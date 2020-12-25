@@ -7,6 +7,7 @@ import (
 
 var cli struct {
 	Init cmd.Init `cmd help:"Create a slip box in the given directory"`
+	New  cmd.New  `cmd help:"Add a new note to the slip box"`
 }
 
 func main() {
