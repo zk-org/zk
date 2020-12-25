@@ -2,27 +2,47 @@ package zk
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-const defaultConfig = `
-# Test
-test = thing
+const defaultConfig = `editor = "nvim"
+dir "log" {
+	template = "log.md"
+}
 `
 
+type Zk struct {
+	Config Config
+}
+
 // Open locates a slip box at the given path and parses its configuration.
-func Open(path string) error {
+func Open(path string) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return wrap(err)
+		return nil, wrap(err)
 	}
-	_, err = locateRoot(path)
-	return wrap(err)
+	path, err = locateRoot(path)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	configContent, err := ioutil.ReadFile(filepath.Join(path, ".zk/config.hcl"))
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	config, err := parseConfig(configContent)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	return &Zk{*config}, nil
 }
 
 // Create initializes a new slip box at the given path.
@@ -45,7 +65,7 @@ func Create(path string) error {
 	}
 
 	// Write default config.toml.
-	f, err := os.Create(filepath.Join(path, ".zk/config.toml"))
+	f, err := os.Create(filepath.Join(path, ".zk/config.hcl"))
 	if err != nil {
 		return wrap(err)
 	}
