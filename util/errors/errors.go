@@ -4,10 +4,18 @@ import (
 	"fmt"
 )
 
+func Wrapperf(format string, args ...interface{}) func(error) error {
+	return Wrapper(fmt.Sprintf(format, args...))
+}
+
 func Wrapper(msg string) func(error) error {
 	return func(err error) error {
 		return Wrap(err, msg)
 	}
+}
+
+func Wrapf(err error, format string, args ...interface{}) error {
+	return Wrap(err, fmt.Sprintf(format, args...))
 }
 
 func Wrap(err error, msg string) error {

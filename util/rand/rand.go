@@ -21,7 +21,7 @@ var (
 type Case int
 
 const (
-	LowerCase Case = iota
+	LowerCase Case = iota + 1
 	UpperCase
 	MixedCase
 )
