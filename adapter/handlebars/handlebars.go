@@ -2,12 +2,21 @@ package handlebars
 
 import (
 	"html"
-	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/aymerick/raymond"
+	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/util/errors"
 )
+
+func Init() {
+	// FIXME Pass the logger as dependency
+	logger := log.New(os.Stderr, "zk: warning: ", 0)
+	// FIXME Support custom languages from the config
+	helpers.RegisterSlug(logger, "en")
+}
 
 // HandlebarsRenderer holds parsed handlebars template and renders them.
 type HandlebarsRenderer struct {
@@ -23,11 +32,11 @@ func NewRenderer() *HandlebarsRenderer {
 
 // Render renders a handlebars string template with the given context.
 func (hr *HandlebarsRenderer) Render(template string, context interface{}) (string, error) {
-	template = html.EscapeString(template)
 	res, err := raymond.Render(template, context)
 	if err != nil {
 		return "", errors.Wrap(err, "render template failed")
 	}
+
 	return html.UnescapeString(res), nil
 }
 
@@ -65,11 +74,7 @@ func (hr *HandlebarsRenderer) loadFileTemplate(path string) (*raymond.Template, 
 	}
 
 	// Load new template.
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, wrap(err)
-	}
-	templ, err = raymond.Parse(html.EscapeString(string(bytes)))
+	templ, err = raymond.ParseFile(path)
 	if err != nil {
 		return nil, wrap(err)
 	}

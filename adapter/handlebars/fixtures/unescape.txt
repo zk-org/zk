@@ -1,1 +1,1 @@
-Salut, &lt;{{name}}&gt;!
+Salut, {{name}}!

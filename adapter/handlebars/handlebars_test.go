@@ -7,6 +7,10 @@ import (
 	"github.com/mickael-menu/zk/util/fixtures"
 )
 
+func init() {
+	Init()
+}
+
 func TestRenderString(t *testing.T) {
 	sut := NewRenderer()
 	res, err := sut.Render("Goodbye, {{name}}", map[string]string{"name": "Ed"})
@@ -31,11 +35,22 @@ func TestUnknownVariable(t *testing.T) {
 func TestDoesntEscapeHTML(t *testing.T) {
 	sut := NewRenderer()
 
-	res, err := sut.Render("Salut, &lt;{{name}}&gt;!", map[string]string{"name": "l'ami"})
+	res, err := sut.Render("Salut, {{name}}!", map[string]string{"name": "l'ami"})
 	assert.Nil(t, err)
-	assert.Equal(t, res, "Salut, &lt;l'ami&gt;!")
+	assert.Equal(t, res, "Salut, l'ami!")
 
 	res, err = sut.RenderFile(fixtures.Path("unescape.txt"), map[string]string{"name": "l'ami"})
 	assert.Nil(t, err)
-	assert.Equal(t, res, "Salut, &lt;l'ami&gt;!\n")
+	assert.Equal(t, res, "Salut, l'ami!\n")
+}
+
+func TestSlug(t *testing.T) {
+	sut := NewRenderer()
+	res, err := sut.Render("{{#slug}}This will be slugified!{{/slug}}", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, res, "this-will-be-slugified")
+
+	res, err = sut.Render(`{{slug "This will be slugified!"}}`, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, res, "this-will-be-slugified")
 }
