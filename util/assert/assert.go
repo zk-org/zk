@@ -3,8 +3,6 @@ package assert
 import (
 	"reflect"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func Nil(t *testing.T, value interface{}) {
@@ -24,8 +22,8 @@ func isNil(value interface{}) bool {
 		(reflect.ValueOf(value).Kind() == reflect.Ptr && reflect.ValueOf(value).IsNil())
 }
 
-func Equal(t *testing.T, value interface{}, expected interface{}) {
-	if !cmp.Equal(value, expected) {
-		t.Errorf("Received %+v (type %v), expected %+v (type %v)", value, reflect.TypeOf(value), expected, reflect.TypeOf(expected))
+func Equal(t *testing.T, actual, expected interface{}) {
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Received %+v (type %v), expected %+v (type %v)", actual, reflect.TypeOf(actual), expected, reflect.TypeOf(expected))
 	}
 }

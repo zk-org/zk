@@ -37,7 +37,7 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	config, err := parseConfig(configContent)
+	config, err := ParseConfig(configContent)
 	if err != nil {
 		return nil, wrap(err)
 	}
