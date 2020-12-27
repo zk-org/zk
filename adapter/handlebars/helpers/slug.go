@@ -6,6 +6,10 @@ import (
 	"github.com/mickael-menu/zk/util"
 )
 
+// RegisterSlug registers a {{slug}} template helper to slugify text.
+//
+// {{slug "This will be slugified!"}} -> this-will-be-slugified
+// {{#slug}}This will be slugified!{{/slug}} -> this-will-be-slugified
 func RegisterSlug(logger util.Logger, lang string) {
 	raymond.RegisterHelper("slug", func(opt interface{}) string {
 		switch arg := opt.(type) {

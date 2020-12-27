@@ -14,6 +14,7 @@ import (
 func Init(lang string, logger util.Logger, date date.Provider) {
 	helpers.RegisterSlug(logger, lang)
 	helpers.RegisterDate(logger, date)
+	helpers.RegisterShell(logger)
 }
 
 // HandlebarsRenderer holds parsed handlebars template and renders them.

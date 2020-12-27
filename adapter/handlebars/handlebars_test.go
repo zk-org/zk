@@ -2,20 +2,18 @@ package handlebars
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/fixtures"
 )
 
 func init() {
-	logger := log.New(os.Stderr, "zk: warning: ", 0)
 	date := date.NewFrozen(time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC))
-	Init("en", logger, &date)
+	Init("en", &util.NullLogger, &date)
 }
 
 func TestRenderString(t *testing.T) {
@@ -81,4 +79,16 @@ func TestDateHelper(t *testing.T) {
 	test("timestamp", "200911172034")
 	test("timestamp-unix", "1258490098")
 	test("cust: %Y-%m", "cust: 2009-11")
+}
+
+func TestShellHelper(t *testing.T) {
+	sut := NewRenderer()
+	// block is passed as piped input
+	res, err := sut.Render(`{{#sh "tr '[a-z]' '[A-Z]'"}}Hello, world!{{/sh}}`, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, res, "HELLO, WORLD!")
+	// inline
+	res, err = sut.Render(`{{sh "echo 'Hello, world!'"}}`, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, res, "Hello, world!\n")
 }
