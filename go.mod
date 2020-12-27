@@ -8,5 +8,6 @@ require (
 	github.com/google/go-cmp v0.3.1
 	github.com/gosimple/slug v1.9.0
 	github.com/hashicorp/hcl/v2 v2.8.1
+	github.com/lestrrat-go/strftime v1.0.3
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

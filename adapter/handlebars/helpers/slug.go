@@ -6,7 +6,6 @@ import (
 	"github.com/mickael-menu/zk/util"
 )
 
-// FIXME Support custom languages with slug.MakeLang()
 func RegisterSlug(logger util.Logger, lang string) {
 	raymond.RegisterHelper("slug", func(opt interface{}) string {
 		switch arg := opt.(type) {

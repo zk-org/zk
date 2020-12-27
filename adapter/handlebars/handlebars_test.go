@@ -1,14 +1,21 @@
 package handlebars
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/mickael-menu/zk/util/assert"
+	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/fixtures"
 )
 
 func init() {
-	Init()
+	logger := log.New(os.Stderr, "zk: warning: ", 0)
+	date := date.NewFrozen(time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC))
+	Init("en", logger, &date)
 }
 
 func TestRenderString(t *testing.T) {
@@ -44,13 +51,34 @@ func TestDoesntEscapeHTML(t *testing.T) {
 	assert.Equal(t, res, "Salut, l'ami!\n")
 }
 
-func TestSlug(t *testing.T) {
+func TestSlugHelper(t *testing.T) {
 	sut := NewRenderer()
+	// block
 	res, err := sut.Render("{{#slug}}This will be slugified!{{/slug}}", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, res, "this-will-be-slugified")
-
+	// inline
 	res, err = sut.Render(`{{slug "This will be slugified!"}}`, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, res, "this-will-be-slugified")
+}
+
+func TestDateHelper(t *testing.T) {
+	sut := NewRenderer()
+
+	test := func(format string, expected string) {
+		res, err := sut.Render(fmt.Sprintf("{{date '%s'}}", format), nil)
+		assert.Nil(t, err)
+		assert.Equal(t, res, expected)
+	}
+
+	test("short", "11/17/2009")
+	test("medium", "Nov 17, 2009")
+	test("long", "November 17, 2009")
+	test("full", "Tuesday, November 17, 2009")
+	test("year", "2009")
+	test("time", "20:34")
+	test("timestamp", "200911172034")
+	test("timestamp-unix", "1258490098")
+	test("cust: %Y-%m", "cust: 2009-11")
 }

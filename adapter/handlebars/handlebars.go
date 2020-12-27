@@ -2,20 +2,18 @@ package handlebars
 
 import (
 	"html"
-	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
+	"github.com/mickael-menu/zk/util"
+	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-func Init() {
-	// FIXME Pass the logger as dependency
-	logger := log.New(os.Stderr, "zk: warning: ", 0)
-	// FIXME Support custom languages from the config
-	helpers.RegisterSlug(logger, "en")
+func Init(lang string, logger util.Logger, date date.Provider) {
+	helpers.RegisterSlug(logger, lang)
+	helpers.RegisterDate(logger, date)
 }
 
 // HandlebarsRenderer holds parsed handlebars template and renders them.
