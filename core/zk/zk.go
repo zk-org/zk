@@ -166,14 +166,23 @@ func (zk *Zk) FilenameTemplate(dir Dir) string {
 func (zk *Zk) Template(dir Dir) opt.String {
 	dirConfig := zk.dirConfig(dir)
 
+	var template string
 	switch {
 	case dirConfig != nil && dirConfig.Template != "":
-		return opt.NewString(dirConfig.Template)
+		template = dirConfig.Template
 	case zk.config.Template != "":
-		return opt.NewString(zk.config.Template)
-	default:
+		template = zk.config.Template
+	}
+
+	if template == "" {
 		return opt.NullString
 	}
+
+	if !filepath.IsAbs(template) {
+		template = filepath.Join(zk.Path, ".zk/templates", template)
+	}
+
+	return opt.NewString(template)
 }
 
 // RandIDOpts returns the options to use to generate a random ID for the given directory.

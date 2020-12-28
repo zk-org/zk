@@ -63,19 +63,27 @@ func TestDefaultTemplate(t *testing.T) {
 }
 
 func TestCustomTemplate(t *testing.T) {
-	zk := &Zk{config: config{
-		Template: "root.tpl",
-		Dirs: []dirConfig{
-			{
-				Dir:      "log",
-				Template: "log.tpl",
+	zk := &Zk{
+		Path: "/test",
+		config: config{
+			Template: "root.tpl",
+			Dirs: []dirConfig{
+				{
+					Dir:      "log",
+					Template: "log.tpl",
+				},
+				{
+					Dir:      "abs",
+					Template: "/abs/template.tpl",
+				},
 			},
 		},
-	}}
-	assert.Equal(t, zk.Template(dir("")), opt.NewString("root.tpl"))
-	assert.Equal(t, zk.Template(dir(".")), opt.NewString("root.tpl"))
-	assert.Equal(t, zk.Template(dir("unknown")), opt.NewString("root.tpl"))
-	assert.Equal(t, zk.Template(dir("log")), opt.NewString("log.tpl"))
+	}
+	assert.Equal(t, zk.Template(dir("")), opt.NewString("/test/.zk/templates/root.tpl"))
+	assert.Equal(t, zk.Template(dir(".")), opt.NewString("/test/.zk/templates/root.tpl"))
+	assert.Equal(t, zk.Template(dir("unknown")), opt.NewString("/test/.zk/templates/root.tpl"))
+	assert.Equal(t, zk.Template(dir("log")), opt.NewString("/test/.zk/templates/log.tpl"))
+	assert.Equal(t, zk.Template(dir("abs")), opt.NewString("/abs/template.tpl"))
 }
 
 func TestNoExtra(t *testing.T) {
