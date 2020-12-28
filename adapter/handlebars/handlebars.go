@@ -31,32 +31,51 @@ func NewRenderer() *HandlebarsRenderer {
 
 // Render renders a handlebars string template with the given context.
 func (hr *HandlebarsRenderer) Render(template string, context interface{}) (string, error) {
-	res, err := raymond.Render(template, context)
+	templ, err := hr.loadTemplate(template)
 	if err != nil {
-		return "", errors.Wrap(err, "render template failed")
+		return "", err
 	}
-
-	return html.UnescapeString(res), nil
+	return hr.render(templ, context)
 }
 
 // RenderFile renders a handlebars template file with the given context.
 func (hr *HandlebarsRenderer) RenderFile(path string, context interface{}) (string, error) {
-	wrap := errors.Wrapper("render template failed")
-
 	templ, err := hr.loadFileTemplate(path)
 	if err != nil {
-		return "", wrap(err)
+		return "", err
 	}
+	return hr.render(templ, context)
+}
 
-	res, err := templ.Exec(context)
+func (hr *HandlebarsRenderer) render(template *raymond.Template, context interface{}) (string, error) {
+	res, err := template.Exec(context)
 	if err != nil {
-		return "", wrap(err)
+		return "", errors.Wrap(err, "render template failed")
 	}
-
 	return html.UnescapeString(res), nil
 }
 
-// LoadFileTemplate loads the template at given path into the renderer if needed.
+// loadTemplate loads the template with the given content into the renderer if needed.
+// Returns the parsed template.
+func (hr *HandlebarsRenderer) loadTemplate(content string) (*raymond.Template, error) {
+	wrap := errors.Wrapperf("load template failed")
+
+	// Already loaded?
+	templ, ok := hr.templates[content]
+	if ok {
+		return templ, nil
+	}
+
+	// Load new template.
+	templ, err := raymond.Parse(content)
+	if err != nil {
+		return nil, wrap(err)
+	}
+	hr.templates[content] = templ
+	return templ, nil
+}
+
+// loadFileTemplate loads the template at given path into the renderer if needed.
 // Returns the parsed template.
 func (hr *HandlebarsRenderer) loadFileTemplate(path string) (*raymond.Template, error) {
 	wrap := errors.Wrapperf("load template file failed: %v", path)
