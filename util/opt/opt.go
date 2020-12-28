@@ -5,13 +5,13 @@ type String struct {
 	value *string
 }
 
+// NullString repreents an empty optional String.
+var NullString = String{nil}
+
 // NewString creates a new optional String with the given value.
 func NewString(value string) String {
 	return String{&value}
 }
-
-// NullString repreents an empty optional String.
-var NullString = String{nil}
 
 // IsNull returns whether the optional String has no value.
 func (s String) IsNull() bool {

@@ -18,7 +18,7 @@ type rootConfig struct {
 	RandomID *randomIDConfig   `hcl:"random_id,block"`
 	Editor   string            `hcl:"editor,optional"`
 	Dirs     []dirConfig       `hcl:"dir,block"`
-	Ext      map[string]string `hcl:"ext,optional"`
+	Extra    map[string]string `hcl:"extra,optional"`
 }
 
 type dirConfig struct {
@@ -26,7 +26,7 @@ type dirConfig struct {
 	Filename string            `hcl:"filename,optional"`
 	Template string            `hcl:"template,optional"`
 	RandomID *randomIDConfig   `hcl:"random_id,block"`
-	Ext      map[string]string `hcl:"ext,optional"`
+	Extra    map[string]string `hcl:"extra,optional"`
 }
 
 type randomIDConfig struct {
@@ -46,7 +46,7 @@ func ParseConfig(content []byte) (*Config, error) {
 }
 
 // Filename returns the filename template for the notes in the given directory.
-func (c *Config) Filename(dir string) string {
+func (c *Config) Filename(dir Dir) string {
 	dirConfig := c.dirConfig(dir)
 
 	switch {
@@ -60,7 +60,7 @@ func (c *Config) Filename(dir string) string {
 }
 
 // Template returns the file template to use for the notes in the given directory.
-func (c *Config) Template(dir string) opt.String {
+func (c *Config) Template(dir Dir) opt.String {
 	dirConfig := c.dirConfig(dir)
 
 	switch {
@@ -74,7 +74,7 @@ func (c *Config) Template(dir string) opt.String {
 }
 
 // RandIDOpts returns the options to use to generate a random ID for the given directory.
-func (c *Config) RandIDOpts(dir string) rand.IDOpts {
+func (c *Config) RandIDOpts(dir Dir) rand.IDOpts {
 	toCharset := func(charset string) []rune {
 		switch charset {
 		case "alphanum":
@@ -133,27 +133,27 @@ func (c *Config) RandIDOpts(dir string) rand.IDOpts {
 	return opts
 }
 
-// Ext returns the extra variables for the given directory.
-func (c *Config) Ext(dir string) map[string]string {
-	ext := make(map[string]string)
+// Extra returns the extra variables for the given directory.
+func (c *Config) Extra(dir Dir) map[string]string {
+	extra := make(map[string]string)
 
-	for k, v := range c.rootConfig.Ext {
-		ext[k] = v
+	for k, v := range c.rootConfig.Extra {
+		extra[k] = v
 	}
 
 	if dirConfig := c.dirConfig(dir); dirConfig != nil {
-		for k, v := range dirConfig.Ext {
-			ext[k] = v
+		for k, v := range dirConfig.Extra {
+			extra[k] = v
 		}
 	}
 
-	return ext
+	return extra
 }
 
 // dirConfig returns the dirConfig instance for the given directory.
-func (c *Config) dirConfig(dir string) *dirConfig {
+func (c *Config) dirConfig(dir Dir) *dirConfig {
 	for _, dirConfig := range c.rootConfig.Dirs {
-		if dirConfig.Dir == dir {
+		if dirConfig.Dir == dir.Name {
 			return &dirConfig
 		}
 	}

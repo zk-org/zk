@@ -27,7 +27,7 @@ func TestParseComplete(t *testing.T) {
 			length = 4
 			case = "lower"
 		}
-		ext = {
+		extra = {
 			hello = "world"
 			salut = "le monde"
 		}
@@ -39,7 +39,7 @@ func TestParseComplete(t *testing.T) {
 				length = 8
 				case = "mixed"
 			}
-			ext = {
+			extra = {
 				log-ext = "value"
 			}
 		}
@@ -65,10 +65,10 @@ func TestParseComplete(t *testing.T) {
 					Length:  8,
 					Case:    "mixed",
 				},
-				Ext: map[string]string{"log-ext": "value"},
+				Extra: map[string]string{"log-ext": "value"},
 			},
 		},
-		Ext: map[string]string{
+		Extra: map[string]string{
 			"hello": "world",
 			"salut": "le monde",
 		},
@@ -84,9 +84,9 @@ func TestParseInvalidConfig(t *testing.T) {
 
 func TestDefaultFilename(t *testing.T) {
 	config := &Config{}
-	assert.Equal(t, config.Filename(""), "{{random-id}}")
-	assert.Equal(t, config.Filename("."), "{{random-id}}")
-	assert.Equal(t, config.Filename("unknown"), "{{random-id}}")
+	assert.Equal(t, config.Filename(dir("")), "{{random-id}}")
+	assert.Equal(t, config.Filename(dir(".")), "{{random-id}}")
+	assert.Equal(t, config.Filename(dir("unknown")), "{{random-id}}")
 }
 
 func TestCustomFilename(t *testing.T) {
@@ -99,17 +99,17 @@ func TestCustomFilename(t *testing.T) {
 			},
 		},
 	}}
-	assert.Equal(t, config.Filename(""), "root-filename")
-	assert.Equal(t, config.Filename("."), "root-filename")
-	assert.Equal(t, config.Filename("unknown"), "root-filename")
-	assert.Equal(t, config.Filename("log"), "log-filename")
+	assert.Equal(t, config.Filename(dir("")), "root-filename")
+	assert.Equal(t, config.Filename(dir(".")), "root-filename")
+	assert.Equal(t, config.Filename(dir("unknown")), "root-filename")
+	assert.Equal(t, config.Filename(dir("log")), "log-filename")
 }
 
 func TestDefaultTemplate(t *testing.T) {
 	config := &Config{}
-	assert.Equal(t, config.Template(""), opt.NullString)
-	assert.Equal(t, config.Template("."), opt.NullString)
-	assert.Equal(t, config.Template("unknown"), opt.NullString)
+	assert.Equal(t, config.Template(dir("")), opt.NullString)
+	assert.Equal(t, config.Template(dir(".")), opt.NullString)
+	assert.Equal(t, config.Template(dir("unknown")), opt.NullString)
 }
 
 func TestCustomTemplate(t *testing.T) {
@@ -122,52 +122,52 @@ func TestCustomTemplate(t *testing.T) {
 			},
 		},
 	}}
-	assert.Equal(t, config.Template(""), opt.NewString("root.tpl"))
-	assert.Equal(t, config.Template("."), opt.NewString("root.tpl"))
-	assert.Equal(t, config.Template("unknown"), opt.NewString("root.tpl"))
-	assert.Equal(t, config.Template("log"), opt.NewString("log.tpl"))
+	assert.Equal(t, config.Template(dir("")), opt.NewString("root.tpl"))
+	assert.Equal(t, config.Template(dir(".")), opt.NewString("root.tpl"))
+	assert.Equal(t, config.Template(dir("unknown")), opt.NewString("root.tpl"))
+	assert.Equal(t, config.Template(dir("log")), opt.NewString("log.tpl"))
 }
 
 func TestNoExtra(t *testing.T) {
 	config := &Config{}
-	assert.Equal(t, config.Ext(""), map[string]string{})
+	assert.Equal(t, config.Extra(dir("")), map[string]string{})
 }
 
 func TestMergeExtra(t *testing.T) {
 	config := &Config{rootConfig{
-		Ext: map[string]string{
+		Extra: map[string]string{
 			"hello": "world",
 			"salut": "le monde",
 		},
 		Dirs: []dirConfig{
 			dirConfig{
 				Dir: "log",
-				Ext: map[string]string{
+				Extra: map[string]string{
 					"hello":      "override",
 					"additional": "value",
 				},
 			},
 		},
 	}}
-	assert.Equal(t, config.Ext(""), map[string]string{
+	assert.Equal(t, config.Extra(dir("")), map[string]string{
 		"hello": "world",
 		"salut": "le monde",
 	})
-	assert.Equal(t, config.Ext("."), map[string]string{
+	assert.Equal(t, config.Extra(dir(".")), map[string]string{
 		"hello": "world",
 		"salut": "le monde",
 	})
-	assert.Equal(t, config.Ext("unknown"), map[string]string{
+	assert.Equal(t, config.Extra(dir("unknown")), map[string]string{
 		"hello": "world",
 		"salut": "le monde",
 	})
-	assert.Equal(t, config.Ext("log"), map[string]string{
+	assert.Equal(t, config.Extra(dir("log")), map[string]string{
 		"hello":      "override",
 		"salut":      "le monde",
 		"additional": "value",
 	})
 	// Makes sure we didn't modify the extra in place by getting the `log` ones.
-	assert.Equal(t, config.Ext(""), map[string]string{
+	assert.Equal(t, config.Extra(dir("")), map[string]string{
 		"hello": "world",
 		"salut": "le monde",
 	})
@@ -181,9 +181,9 @@ func TestDefaultRandIDOpts(t *testing.T) {
 		Case:    rand.LowerCase,
 	}
 
-	assert.Equal(t, config.RandIDOpts(""), defaultOpts)
-	assert.Equal(t, config.RandIDOpts("."), defaultOpts)
-	assert.Equal(t, config.RandIDOpts("unknown"), defaultOpts)
+	assert.Equal(t, config.RandIDOpts(dir("")), defaultOpts)
+	assert.Equal(t, config.RandIDOpts(dir(".")), defaultOpts)
+	assert.Equal(t, config.RandIDOpts(dir("unknown")), defaultOpts)
 }
 
 func TestOverrideRandIDOpts(t *testing.T) {
@@ -207,11 +207,11 @@ func TestOverrideRandIDOpts(t *testing.T) {
 		Length:  42,
 		Case:    rand.LowerCase,
 	}
-	assert.Equal(t, config.RandIDOpts(""), expectedRootOpts)
-	assert.Equal(t, config.RandIDOpts("."), expectedRootOpts)
-	assert.Equal(t, config.RandIDOpts("unknown"), expectedRootOpts)
+	assert.Equal(t, config.RandIDOpts(dir("")), expectedRootOpts)
+	assert.Equal(t, config.RandIDOpts(dir(".")), expectedRootOpts)
+	assert.Equal(t, config.RandIDOpts(dir("unknown")), expectedRootOpts)
 
-	assert.Equal(t, config.RandIDOpts("log"), rand.IDOpts{
+	assert.Equal(t, config.RandIDOpts(dir("log")), rand.IDOpts{
 		Charset: rand.AlphanumCharset,
 		Length:  28,
 		Case:    rand.LowerCase,
@@ -226,7 +226,7 @@ func TestParseRandIDCharset(t *testing.T) {
 			},
 		}}
 
-		if !cmp.Equal(config.RandIDOpts("").Charset, expected) {
+		if !cmp.Equal(config.RandIDOpts(dir("")).Charset, expected) {
 			t.Errorf("Didn't parse random ID charset `%v` as expected", charset)
 		}
 	}
@@ -247,7 +247,7 @@ func TestParseRandIDCase(t *testing.T) {
 			},
 		}}
 
-		if !cmp.Equal(config.RandIDOpts("").Case, expected) {
+		if !cmp.Equal(config.RandIDOpts(dir("")).Case, expected) {
 			t.Errorf("Didn't parse random ID case `%v` as expected", letterCase)
 		}
 	}
@@ -256,4 +256,8 @@ func TestParseRandIDCase(t *testing.T) {
 	test("upper", rand.UpperCase)
 	test("mixed", rand.MixedCase)
 	test("unknown", rand.LowerCase)
+}
+
+func dir(name string) Dir {
+	return Dir{Name: name, Path: name}
 }
