@@ -41,3 +41,7 @@ func (s String) OrDefault(def string) string {
 func (s String) Unwrap() string {
 	return s.OrDefault("")
 }
+
+func (s String) String() string {
+	return s.OrDefault("")
+}
