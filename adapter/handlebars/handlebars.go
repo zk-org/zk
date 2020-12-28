@@ -78,7 +78,7 @@ func (hr *HandlebarsRenderer) loadTemplate(content string) (*raymond.Template, e
 // loadFileTemplate loads the template at given path into the renderer if needed.
 // Returns the parsed template.
 func (hr *HandlebarsRenderer) loadFileTemplate(path string) (*raymond.Template, error) {
-	wrap := errors.Wrapperf("load template file failed: %v", path)
+	wrap := errors.Wrapper("load template file failed")
 
 	path, err := filepath.Abs(path)
 	if err != nil {

@@ -16,8 +16,14 @@ import (
 // {{date "medium"}} -> Nov 17, 2009
 // {{date "%Y-%m"}} -> 2009-11
 func RegisterDate(logger util.Logger, date date.Provider) {
-	raymond.RegisterHelper("date", func(arg string) string {
-		format := findFormat(arg)
+	raymond.RegisterHelper("date", func(opt interface{}) string {
+		format := "%Y-%m-%d"
+
+		arg, ok := opt.(string)
+		if ok {
+			format = findFormat(arg)
+		}
+
 		res, err := strftime.Format(format, date.Date(), strftime.WithUnixSeconds('s'))
 		if err != nil {
 			logger.Printf("the {{date}} template helper failed to format the date: %v", err)

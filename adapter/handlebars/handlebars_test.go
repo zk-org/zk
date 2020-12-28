@@ -64,6 +64,11 @@ func TestSlugHelper(t *testing.T) {
 func TestDateHelper(t *testing.T) {
 	sut := NewRenderer()
 
+	// Default
+	res, err := sut.Render("{{date}}", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, res, "2009-11-17")
+
 	test := func(format string, expected string) {
 		res, err := sut.Render(fmt.Sprintf("{{date '%s'}}", format), nil)
 		assert.Nil(t, err)
