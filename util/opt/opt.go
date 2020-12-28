@@ -5,12 +5,22 @@ type String struct {
 	value *string
 }
 
-// NullString repreents an empty optional String.
+// NullString represents an empty optional String.
 var NullString = String{nil}
 
 // NewString creates a new optional String with the given value.
 func NewString(value string) String {
 	return String{&value}
+}
+
+// NewNotEmptyString creates a new optional String with the given value or
+// returns NullString if the value is an empty string.
+func NewNotEmptyString(value string) String {
+	if value == "" {
+		return NullString
+	} else {
+		return NewString(value)
+	}
 }
 
 // IsNull returns whether the optional String has no value.
@@ -25,4 +35,9 @@ func (s String) OrDefault(def string) string {
 	} else {
 		return *s.value
 	}
+}
+
+// Unwrap returns the optional String value or an empty String if none is set.
+func (s String) Unwrap() string {
+	return s.OrDefault("")
 }

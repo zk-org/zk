@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/util/errors"
+	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/rand"
 )
 
 const defaultConfig = `editor = "nvim"
@@ -20,7 +22,7 @@ type Zk struct {
 	// Slip box root path.
 	Path string
 	// User configuration parsed from .zk/config.hsl.
-	Config Config
+	config config
 }
 
 // Dir represents a directory inside a slip box.
@@ -49,14 +51,14 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	config, err := ParseConfig(configContent)
+	config, err := parseConfig(configContent)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	return &Zk{
 		Path:   path,
-		Config: *config,
+		config: *config,
 	}, nil
 }
 
@@ -144,4 +146,119 @@ func (zk *Zk) DirAt(path string) (*Dir, error) {
 		Name: name,
 		Path: path,
 	}, nil
+}
+
+// FilenameTemplate returns the filename template for the notes in the given directory.
+func (zk *Zk) FilenameTemplate(dir Dir) string {
+	dirConfig := zk.dirConfig(dir)
+
+	switch {
+	case dirConfig != nil && dirConfig.Filename != "":
+		return dirConfig.Filename
+	case zk.config.Filename != "":
+		return zk.config.Filename
+	default:
+		return "{{random-id}}"
+	}
+}
+
+// Template returns the file template to use for the notes in the given directory.
+func (zk *Zk) Template(dir Dir) opt.String {
+	dirConfig := zk.dirConfig(dir)
+
+	switch {
+	case dirConfig != nil && dirConfig.Template != "":
+		return opt.NewString(dirConfig.Template)
+	case zk.config.Template != "":
+		return opt.NewString(zk.config.Template)
+	default:
+		return opt.NullString
+	}
+}
+
+// RandIDOpts returns the options to use to generate a random ID for the given directory.
+func (zk *Zk) RandIDOpts(dir Dir) rand.IDOpts {
+	toCharset := func(charset string) []rune {
+		switch charset {
+		case "alphanum":
+			return rand.AlphanumCharset
+		case "hex":
+			return rand.HexCharset
+		case "letters":
+			return rand.LettersCharset
+		case "numbers":
+			return rand.NumbersCharset
+		default:
+			return []rune(charset)
+		}
+	}
+
+	toCase := func(c string) rand.Case {
+		switch c {
+		case "lower":
+			return rand.LowerCase
+		case "upper":
+			return rand.UpperCase
+		case "mixed":
+			return rand.MixedCase
+		default:
+			return rand.LowerCase
+		}
+	}
+
+	// Default options
+	opts := rand.IDOpts{
+		Charset: rand.AlphanumCharset,
+		Length:  5,
+		Case:    rand.LowerCase,
+	}
+
+	merge := func(more *randomIDConfig) {
+		if more.Charset != "" {
+			opts.Charset = toCharset(more.Charset)
+		}
+		if more.Length > 0 {
+			opts.Length = more.Length
+		}
+		if more.Case != "" {
+			opts.Case = toCase(more.Case)
+		}
+	}
+
+	if root := zk.config.RandomID; root != nil {
+		merge(root)
+	}
+
+	if dir := zk.dirConfig(dir); dir != nil && dir.RandomID != nil {
+		merge(dir.RandomID)
+	}
+
+	return opts
+}
+
+// Extra returns the extra variables for the given directory.
+func (zk *Zk) Extra(dir Dir) map[string]string {
+	extra := make(map[string]string)
+
+	for k, v := range zk.config.Extra {
+		extra[k] = v
+	}
+
+	if dirConfig := zk.dirConfig(dir); dirConfig != nil {
+		for k, v := range dirConfig.Extra {
+			extra[k] = v
+		}
+	}
+
+	return extra
+}
+
+// dirConfig returns the dirConfig instance for the given directory.
+func (zk *Zk) dirConfig(dir Dir) *dirConfig {
+	for _, dirConfig := range zk.config.Dirs {
+		if dirConfig.Dir == dir.Name {
+			return &dirConfig
+		}
+	}
+	return nil
 }
