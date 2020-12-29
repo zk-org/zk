@@ -8,7 +8,6 @@ import (
 
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
-	"github.com/mickael-menu/zk/util/rand"
 )
 
 const defaultConfig = `editor = "nvim"
@@ -158,7 +157,7 @@ func (zk *Zk) FilenameTemplate(dir Dir) string {
 	case zk.config.Filename != "":
 		return zk.config.Filename
 	default:
-		return "{{random-id}}"
+		return "{{id}}"
 	}
 }
 
@@ -185,44 +184,44 @@ func (zk *Zk) Template(dir Dir) opt.String {
 	return opt.NewString(template)
 }
 
-// RandIDOpts returns the options to use to generate a random ID for the given directory.
-func (zk *Zk) RandIDOpts(dir Dir) rand.IDOpts {
-	toCharset := func(charset string) []rune {
+// IDOptions returns the options to use to generate an ID for the given directory.
+func (zk *Zk) IDOptions(dir Dir) IDOptions {
+	toCharset := func(charset string) Charset {
 		switch charset {
 		case "alphanum":
-			return rand.AlphanumCharset
+			return CharsetAlphanum
 		case "hex":
-			return rand.HexCharset
+			return CharsetHex
 		case "letters":
-			return rand.LettersCharset
+			return CharsetLetters
 		case "numbers":
-			return rand.NumbersCharset
+			return CharsetNumbers
 		default:
-			return []rune(charset)
+			return Charset(charset)
 		}
 	}
 
-	toCase := func(c string) rand.Case {
+	toCase := func(c string) Case {
 		switch c {
 		case "lower":
-			return rand.LowerCase
+			return CaseLower
 		case "upper":
-			return rand.UpperCase
+			return CaseUpper
 		case "mixed":
-			return rand.MixedCase
+			return CaseMixed
 		default:
-			return rand.LowerCase
+			return CaseLower
 		}
 	}
 
 	// Default options
-	opts := rand.IDOpts{
-		Charset: rand.AlphanumCharset,
+	opts := IDOptions{
+		Charset: CharsetAlphanum,
 		Length:  5,
-		Case:    rand.LowerCase,
+		Case:    CaseLower,
 	}
 
-	merge := func(more *randomIDConfig) {
+	merge := func(more *idConfig) {
 		if more.Charset != "" {
 			opts.Charset = toCharset(more.Charset)
 		}
@@ -234,12 +233,12 @@ func (zk *Zk) RandIDOpts(dir Dir) rand.IDOpts {
 		}
 	}
 
-	if root := zk.config.RandomID; root != nil {
+	if root := zk.config.ID; root != nil {
 		merge(root)
 	}
 
-	if dir := zk.dirConfig(dir); dir != nil && dir.RandomID != nil {
-		merge(dir.RandomID)
+	if dir := zk.dirConfig(dir); dir != nil && dir.ID != nil {
+		merge(dir.ID)
 	}
 
 	return opts

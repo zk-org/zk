@@ -17,9 +17,9 @@ func TestParseComplete(t *testing.T) {
 	conf, err := parseConfig([]byte(`
 		// Comment
 		editor = "vim"
-		filename = "{{random-id}}.note"
+		filename = "{{id}}.note"
 		template = "default.note"
-		random_id {
+		id {
 			charset = "alphanum"
 			length = 4
 			case = "lower"
@@ -31,7 +31,7 @@ func TestParseComplete(t *testing.T) {
 		dir "log" {
 			filename = "{{date}}.md"
 			template = "log.md"
-			random_id {
+			id {
 				charset = "letters"
 				length = 8
 				case = "mixed"
@@ -44,9 +44,9 @@ func TestParseComplete(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &config{
-		Filename: "{{random-id}}.note",
+		Filename: "{{id}}.note",
 		Template: "default.note",
-		RandomID: &randomIDConfig{
+		ID: &idConfig{
 			Charset: "alphanum",
 			Length:  4,
 			Case:    "lower",
@@ -57,7 +57,7 @@ func TestParseComplete(t *testing.T) {
 				Dir:      "log",
 				Filename: "{{date}}.md",
 				Template: "log.md",
-				RandomID: &randomIDConfig{
+				ID: &idConfig{
 					Charset: "letters",
 					Length:  8,
 					Case:    "mixed",

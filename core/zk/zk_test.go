@@ -8,7 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/opt"
-	"github.com/mickael-menu/zk/util/rand"
 )
 
 func TestDirAt(t *testing.T) {
@@ -34,9 +33,9 @@ func TestDirAt(t *testing.T) {
 
 func TestDefaultFilenameTemplate(t *testing.T) {
 	zk := &Zk{}
-	assert.Equal(t, zk.FilenameTemplate(dir("")), "{{random-id}}")
-	assert.Equal(t, zk.FilenameTemplate(dir(".")), "{{random-id}}")
-	assert.Equal(t, zk.FilenameTemplate(dir("unknown")), "{{random-id}}")
+	assert.Equal(t, zk.FilenameTemplate(dir("")), "{{id}}")
+	assert.Equal(t, zk.FilenameTemplate(dir(".")), "{{id}}")
+	assert.Equal(t, zk.FilenameTemplate(dir("unknown")), "{{id}}")
 }
 
 func TestCustomFilenameTemplate(t *testing.T) {
@@ -131,89 +130,89 @@ func TestMergeExtra(t *testing.T) {
 	})
 }
 
-func TestDefaultRandIDOpts(t *testing.T) {
+func TestDefaultIDOptions(t *testing.T) {
 	zk := &Zk{}
-	defaultOpts := rand.IDOpts{
-		Charset: rand.AlphanumCharset,
+	defaultOpts := IDOptions{
+		Charset: CharsetAlphanum,
 		Length:  5,
-		Case:    rand.LowerCase,
+		Case:    CaseLower,
 	}
 
-	assert.Equal(t, zk.RandIDOpts(dir("")), defaultOpts)
-	assert.Equal(t, zk.RandIDOpts(dir(".")), defaultOpts)
-	assert.Equal(t, zk.RandIDOpts(dir("unknown")), defaultOpts)
+	assert.Equal(t, zk.IDOptions(dir("")), defaultOpts)
+	assert.Equal(t, zk.IDOptions(dir(".")), defaultOpts)
+	assert.Equal(t, zk.IDOptions(dir("unknown")), defaultOpts)
 }
 
-func TestOverrideRandIDOpts(t *testing.T) {
+func TestOverrideIDOptions(t *testing.T) {
 	zk := &Zk{config: config{
-		RandomID: &randomIDConfig{
+		ID: &idConfig{
 			Charset: "alphanum",
 			Length:  42,
 		},
 		Dirs: []dirConfig{
 			{
 				Dir: "log",
-				RandomID: &randomIDConfig{
+				ID: &idConfig{
 					Length: 28,
 				},
 			},
 		},
 	}}
 
-	expectedRootOpts := rand.IDOpts{
-		Charset: rand.AlphanumCharset,
+	expectedRootOpts := IDOptions{
+		Charset: CharsetAlphanum,
 		Length:  42,
-		Case:    rand.LowerCase,
+		Case:    CaseLower,
 	}
-	assert.Equal(t, zk.RandIDOpts(dir("")), expectedRootOpts)
-	assert.Equal(t, zk.RandIDOpts(dir(".")), expectedRootOpts)
-	assert.Equal(t, zk.RandIDOpts(dir("unknown")), expectedRootOpts)
+	assert.Equal(t, zk.IDOptions(dir("")), expectedRootOpts)
+	assert.Equal(t, zk.IDOptions(dir(".")), expectedRootOpts)
+	assert.Equal(t, zk.IDOptions(dir("unknown")), expectedRootOpts)
 
-	assert.Equal(t, zk.RandIDOpts(dir("log")), rand.IDOpts{
-		Charset: rand.AlphanumCharset,
+	assert.Equal(t, zk.IDOptions(dir("log")), IDOptions{
+		Charset: CharsetAlphanum,
 		Length:  28,
-		Case:    rand.LowerCase,
+		Case:    CaseLower,
 	})
 }
 
-func TestParseRandIDCharset(t *testing.T) {
-	test := func(charset string, expected []rune) {
+func TestParseIDCharset(t *testing.T) {
+	test := func(charset string, expected Charset) {
 		zk := &Zk{config: config{
-			RandomID: &randomIDConfig{
+			ID: &idConfig{
 				Charset: charset,
 			},
 		}}
 
-		if !cmp.Equal(zk.RandIDOpts(dir("")).Charset, expected) {
-			t.Errorf("Didn't parse random ID charset `%v` as expected", charset)
+		if !cmp.Equal(zk.IDOptions(dir("")).Charset, expected) {
+			t.Errorf("Didn't parse ID charset `%v` as expected", charset)
 		}
 	}
 
-	test("alphanum", rand.AlphanumCharset)
-	test("hex", rand.HexCharset)
-	test("letters", rand.LettersCharset)
-	test("numbers", rand.NumbersCharset)
+	test("alphanum", CharsetAlphanum)
+	test("hex", CharsetHex)
+	test("letters", CharsetLetters)
+	test("numbers", CharsetNumbers)
 	test("HEX", []rune("HEX")) // case sensitive
 	test("custom", []rune("custom"))
 }
 
-func TestParseRandIDCase(t *testing.T) {
-	test := func(letterCase string, expected rand.Case) {
+func TestParseIDCase(t *testing.T) {
+	test := func(letterCase string, expected Case) {
 		zk := &Zk{config: config{
-			RandomID: &randomIDConfig{
+			ID: &idConfig{
 				Case: letterCase,
 			},
 		}}
 
-		if !cmp.Equal(zk.RandIDOpts(dir("")).Case, expected) {
-			t.Errorf("Didn't parse random ID case `%v` as expected", letterCase)
+		if !cmp.Equal(zk.IDOptions(dir("")).Case, expected) {
+			t.Errorf("Didn't parse ID case `%v` as expected", letterCase)
 		}
 	}
 
-	test("lower", rand.LowerCase)
-	test("upper", rand.UpperCase)
-	test("mixed", rand.MixedCase)
-	test("unknown", rand.LowerCase)
+	test("lower", CaseLower)
+	test("upper", CaseUpper)
+	test("mixed", CaseMixed)
+	test("unknown", CaseLower)
 }
 
 func dir(name string) Dir {

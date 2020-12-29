@@ -9,7 +9,7 @@ import (
 type config struct {
 	Filename string            `hcl:"filename,optional"`
 	Template string            `hcl:"template,optional"`
-	RandomID *randomIDConfig   `hcl:"random_id,block"`
+	ID       *idConfig         `hcl:"id,block"`
 	Editor   string            `hcl:"editor,optional"`
 	Dirs     []dirConfig       `hcl:"dir,block"`
 	Extra    map[string]string `hcl:"extra,optional"`
@@ -19,11 +19,11 @@ type dirConfig struct {
 	Dir      string            `hcl:"dir,label"`
 	Filename string            `hcl:"filename,optional"`
 	Template string            `hcl:"template,optional"`
-	RandomID *randomIDConfig   `hcl:"random_id,block"`
+	ID       *idConfig         `hcl:"id,block"`
 	Extra    map[string]string `hcl:"extra,optional"`
 }
 
-type randomIDConfig struct {
+type idConfig struct {
 	Charset string `hcl:"charset,optional"`
 	Length  int    `hcl:"length,optional"`
 	Case    string `hcl:"case,optional"`

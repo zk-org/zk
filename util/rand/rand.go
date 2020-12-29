@@ -4,54 +4,29 @@ import (
 	"math/rand"
 	"time"
 	"unicode"
+
+	"github.com/mickael-menu/zk/core/zk"
 )
-
-var (
-	// AlphanumCharset is a charset containing letters and numbers.
-	AlphanumCharset = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
-	// AlphanumCharset is a charset containing hexadecimal characters.
-	HexCharset = []rune("0123456789abcdef")
-	// LettersCharset is a charset containing only letters.
-	LettersCharset = []rune("abcdefghijklmnopqrstuvwxyz")
-	// NumbersCharset is a charset containing only numbers.
-	NumbersCharset = []rune("0123456789")
-)
-
-// Case represents the letter case to use when generating a string.
-type Case int
-
-const (
-	LowerCase Case = iota + 1
-	UpperCase
-	MixedCase
-)
-
-// IDOpts holds the options used to generate a random ID.
-type IDOpts struct {
-	Length  int
-	Charset []rune
-	Case    Case
-}
 
 // NewIDGenerator returns a function generating string IDs using the given options.
 // Inspired by https://www.calhoun.io/creating-random-strings-in-go/
-func NewIDGenerator(options IDOpts) func() string {
+func NewIDGenerator(options zk.IDOptions) func() string {
 	if options.Length < 1 {
-		panic("IDOpts.Length must be at least 1")
+		panic("IDOptions.Length must be at least 1")
 	}
 
 	var charset []rune
 	for _, char := range options.Charset {
 		switch options.Case {
-		case LowerCase:
+		case zk.CaseLower:
 			charset = append(charset, unicode.ToLower(char))
-		case UpperCase:
+		case zk.CaseUpper:
 			charset = append(charset, unicode.ToUpper(char))
-		case MixedCase:
+		case zk.CaseMixed:
 			charset = append(charset, unicode.ToLower(char))
 			charset = append(charset, unicode.ToUpper(char))
 		default:
-			panic("unknown rand.Case value")
+			panic("unknown zk.Case value")
 		}
 	}
 

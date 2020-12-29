@@ -3,7 +3,6 @@ package note
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/zk"
@@ -27,7 +26,7 @@ type CreateOpts struct {
 	Extra map[string]string
 }
 
-// Create generates a new note in the given slip box from the given options.
+// Create generates a new note from the given options.
 func Create(zk *zk.Zk, opts CreateOpts, templateLoader core.TemplateLoader) (string, error) {
 	wrap := errors.Wrapper("note creation failed")
 
@@ -74,7 +73,7 @@ type renderContext struct {
 	Path         string
 	Filename     string
 	FilenameStem string `handlebars:"filename-stem"`
-	RandomID     string `handlebars:"random-id"`
+	ID           string
 	Extra        map[string]string
 }
 
@@ -93,10 +92,11 @@ func newRenderContext(zk *zk.Zk, opts CreateOpts, templateLoader core.TemplateLo
 		return renderContext{}, err
 	}
 
-	idGenerator := rand.NewIDGenerator(zk.RandIDOpts(opts.Dir))
-	contextGenerator := newRenderContextGenerator(template, opts)
+	genContext := newRenderContextGenerator(template, opts)
+	genId := rand.NewIDGenerator(zk.IDOptions(opts.Dir))
+	// Attempts to generate a new render context until the generated filepath doesn't exist.
 	for {
-		context, err := contextGenerator(idGenerator())
+		context, err := genContext(genId())
 		if err != nil {
 			return context, err
 		}
@@ -110,7 +110,7 @@ func newRenderContext(zk *zk.Zk, opts CreateOpts, templateLoader core.TemplateLo
 	}
 }
 
-type renderContextGenerator func(randomID string) (renderContext, error)
+type renderContextGenerator func(id string) (renderContext, error)
 
 func newRenderContextGenerator(
 	filenameTemplate core.Template,
@@ -124,26 +124,28 @@ func newRenderContextGenerator(
 	}
 
 	i := 0
-	isRandom := false
-
-	return func(randomID string) (renderContext, error) {
+	return func(id string) (renderContext, error) {
 		i++
-
-		// Attempts 50ish tries if the filename template contains a random ID before failing.
-		if i > 1 && !isRandom || i >= 50 {
+		// Attempts 50ish tries before failing.
+		if i >= 50 {
 			return context, fmt.Errorf("%v: file already exists", context.Path)
 		}
 
-		context.RandomID = randomID
+		context.ID = id
 
 		filename, err := filenameTemplate.Render(context)
 		if err != nil {
 			return context, err
 		}
-		isRandom = strings.Contains(filename, randomID)
 
 		// FIXME Customize extension in config
 		path := filepath.Join(opts.Dir.Path, filename+".md")
+		// Same path as before? We can fail because there's no random component
+		// in the filename template.
+		if context.Path == path {
+			return context, fmt.Errorf("%v: file already exists", path)
+		}
+
 		context.Path = path
 		context.Filename = filepath.Base(path)
 		context.FilenameStem = paths.FilenameStem(path)
