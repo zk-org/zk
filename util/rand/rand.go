@@ -33,9 +33,9 @@ type IDOpts struct {
 	Case    Case
 }
 
-// GenID creates a new random string ID using the given options.
+// NewIDGenerator returns a function generating string IDs using the given options.
 // Inspired by https://www.calhoun.io/creating-random-strings-in-go/
-func GenID(options IDOpts) string {
+func NewIDGenerator(options IDOpts) func() string {
 	if options.Length < 1 {
 		panic("IDOpts.Length must be at least 1")
 	}
@@ -56,10 +56,13 @@ func GenID(options IDOpts) string {
 	}
 
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	buf := make([]rune, options.Length)
-	for i := range buf {
-		buf[i] = charset[rand.Intn(len(charset))]
-	}
 
-	return string(buf)
+	return func() string {
+		buf := make([]rune, options.Length)
+		for i := range buf {
+			buf[i] = charset[rand.Intn(len(charset))]
+		}
+
+		return string(buf)
+	}
 }

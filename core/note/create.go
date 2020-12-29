@@ -46,19 +46,7 @@ func Create(zk *zk.Zk, opts CreateOpts, renderer Renderer) (string, error) {
 		return "", wrap(fmt.Errorf("directory not found at %v", opts.Dir.Path))
 	}
 
-	extra := zk.Extra(opts.Dir)
-	for k, v := range opts.Extra {
-		extra[k] = v
-	}
-
-	context := renderContext{
-		// FIXME Customize default title in config
-		Title:   opts.Title.OrDefault("Untitled"),
-		Content: opts.Content.Unwrap(),
-		Extra:   extra,
-	}
-
-	file, err := genFilepath(zk, opts.Dir, renderer, &context)
+	context, err := newRenderContext(zk, opts, renderer)
 	if err != nil {
 		return "", wrap(err)
 	}
@@ -71,54 +59,92 @@ func Create(zk *zk.Zk, opts CreateOpts, renderer Renderer) (string, error) {
 		if err != nil {
 			return "", wrap(err)
 		}
-		err = paths.WriteString(path, content)
+		err = paths.WriteString(context.Path, content)
 		if err != nil {
 			return "", wrap(err)
 		}
+
+		fmt.Printf("<<<\n%v\n<<<\n", content)
 	}
 
-	return file, nil
+	return context.Path, nil
 }
 
 // renderContext holds the placeholder values which will be expanded in the templates.
 type renderContext struct {
 	Title        string
 	Content      string
+	Path         string
 	Filename     string
 	FilenameStem string `handlebars:"filename-stem"`
 	RandomID     string `handlebars:"random-id"`
 	Extra        map[string]string
 }
 
-func genFilepath(zk *zk.Zk, dir zk.Dir, renderer Renderer, context *renderContext) (string, error) {
-	template := zk.FilenameTemplate(dir)
-	isRandom := strings.Contains(template, "random-id")
+func newRenderContext(zk *zk.Zk, opts CreateOpts, renderer Renderer) (renderContext, error) {
+	if opts.Extra == nil {
+		opts.Extra = make(map[string]string)
+	}
+	for k, v := range zk.Extra(opts.Dir) {
+		if _, ok := opts.Extra[k]; !ok {
+			opts.Extra[k] = v
+		}
+	}
+
+	template := zk.FilenameTemplate(opts.Dir)
+	idGenerator := rand.NewIDGenerator(zk.RandIDOpts(opts.Dir))
+	contextGenerator := newRenderContextGenerator(template, opts, renderer)
+	for {
+		context, err := contextGenerator(idGenerator())
+		if err != nil {
+			return context, err
+		}
+		exists, err := paths.Exists(context.Path)
+		if err != nil {
+			return context, err
+		}
+		if !exists {
+			return context, nil
+		}
+	}
+}
+
+type renderContextGenerator func(randomID string) (renderContext, error)
+
+func newRenderContextGenerator(
+	filenameTemplate string,
+	opts CreateOpts,
+	renderer Renderer,
+) renderContextGenerator {
+	context := renderContext{
+		// FIXME Customize default title in config
+		Title:   opts.Title.OrDefault("Untitled"),
+		Content: opts.Content.Unwrap(),
+		Extra:   opts.Extra,
+	}
+
+	isRandom := strings.Contains(filenameTemplate, "random-id")
 
 	i := 0
-	for {
-		context.RandomID = rand.GenID(zk.RandIDOpts(dir))
+	return func(randomID string) (renderContext, error) {
+		// Attempts 50ish tries if the filename template contains a random ID before failing.
+		if i > 0 && !isRandom || i >= 50 {
+			return context, fmt.Errorf("%v: file already exists", context.Path)
+		}
+		i++
 
-		filename, err := renderer.Render(template, context)
+		context.RandomID = randomID
+
+		filename, err := renderer.Render(filenameTemplate, context)
 		if err != nil {
-			return "", err
+			return context, err
 		}
 
 		// FIXME Customize extension in config
-		path := filepath.Join(dir.Path, filename+".md")
-		exists, err := paths.Exists(path)
-		if err != nil {
-			return "", err
-		}
-
-		if !exists {
-			context.Filename = filepath.Base(path)
-			context.FilenameStem = paths.FilenameStem(path)
-			return path, nil
-
-		} else if !isRandom || i > 50 { // Attempts 50 tries if the filename template contains a random ID before failing.
-			return "", fmt.Errorf("%v: file already exists", path)
-		}
-
-		i++
+		path := filepath.Join(opts.Dir.Path, filename+".md")
+		context.Path = path
+		context.Filename = filepath.Base(path)
+		context.FilenameStem = paths.FilenameStem(path)
+		return context, nil
 	}
 }
