@@ -10,9 +10,9 @@ import (
 )
 
 type Container struct {
-	Date     date.Provider
-	Logger   util.Logger
-	renderer *handlebars.HandlebarsRenderer
+	Date           date.Provider
+	Logger         util.Logger
+	templateLoader *handlebars.Loader
 }
 
 func NewContainer() *Container {
@@ -26,11 +26,11 @@ func NewContainer() *Container {
 	}
 }
 
-func (c *Container) Renderer() *handlebars.HandlebarsRenderer {
-	if c.renderer == nil {
+func (c *Container) TemplateLoader() *handlebars.Loader {
+	if c.templateLoader == nil {
 		// FIXME take the language from the config
 		handlebars.Init("en", c.Logger, c.Date)
-		c.renderer = handlebars.NewRenderer()
+		c.templateLoader = handlebars.NewLoader()
 	}
-	return c.renderer
+	return c.templateLoader
 }

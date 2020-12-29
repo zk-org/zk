@@ -35,7 +35,7 @@ func (cmd *New) Run(container *Container) error {
 		Template: opt.NewNotEmptyString(cmd.Template),
 		Extra:    cmd.Extra,
 	}
-	file, err := note.Create(zk, opts, container.Renderer())
+	file, err := note.Create(zk, opts, container.TemplateLoader())
 	if err != nil {
 		return err
 	}

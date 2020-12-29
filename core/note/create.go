@@ -5,20 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/paths"
 	"github.com/mickael-menu/zk/util/rand"
 )
-
-// Renderer renders templates.
-type Renderer interface {
-	// Render renders a handlebars string template with the given context.
-	Render(template string, context interface{}) (string, error)
-	// RenderFile renders a handlebars template file with the given context.
-	RenderFile(path string, context interface{}) (string, error)
-}
 
 // CreateOpts holds the options to create a new note.
 type CreateOpts struct {
@@ -35,7 +28,7 @@ type CreateOpts struct {
 }
 
 // Create generates a new note in the given slip box from the given options.
-func Create(zk *zk.Zk, opts CreateOpts, renderer Renderer) (string, error) {
+func Create(zk *zk.Zk, opts CreateOpts, templateLoader core.TemplateLoader) (string, error) {
 	wrap := errors.Wrapper("note creation failed")
 
 	exists, err := paths.Exists(opts.Dir.Path)
@@ -46,16 +39,20 @@ func Create(zk *zk.Zk, opts CreateOpts, renderer Renderer) (string, error) {
 		return "", wrap(fmt.Errorf("directory not found at %v", opts.Dir.Path))
 	}
 
-	context, err := newRenderContext(zk, opts, renderer)
+	context, err := newRenderContext(zk, opts, templateLoader)
 	if err != nil {
 		return "", wrap(err)
 	}
 
-	template := opts.Template.OrDefault(
+	templatePath := opts.Template.OrDefault(
 		zk.Template(opts.Dir).OrDefault(""),
 	)
-	if template != "" {
-		content, err := renderer.RenderFile(template, context)
+	if templatePath != "" {
+		template, err := templateLoader.LoadFile(templatePath)
+		if err != nil {
+			return "", wrap(err)
+		}
+		content, err := template.Render(context)
 		if err != nil {
 			return "", wrap(err)
 		}
@@ -81,7 +78,7 @@ type renderContext struct {
 	Extra        map[string]string
 }
 
-func newRenderContext(zk *zk.Zk, opts CreateOpts, renderer Renderer) (renderContext, error) {
+func newRenderContext(zk *zk.Zk, opts CreateOpts, templateLoader core.TemplateLoader) (renderContext, error) {
 	if opts.Extra == nil {
 		opts.Extra = make(map[string]string)
 	}
@@ -91,9 +88,13 @@ func newRenderContext(zk *zk.Zk, opts CreateOpts, renderer Renderer) (renderCont
 		}
 	}
 
-	template := zk.FilenameTemplate(opts.Dir)
+	template, err := templateLoader.Load(zk.FilenameTemplate(opts.Dir))
+	if err != nil {
+		return renderContext{}, err
+	}
+
 	idGenerator := rand.NewIDGenerator(zk.RandIDOpts(opts.Dir))
-	contextGenerator := newRenderContextGenerator(template, opts, renderer)
+	contextGenerator := newRenderContextGenerator(template, opts)
 	for {
 		context, err := contextGenerator(idGenerator())
 		if err != nil {
@@ -112,9 +113,8 @@ func newRenderContext(zk *zk.Zk, opts CreateOpts, renderer Renderer) (renderCont
 type renderContextGenerator func(randomID string) (renderContext, error)
 
 func newRenderContextGenerator(
-	filenameTemplate string,
+	filenameTemplate core.Template,
 	opts CreateOpts,
-	renderer Renderer,
 ) renderContextGenerator {
 	context := renderContext{
 		// FIXME Customize default title in config
@@ -123,22 +123,24 @@ func newRenderContextGenerator(
 		Extra:   opts.Extra,
 	}
 
-	isRandom := strings.Contains(filenameTemplate, "random-id")
-
 	i := 0
+	isRandom := false
+
 	return func(randomID string) (renderContext, error) {
+		i++
+
 		// Attempts 50ish tries if the filename template contains a random ID before failing.
-		if i > 0 && !isRandom || i >= 50 {
+		if i > 1 && !isRandom || i >= 50 {
 			return context, fmt.Errorf("%v: file already exists", context.Path)
 		}
-		i++
 
 		context.RandomID = randomID
 
-		filename, err := renderer.Render(filenameTemplate, context)
+		filename, err := filenameTemplate.Render(context)
 		if err != nil {
 			return context, err
 		}
+		isRandom = strings.Contains(filename, randomID)
 
 		// FIXME Customize extension in config
 		path := filepath.Join(opts.Dir.Path, filename+".md")

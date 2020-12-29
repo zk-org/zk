@@ -16,63 +16,87 @@ func init() {
 	Init("en", &util.NullLogger, &date)
 }
 
-func TestRenderString(t *testing.T) {
-	sut := NewRenderer()
-	res, err := sut.Render("Goodbye, {{name}}", map[string]string{"name": "Ed"})
+func testString(t *testing.T, template string, context interface{}, expected string) {
+	sut := NewLoader()
+
+	templ, err := sut.Load(template)
 	assert.Nil(t, err)
-	assert.Equal(t, res, "Goodbye, Ed")
+
+	actual, err := templ.Render(context)
+	assert.Nil(t, err)
+	assert.Equal(t, actual, expected)
+}
+
+func testFile(t *testing.T, name string, context interface{}, expected string) {
+	sut := NewLoader()
+
+	templ, err := sut.LoadFile(fixtures.Path(name))
+	assert.Nil(t, err)
+
+	actual, err := templ.Render(context)
+	assert.Nil(t, err)
+	assert.Equal(t, actual, expected)
+}
+
+func TestRenderString(t *testing.T) {
+	testString(t,
+		"Goodbye, {{name}}",
+		map[string]string{"name": "Ed"},
+		"Goodbye, Ed",
+	)
 }
 
 func TestRenderFile(t *testing.T) {
-	sut := NewRenderer()
-	res, err := sut.RenderFile(fixtures.Path("template.txt"), map[string]string{"name": "Thom"})
-	assert.Nil(t, err)
-	assert.Equal(t, res, "Hello, Thom\n")
+	testFile(t,
+		"template.txt",
+		map[string]string{"name": "Thom"},
+		"Hello, Thom\n",
+	)
 }
 
 func TestUnknownVariable(t *testing.T) {
-	sut := NewRenderer()
-	res, err := sut.Render("Hi, {{unknown}}!", nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "Hi, !")
+	testString(t,
+		"Hi, {{unknown}}!",
+		nil,
+		"Hi, !",
+	)
 }
 
 func TestDoesntEscapeHTML(t *testing.T) {
-	sut := NewRenderer()
+	testString(t,
+		"Salut, {{name}}!",
+		map[string]string{"name": "l'ami"},
+		"Salut, l'ami!",
+	)
 
-	res, err := sut.Render("Salut, {{name}}!", map[string]string{"name": "l'ami"})
-	assert.Nil(t, err)
-	assert.Equal(t, res, "Salut, l'ami!")
-
-	res, err = sut.RenderFile(fixtures.Path("unescape.txt"), map[string]string{"name": "l'ami"})
-	assert.Nil(t, err)
-	assert.Equal(t, res, "Salut, l'ami!\n")
+	testFile(t,
+		"unescape.txt",
+		map[string]string{"name": "l'ami"},
+		"Salut, l'ami!\n",
+	)
 }
 
 func TestSlugHelper(t *testing.T) {
-	sut := NewRenderer()
 	// block
-	res, err := sut.Render("{{#slug}}This will be slugified!{{/slug}}", nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "this-will-be-slugified")
+	testString(t,
+		"{{#slug}}This will be slugified!{{/slug}}",
+		nil,
+		"this-will-be-slugified",
+	)
 	// inline
-	res, err = sut.Render(`{{slug "This will be slugified!"}}`, nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "this-will-be-slugified")
+	testString(t,
+		`{{slug "This will be slugified!"}}`,
+		nil,
+		"this-will-be-slugified",
+	)
 }
 
 func TestDateHelper(t *testing.T) {
-	sut := NewRenderer()
-
 	// Default
-	res, err := sut.Render("{{date}}", nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "2009-11-17")
+	testString(t, "{{date}}", nil, "2009-11-17")
 
 	test := func(format string, expected string) {
-		res, err := sut.Render(fmt.Sprintf("{{date '%s'}}", format), nil)
-		assert.Nil(t, err)
-		assert.Equal(t, res, expected)
+		testString(t, fmt.Sprintf("{{date '%s'}}", format), nil, expected)
 	}
 
 	test("short", "11/17/2009")
@@ -87,13 +111,16 @@ func TestDateHelper(t *testing.T) {
 }
 
 func TestShellHelper(t *testing.T) {
-	sut := NewRenderer()
 	// block is passed as piped input
-	res, err := sut.Render(`{{#sh "tr '[a-z]' '[A-Z]'"}}Hello, world!{{/sh}}`, nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "HELLO, WORLD!")
+	testString(t,
+		`{{#sh "tr '[a-z]' '[A-Z]'"}}Hello, world!{{/sh}}`,
+		nil,
+		"HELLO, WORLD!",
+	)
 	// inline
-	res, err = sut.Render(`{{sh "echo 'Hello, world!'"}}`, nil)
-	assert.Nil(t, err)
-	assert.Equal(t, res, "Hello, world!\n")
+	testString(t,
+		`{{sh "echo 'Hello, world!'"}}`,
+		nil,
+		"Hello, world!\n",
+	)
 }
