@@ -30,6 +30,29 @@ type ConfigOverrides struct {
 	Extra            map[string]string
 }
 
+// Clone creates a copy of the DirConfig receiver.
+func (c DirConfig) Clone() DirConfig {
+	clone := c
+	clone.Extra = make(map[string]string)
+	for k, v := range c.Extra {
+		clone.Extra[k] = v
+	}
+	return clone
+}
+
+// Override modifies the DirConfig receiver by updating the properties
+// overriden in ConfigOverrides.
+func (c *DirConfig) Override(overrides ConfigOverrides) {
+	if !overrides.BodyTemplatePath.IsNull() {
+		c.BodyTemplatePath = overrides.BodyTemplatePath
+	}
+	if overrides.Extra != nil {
+		for k, v := range overrides.Extra {
+			c.Extra[k] = v
+		}
+	}
+}
+
 // ParseConfig creates a new Config instance from its HCL representation.
 // templatesDir is the base path for the relative templates.
 func ParseConfig(content []byte, templatesDir string) (*Config, error) {

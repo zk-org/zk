@@ -26,7 +26,8 @@ func TestDirAtGivenPath(t *testing.T) {
 	} {
 		actual, err := zk.DirAt(path)
 		assert.Nil(t, err)
-		assert.Equal(t, actual, &Dir{Name: name, Path: filepath.Join(wd, name)})
+		assert.Equal(t, actual.Name, name)
+		assert.Equal(t, actual.Path, filepath.Join(wd, name))
 	}
 }
 
@@ -64,6 +65,116 @@ func TestDirAtRoot(t *testing.T) {
 			Length:  4,
 			Charset: CharsetAlphanum,
 			Case:    CaseLower,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+		},
+	})
+}
+
+// Modifying the DirConfig of the returned Dir should not modify the global config.
+func TestDirAtReturnsClonedConfig(t *testing.T) {
+	zk := Zk{
+		Path: "/test",
+		Config: Config{
+			DirConfig: DirConfig{
+				FilenameTemplate: "{{id}}.note",
+				BodyTemplatePath: opt.NewString("default.note"),
+				IDOptions: IDOptions{
+					Length:  4,
+					Charset: CharsetAlphanum,
+					Case:    CaseLower,
+				},
+				Extra: map[string]string{
+					"hello": "world",
+				},
+			},
+		},
+	}
+
+	dir, err := zk.DirAt(".")
+	assert.Nil(t, err)
+
+	dir.Config.FilenameTemplate = "modified"
+	dir.Config.BodyTemplatePath = opt.NewString("modified")
+	dir.Config.IDOptions.Length = 41
+	dir.Config.IDOptions.Charset = CharsetNumbers
+	dir.Config.IDOptions.Case = CaseUpper
+	dir.Config.Extra["test"] = "modified"
+
+	assert.Equal(t, zk.Config.DirConfig, DirConfig{
+		FilenameTemplate: "{{id}}.note",
+		BodyTemplatePath: opt.NewString("default.note"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetAlphanum,
+			Case:    CaseLower,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+		},
+	})
+}
+
+func TestDirAtWithOverrides(t *testing.T) {
+	zk := Zk{
+		Path: "/test",
+		Config: Config{
+			DirConfig: DirConfig{
+				FilenameTemplate: "{{id}}.note",
+				BodyTemplatePath: opt.NewString("default.note"),
+				IDOptions: IDOptions{
+					Length:  4,
+					Charset: CharsetLetters,
+					Case:    CaseUpper,
+				},
+				Extra: map[string]string{
+					"hello": "world",
+				},
+			},
+		},
+	}
+
+	dir, err := zk.DirAt(".",
+		ConfigOverrides{
+			BodyTemplatePath: opt.NewString("overriden-template"),
+			Extra: map[string]string{
+				"hello":      "overriden",
+				"additional": "value",
+			},
+		},
+		ConfigOverrides{
+			Extra: map[string]string{
+				"additional":  "value2",
+				"additional2": "value3",
+			},
+		},
+	)
+
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config, DirConfig{
+		FilenameTemplate: "{{id}}.note",
+		BodyTemplatePath: opt.NewString("overriden-template"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetLetters,
+			Case:    CaseUpper,
+		},
+		Extra: map[string]string{
+			"hello":       "overriden",
+			"additional":  "value2",
+			"additional2": "value3",
+		},
+	})
+
+	// Check that the original config was not modified.
+	assert.Equal(t, zk.Config.DirConfig, DirConfig{
+		FilenameTemplate: "{{id}}.note",
+		BodyTemplatePath: opt.NewString("default.note"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetLetters,
+			Case:    CaseUpper,
 		},
 		Extra: map[string]string{
 			"hello": "world",

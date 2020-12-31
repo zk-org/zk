@@ -121,8 +121,8 @@ func locateRoot(path string) (string, error) {
 	return locate(path)
 }
 
-// DirAt creates a Dir representation of the slip box directory at the given path.
-func (zk *Zk) DirAt(path string) (*Dir, error) {
+// DirAt returns a Dir representation of the slip box directory at the given path.
+func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	wrap := errors.Wrapperf("%v: not a valid slip box directory", path)
 
 	path, err := filepath.Abs(path)
@@ -140,6 +140,11 @@ func (zk *Zk) DirAt(path string) (*Dir, error) {
 		// Fallback on root config.
 		config = zk.Config.DirConfig
 	}
+	config = config.Clone()
+
+	for _, v := range overrides {
+		config.Override(v)
+	}
 
 	return &Dir{
 		Name:   name,
@@ -150,8 +155,8 @@ func (zk *Zk) DirAt(path string) (*Dir, error) {
 
 // RequiredDirAt is the same as DirAt, but checks that the directory exists
 // before returning the Dir.
-func (zk *Zk) RequireDirAt(path string) (*Dir, error) {
-	dir, err := zk.DirAt(path)
+func (zk *Zk) RequireDirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
+	dir, err := zk.DirAt(path, overrides...)
 	if err != nil {
 		return nil, err
 	}

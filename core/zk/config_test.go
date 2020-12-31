@@ -239,3 +239,98 @@ func TestParseResolvesTemplatePaths(t *testing.T) {
 	test("template.tpl", "/test/.zk/templates/template.tpl")
 	test("/abs/template.tpl", "/abs/template.tpl")
 }
+
+func TestDirConfigClone(t *testing.T) {
+	original := DirConfig{
+		FilenameTemplate: "{{id}}.note",
+		BodyTemplatePath: opt.NewString("default.note"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetAlphanum,
+			Case:    CaseLower,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+		},
+	}
+
+	clone := original.Clone()
+	// Check that the clone is equivalent
+	assert.Equal(t, clone, original)
+
+	clone.FilenameTemplate = "modified"
+	clone.BodyTemplatePath = opt.NewString("modified")
+	clone.IDOptions.Length = 41
+	clone.IDOptions.Charset = CharsetNumbers
+	clone.IDOptions.Case = CaseUpper
+	clone.Extra["test"] = "modified"
+
+	// Check that we didn't modify the original
+	assert.Equal(t, original, DirConfig{
+		FilenameTemplate: "{{id}}.note",
+		BodyTemplatePath: opt.NewString("default.note"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetAlphanum,
+			Case:    CaseLower,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+		},
+	})
+}
+
+func TestDirConfigOverride(t *testing.T) {
+	sut := DirConfig{
+		FilenameTemplate: "filename",
+		BodyTemplatePath: opt.NewString("body.tpl"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetLetters,
+			Case:    CaseUpper,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+			"salut": "le monde",
+		},
+	}
+
+	// Empty overrides
+	sut.Override(ConfigOverrides{})
+	assert.Equal(t, sut, DirConfig{
+		FilenameTemplate: "filename",
+		BodyTemplatePath: opt.NewString("body.tpl"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetLetters,
+			Case:    CaseUpper,
+		},
+		Extra: map[string]string{
+			"hello": "world",
+			"salut": "le monde",
+		},
+	})
+
+	// Some overrides
+	sut.Override(ConfigOverrides{
+		BodyTemplatePath: opt.NewString("overriden-template"),
+		Extra: map[string]string{
+			"hello":      "overriden",
+			"additional": "value",
+		},
+	})
+	assert.Equal(t, sut, DirConfig{
+		FilenameTemplate: "filename",
+		BodyTemplatePath: opt.NewString("overriden-template"),
+		IDOptions: IDOptions{
+			Length:  4,
+			Charset: CharsetLetters,
+			Case:    CaseUpper,
+		},
+		Extra: map[string]string{
+			"hello":      "overriden",
+			"salut":      "le monde",
+			"additional": "value",
+		},
+	})
+}
