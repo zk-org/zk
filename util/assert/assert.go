@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -24,6 +25,13 @@ func isNil(value interface{}) bool {
 
 func Equal(t *testing.T, actual, expected interface{}) {
 	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Received `%+v` (type %v), expected `%+v` (type %v)", actual, reflect.TypeOf(actual), expected, reflect.TypeOf(expected))
+		t.Errorf("Received (type %v):\n%+v\n---\nBut expected (type %v):\n%+v", reflect.TypeOf(actual), toJSON(t, actual), reflect.TypeOf(expected), toJSON(t, expected))
 	}
+}
+
+func toJSON(t *testing.T, obj interface{}) string {
+	json, err := json.Marshal(obj)
+	// json, err := json.MarshalIndent(obj, "", "  ")
+	Nil(t, err)
+	return string(json)
 }

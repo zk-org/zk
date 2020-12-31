@@ -8,12 +8,31 @@ import (
 
 // Exists returns whether the given path exists on the file system.
 func Exists(path string) (bool, error) {
-	if _, err := os.Stat(path); err == nil {
-		return true, nil
-	} else if os.IsNotExist(err) {
-		return false, nil
-	} else {
+	fi, err := fileInfo(path)
+	if err != nil {
 		return false, err
+	} else {
+		return fi != nil, nil
+	}
+}
+
+// DirExists returns whether the given path exists and is a directory.
+func DirExists(path string) (bool, error) {
+	fi, err := fileInfo(path)
+	if err != nil {
+		return false, err
+	} else {
+		return fi != nil && (*fi).Mode().IsDir(), nil
+	}
+}
+
+func fileInfo(path string) (*os.FileInfo, error) {
+	if fi, err := os.Stat(path); err == nil {
+		return &fi, nil
+	} else if os.IsNotExist(err) {
+		return nil, nil
+	} else {
+		return nil, err
 	}
 }
 
