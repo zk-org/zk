@@ -3,6 +3,7 @@ package assert
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -34,4 +35,10 @@ func toJSON(t *testing.T, obj interface{}) string {
 	// json, err := json.MarshalIndent(obj, "", "  ")
 	Nil(t, err)
 	return string(json)
+}
+
+func Err(t *testing.T, err error, expected string) {
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("Expected error `%v`, received `%v`", expected, err.Error())
+	}
 }
