@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/mickael-menu/zk/adapter/handlebars"
+	"github.com/mickael-menu/zk/adapter/sqlite"
+	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
 )
@@ -33,4 +35,15 @@ func (c *Container) TemplateLoader() *handlebars.Loader {
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader
+}
+
+// Database returns the DB instance for the given slip box, after executing any
+// pending migration.
+func (c *Container) Database(zk *zk.Zk) (*sqlite.DB, error) {
+	db, err := sqlite.Open(zk.DBPath())
+	if err != nil {
+		return nil, err
+	}
+	err = db.Migrate()
+	return db, err
 }

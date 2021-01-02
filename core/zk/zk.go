@@ -121,6 +121,11 @@ func locateRoot(path string) (string, error) {
 	return locate(path)
 }
 
+// DBPath returns the path to the slip box database.
+func (zk *Zk) DBPath() string {
+	return filepath.Join(zk.Path, ".zk/data.db")
+}
+
 // DirAt returns a Dir representation of the slip box directory at the given path.
 func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	wrap := errors.Wrapperf("%v: not a valid slip box directory", path)

@@ -9,10 +9,16 @@ import (
 	"github.com/mickael-menu/zk/util/opt"
 )
 
+func TestDBPath(t *testing.T) {
+	wd, _ := os.Getwd()
+	zk := &Zk{Path: wd}
+
+	assert.Equal(t, zk.DBPath(), filepath.Join(wd, ".zk/data.db"))
+}
+
 func TestDirAtGivenPath(t *testing.T) {
 	// The tests are relative to the working directory, for convenience.
-	wd, err := os.Getwd()
-	assert.Nil(t, err)
+	wd, _ := os.Getwd()
 
 	zk := &Zk{Path: wd}
 

@@ -10,5 +10,6 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.1
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.3
+	github.com/mattn/go-sqlite3 v1.14.6
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
