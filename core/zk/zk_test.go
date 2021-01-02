@@ -39,8 +39,10 @@ func TestDirAtGivenPath(t *testing.T) {
 
 // When requesting the root directory `.`, the config is the default one.
 func TestDirAtRoot(t *testing.T) {
+	wd, _ := os.Getwd()
+
 	zk := Zk{
-		Path: "/test",
+		Path: wd,
 		Config: Config{
 			DirConfig: DirConfig{
 				FilenameTemplate: "{{id}}.note",
@@ -64,6 +66,8 @@ func TestDirAtRoot(t *testing.T) {
 
 	dir, err := zk.DirAt(".")
 	assert.Nil(t, err)
+	assert.Equal(t, dir.Name, "")
+	assert.Equal(t, dir.Path, wd)
 	assert.Equal(t, dir.Config, DirConfig{
 		FilenameTemplate: "{{id}}.note",
 		BodyTemplatePath: opt.NewString("default.note"),

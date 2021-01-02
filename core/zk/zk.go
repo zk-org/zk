@@ -139,6 +139,9 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	if err != nil {
 		return nil, wrap(err)
 	}
+	if name == "." {
+		name = ""
+	}
 
 	config, ok := zk.Config.Dirs[name]
 	if !ok {
