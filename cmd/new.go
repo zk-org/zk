@@ -5,14 +5,14 @@ import (
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
-	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/os"
 )
 
 // New adds a new note to the slip box.
 type New struct {
 	Directory string            `arg optional type:"path" default:"." help:"Directory in which to create the note"`
-	ShowPath  bool              `help:"Shows the path of the created note instead of editing it"`
+	PrintPath bool              `help:"Prints the path of the created note to stdin instead of editing it"`
 	Title     string            `short:"t" help:"Title of the new note" placeholder:"TITLE"`
 	Template  string            `type:"path" help:"Custom template to use to render the note" placeholder:"PATH"`
 	Extra     map[string]string `help:"Extra variables passed to the templates"`
@@ -36,7 +36,7 @@ func (cmd *New) Run(container *Container) error {
 		return err
 	}
 
-	content, err := util.ReadStdinPipe()
+	content, err := os.ReadStdinPipe()
 	if err != nil {
 		return err
 	}
@@ -51,6 +51,10 @@ func (cmd *New) Run(container *Container) error {
 		return err
 	}
 
-	fmt.Printf("%+v\n", file)
-	return nil
+	if cmd.PrintPath {
+		fmt.Printf("%+v\n", file)
+		return nil
+	} else {
+		return note.Edit(zk, file)
+	}
 }

@@ -1,4 +1,4 @@
-package util
+package os
 
 import (
 	"bufio"
@@ -26,4 +26,10 @@ func ReadStdinPipe() (opt.String, error) {
 	}
 
 	return opt.NewNotEmptyString(string(bytes)), nil
+}
+
+// Getenv returns an optional String for the environment variable with given
+// key.
+func GetOptEnv(key string) opt.String {
+	return opt.NewNotEmptyString(os.Getenv(key))
 }
