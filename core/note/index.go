@@ -84,7 +84,9 @@ func metadata(path file.Path) (Metadata, error) {
 		return metadata, err
 	}
 	contentStr := string(content)
-	metadata.Body = contentStr
+	contentParts := Parse(contentStr)
+	metadata.Title = contentParts.Title
+	metadata.Body = contentParts.Body
 	metadata.WordCount = len(strings.Fields(contentStr))
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
 
