@@ -17,27 +17,27 @@ func TestWalkRootDir(t *testing.T) {
 	res := toSlice(dir.Walk(&util.NullLogger))
 	assert.Equal(t, res, []FileMetadata{
 		{
-			Path:     Path{Dir: "", Filename: "a.md"},
+			Path:     Path{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
 			Modified: date("2021-01-03T11:30:26.069257899+01:00"),
 		},
 		{
-			Path:     Path{Dir: "", Filename: "b.md"},
+			Path:     Path{Dir: "", Filename: "b.md", Abs: filepath.Join(root, "b.md")},
 			Modified: date("2021-01-03T11:30:27.545667767+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir1", Filename: "a.md"},
+			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
 			Modified: date("2021-01-03T11:31:18.961628888+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir1", Filename: "b.md"},
+			Path:     Path{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
 			Modified: date("2021-01-03T11:31:24.692881103+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md"},
+			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir2", Filename: "a.md"},
+			Path:     Path{Dir: "dir2", Filename: "a.md", Abs: filepath.Join(root, "dir2/a.md")},
 			Modified: date("2021-01-03T11:31:51.001827456+01:00"),
 		},
 	})
@@ -48,15 +48,15 @@ func TestWalkSubDir(t *testing.T) {
 	res := toSlice(dir.Walk(&util.NullLogger))
 	assert.Equal(t, res, []FileMetadata{
 		{
-			Path:     Path{Dir: "dir1", Filename: "a.md"},
+			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
 			Modified: date("2021-01-03T11:31:18.961628888+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir1", Filename: "b.md"},
+			Path:     Path{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
 			Modified: date("2021-01-03T11:31:24.692881103+01:00"),
 		},
 		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md"},
+			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
 		},
 	})
@@ -67,7 +67,7 @@ func TestWalkSubSubDir(t *testing.T) {
 	res := toSlice(dir.Walk(&util.NullLogger))
 	assert.Equal(t, res, []FileMetadata{
 		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md"},
+			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
 		},
 	})

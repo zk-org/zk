@@ -31,7 +31,7 @@ func (d Dir) Walk(logger util.Logger) <-chan FileMetadata {
 	go func() {
 		defer close(c)
 
-		err := filepath.Walk(d.Path, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(d.Path, func(abs string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func (d Dir) Walk(logger util.Logger) <-chan FileMetadata {
 					return nil
 				}
 
-				path, err := filepath.Rel(d.Path, path)
+				path, err := filepath.Rel(d.Path, abs)
 				if err != nil {
 					logger.Println(err)
 					return nil
@@ -65,6 +65,7 @@ func (d Dir) Walk(logger util.Logger) <-chan FileMetadata {
 					Path: Path{
 						Dir:      filepath.Join(d.Name, curDir),
 						Filename: filename,
+						Abs:      abs,
 					},
 					Modified: info.ModTime(),
 				}

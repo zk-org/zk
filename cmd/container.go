@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"log"
-	"os"
-
 	"github.com/mickael-menu/zk/adapter/handlebars"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/zk"
@@ -21,7 +18,7 @@ func NewContainer() *Container {
 	date := date.NewFrozenNow()
 
 	return &Container{
-		Logger: log.New(os.Stderr, "zk: warning: ", 0),
+		Logger: util.NewStdLogger("zk: ", 0),
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any rendering during the execution.
 		Date: &date,

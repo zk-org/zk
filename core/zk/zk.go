@@ -28,6 +28,7 @@ type Zk struct {
 type Path struct {
 	Dir      string
 	Filename string
+	Abs      string
 }
 
 // Open locates a slip box at the given path and parses its configuration.

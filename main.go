@@ -9,6 +9,7 @@ var Version = "dev"
 var Build = "dev"
 
 var cli struct {
+	Index   cmd.Index        `cmd help:"Index the notes in the given directory to be searchable"`
 	Init    cmd.Init         `cmd help:"Create a slip box in the given directory"`
 	New     cmd.New          `cmd help:"Create a new note in the given slip box directory"`
 	Version kong.VersionFlag `help:"Print zk version"`

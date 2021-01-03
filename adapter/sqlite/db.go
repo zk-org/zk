@@ -9,7 +9,7 @@ import (
 
 // DB holds the connections to a SQLite database.
 type DB struct {
-	db *sql.DB
+	*sql.DB
 }
 
 // Open creates a new DB instance for the SQLite database at the given path.
@@ -23,7 +23,7 @@ func Open(path string) (*DB, error) {
 
 // Close terminates the connections to the SQLite database.
 func (db *DB) Close() error {
-	err := db.db.Close()
+	err := db.Close()
 	return errors.Wrap(err, "failed to close the database")
 }
 
@@ -31,7 +31,7 @@ func (db *DB) Close() error {
 func (db *DB) Migrate() error {
 	wrap := errors.Wrapper("database migration failed")
 
-	tx, err := db.db.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return wrap(err)
 	}
@@ -51,18 +51,18 @@ func (db *DB) Migrate() error {
 					filename TEXT NOT NULL,
 					dir TEXT NOT NULL,
 					title TEXT DEFAULT('') NOT NULL,
-					content TEXT DEFAULT('') NOT NULL,
+					body TEXT DEFAULT('') NOT NULL,
 					word_count INTEGER DEFAULT(0) NOT NULL,
 					checksum TEXT NOT NULL,
-					created TEXT DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
-					modified TEXT DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
+					created DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
+					modified DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
 					UNIQUE(filename, dir)
 				)
 			`,
 			`CREATE INDEX IF NOT EXISTS notes_checksum_idx ON notes(checksum)`,
 			`
 				CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
-					title, content,
+					title, body,
 					content = notes,
 					content_rowid = id,
 					tokenize = 'porter unicode61 remove_diacritics 1'
@@ -71,18 +71,18 @@ func (db *DB) Migrate() error {
 			// Triggers to keep the FTS index up to date.
 			`
 				CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
-					INSERT INTO notes_fts(rowid, title, content) VALUES (new.id, new.title, new.content);
+					INSERT INTO notes_fts(rowid, title, body) VALUES (new.id, new.title, new.body);
 				END
 			`,
 			`
 				CREATE TRIGGER IF NOT EXISTS notes_ad AFTER DELETE ON notes BEGIN
-					INSERT INTO notes_fts(notes_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.content);
+					INSERT INTO notes_fts(notes_fts, rowid, title, body) VALUES('delete', old.id, old.title, old.body);
 				END
 			`,
 			`
 				CREATE TRIGGER IF NOT EXISTS notes_au AFTER UPDATE ON notes BEGIN
-					INSERT INTO notes_fts(notes_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.content);
-					INSERT INTO notes_fts(rowid, title, content) VALUES (new.id, new.title, new.content);
+					INSERT INTO notes_fts(notes_fts, rowid, title, body) VALUES('delete', old.id, old.title, old.body);
+					INSERT INTO notes_fts(rowid, title, body) VALUES (new.id, new.title, new.body);
 				END
 			`,
 			`PRAGMA user_version = 1`,
