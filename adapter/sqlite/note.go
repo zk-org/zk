@@ -18,54 +18,35 @@ type NoteDAO struct {
 	logger util.Logger
 
 	// Prepared SQL statements
-	indexedStmt *sql.Stmt
-	addStmt     *sql.Stmt
-	updateStmt  *sql.Stmt
-	removeStmt  *sql.Stmt
+	indexedStmt *LazyStmt
+	addStmt     *LazyStmt
+	updateStmt  *LazyStmt
+	removeStmt  *LazyStmt
 }
 
-func NewNoteDAO(tx Transaction, root string, logger util.Logger) (*NoteDAO, error) {
-	indexedStmt, err := tx.Prepare(`
-		SELECT dir, filename, modified from notes
-		 ORDER BY dir, filename ASC
-	`)
-	if err != nil {
-		return nil, err
-	}
-
-	addStmt, err := tx.Prepare(`
-		INSERT INTO notes (dir, filename, title, body, word_count, checksum, created, modified)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		return nil, err
-	}
-
-	updateStmt, err := tx.Prepare(`
-		UPDATE notes
-		   SET title = ?, body = ?, word_count = ?, checksum = ?, modified = ?
-		 WHERE dir = ? AND filename = ?`)
-	if err != nil {
-		return nil, err
-	}
-
-	removeStmt, err := tx.Prepare(`
-		DELETE FROM notes
-		 WHERE dir = ? AND filename = ?
-	`)
-	if err != nil {
-		return nil, err
-	}
-
+func NewNoteDAO(tx Transaction, root string, logger util.Logger) *NoteDAO {
 	return &NoteDAO{
-		tx:          tx,
-		root:        root,
-		logger:      logger,
-		indexedStmt: indexedStmt,
-		addStmt:     addStmt,
-		updateStmt:  updateStmt,
-		removeStmt:  removeStmt,
-	}, nil
+		tx:     tx,
+		root:   root,
+		logger: logger,
+		indexedStmt: tx.PrepareLazy(`
+			SELECT dir, filename, modified from notes
+			 ORDER BY dir, filename ASC
+		`),
+		addStmt: tx.PrepareLazy(`
+			INSERT INTO notes (dir, filename, title, body, word_count, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`),
+		updateStmt: tx.PrepareLazy(`
+			UPDATE notes
+			   SET title = ?, body = ?, word_count = ?, checksum = ?, modified = ?
+			 WHERE dir = ? AND filename = ?
+		`),
+		removeStmt: tx.PrepareLazy(`
+			DELETE FROM notes
+			 WHERE dir = ? AND filename = ?
+		`),
+	}
 }
 
 func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {

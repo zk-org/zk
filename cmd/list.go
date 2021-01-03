@@ -23,10 +23,7 @@ func (cmd *List) Run(container *Container) error {
 	}
 
 	return db.WithTransaction(func(tx sqlite.Transaction) error {
-		notes, err := sqlite.NewNoteDAO(tx, zk.Path, container.Logger)
-		if err != nil {
-			return err
-		}
+		notes := sqlite.NewNoteDAO(tx, zk.Path, container.Logger)
 
 		filters := make([]note.Filter, 0)
 		if cmd.Query != "" {

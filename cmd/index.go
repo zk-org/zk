@@ -28,11 +28,7 @@ func (cmd *Index) Run(container *Container) error {
 	}
 
 	return db.WithTransaction(func(tx sqlite.Transaction) error {
-		indexer, err := sqlite.NewNoteDAO(tx, zk.Path, container.Logger)
-		if err != nil {
-			return err
-		}
-
-		return note.Index(*dir, indexer, container.Logger)
+		notes := sqlite.NewNoteDAO(tx, zk.Path, container.Logger)
+		return note.Index(*dir, notes, container.Logger)
 	})
 }

@@ -13,6 +13,7 @@ type Transaction interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	ExecStmts(stmts []string) error
 	Prepare(query string) (*sql.Stmt, error)
+	PrepareLazy(query string) *LazyStmt
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
@@ -20,6 +21,10 @@ type Transaction interface {
 // txWrapper wraps a native sql.Tx to fully implement the Transaction interface.
 type txWrapper struct {
 	*sql.Tx
+}
+
+func (tx *txWrapper) PrepareLazy(query string) *LazyStmt {
+	return NewLazyStmt(tx.Tx, query)
 }
 
 func (tx *txWrapper) ExecStmts(stmts []string) error {
