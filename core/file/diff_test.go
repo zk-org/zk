@@ -1,4 +1,4 @@
-package zk
+package file
 
 import (
 	"errors"
@@ -14,13 +14,13 @@ var date3 = time.Date(2014, 12, 10, 3, 34, 58, 651387237, time.UTC)
 var date4 = time.Date(2016, 13, 11, 4, 34, 58, 651387237, time.UTC)
 
 func TestDiffEmpty(t *testing.T) {
-	source := []FileMetadata{}
-	target := []FileMetadata{}
+	source := []Metadata{}
+	target := []Metadata{}
 	test(t, source, target, []DiffChange{})
 }
 
 func TestNoDiff(t *testing.T) {
-	files := []FileMetadata{
+	files := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -39,7 +39,7 @@ func TestNoDiff(t *testing.T) {
 }
 
 func TestDiff(t *testing.T) {
-	source := []FileMetadata{
+	source := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -54,7 +54,7 @@ func TestDiff(t *testing.T) {
 		},
 	}
 
-	target := []FileMetadata{
+	target := []Metadata{
 		{
 			// Date changed
 			Path:     Path{Dir: "a", Filename: "1"},
@@ -90,7 +90,7 @@ func TestDiff(t *testing.T) {
 }
 
 func TestDiffWithMoreInSource(t *testing.T) {
-	source := []FileMetadata{
+	source := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -101,7 +101,7 @@ func TestDiffWithMoreInSource(t *testing.T) {
 		},
 	}
 
-	target := []FileMetadata{
+	target := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -117,14 +117,14 @@ func TestDiffWithMoreInSource(t *testing.T) {
 }
 
 func TestDiffWithMoreInTarget(t *testing.T) {
-	source := []FileMetadata{
+	source := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
 		},
 	}
 
-	target := []FileMetadata{
+	target := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -144,9 +144,9 @@ func TestDiffWithMoreInTarget(t *testing.T) {
 }
 
 func TestDiffEmptySource(t *testing.T) {
-	source := []FileMetadata{}
+	source := []Metadata{}
 
-	target := []FileMetadata{
+	target := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -170,7 +170,7 @@ func TestDiffEmptySource(t *testing.T) {
 }
 
 func TestDiffEmptyTarget(t *testing.T) {
-	source := []FileMetadata{
+	source := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -181,7 +181,7 @@ func TestDiffEmptyTarget(t *testing.T) {
 		},
 	}
 
-	target := []FileMetadata{}
+	target := []Metadata{}
 
 	test(t, source, target, []DiffChange{
 		{
@@ -196,7 +196,7 @@ func TestDiffEmptyTarget(t *testing.T) {
 }
 
 func TestDiffCancellation(t *testing.T) {
-	source := []FileMetadata{
+	source := []Metadata{
 		{
 			Path:     Path{Dir: "a", Filename: "1"},
 			Modified: date1,
@@ -207,7 +207,7 @@ func TestDiffCancellation(t *testing.T) {
 		},
 	}
 
-	target := []FileMetadata{}
+	target := []Metadata{}
 
 	received := make([]DiffChange, 0)
 	err := Diff(toChannel(source), toChannel(target), func(change DiffChange) error {
@@ -229,7 +229,7 @@ func TestDiffCancellation(t *testing.T) {
 	assert.Err(t, err, "cancelled")
 }
 
-func test(t *testing.T, source, target []FileMetadata, expected []DiffChange) {
+func test(t *testing.T, source, target []Metadata, expected []DiffChange) {
 	received := make([]DiffChange, 0)
 	err := Diff(toChannel(source), toChannel(target), func(change DiffChange) error {
 		received = append(received, change)
@@ -239,8 +239,8 @@ func test(t *testing.T, source, target []FileMetadata, expected []DiffChange) {
 	assert.Equal(t, received, expected)
 }
 
-func toChannel(fm []FileMetadata) <-chan FileMetadata {
-	c := make(chan FileMetadata)
+func toChannel(fm []Metadata) <-chan Metadata {
+	c := make(chan Metadata)
 	go func() {
 		for _, m := range fm {
 			c <- m

@@ -1,4 +1,4 @@
-package zk
+package note
 
 import (
 	"crypto/sha256"
@@ -7,14 +7,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mickael-menu/zk/core/file"
+	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 	"gopkg.in/djherbis/times.v1"
 )
 
-// NoteMetadata holds information about a particular note.
-type NoteMetadata struct {
-	Path      Path
+// Metadata holds information about a particular note.
+type Metadata struct {
+	Path      file.Path
 	Title     string
 	Body      string
 	WordCount int
@@ -23,48 +25,57 @@ type NoteMetadata struct {
 	Checksum  string
 }
 
+// Indexer persists the notes index.
 type Indexer interface {
-	Indexed() (<-chan FileMetadata, error)
-	Add(metadata NoteMetadata) error
-	Update(metadata NoteMetadata) error
-	Remove(path Path) error
+	// Indexed returns the list of indexed note file metadata.
+	Indexed() (<-chan file.Metadata, error)
+	// Add indexes a new note from its metadata.
+	Add(metadata Metadata) error
+	// Update updates the metadata of an already indexed note.
+	Update(metadata Metadata) error
+	// Remove deletes a note from the index.
+	Remove(path file.Path) error
 }
 
 // Index indexes the content of the notes in the given directory.
-func Index(dir Dir, indexer Indexer, logger util.Logger) error {
+func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 	wrap := errors.Wrapper("indexation failed")
 
-	source := dir.Walk(logger)
+	source := file.Walk(dir, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
 		return wrap(err)
 	}
 
-	return Diff(source, target, func(change DiffChange) error {
+	err = file.Diff(source, target, func(change file.DiffChange) error {
 		switch change.Kind {
-		case DiffAdded:
-			metadata, err := noteMetadata(change.Path)
+		case file.DiffAdded:
+			metadata, err := metadata(change.Path)
 			if err == nil {
 				err = indexer.Add(metadata)
 			}
 			logger.Err(err)
 
-		case DiffModified:
-			metadata, err := noteMetadata(change.Path)
+		case file.DiffModified:
+			metadata, err := metadata(change.Path)
 			if err == nil {
 				err = indexer.Update(metadata)
 			}
 			logger.Err(err)
 
-		case DiffRemoved:
-			indexer.Remove(change.Path)
+		case file.DiffRemoved:
+			err := indexer.Remove(change.Path)
+			logger.Err(err)
 		}
 		return nil
 	})
+
+	return wrap(err)
 }
 
-func noteMetadata(path Path) (NoteMetadata, error) {
-	metadata := NoteMetadata{
+// metadata retrieves note metadata for the given file.
+func metadata(path file.Path) (Metadata, error) {
+	metadata := Metadata{
 		Path: path,
 	}
 

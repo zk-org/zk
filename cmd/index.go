@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/mickael-menu/zk/adapter/sqlite"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
 )
 
@@ -11,17 +12,17 @@ type Index struct {
 }
 
 func (cmd *Index) Run(container *Container) error {
-	z, err := zk.Open(".")
+	zk, err := zk.Open(".")
 	if err != nil {
 		return err
 	}
 
-	dir, err := z.RequireDirAt(cmd.Directory)
+	dir, err := zk.RequireDirAt(cmd.Directory)
 	if err != nil {
 		return err
 	}
 
-	db, err := container.Database(z)
+	db, err := container.Database(zk)
 	if err != nil {
 		return err
 	}
@@ -30,11 +31,11 @@ func (cmd *Index) Run(container *Container) error {
 	if err != nil {
 		return err
 	}
-	indexer, err := sqlite.NewIndexer(tx, z.Path, container.Logger)
+	indexer, err := sqlite.NewNoteIndexer(tx, zk.Path, container.Logger)
 	if err != nil {
 		return err
 	}
-	err = zk.Index(*dir, indexer, container.Logger)
+	err = note.Index(*dir, indexer, container.Logger)
 	if err != nil {
 		return err
 	}

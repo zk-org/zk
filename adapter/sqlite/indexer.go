@@ -5,11 +5,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mickael-menu/zk/core/zk"
+	"github.com/mickael-menu/zk/core/file"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 )
 
-type Indexer struct {
+// NoteIndexer retrieves and stores notes indexation in the SQLite database.
+// It implements the Core port note.Indexer.
+type NoteIndexer struct {
 	tx     *sql.Tx
 	root   string
 	logger util.Logger
@@ -21,8 +24,11 @@ type Indexer struct {
 	removeStmt  *sql.Stmt
 }
 
-func NewIndexer(tx *sql.Tx, root string, logger util.Logger) (*Indexer, error) {
-	indexedStmt, err := tx.Prepare("SELECT filename, dir, modified from notes")
+func NewNoteIndexer(tx *sql.Tx, root string, logger util.Logger) (*NoteIndexer, error) {
+	indexedStmt, err := tx.Prepare(`
+		SELECT filename, dir, modified from notes
+		 ORDER BY dir, filename ASC
+	`)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +58,7 @@ func NewIndexer(tx *sql.Tx, root string, logger util.Logger) (*Indexer, error) {
 		return nil, err
 	}
 
-	return &Indexer{
+	return &NoteIndexer{
 		tx:          tx,
 		root:        root,
 		logger:      logger,
@@ -63,13 +69,13 @@ func NewIndexer(tx *sql.Tx, root string, logger util.Logger) (*Indexer, error) {
 	}, nil
 }
 
-func (i *Indexer) Indexed() (<-chan zk.FileMetadata, error) {
+func (i *NoteIndexer) Indexed() (<-chan file.Metadata, error) {
 	rows, err := i.indexedStmt.Query()
 	if err != nil {
 		return nil, err
 	}
 
-	c := make(chan zk.FileMetadata)
+	c := make(chan file.Metadata)
 	go func() {
 		defer close(c)
 		defer rows.Close()
@@ -84,8 +90,8 @@ func (i *Indexer) Indexed() (<-chan zk.FileMetadata, error) {
 				i.logger.Err(err)
 			}
 
-			c <- zk.FileMetadata{
-				Path:     zk.Path{Dir: dir, Filename: filename, Abs: filepath.Join(i.root, dir, filename)},
+			c <- file.Metadata{
+				Path:     file.Path{Dir: dir, Filename: filename, Abs: filepath.Join(i.root, dir, filename)},
 				Modified: modified,
 			}
 		}
@@ -99,7 +105,7 @@ func (i *Indexer) Indexed() (<-chan zk.FileMetadata, error) {
 	return c, nil
 }
 
-func (i *Indexer) Add(metadata zk.NoteMetadata) error {
+func (i *NoteIndexer) Add(metadata note.Metadata) error {
 	_, err := i.addStmt.Exec(
 		metadata.Path.Filename, metadata.Path.Dir, metadata.Title,
 		metadata.Body, metadata.WordCount, metadata.Checksum,
@@ -108,7 +114,7 @@ func (i *Indexer) Add(metadata zk.NoteMetadata) error {
 	return err
 }
 
-func (i *Indexer) Update(metadata zk.NoteMetadata) error {
+func (i *NoteIndexer) Update(metadata note.Metadata) error {
 	_, err := i.updateStmt.Exec(
 		metadata.Title, metadata.Body, metadata.WordCount,
 		metadata.Checksum, metadata.Modified,
@@ -117,7 +123,7 @@ func (i *Indexer) Update(metadata zk.NoteMetadata) error {
 	return err
 }
 
-func (i *Indexer) Remove(path zk.Path) error {
+func (i *NoteIndexer) Remove(path file.Path) error {
 	_, err := i.updateStmt.Exec(path.Filename, path.Dir)
 	return err
 }

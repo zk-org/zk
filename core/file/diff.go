@@ -1,4 +1,4 @@
-package zk
+package file
 
 // DiffChange represents a note change made in a slip box directory.
 type DiffChange struct {
@@ -15,14 +15,14 @@ const (
 	DiffRemoved
 )
 
-// Diff compares two sources of FileMetadata and report the note changes, using
-// the file checksum and modification date.
+// Diff compares two sources of FileMetadata and report the file changes, using
+// the file modification date.
 //
 // Warning: The FileMetadata have to be sorted by their Path for the diffing to
 // work properly.
-func Diff(source, target <-chan FileMetadata, callback func(DiffChange) error) error {
+func Diff(source, target <-chan Metadata, callback func(DiffChange) error) error {
 	var err error
-	var sourceFile, targetFile FileMetadata
+	var sourceFile, targetFile Metadata
 	var sourceOpened, targetOpened bool = true, true
 	pair := diffPair{}
 
@@ -50,8 +50,8 @@ func Diff(source, target <-chan FileMetadata, callback func(DiffChange) error) e
 
 // diffPair holds the current two files to be diffed.
 type diffPair struct {
-	source *FileMetadata
-	target *FileMetadata
+	source *Metadata
+	target *Metadata
 }
 
 // diff compares the source and target files in the current pair.
@@ -82,7 +82,7 @@ func (p *diffPair) diff() *DiffChange {
 		p.target = nil
 
 	default: // Different files, one has been added or removed.
-		if isAscendingOrder(p.source.Path, p.target.Path) {
+		if p.source.Path.Less(p.target.Path) {
 			change = &DiffChange{p.source.Path, DiffAdded}
 			p.source = nil
 		} else {
@@ -92,16 +92,4 @@ func (p *diffPair) diff() *DiffChange {
 	}
 
 	return change
-}
-
-// isAscendingOrder returns true if the source note's path is before the target one.
-func isAscendingOrder(source, target Path) bool {
-	switch {
-	case source.Dir < target.Dir:
-		return true
-	case source.Dir > target.Dir:
-		return false
-	default:
-		return source.Filename < target.Filename
-	}
 }

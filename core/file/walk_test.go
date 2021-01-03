@@ -1,10 +1,11 @@
-package zk
+package file
 
 import (
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/fixtures"
@@ -13,9 +14,9 @@ import (
 var root = fixtures.Path("walk")
 
 func TestWalkRootDir(t *testing.T) {
-	dir := Dir{Name: "", Path: root}
-	res := toSlice(dir.Walk(&util.NullLogger))
-	assert.Equal(t, res, []FileMetadata{
+	dir := zk.Dir{Name: "", Path: root}
+	res := toSlice(Walk(dir, &util.NullLogger))
+	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
 			Modified: date("2021-01-03T11:30:26.069257899+01:00"),
@@ -44,9 +45,9 @@ func TestWalkRootDir(t *testing.T) {
 }
 
 func TestWalkSubDir(t *testing.T) {
-	dir := Dir{Name: "dir1", Path: filepath.Join(root, "dir1")}
-	res := toSlice(dir.Walk(&util.NullLogger))
-	assert.Equal(t, res, []FileMetadata{
+	dir := zk.Dir{Name: "dir1", Path: filepath.Join(root, "dir1")}
+	res := toSlice(Walk(dir, &util.NullLogger))
+	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
 			Modified: date("2021-01-03T11:31:18.961628888+01:00"),
@@ -63,9 +64,9 @@ func TestWalkSubDir(t *testing.T) {
 }
 
 func TestWalkSubSubDir(t *testing.T) {
-	dir := Dir{Name: "dir1/dir1", Path: filepath.Join(root, "dir1/dir1")}
-	res := toSlice(dir.Walk(&util.NullLogger))
-	assert.Equal(t, res, []FileMetadata{
+	dir := zk.Dir{Name: "dir1/dir1", Path: filepath.Join(root, "dir1/dir1")}
+	res := toSlice(Walk(dir, &util.NullLogger))
+	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
@@ -78,8 +79,8 @@ func date(s string) time.Time {
 	return date
 }
 
-func toSlice(c <-chan FileMetadata) []FileMetadata {
-	s := make([]FileMetadata, 0)
+func toSlice(c <-chan Metadata) []Metadata {
+	s := make([]Metadata, 0)
 	for fm := range c {
 		s = append(s, fm)
 	}

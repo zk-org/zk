@@ -7,6 +7,7 @@ type IDOptions struct {
 	Case    Case
 }
 
+// Charset is a set of characters.
 type Charset []rune
 
 var (
