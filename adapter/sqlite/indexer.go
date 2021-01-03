@@ -13,7 +13,7 @@ import (
 // NoteIndexer retrieves and stores notes indexation in the SQLite database.
 // It implements the Core port note.Indexer.
 type NoteIndexer struct {
-	tx     *sql.Tx
+	tx     Transaction
 	root   string
 	logger util.Logger
 
@@ -24,7 +24,7 @@ type NoteIndexer struct {
 	removeStmt  *sql.Stmt
 }
 
-func NewNoteIndexer(tx *sql.Tx, root string, logger util.Logger) (*NoteIndexer, error) {
+func NewNoteIndexer(tx Transaction, root string, logger util.Logger) (*NoteIndexer, error) {
 	indexedStmt, err := tx.Prepare(`
 		SELECT filename, dir, modified from notes
 		 ORDER BY dir, filename ASC
