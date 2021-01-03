@@ -1,6 +1,7 @@
-package note
+package zk
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -194,9 +195,48 @@ func TestDiffEmptyTarget(t *testing.T) {
 	})
 }
 
+func TestDiffCancellation(t *testing.T) {
+	source := []FileMetadata{
+		{
+			Path:     Path{Dir: "a", Filename: "1"},
+			Modified: date1,
+		},
+		{
+			Path:     Path{Dir: "a", Filename: "2"},
+			Modified: date2,
+		},
+	}
+
+	target := []FileMetadata{}
+
+	received := make([]DiffChange, 0)
+	err := Diff(toChannel(source), toChannel(target), func(change DiffChange) error {
+		received = append(received, change)
+
+		if len(received) == 1 {
+			return errors.New("cancelled")
+		} else {
+			return nil
+		}
+	})
+
+	assert.Equal(t, received, []DiffChange{
+		{
+			Path: Path{Dir: "a", Filename: "1"},
+			Kind: DiffAdded,
+		},
+	})
+	assert.Err(t, err, "cancelled")
+}
+
 func test(t *testing.T, source, target []FileMetadata, expected []DiffChange) {
-	actual := toSlice(Diff(toChannel(source), toChannel(target)))
-	assert.Equal(t, actual, expected)
+	received := make([]DiffChange, 0)
+	err := Diff(toChannel(source), toChannel(target), func(change DiffChange) error {
+		received = append(received, change)
+		return nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, received, expected)
 }
 
 func toChannel(fm []FileMetadata) <-chan FileMetadata {
@@ -208,12 +248,4 @@ func toChannel(fm []FileMetadata) <-chan FileMetadata {
 		close(c)
 	}()
 	return c
-}
-
-func toSlice(c <-chan DiffChange) []DiffChange {
-	s := make([]DiffChange, 0)
-	for i := range c {
-		s = append(s, i)
-	}
-	return s
 }

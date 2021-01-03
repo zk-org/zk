@@ -1,4 +1,4 @@
-package note
+package zk
 
 // DiffChange represents a note change made in a slip box directory.
 type DiffChange struct {
@@ -20,35 +20,32 @@ const (
 //
 // Warning: The FileMetadata have to be sorted by their Path for the diffing to
 // work properly.
-func Diff(source, target <-chan FileMetadata) <-chan DiffChange {
-	c := make(chan DiffChange)
-	go func() {
-		defer close(c)
+func Diff(source, target <-chan FileMetadata, callback func(DiffChange) error) error {
+	var err error
+	var sourceFile, targetFile FileMetadata
+	var sourceOpened, targetOpened bool = true, true
+	pair := diffPair{}
 
-		pair := diffPair{}
-		var sourceFile, targetFile FileMetadata
-		var sourceOpened, targetOpened bool = true, true
-
-		for sourceOpened || targetOpened {
-			if pair.source == nil {
-				sourceFile, sourceOpened = <-source
-				if sourceOpened {
-					pair.source = &sourceFile
-				}
-			}
-			if pair.target == nil {
-				targetFile, targetOpened = <-target
-				if targetOpened {
-					pair.target = &targetFile
-				}
-			}
-			change := pair.diff()
-			if change != nil {
-				c <- *change
+	for err == nil && (sourceOpened || targetOpened) {
+		if pair.source == nil {
+			sourceFile, sourceOpened = <-source
+			if sourceOpened {
+				pair.source = &sourceFile
 			}
 		}
-	}()
-	return c
+		if pair.target == nil {
+			targetFile, targetOpened = <-target
+			if targetOpened {
+				pair.target = &targetFile
+			}
+		}
+		change := pair.diff()
+		if change != nil {
+			err = callback(*change)
+		}
+	}
+
+	return err
 }
 
 // diffPair holds the current two files to be diffed.

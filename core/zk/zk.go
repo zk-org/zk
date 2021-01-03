@@ -24,14 +24,10 @@ type Zk struct {
 	Config Config
 }
 
-// Dir represents a directory inside a slip box.
-type Dir struct {
-	// Name of the directory, which is the path relative to the slip box's root.
-	Name string
-	// Absolute path to the directory.
-	Path string
-	// User configuration for this directory.
-	Config DirConfig
+// Path holds a file path relative to a slip box.
+type Path struct {
+	Dir      string
+	Filename string
 }
 
 // Open locates a slip box at the given path and parses its configuration.

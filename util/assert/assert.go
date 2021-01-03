@@ -38,7 +38,10 @@ func toJSON(t *testing.T, obj interface{}) string {
 }
 
 func Err(t *testing.T, err error, expected string) {
-	if !strings.Contains(err.Error(), expected) {
+	switch {
+	case err == nil:
+		t.Errorf("Expected error `%v`, received nil", expected)
+	case !strings.Contains(err.Error(), expected):
 		t.Errorf("Expected error `%v`, received `%v`", expected, err.Error())
 	}
 }
