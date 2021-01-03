@@ -6,7 +6,7 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/errors"
@@ -47,7 +47,7 @@ func NewLoader() *Loader {
 }
 
 // Load retrieves or parses a handlebars string template.
-func (l *Loader) Load(content string) (core.Template, error) {
+func (l *Loader) Load(content string) (templ.Renderer, error) {
 	wrap := errors.Wrapperf("load template failed")
 
 	// Already loaded?
@@ -67,7 +67,7 @@ func (l *Loader) Load(content string) (core.Template, error) {
 }
 
 // LoadFile retrieves or parses a handlebars file template.
-func (l *Loader) LoadFile(path string) (core.Template, error) {
+func (l *Loader) LoadFile(path string) (templ.Renderer, error) {
 	wrap := errors.Wrapper("load template file failed")
 
 	path, err := filepath.Abs(path)

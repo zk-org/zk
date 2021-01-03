@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/opt"
@@ -132,10 +132,10 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 			},
 		},
 		createDeps{
-			filenameTemplate: core.TemplateFunc(func(context interface{}) (string, error) {
+			filenameTemplate: templ.RendererFunc(func(context interface{}) (string, error) {
 				return "filename", nil
 			}),
-			bodyTemplate: core.NullTemplate,
+			bodyTemplate: templ.NullRenderer,
 			genId:        func() string { return "abc" },
 			validatePath: func(path string) (bool, error) { return false, nil },
 		},

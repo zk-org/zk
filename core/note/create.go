@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
@@ -26,7 +26,7 @@ type CreateOpts struct {
 // Returns the path of the newly created note.
 func Create(
 	opts CreateOpts,
-	templateLoader core.TemplateLoader,
+	templateLoader templ.Loader,
 ) (string, error) {
 	wrap := errors.Wrapperf("new note")
 
@@ -35,7 +35,7 @@ func Create(
 		return "", err
 	}
 
-	var bodyTemplate core.Template = core.NullTemplate
+	var bodyTemplate templ.Renderer = templ.NullRenderer
 	if templatePath := opts.Dir.Config.BodyTemplatePath.Unwrap(); templatePath != "" {
 		bodyTemplate, err = templateLoader.LoadFile(templatePath)
 		if err != nil {
@@ -83,8 +83,8 @@ type renderContext struct {
 }
 
 type createDeps struct {
-	filenameTemplate core.Template
-	bodyTemplate     core.Template
+	filenameTemplate templ.Renderer
+	bodyTemplate     templ.Renderer
 	genId            func() string
 	validatePath     func(path string) (bool, error)
 }
