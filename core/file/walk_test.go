@@ -15,7 +15,7 @@ var root = fixtures.Path("walk")
 
 func TestWalkRootDir(t *testing.T) {
 	dir := zk.Dir{Name: "", Path: root}
-	res := toSlice(Walk(dir, &util.NullLogger))
+	res := toSlice(Walk(dir, "md", &util.NullLogger))
 	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
@@ -46,7 +46,7 @@ func TestWalkRootDir(t *testing.T) {
 
 func TestWalkSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1", Path: filepath.Join(root, "dir1")}
-	res := toSlice(Walk(dir, &util.NullLogger))
+	res := toSlice(Walk(dir, "md", &util.NullLogger))
 	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
@@ -65,7 +65,7 @@ func TestWalkSubDir(t *testing.T) {
 
 func TestWalkSubSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1/dir1", Path: filepath.Join(root, "dir1/dir1")}
-	res := toSlice(Walk(dir, &util.NullLogger))
+	res := toSlice(Walk(dir, "md", &util.NullLogger))
 	assert.Equal(t, res, []Metadata{
 		{
 			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},

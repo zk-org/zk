@@ -22,7 +22,7 @@ func (cmd *Index) Run(container *Container) error {
 		return err
 	}
 
-	db, err := container.Database(zk)
+	db, err := container.Database(zk.DBPath())
 	if err != nil {
 		return err
 	}

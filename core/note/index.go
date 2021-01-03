@@ -41,7 +41,7 @@ type Indexer interface {
 func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 	wrap := errors.Wrapper("indexation failed")
 
-	source := file.Walk(dir, logger)
+	source := file.Walk(dir, dir.Config.Extension, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
 		return wrap(err)

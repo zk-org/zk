@@ -10,7 +10,9 @@ import (
 )
 
 // Walk emits the metadata of each file stored in the directory.
-func Walk(dir zk.Dir, logger util.Logger) <-chan Metadata {
+func Walk(dir zk.Dir, extension string, logger util.Logger) <-chan Metadata {
+	extension = "." + extension
+
 	c := make(chan Metadata, 50)
 	go func() {
 		defer close(c)
@@ -29,8 +31,7 @@ func Walk(dir zk.Dir, logger util.Logger) <-chan Metadata {
 				}
 
 			} else {
-				// FIXME: Customize extension in config
-				if isHidden || filepath.Ext(filename) != ".md" {
+				if isHidden || filepath.Ext(filename) != extension {
 					return nil
 				}
 

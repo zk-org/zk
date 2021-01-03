@@ -18,8 +18,11 @@ type Config struct {
 // DirConfig holds the user configuration for a given directory.
 type DirConfig struct {
 	FilenameTemplate string
+	Extension        string
 	BodyTemplatePath opt.String
 	IDOptions        IDOptions
+	Lang             string
+	DefaultTitle     string
 	Extra            map[string]string
 }
 
@@ -64,17 +67,23 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 
 	root := DirConfig{
 		FilenameTemplate: "{{id}}",
+		Extension:        "md",
 		BodyTemplatePath: opt.NullString,
 		IDOptions: IDOptions{
 			Charset: CharsetAlphanum,
 			Length:  5,
 			Case:    CaseLower,
 		},
-		Extra: make(map[string]string),
+		Lang:         "en",
+		DefaultTitle: "Untitled",
+		Extra:        make(map[string]string),
 	}
 
 	if hcl.Filename != "" {
 		root.FilenameTemplate = hcl.Filename
+	}
+	if hcl.Extension != "" {
+		root.Extension = hcl.Extension
 	}
 	if hcl.Template != "" {
 		root.BodyTemplatePath = templatePathFromString(hcl.Template, templatesDir)
@@ -89,6 +98,12 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		if hcl.ID.Case != "" {
 			root.IDOptions.Case = caseFromString(hcl.ID.Case)
 		}
+	}
+	if hcl.Lang != "" {
+		root.Lang = hcl.Lang
+	}
+	if hcl.DefaultTitle != "" {
+		root.DefaultTitle = hcl.DefaultTitle
 	}
 	if hcl.Extra != nil {
 		for k, v := range hcl.Extra {
@@ -112,8 +127,11 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
 	res := DirConfig{
 		FilenameTemplate: c.FilenameTemplate,
+		Extension:        c.Extension,
 		BodyTemplatePath: c.BodyTemplatePath,
 		IDOptions:        c.IDOptions,
+		Lang:             c.Lang,
+		DefaultTitle:     c.DefaultTitle,
 		Extra:            make(map[string]string),
 	}
 	for k, v := range c.Extra {
@@ -122,6 +140,9 @@ func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
 
 	if hcl.Filename != "" {
 		res.FilenameTemplate = hcl.Filename
+	}
+	if hcl.Extension != "" {
+		res.Extension = hcl.Extension
 	}
 	if hcl.Template != "" {
 		res.BodyTemplatePath = templatePathFromString(hcl.Template, templatesDir)
@@ -137,6 +158,12 @@ func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
 			res.IDOptions.Case = caseFromString(hcl.ID.Case)
 		}
 	}
+	if hcl.Lang != "" {
+		res.Lang = hcl.Lang
+	}
+	if hcl.DefaultTitle != "" {
+		res.DefaultTitle = hcl.DefaultTitle
+	}
 	if hcl.Extra != nil {
 		for k, v := range hcl.Extra {
 			res.Extra[k] = v
@@ -147,20 +174,26 @@ func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
 
 // hclConfig holds the HCL representation of Config
 type hclConfig struct {
-	Filename string            `hcl:"filename,optional"`
-	Template string            `hcl:"template,optional"`
-	ID       *hclIDConfig      `hcl:"id,block"`
-	Extra    map[string]string `hcl:"extra,optional"`
-	Dirs     []hclDirConfig    `hcl:"dir,block"`
-	Editor   string            `hcl:"editor,optional"`
+	Filename     string            `hcl:"filename,optional"`
+	Extension    string            `hcl:"extension,optional"`
+	Template     string            `hcl:"template,optional"`
+	ID           *hclIDConfig      `hcl:"id,block"`
+	Lang         string            `hcl:"language,optional"`
+	DefaultTitle string            `hcl:"default-title,optional"`
+	Extra        map[string]string `hcl:"extra,optional"`
+	Dirs         []hclDirConfig    `hcl:"dir,block"`
+	Editor       string            `hcl:"editor,optional"`
 }
 
 type hclDirConfig struct {
-	Dir      string            `hcl:"dir,label"`
-	Filename string            `hcl:"filename,optional"`
-	Template string            `hcl:"template,optional"`
-	ID       *hclIDConfig      `hcl:"id,block"`
-	Extra    map[string]string `hcl:"extra,optional"`
+	Dir          string            `hcl:"dir,label"`
+	Filename     string            `hcl:"filename,optional"`
+	Extension    string            `hcl:"extension,optional"`
+	Template     string            `hcl:"template,optional"`
+	ID           *hclIDConfig      `hcl:"id,block"`
+	Lang         string            `hcl:"language,optional"`
+	DefaultTitle string            `hcl:"default-title,optional"`
+	Extra        map[string]string `hcl:"extra,optional"`
 }
 
 type hclIDConfig struct {

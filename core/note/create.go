@@ -94,14 +94,13 @@ func create(
 	deps createDeps,
 ) (*createdNote, error) {
 	context := renderContext{
-		// FIXME Customize default title in config
-		Title:   opts.Title.OrDefault("Untitled"),
+		Title:   opts.Title.OrDefault(opts.Dir.Config.DefaultTitle),
 		Content: opts.Content.Unwrap(),
 		Dir:     opts.Dir.Name,
 		Extra:   opts.Dir.Config.Extra,
 	}
 
-	path, context, err := genPath(context, opts.Dir.Path, deps)
+	path, context, err := genPath(context, opts.Dir, deps)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +115,7 @@ func create(
 
 func genPath(
 	context renderContext,
-	basePath string,
+	dir zk.Dir,
 	deps createDeps,
 ) (string, renderContext, error) {
 	var path string
@@ -128,8 +127,8 @@ func genPath(
 			return "", context, err
 		}
 
-		// FIXME Customize extension in config
-		path = filepath.Join(basePath, filename+".md")
+		filename = filename + "." + dir.Config.Extension
+		path = filepath.Join(dir.Path, filename)
 		validPath, err := deps.validatePath(path)
 		if err != nil {
 			return "", context, err

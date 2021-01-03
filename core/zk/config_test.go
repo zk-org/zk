@@ -17,13 +17,16 @@ func TestParseDefaultConfig(t *testing.T) {
 		Editor: opt.NullString,
 		DirConfig: DirConfig{
 			FilenameTemplate: "{{id}}",
+			Extension:        "md",
 			BodyTemplatePath: opt.NullString,
 			IDOptions: IDOptions{
 				Length:  5,
 				Charset: CharsetAlphanum,
 				Case:    CaseLower,
 			},
-			Extra: make(map[string]string),
+			DefaultTitle: "Untitled",
+			Lang:         "en",
+			Extra:        make(map[string]string),
 		},
 		Dirs: make(map[string]DirConfig),
 	})
@@ -41,24 +44,30 @@ func TestParseComplete(t *testing.T) {
 		// Comment
 		editor = "vim"
 		filename = "{{id}}.note"
+		extension = "txt"
 		template = "default.note"
 		id {
 			charset = "alphanum"
 			length = 4
 			case = "lower"
 		}
+		language = "fr"
+		default-title = "Sans titre"
 		extra = {
 			hello = "world"
 			salut = "le monde"
 		}
 		dir "log" {
 			filename = "{{date}}.md"
+			extension = "note"
 			template = "log.md"
 			id {
 				charset = "letters"
 				length = 8
 				case = "mixed"
 			}
+			language = "de"
+			default-title = "Ohne Titel"
 			extra = {
 				log-ext = "value"
 			}
@@ -72,12 +81,15 @@ func TestParseComplete(t *testing.T) {
 	assert.Equal(t, conf, &Config{
 		DirConfig: DirConfig{
 			FilenameTemplate: "{{id}}.note",
+			Extension:        "txt",
 			BodyTemplatePath: opt.NewString("default.note"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetAlphanum,
 				Case:    CaseLower,
 			},
+			Lang:         "fr",
+			DefaultTitle: "Sans titre",
 			Extra: map[string]string{
 				"hello": "world",
 				"salut": "le monde",
@@ -86,12 +98,15 @@ func TestParseComplete(t *testing.T) {
 		Dirs: map[string]DirConfig{
 			"log": {
 				FilenameTemplate: "{{date}}.md",
+				Extension:        "note",
 				BodyTemplatePath: opt.NewString("log.md"),
 				IDOptions: IDOptions{
 					Length:  8,
 					Charset: CharsetLetters,
 					Case:    CaseMixed,
 				},
+				Lang:         "de",
+				DefaultTitle: "Ohne Titel",
 				Extra: map[string]string{
 					"hello":   "world",
 					"salut":   "le monde",
@@ -100,12 +115,15 @@ func TestParseComplete(t *testing.T) {
 			},
 			"ref": {
 				FilenameTemplate: "{{slug title}}.md",
+				Extension:        "txt",
 				BodyTemplatePath: opt.NewString("default.note"),
 				IDOptions: IDOptions{
 					Length:  4,
 					Charset: CharsetAlphanum,
 					Case:    CaseLower,
 				},
+				Lang:         "fr",
+				DefaultTitle: "Sans titre",
 				Extra: map[string]string{
 					"hello": "world",
 					"salut": "le monde",
@@ -119,12 +137,15 @@ func TestParseComplete(t *testing.T) {
 func TestParseMergesDirConfig(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		filename = "root-filename"
+		extension = "txt"
 		template = "root-template"
 		id {
 			charset = "letters"
 			length = 42
 			case = "upper"
 		}
+		language = "fr"
+		default-title = "Sans titre"
 		extra = {
 			hello = "world"
 			salut = "le monde"
@@ -149,12 +170,15 @@ func TestParseMergesDirConfig(t *testing.T) {
 	assert.Equal(t, conf, &Config{
 		DirConfig: DirConfig{
 			FilenameTemplate: "root-filename",
+			Extension:        "txt",
 			BodyTemplatePath: opt.NewString("root-template"),
 			IDOptions: IDOptions{
 				Length:  42,
 				Charset: CharsetLetters,
 				Case:    CaseUpper,
 			},
+			Lang:         "fr",
+			DefaultTitle: "Sans titre",
 			Extra: map[string]string{
 				"hello": "world",
 				"salut": "le monde",
@@ -163,12 +187,15 @@ func TestParseMergesDirConfig(t *testing.T) {
 		Dirs: map[string]DirConfig{
 			"log": {
 				FilenameTemplate: "log-filename",
+				Extension:        "txt",
 				BodyTemplatePath: opt.NewString("log-template"),
 				IDOptions: IDOptions{
 					Length:  8,
 					Charset: CharsetNumbers,
 					Case:    CaseMixed,
 				},
+				Lang:         "fr",
+				DefaultTitle: "Sans titre",
 				Extra: map[string]string{
 					"hello":   "override",
 					"salut":   "le monde",
@@ -177,12 +204,15 @@ func TestParseMergesDirConfig(t *testing.T) {
 			},
 			"inherited": {
 				FilenameTemplate: "root-filename",
+				Extension:        "txt",
 				BodyTemplatePath: opt.NewString("root-template"),
 				IDOptions: IDOptions{
 					Length:  42,
 					Charset: CharsetLetters,
 					Case:    CaseUpper,
 				},
+				Lang:         "fr",
+				DefaultTitle: "Sans titre",
 				Extra: map[string]string{
 					"hello": "world",
 					"salut": "le monde",
@@ -243,12 +273,15 @@ func TestParseResolvesTemplatePaths(t *testing.T) {
 func TestDirConfigClone(t *testing.T) {
 	original := DirConfig{
 		FilenameTemplate: "{{id}}.note",
+		Extension:        "md",
 		BodyTemplatePath: opt.NewString("default.note"),
 		IDOptions: IDOptions{
 			Length:  4,
 			Charset: CharsetAlphanum,
 			Case:    CaseLower,
 		},
+		Lang:         "fr",
+		DefaultTitle: "Sans titre",
 		Extra: map[string]string{
 			"hello": "world",
 		},
@@ -259,21 +292,27 @@ func TestDirConfigClone(t *testing.T) {
 	assert.Equal(t, clone, original)
 
 	clone.FilenameTemplate = "modified"
+	clone.Extension = "txt"
 	clone.BodyTemplatePath = opt.NewString("modified")
 	clone.IDOptions.Length = 41
 	clone.IDOptions.Charset = CharsetNumbers
 	clone.IDOptions.Case = CaseUpper
+	clone.Lang = "de"
+	clone.DefaultTitle = "Ohne Titel"
 	clone.Extra["test"] = "modified"
 
 	// Check that we didn't modify the original
 	assert.Equal(t, original, DirConfig{
 		FilenameTemplate: "{{id}}.note",
+		Extension:        "md",
 		BodyTemplatePath: opt.NewString("default.note"),
 		IDOptions: IDOptions{
 			Length:  4,
 			Charset: CharsetAlphanum,
 			Case:    CaseLower,
 		},
+		Lang:         "fr",
+		DefaultTitle: "Sans titre",
 		Extra: map[string]string{
 			"hello": "world",
 		},
