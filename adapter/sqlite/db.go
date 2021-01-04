@@ -14,7 +14,16 @@ type DB struct {
 
 // Open creates a new DB instance for the SQLite database at the given path.
 func Open(path string) (*DB, error) {
-	db, err := sql.Open("sqlite3", "file:"+path)
+	return open("file:" + path)
+}
+
+// OpenInMemory creates a new in-memory DB instance.
+func OpenInMemory() (*DB, error) {
+	return open(":memory:")
+}
+
+func open(uri string) (*DB, error) {
+	db, err := sql.Open("sqlite3", uri)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open the database")
 	}
