@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -23,4 +24,8 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 	return fmt.Errorf("%s: %w", msg, err)
+}
+
+func New(text string) error {
+	return errors.New(text)
 }

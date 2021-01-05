@@ -15,62 +15,29 @@ var root = fixtures.Path("walk")
 
 func TestWalkRootDir(t *testing.T) {
 	dir := zk.Dir{Name: "", Path: root}
-	res := toSlice(Walk(dir, "md", &util.NullLogger))
-	assert.Equal(t, res, []Metadata{
-		{
-			Path:     Path{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
-			Modified: date("2021-01-03T11:30:26.069257899+01:00"),
-		},
-		{
-			Path:     Path{Dir: "", Filename: "b.md", Abs: filepath.Join(root, "b.md")},
-			Modified: date("2021-01-03T11:30:27.545667767+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
-			Modified: date("2021-01-03T11:31:18.961628888+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
-			Modified: date("2021-01-03T11:31:24.692881103+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
-			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir2", Filename: "a.md", Abs: filepath.Join(root, "dir2/a.md")},
-			Modified: date("2021-01-03T11:31:51.001827456+01:00"),
-		},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
+		{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
+		{Dir: "", Filename: "b.md", Abs: filepath.Join(root, "b.md")},
+		{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
+		{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
+		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
+		{Dir: "dir2", Filename: "a.md", Abs: filepath.Join(root, "dir2/a.md")},
 	})
 }
 
 func TestWalkSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1", Path: filepath.Join(root, "dir1")}
-	res := toSlice(Walk(dir, "md", &util.NullLogger))
-	assert.Equal(t, res, []Metadata{
-		{
-			Path:     Path{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
-			Modified: date("2021-01-03T11:31:18.961628888+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
-			Modified: date("2021-01-03T11:31:24.692881103+01:00"),
-		},
-		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
-			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
-		},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
+		{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
+		{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
+		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 	})
 }
 
 func TestWalkSubSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1/dir1", Path: filepath.Join(root, "dir1/dir1")}
-	res := toSlice(Walk(dir, "md", &util.NullLogger))
-	assert.Equal(t, res, []Metadata{
-		{
-			Path:     Path{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
-			Modified: date("2021-01-03T11:31:27.900472856+01:00"),
-		},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
+		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
 	})
 }
 
@@ -79,10 +46,27 @@ func date(s string) time.Time {
 	return date
 }
 
-func toSlice(c <-chan Metadata) []Metadata {
-	s := make([]Metadata, 0)
-	for fm := range c {
-		s = append(s, fm)
+func testEqual(t *testing.T, actual <-chan Metadata, expected []Path) {
+	popExpected := func() (Path, bool) {
+		if len(expected) == 0 {
+			return Path{}, false
+		}
+		item := expected[0]
+		expected = expected[1:]
+		return item, true
 	}
-	return s
+
+	for act := range actual {
+		exp, ok := popExpected()
+		if !ok {
+			t.Errorf("More paths available than expected")
+			return
+		}
+		assert.Equal(t, act.Path, exp)
+		assert.NotNil(t, act.Modified)
+	}
+
+	if len(expected) > 0 {
+		t.Errorf("Missing expected paths: %v", expected)
+	}
 }

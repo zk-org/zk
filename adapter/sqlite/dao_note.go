@@ -8,6 +8,7 @@ import (
 	"github.com/mickael-menu/zk/core/file"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
+	"github.com/mickael-menu/zk/util/errors"
 )
 
 // NoteDAO persists notes in the SQLite database.
@@ -22,6 +23,7 @@ type NoteDAO struct {
 	addStmt     *LazyStmt
 	updateStmt  *LazyStmt
 	removeStmt  *LazyStmt
+	existsStmt  *LazyStmt
 }
 
 func NewNoteDAO(tx Transaction, root string, logger util.Logger) *NoteDAO {
@@ -46,13 +48,18 @@ func NewNoteDAO(tx Transaction, root string, logger util.Logger) *NoteDAO {
 			DELETE FROM notes
 			 WHERE dir = ? AND filename = ?
 		`),
+		existsStmt: tx.PrepareLazy(`
+			SELECT EXISTS (SELECT 1 FROM notes WHERE dir = ? AND filename = ?)
+		`),
 	}
 }
 
 func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
+	wrap := errors.Wrapper("failed to get indexed notes")
+
 	rows, err := d.indexedStmt.Query()
 	if err != nil {
-		return nil, err
+		return nil, wrap(err)
 	}
 
 	c := make(chan file.Metadata)
@@ -67,7 +74,7 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 		for rows.Next() {
 			err := rows.Scan(&dir, &filename, &modified)
 			if err != nil {
-				d.logger.Err(err)
+				d.logger.Err(wrap(err))
 			}
 
 			c <- file.Metadata{
@@ -78,7 +85,7 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 
 		err = rows.Err()
 		if err != nil {
-			d.logger.Err(err)
+			d.logger.Err(wrap(err))
 		}
 	}()
 
@@ -91,21 +98,54 @@ func (d *NoteDAO) Add(note note.Metadata) error {
 		note.Body, note.WordCount, note.Checksum,
 		note.Created, note.Modified,
 	)
-	return err
+	return errors.Wrapf(err, "%v: can't add note to the index", note.Path)
 }
 
 func (d *NoteDAO) Update(note note.Metadata) error {
-	_, err := d.updateStmt.Exec(
+	wrap := errors.Wrapperf("%v: failed to update note index", note.Path)
+
+	exists, err := d.exists(note.Path)
+	if err != nil {
+		return wrap(err)
+	}
+	if !exists {
+		return wrap(errors.New("note not found in the index"))
+	}
+
+	_, err = d.updateStmt.Exec(
 		note.Title, note.Body, note.WordCount,
 		note.Checksum, note.Modified,
 		note.Path.Dir, note.Path.Filename,
 	)
-	return err
+	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
 }
 
 func (d *NoteDAO) Remove(path file.Path) error {
-	_, err := d.updateStmt.Exec(path.Dir, path.Filename)
-	return err
+	wrap := errors.Wrapperf("%v: failed to remove note index", path)
+
+	exists, err := d.exists(path)
+	if err != nil {
+		return wrap(err)
+	}
+	if !exists {
+		return wrap(errors.New("note not found in the index"))
+	}
+
+	_, err = d.removeStmt.Exec(path.Dir, path.Filename)
+	return wrap(err)
+}
+
+func (d *NoteDAO) exists(path file.Path) (bool, error) {
+	row, err := d.existsStmt.QueryRow(path.Dir, path.Filename)
+	if err != nil {
+		return false, err
+	}
+	var exists bool
+	row.Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) error {

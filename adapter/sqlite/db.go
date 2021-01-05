@@ -50,8 +50,8 @@ func (db *DB) Migrate() error {
 				`
 					CREATE TABLE IF NOT EXISTS notes (
 						id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-						filename TEXT NOT NULL,
 						dir TEXT NOT NULL,
+						filename TEXT NOT NULL,
 						title TEXT DEFAULT('') NOT NULL,
 						body TEXT DEFAULT('') NOT NULL,
 						word_count INTEGER DEFAULT(0) NOT NULL,

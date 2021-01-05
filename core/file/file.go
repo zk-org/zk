@@ -1,6 +1,9 @@
 package file
 
-import "time"
+import (
+	"path/filepath"
+	"time"
+)
 
 // Metadata holds information about a slip box file.
 type Metadata struct {
@@ -26,4 +29,8 @@ func (p Path) Less(other Path) bool {
 	default:
 		return p.Filename < other.Filename
 	}
+}
+
+func (p Path) String() string {
+	return filepath.Join(p.Dir, p.Filename)
 }
