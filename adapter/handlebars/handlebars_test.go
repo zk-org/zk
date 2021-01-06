@@ -92,9 +92,6 @@ func TestSlugHelper(t *testing.T) {
 }
 
 func TestDateHelper(t *testing.T) {
-	// Default
-	testString(t, "{{date}}", nil, "2009-11-17")
-
 	test := func(format string, expected string) {
 		testString(t, fmt.Sprintf("{{date '%s'}}", format), nil, expected)
 	}
@@ -108,6 +105,10 @@ func TestDateHelper(t *testing.T) {
 	test("timestamp", "200911172034")
 	test("timestamp-unix", "1258490098")
 	test("cust: %Y-%m", "cust: 2009-11")
+
+	// Test with provided date
+	context := map[string]interface{}{"created": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	testString(t, "{{date created '%Y-%m'}}", context, "2009-11")
 }
 
 func TestShellHelper(t *testing.T) {

@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"time"
+
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
 	"github.com/mickael-menu/zk/util"
@@ -12,19 +14,26 @@ import (
 // It supports various styles: short, medium, long, full, year, time,
 // timestamp, timestamp-unix or a custom strftime format.
 //
-// {{date}} -> 2009-11-17
 // {{date "medium"}} -> Nov 17, 2009
 // {{date "%Y-%m"}} -> 2009-11
+// {{date created "%Y-%m-%d"}} -> 2008-12-05
 func RegisterDate(logger util.Logger, date date.Provider) {
-	raymond.RegisterHelper("date", func(opt interface{}) string {
+	raymond.RegisterHelper("date", func(arg1 interface{}, arg2 interface{}) string {
 		format := "%Y-%m-%d"
+		date := date.Date()
 
-		arg, ok := opt.(string)
-		if ok {
+		switch arg := arg1.(type) {
+		case string:
+			format = findFormat(arg)
+		case time.Time:
+			date = arg
+		}
+
+		if arg, ok := arg2.(string); ok {
 			format = findFormat(arg)
 		}
 
-		res, err := strftime.Format(format, date.Date(), strftime.WithUnixSeconds('s'))
+		res, err := strftime.Format(format, date, strftime.WithUnixSeconds('s'))
 		if err != nil {
 			logger.Printf("the {{date}} template helper failed to format the date: %v", err)
 			return ""
