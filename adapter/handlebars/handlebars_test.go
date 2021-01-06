@@ -1,19 +1,16 @@
 package handlebars
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
-	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/fixtures"
 )
 
 func init() {
-	date := date.NewFrozen(time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC))
-	Init("en", &util.NullLogger, &date)
+	Init("en", &util.NullLogger)
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
@@ -92,23 +89,17 @@ func TestSlugHelper(t *testing.T) {
 }
 
 func TestDateHelper(t *testing.T) {
-	test := func(format string, expected string) {
-		testString(t, fmt.Sprintf("{{date '%s'}}", format), nil, expected)
-	}
-
-	test("short", "11/17/2009")
-	test("medium", "Nov 17, 2009")
-	test("long", "November 17, 2009")
-	test("full", "Tuesday, November 17, 2009")
-	test("year", "2009")
-	test("time", "20:34")
-	test("timestamp", "200911172034")
-	test("timestamp-unix", "1258490098")
-	test("cust: %Y-%m", "cust: 2009-11")
-
-	// Test with provided date
-	context := map[string]interface{}{"created": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
-	testString(t, "{{date created '%Y-%m'}}", context, "2009-11")
+	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	testString(t, "{{date now}}", context, "2009-11-17")
+	testString(t, "{{date now 'short'}}", context, "11/17/2009")
+	testString(t, "{{date now 'medium'}}", context, "Nov 17, 2009")
+	testString(t, "{{date now 'long'}}", context, "November 17, 2009")
+	testString(t, "{{date now 'full'}}", context, "Tuesday, November 17, 2009")
+	testString(t, "{{date now 'year'}}", context, "2009")
+	testString(t, "{{date now 'time'}}", context, "20:34")
+	testString(t, "{{date now 'timestamp'}}", context, "200911172034")
+	testString(t, "{{date now 'timestamp-unix'}}", context, "1258490098")
+	testString(t, "{{date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
 }
 
 func TestShellHelper(t *testing.T) {

@@ -1,12 +1,12 @@
 package file
 
-// DiffChange represents a note change made in a slip box directory.
+// DiffChange represents a file change made in a slip box directory.
 type DiffChange struct {
 	Path Path
 	Kind DiffKind
 }
 
-// DiffKind represents a type of note change made in a slip box directory.
+// DiffKind represents a type of file change made in a slip box directory.
 type DiffKind int
 
 const (
@@ -15,10 +15,10 @@ const (
 	DiffRemoved
 )
 
-// Diff compares two sources of FileMetadata and report the file changes, using
+// Diff compares two sources of file.Metadata and report the file changes, using
 // the file modification date.
 //
-// Warning: The FileMetadata have to be sorted by their Path for the diffing to
+// Warning: The file.Metadata have to be sorted by their Path for the diffing to
 // work properly.
 func Diff(source, target <-chan Metadata, callback func(DiffChange) error) error {
 	var err error

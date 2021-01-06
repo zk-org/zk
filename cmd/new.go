@@ -46,7 +46,7 @@ func (cmd *New) Run(container *Container) error {
 		Title:   opt.NewNotEmptyString(cmd.Title),
 		Content: content,
 	}
-	file, err := note.Create(opts, container.TemplateLoader(dir.Config.Lang))
+	file, err := note.Create(opts, container.TemplateLoader(dir.Config.Lang), container.Date)
 	if err != nil {
 		return err
 	}

@@ -26,7 +26,7 @@ func NewContainer() *Container {
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Logger, c.Date)
+		handlebars.Init(lang, c.Logger)
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader

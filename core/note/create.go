@@ -3,9 +3,11 @@ package note
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
+	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/paths"
@@ -27,6 +29,7 @@ type CreateOpts struct {
 func Create(
 	opts CreateOpts,
 	templateLoader templ.Loader,
+	date date.Provider,
 ) (string, error) {
 	wrap := errors.Wrapperf("new note")
 
@@ -48,6 +51,7 @@ func Create(
 		bodyTemplate:     bodyTemplate,
 		genId:            rand.NewIDGenerator(opts.Dir.Config.IDOptions),
 		validatePath:     validatePath,
+		now:              date.Date(),
 	})
 	if err != nil {
 		return "", wrap(err)
@@ -80,6 +84,7 @@ type renderContext struct {
 	Filename     string
 	FilenameStem string `handlebars:"filename-stem"`
 	Extra        map[string]string
+	Now          time.Time
 }
 
 type createDeps struct {
@@ -87,6 +92,7 @@ type createDeps struct {
 	bodyTemplate     templ.Renderer
 	genId            func() string
 	validatePath     func(path string) (bool, error)
+	now              time.Time
 }
 
 func create(
@@ -98,6 +104,7 @@ func create(
 		Content: opts.Content.Unwrap(),
 		Dir:     opts.Dir.Name,
 		Extra:   opts.Dir.Config.Extra,
+		Now:     deps.now,
 	}
 
 	path, context, err := genPath(context, opts.Dir, deps)

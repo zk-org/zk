@@ -6,7 +6,6 @@ import (
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
 	"github.com/mickael-menu/zk/util"
-	"github.com/mickael-menu/zk/util/date"
 )
 
 // RegisterDate registers the {{date}} template helpers which format a given date.
@@ -14,22 +13,14 @@ import (
 // It supports various styles: short, medium, long, full, year, time,
 // timestamp, timestamp-unix or a custom strftime format.
 //
-// {{date "medium"}} -> Nov 17, 2009
-// {{date "%Y-%m"}} -> 2009-11
-// {{date created "%Y-%m-%d"}} -> 2008-12-05
-func RegisterDate(logger util.Logger, date date.Provider) {
-	raymond.RegisterHelper("date", func(arg1 interface{}, arg2 interface{}) string {
+// {{date now}} -> 2009-11-17
+// {{date now "medium"}} -> Nov 17, 2009
+// {{date now "%Y-%m"}} -> 2009-11
+func RegisterDate(logger util.Logger) {
+	raymond.RegisterHelper("date", func(date time.Time, arg interface{}) string {
 		format := "%Y-%m-%d"
-		date := date.Date()
 
-		switch arg := arg1.(type) {
-		case string:
-			format = findFormat(arg)
-		case time.Time:
-			date = arg
-		}
-
-		if arg, ok := arg2.(string); ok {
+		if arg, ok := arg.(string); ok {
 			format = findFormat(arg)
 		}
 

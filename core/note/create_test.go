@@ -3,12 +3,15 @@ package note
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/opt"
 )
+
+var now = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
 func TestCreate(t *testing.T) {
 	filenameTemplate := spyTemplateString("filename")
@@ -34,6 +37,7 @@ func TestCreate(t *testing.T) {
 			bodyTemplate:     &bodyTemplate,
 			genId:            func() string { return "abc" },
 			validatePath:     func(path string) (bool, error) { return true, nil },
+			now:              now,
 		},
 	)
 
@@ -53,6 +57,7 @@ func TestCreate(t *testing.T) {
 		Extra: map[string]string{
 			"hello": "world",
 		},
+		Now: now,
 	}})
 	assert.Equal(t, bodyTemplate.Contexts, []renderContext{{
 		ID:           "abc",
@@ -64,6 +69,7 @@ func TestCreate(t *testing.T) {
 		Extra: map[string]string{
 			"hello": "world",
 		},
+		Now: now,
 	}})
 }
 
@@ -91,6 +97,7 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 			validatePath: func(path string) (bool, error) {
 				return path == "/test/log/3.md", nil
 			},
+			now: now,
 		},
 	)
 
@@ -106,16 +113,19 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 			ID:    "1",
 			Title: "Note title",
 			Dir:   "log",
+			Now:   now,
 		},
 		{
 			ID:    "2",
 			Title: "Note title",
 			Dir:   "log",
+			Now:   now,
 		},
 		{
 			ID:    "3",
 			Title: "Note title",
 			Dir:   "log",
+			Now:   now,
 		},
 	})
 }
@@ -138,6 +148,7 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 			bodyTemplate: templ.NullRenderer,
 			genId:        func() string { return "abc" },
 			validatePath: func(path string) (bool, error) { return false, nil },
+			now:          now,
 		},
 	)
 

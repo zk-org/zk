@@ -8,13 +8,12 @@ import (
 	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util"
-	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-func Init(lang string, logger util.Logger, date date.Provider) {
+func Init(lang string, logger util.Logger) {
 	helpers.RegisterSlug(logger, lang)
-	helpers.RegisterDate(logger, date)
+	helpers.RegisterDate(logger)
 	helpers.RegisterShell(logger)
 }
 
