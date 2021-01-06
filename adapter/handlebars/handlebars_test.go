@@ -73,16 +73,25 @@ func TestDoesntEscapeHTML(t *testing.T) {
 	)
 }
 
-func TestSlugHelper(t *testing.T) {
+func TestPrependHelper(t *testing.T) {
+	// inline
+	testString(t, "{{prepend '> ' 'A quote'}}", nil, "> A quote")
+
 	// block
-	testString(t,
-		"{{#slug}}This will be slugified!{{/slug}}",
-		nil,
-		"this-will-be-slugified",
-	)
+	testString(t, "{{#prepend '> '}}A quote{{/prepend}}", nil, "> A quote")
+	testString(t, "{{#prepend '> '}}A quote on\nseveral lines{{/prepend}}", nil, "> A quote on\n> several lines")
+}
+
+func TestSlugHelper(t *testing.T) {
 	// inline
 	testString(t,
 		`{{slug "This will be slugified!"}}`,
+		nil,
+		"this-will-be-slugified",
+	)
+	// block
+	testString(t,
+		"{{#slug}}This will be slugified!{{/slug}}",
 		nil,
 		"this-will-be-slugified",
 	)

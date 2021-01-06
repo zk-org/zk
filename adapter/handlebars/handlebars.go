@@ -12,9 +12,10 @@ import (
 )
 
 func Init(lang string, logger util.Logger) {
-	helpers.RegisterSlug(logger, lang)
 	helpers.RegisterDate(logger)
+	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
+	helpers.RegisterSlug(logger, lang)
 }
 
 // Template renders a parsed handlebars template.
