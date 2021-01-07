@@ -161,12 +161,12 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 			return d.tx.Query(`
 				SELECT n.id, n.dir, n.filename, n.title, n.body, n.word_count,
 				       n.created, n.modified, n.checksum,
-					   snippet(notes_fts, -1, '\033[31m', '\033[0m', '…', 20) as snippet
+					   snippet(notes_fts, -1, '<zk:match>', '</zk:match>', '…', 20) as snippet
 				  FROM notes n
 				  JOIN notes_fts
 					ON n.id = notes_fts.rowid
 				 WHERE notes_fts MATCH ?
-				 ORDER BY bm25(notes_fts, 1000.0, 1.0)
+				 ORDER BY bm25(notes_fts, 1000.0, 500.0, 1.0)
 				 --- ORDER BY rank
 			`, filter)
 		}
