@@ -6,6 +6,7 @@ import (
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
 	"github.com/mickael-menu/zk/util"
+	"github.com/rvflash/elapsed"
 )
 
 // RegisterDate registers the {{date}} template helpers which format a given date.
@@ -24,12 +25,17 @@ func RegisterDate(logger util.Logger) {
 			format = findFormat(arg)
 		}
 
-		res, err := strftime.Format(format, date, strftime.WithUnixSeconds('s'))
-		if err != nil {
-			logger.Printf("the {{date}} template helper failed to format the date: %v", err)
-			return ""
+		if format == "elapsed" {
+			return elapsed.Time(date)
+
+		} else {
+			res, err := strftime.Format(format, date, strftime.WithUnixSeconds('s'))
+			if err != nil {
+				logger.Printf("the {{date}} template helper failed to format the date: %v", err)
+				return ""
+			}
+			return res
 		}
-		return res
 	})
 }
 
