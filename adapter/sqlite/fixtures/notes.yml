@@ -1,6 +1,5 @@
 - id: 1
-  dir: "log"
-  filename: "2021-01-03.md"
+  path: "log/2021-01-03.md"
   title: "January 3, 2021"
   body: "A daily note"
   word_count: 3
@@ -9,8 +8,7 @@
   modified: "2020-11-22T16:27:45.734454655+01:00"
 
 - id: 2
-  dir: "log"
-  filename: "2021-01-04.md"
+  path: "log/2021-01-04.md"
   title: "January 4, 2021"
   body: "A second daily note"
   word_count: 4
@@ -19,8 +17,7 @@
   modified: "2020-11-29T08:20:18.138907236+01:00"
 
 - id: 3
-  dir: ""
-  filename: "index.md"
+  path: "index.md"
   title: "Index"
   body: "Index of the Zettelkasten"
   word_count: 4
@@ -29,8 +26,7 @@
   modified: "2019-12-04T12:17:21.720747+01:00"
 
 - id: 4
-  dir: ""
-  filename: "f39c8.md"
+  path: "f39c8.md"
   title: "An interesting note"
   body: "Its content will surprise you"
   word_count: 5
@@ -39,8 +35,7 @@
   modified: "2020-01-20T08:52:42.321024+01:00"
 
 - id: 5
-  dir: "ref/test"
-  filename: "b.md"
+  path: "ref/test/b.md"
   title: "A nested note"
   body: "This one is in a sub sub directory"
   word_count: 8
@@ -49,8 +44,7 @@
   modified: "2019-11-20T20:34:06.120375+01:00"
 
 - id: 6
-  dir: "ref/test"
-  filename: "a.md"
+  path: "ref/test/a.md"
   title: "Another nested note"
   body: "It shall appear before b.md"
   word_count: 5

@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"path/filepath"
 	"time"
 
 	"github.com/mickael-menu/zk/core/file"
@@ -15,7 +14,6 @@ import (
 // It implements the core ports note.Indexer and note.Finder.
 type NoteDAO struct {
 	tx     Transaction
-	root   string
 	logger util.Logger
 
 	// Prepared SQL statements
@@ -26,30 +24,29 @@ type NoteDAO struct {
 	existsStmt  *LazyStmt
 }
 
-func NewNoteDAO(tx Transaction, root string, logger util.Logger) *NoteDAO {
+func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 	return &NoteDAO{
 		tx:     tx,
-		root:   root,
 		logger: logger,
 		indexedStmt: tx.PrepareLazy(`
-			SELECT dir, filename, modified from notes
-			 ORDER BY dir, filename ASC
+			SELECT path, modified from notes
+			 ORDER BY path ASC
 		`),
 		addStmt: tx.PrepareLazy(`
-			INSERT INTO notes (dir, filename, title, body, word_count, checksum, created, modified)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO notes (path, title, body, word_count, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`),
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
 			   SET title = ?, body = ?, word_count = ?, checksum = ?, modified = ?
-			 WHERE dir = ? AND filename = ?
+			 WHERE path = ?
 		`),
 		removeStmt: tx.PrepareLazy(`
 			DELETE FROM notes
-			 WHERE dir = ? AND filename = ?
+			 WHERE path = ?
 		`),
 		existsStmt: tx.PrepareLazy(`
-			SELECT EXISTS (SELECT 1 FROM notes WHERE dir = ? AND filename = ?)
+			SELECT EXISTS (SELECT 1 FROM notes WHERE path = ?)
 		`),
 	}
 }
@@ -67,18 +64,18 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 		defer close(c)
 		defer rows.Close()
 		var (
-			dir, filename string
-			modified      time.Time
+			path     string
+			modified time.Time
 		)
 
 		for rows.Next() {
-			err := rows.Scan(&dir, &filename, &modified)
+			err := rows.Scan(&path, &modified)
 			if err != nil {
 				d.logger.Err(wrap(err))
 			}
 
 			c <- file.Metadata{
-				Path:     file.Path{Dir: dir, Filename: filename, Abs: filepath.Join(d.root, dir, filename)},
+				Path:     path,
 				Modified: modified,
 			}
 		}
@@ -94,8 +91,7 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 
 func (d *NoteDAO) Add(note note.Metadata) error {
 	_, err := d.addStmt.Exec(
-		note.Path.Dir, note.Path.Filename, note.Title,
-		note.Body, note.WordCount, note.Checksum,
+		note.Path, note.Title, note.Body, note.WordCount, note.Checksum,
 		note.Created, note.Modified,
 	)
 	return errors.Wrapf(err, "%v: can't add note to the index", note.Path)
@@ -113,14 +109,13 @@ func (d *NoteDAO) Update(note note.Metadata) error {
 	}
 
 	_, err = d.updateStmt.Exec(
-		note.Title, note.Body, note.WordCount,
-		note.Checksum, note.Modified,
-		note.Path.Dir, note.Path.Filename,
+		note.Title, note.Body, note.WordCount, note.Checksum, note.Modified,
+		note.Path,
 	)
 	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
 }
 
-func (d *NoteDAO) Remove(path file.Path) error {
+func (d *NoteDAO) Remove(path string) error {
 	wrap := errors.Wrapperf("%v: failed to remove note index", path)
 
 	exists, err := d.exists(path)
@@ -131,12 +126,12 @@ func (d *NoteDAO) Remove(path file.Path) error {
 		return wrap(errors.New("note not found in the index"))
 	}
 
-	_, err = d.removeStmt.Exec(path.Dir, path.Filename)
+	_, err = d.removeStmt.Exec(path)
 	return wrap(err)
 }
 
-func (d *NoteDAO) exists(path file.Path) (bool, error) {
-	row, err := d.existsStmt.QueryRow(path.Dir, path.Filename)
+func (d *NoteDAO) exists(path string) (bool, error) {
+	row, err := d.existsStmt.QueryRow(path)
 	if err != nil {
 		return false, err
 	}
@@ -152,14 +147,14 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 	rows, err := func() (*sql.Rows, error) {
 		if len(filters) == 0 {
 			return d.tx.Query(`
-				SELECT id, dir, filename, title, body, word_count, created, modified,
+				SELECT id, path, title, body, word_count, created, modified,
 					   checksum, "" as snippet from notes
 				 ORDER BY title ASC
 			`)
 		} else {
 			filter := filters[0].(note.QueryFilter)
 			return d.tx.Query(`
-				SELECT n.id, n.dir, n.filename, n.title, n.body, n.word_count,
+				SELECT n.id, n.path, n.title, n.body, n.word_count,
 				       n.created, n.modified, n.checksum,
 					   snippet(notes_fts, -1, '<zk:match>', '</zk:match>', '…', 20) as snippet
 				  FROM notes n
@@ -179,13 +174,13 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 
 	for rows.Next() {
 		var (
-			id, wordCount           int
-			title, body, snippet    string
-			dir, filename, checksum string
-			created, modified       time.Time
+			id, wordCount        int
+			title, body, snippet string
+			path, checksum       string
+			created, modified    time.Time
 		)
 
-		err := rows.Scan(&id, &dir, &filename, &title, &body, &wordCount, &created, &modified, &checksum, &snippet)
+		err := rows.Scan(&id, &path, &title, &body, &wordCount, &created, &modified, &checksum, &snippet)
 		if err != nil {
 			d.logger.Err(err)
 			continue
@@ -195,11 +190,7 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 			ID:      id,
 			Snippet: snippet,
 			Metadata: note.Metadata{
-				Path: file.Path{
-					Dir:      dir,
-					Filename: filename,
-					Abs:      filepath.Join(d.root, dir, filename),
-				},
+				Path:      path,
 				Title:     title,
 				Body:      body,
 				WordCount: wordCount,

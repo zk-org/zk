@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 
 // Metadata holds information about a particular note.
 type Metadata struct {
-	Path      file.Path
+	Path      string
 	Title     string
 	Body      string
 	WordCount int
@@ -34,7 +35,7 @@ type Indexer interface {
 	// Update updates the metadata of an already indexed note.
 	Update(metadata Metadata) error
 	// Remove deletes a note from the index.
-	Remove(path file.Path) error
+	Remove(path string) error
 }
 
 // Index indexes the content of the notes in the given directory.
@@ -50,14 +51,14 @@ func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 	err = file.Diff(source, target, func(change file.DiffChange) error {
 		switch change.Kind {
 		case file.DiffAdded:
-			metadata, err := metadata(change.Path)
+			metadata, err := metadata(change.Path, dir.Path)
 			if err == nil {
 				err = indexer.Add(metadata)
 			}
 			logger.Err(err)
 
 		case file.DiffModified:
-			metadata, err := metadata(change.Path)
+			metadata, err := metadata(change.Path, dir.Path)
 			if err == nil {
 				err = indexer.Update(metadata)
 			}
@@ -74,12 +75,13 @@ func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 }
 
 // metadata retrieves note metadata for the given file.
-func metadata(path file.Path) (Metadata, error) {
+func metadata(path string, basePath string) (Metadata, error) {
 	metadata := Metadata{
 		Path: path,
 	}
 
-	content, err := ioutil.ReadFile(path.Abs)
+	absPath := filepath.Join(basePath, path)
+	content, err := ioutil.ReadFile(absPath)
 	if err != nil {
 		return metadata, err
 	}
@@ -90,7 +92,7 @@ func metadata(path file.Path) (Metadata, error) {
 	metadata.WordCount = len(strings.Fields(contentStr))
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
 
-	times, err := times.Stat(path.Abs)
+	times, err := times.Stat(absPath)
 	if err != nil {
 		return metadata, err
 	}

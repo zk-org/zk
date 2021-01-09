@@ -47,47 +47,36 @@ func (db *DB) Migrate() error {
 
 		if version == 0 {
 			err = tx.ExecStmts([]string{
-				`
-					CREATE TABLE IF NOT EXISTS notes (
-						id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-						dir TEXT NOT NULL,
-						filename TEXT NOT NULL,
-						title TEXT DEFAULT('') NOT NULL,
-						body TEXT DEFAULT('') NOT NULL,
-						word_count INTEGER DEFAULT(0) NOT NULL,
-						checksum TEXT NOT NULL,
-						created DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
-						modified DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
-						UNIQUE(filename, dir)
-					)
-				`,
+				`CREATE TABLE IF NOT EXISTS notes (
+					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+					path TEXT NOT NULL,
+					title TEXT DEFAULT('') NOT NULL,
+					body TEXT DEFAULT('') NOT NULL,
+					word_count INTEGER DEFAULT(0) NOT NULL,
+					checksum TEXT NOT NULL,
+					created DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
+					modified DATETIME DEFAULT(CURRENT_TIMESTAMP) NOT NULL,
+					UNIQUE(path)
+				)`,
 				`CREATE INDEX IF NOT EXISTS index_notes_checksum ON notes (checksum)`,
-				`CREATE INDEX IF NOT EXISTS index_notes_dir_filename ON notes (dir, filename)`,
-				`
-					CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
-						filename, title, body,
-						content = notes,
-						content_rowid = id,
-						tokenize = 'porter unicode61 remove_diacritics 1'
-					)
-				`,
+				`CREATE INDEX IF NOT EXISTS index_notes_path ON notes (path)`,
+				`CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
+					path, title, body,
+					content = notes,
+					content_rowid = id,
+					tokenize = 'porter unicode61 remove_diacritics 1'
+				)`,
 				// Triggers to keep the FTS index up to date.
-				`
-					CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
-						INSERT INTO notes_fts(rowid, filename, title, body) VALUES (new.id, new.filename, new.title, new.body);
-					END
-				`,
-				`
-					CREATE TRIGGER IF NOT EXISTS notes_ad AFTER DELETE ON notes BEGIN
-						INSERT INTO notes_fts(notes_fts, rowid, filename, title, body) VALUES('delete', old.id, old.filename, old.title, old.body);
-					END
-				`,
-				`
-					CREATE TRIGGER IF NOT EXISTS notes_au AFTER UPDATE ON notes BEGIN
-						INSERT INTO notes_fts(notes_fts, rowid, filename, title, body) VALUES('delete', old.id, old.filename, old.title, old.body);
-						INSERT INTO notes_fts(rowid, filename, title, body) VALUES (new.id, new.filename, new.title, new.body);
-					END
-				`,
+				`CREATE TRIGGER IF NOT EXISTS trigger_notes_ai AFTER INSERT ON notes BEGIN
+					INSERT INTO notes_fts(rowid, path, title, body) VALUES (new.id, new.path, new.title, new.body);
+				END`,
+				`CREATE TRIGGER IF NOT EXISTS trigger_notes_ad AFTER DELETE ON notes BEGIN
+					INSERT INTO notes_fts(notes_fts, rowid, path, title, body) VALUES('delete', old.id, old.path, old.title, old.body);
+				END`,
+				`CREATE TRIGGER IF NOT EXISTS trigger_notes_au AFTER UPDATE ON notes BEGIN
+					INSERT INTO notes_fts(notes_fts, rowid, path, title, body) VALUES('delete', old.id, old.path, old.title, old.body);
+					INSERT INTO notes_fts(rowid, path, title, body) VALUES (new.id, new.path, new.title, new.body);
+				END`,
 				`PRAGMA user_version = 1`,
 			})
 

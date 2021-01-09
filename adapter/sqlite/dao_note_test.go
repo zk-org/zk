@@ -13,31 +13,31 @@ import (
 
 func TestNoteDAOIndexed(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
 		expected := []file.Metadata{
 			{
-				Path:     file.Path{Dir: "", Filename: "f39c8.md", Abs: "/test/f39c8.md"},
+				Path:     "f39c8.md",
 				Modified: date("2020-01-20T08:52:42.321024+01:00"),
 			},
 			{
-				Path:     file.Path{Dir: "", Filename: "index.md", Abs: "/test/index.md"},
+				Path:     "index.md",
 				Modified: date("2019-12-04T12:17:21.720747+01:00"),
 			},
 			{
-				Path:     file.Path{Dir: "log", Filename: "2021-01-03.md", Abs: "/test/log/2021-01-03.md"},
+				Path:     "log/2021-01-03.md",
 				Modified: date("2020-11-22T16:27:45.734454655+01:00"),
 			},
 			{
-				Path:     file.Path{Dir: "log", Filename: "2021-01-04.md", Abs: "/test/log/2021-01-04.md"},
+				Path:     "log/2021-01-04.md",
 				Modified: date("2020-11-29T08:20:18.138907236+01:00"),
 			},
 			{
-				Path:     file.Path{Dir: "ref/test", Filename: "a.md", Abs: "/test/ref/test/a.md"},
+				Path:     "ref/test/a.md",
 				Modified: date("2019-11-20T20:34:06.120375+01:00"),
 			},
 			{
-				Path:     file.Path{Dir: "ref/test", Filename: "b.md", Abs: "/test/ref/test/b.md"},
+				Path:     "ref/test/b.md",
 				Modified: date("2019-11-20T20:34:06.120375+01:00"),
 			},
 		}
@@ -55,14 +55,10 @@ func TestNoteDAOIndexed(t *testing.T) {
 
 func TestNoteDAOAdd(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
 		err := dao.Add(note.Metadata{
-			Path: file.Path{
-				Dir:      "log",
-				Filename: "added.md",
-				Abs:      "/test/log/added.md",
-			},
+			Path:      "log/added.md",
 			Title:     "Added note",
 			Body:      "Note body",
 			WordCount: 2,
@@ -72,11 +68,10 @@ func TestNoteDAOAdd(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		row, err := queryNoteRow(tx, `filename = "added.md"`)
+		row, err := queryNoteRow(tx, `path = "log/added.md"`)
 		assert.Nil(t, err)
 		assert.Equal(t, row, noteRow{
-			Dir:       "log",
-			Filename:  "added.md",
+			Path:      "log/added.md",
 			Title:     "Added note",
 			Body:      "Note body",
 			WordCount: 2,
@@ -90,28 +85,19 @@ func TestNoteDAOAdd(t *testing.T) {
 // Check that we can't add a duplicate note with an existing path.
 func TestNoteDAOAddExistingNote(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
-		err := dao.Add(note.Metadata{
-			Path: file.Path{
-				Dir:      "ref/test",
-				Filename: "a.md",
-			},
-		})
-		assert.Err(t, err, "ref/test/a.md: can't add note to the index: UNIQUE constraint failed: notes.filename, notes.dir")
+		err := dao.Add(note.Metadata{Path: "ref/test/a.md"})
+		assert.Err(t, err, "ref/test/a.md: can't add note to the index: UNIQUE constraint failed: notes.path")
 	})
 }
 
 func TestNoteDAOUpdate(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
 		err := dao.Update(note.Metadata{
-			Path: file.Path{
-				Dir:      "ref/test",
-				Filename: "a.md",
-				Abs:      "/test/log/added.md",
-			},
+			Path:      "ref/test/a.md",
 			Title:     "Updated note",
 			Body:      "Updated body",
 			WordCount: 42,
@@ -121,11 +107,10 @@ func TestNoteDAOUpdate(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		row, err := queryNoteRow(tx, `dir = "ref/test" AND filename = "a.md"`)
+		row, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
 		assert.Equal(t, row, noteRow{
-			Dir:       "ref/test",
-			Filename:  "a.md",
+			Path:      "ref/test/a.md",
 			Title:     "Updated note",
 			Body:      "Updated body",
 			WordCount: 42,
@@ -138,14 +123,10 @@ func TestNoteDAOUpdate(t *testing.T) {
 
 func TestNoteDAOUpdateUnknown(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
 		err := dao.Update(note.Metadata{
-			Path: file.Path{
-				Dir:      "unknown",
-				Filename: "unknown.md",
-				Abs:      "/test/unknown/unknown.md",
-			},
+			Path: "unknown/unknown.md",
 		})
 		assert.Err(t, err, "unknown/unknown.md: failed to update note index: note not found in the index")
 	})
@@ -153,43 +134,35 @@ func TestNoteDAOUpdateUnknown(t *testing.T) {
 
 func TestNoteDAORemove(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
-		err := dao.Remove(file.Path{
-			Dir:      "ref/test",
-			Filename: "a.md",
-			Abs:      "/test/ref/test/a.md",
-		})
+		err := dao.Remove("ref/test/a.md")
 		assert.Nil(t, err)
 	})
 }
 
 func TestNoteDAORemoveUnknown(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
-		dao := NewNoteDAO(tx, "/test", &util.NullLogger)
+		dao := NewNoteDAO(tx, &util.NullLogger)
 
-		err := dao.Remove(file.Path{
-			Dir:      "unknown",
-			Filename: "unknown.md",
-			Abs:      "/test/unknown/unknown.md",
-		})
+		err := dao.Remove("unknown/unknown.md")
 		assert.Err(t, err, "unknown/unknown.md: failed to remove note index: note not found in the index")
 	})
 }
 
 type noteRow struct {
-	Dir, Filename, Title, Body, Checksum string
-	WordCount                            int
-	Created, Modified                    time.Time
+	Path, Title, Body, Checksum string
+	WordCount                   int
+	Created, Modified           time.Time
 }
 
 func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 	var row noteRow
 	err := tx.QueryRow(fmt.Sprintf(`
-		SELECT dir, filename, title, body, word_count, checksum, created, modified
+		SELECT path, title, body, word_count, checksum, created, modified
 		  FROM notes
 		 WHERE %v
-	`, where)).Scan(&row.Dir, &row.Filename, &row.Title, &row.Body, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
+	`, where)).Scan(&row.Path, &row.Title, &row.Body, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
 	return row, err
 }
 

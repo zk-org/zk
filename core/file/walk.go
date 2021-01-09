@@ -47,11 +47,7 @@ func Walk(dir zk.Dir, extension string, logger util.Logger) <-chan Metadata {
 				}
 
 				c <- Metadata{
-					Path: Path{
-						Dir:      filepath.Join(dir.Name, curDir),
-						Filename: filename,
-						Abs:      abs,
-					},
+					Path:     filepath.Join(dir.Name, curDir, filename),
 					Modified: info.ModTime(),
 				}
 			}

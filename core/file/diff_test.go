@@ -22,15 +22,15 @@ func TestDiffEmpty(t *testing.T) {
 func TestNoDiff(t *testing.T) {
 	files := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 		{
-			Path:     Path{Dir: "b", Filename: "1"},
+			Path:     "b/1",
 			Modified: date3,
 		},
 	}
@@ -41,15 +41,15 @@ func TestNoDiff(t *testing.T) {
 func TestDiff(t *testing.T) {
 	source := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 		{
-			Path:     Path{Dir: "b", Filename: "1"},
+			Path:     "b/1",
 			Modified: date3,
 		},
 	}
@@ -57,33 +57,33 @@ func TestDiff(t *testing.T) {
 	target := []Metadata{
 		{
 			// Date changed
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1.Add(time.Hour),
 		},
 		// 2 is added
 		{
 			// 3 is removed
-			Path:     Path{Dir: "a", Filename: "3"},
+			Path:     "a/3",
 			Modified: date3,
 		},
 		{
 			// No change
-			Path:     Path{Dir: "b", Filename: "1"},
+			Path:     "b/1",
 			Modified: date3,
 		},
 	}
 
 	test(t, source, target, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "1"},
+			Path: "a/1",
 			Kind: DiffModified,
 		},
 		{
-			Path: Path{Dir: "a", Filename: "2"},
+			Path: "a/2",
 			Kind: DiffAdded,
 		},
 		{
-			Path: Path{Dir: "a", Filename: "3"},
+			Path: "a/3",
 			Kind: DiffRemoved,
 		},
 	})
@@ -92,25 +92,25 @@ func TestDiff(t *testing.T) {
 func TestDiffWithMoreInSource(t *testing.T) {
 	source := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 	}
 
 	target := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 	}
 
 	test(t, source, target, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "2"},
+			Path: "a/2",
 			Kind: DiffAdded,
 		},
 	})
@@ -119,25 +119,25 @@ func TestDiffWithMoreInSource(t *testing.T) {
 func TestDiffWithMoreInTarget(t *testing.T) {
 	source := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 	}
 
 	target := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 	}
 
 	test(t, source, target, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "2"},
+			Path: "a/2",
 			Kind: DiffRemoved,
 		},
 	})
@@ -148,22 +148,22 @@ func TestDiffEmptySource(t *testing.T) {
 
 	target := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 	}
 
 	test(t, source, target, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "1"},
+			Path: "a/1",
 			Kind: DiffRemoved,
 		},
 		{
-			Path: Path{Dir: "a", Filename: "2"},
+			Path: "a/2",
 			Kind: DiffRemoved,
 		},
 	})
@@ -172,11 +172,11 @@ func TestDiffEmptySource(t *testing.T) {
 func TestDiffEmptyTarget(t *testing.T) {
 	source := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 	}
@@ -185,11 +185,11 @@ func TestDiffEmptyTarget(t *testing.T) {
 
 	test(t, source, target, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "1"},
+			Path: "a/1",
 			Kind: DiffAdded,
 		},
 		{
-			Path: Path{Dir: "a", Filename: "2"},
+			Path: "a/2",
 			Kind: DiffAdded,
 		},
 	})
@@ -198,11 +198,11 @@ func TestDiffEmptyTarget(t *testing.T) {
 func TestDiffCancellation(t *testing.T) {
 	source := []Metadata{
 		{
-			Path:     Path{Dir: "a", Filename: "1"},
+			Path:     "a/1",
 			Modified: date1,
 		},
 		{
-			Path:     Path{Dir: "a", Filename: "2"},
+			Path:     "a/2",
 			Modified: date2,
 		},
 	}
@@ -222,7 +222,7 @@ func TestDiffCancellation(t *testing.T) {
 
 	assert.Equal(t, received, []DiffChange{
 		{
-			Path: Path{Dir: "a", Filename: "1"},
+			Path: "a/1",
 			Kind: DiffAdded,
 		},
 	})

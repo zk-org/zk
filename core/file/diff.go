@@ -1,12 +1,12 @@
 package file
 
-// DiffChange represents a file change made in a slip box directory.
+// DiffChange represents a file change made in a directory.
 type DiffChange struct {
-	Path Path
+	Path string
 	Kind DiffKind
 }
 
-// DiffKind represents a type of file change made in a slip box directory.
+// DiffKind represents a type of file change made in a directory.
 type DiffKind int
 
 const (
@@ -82,7 +82,7 @@ func (p *diffPair) diff() *DiffChange {
 		p.target = nil
 
 	default: // Different files, one has been added or removed.
-		if p.source.Path.Less(p.target.Path) {
+		if p.source.Path < p.target.Path {
 			change = &DiffChange{p.source.Path, DiffAdded}
 			p.source = nil
 		} else {

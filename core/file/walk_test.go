@@ -15,29 +15,29 @@ var root = fixtures.Path("walk")
 
 func TestWalkRootDir(t *testing.T) {
 	dir := zk.Dir{Name: "", Path: root}
-	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
-		{Dir: "", Filename: "a.md", Abs: filepath.Join(root, "a.md")},
-		{Dir: "", Filename: "b.md", Abs: filepath.Join(root, "b.md")},
-		{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
-		{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
-		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
-		{Dir: "dir2", Filename: "a.md", Abs: filepath.Join(root, "dir2/a.md")},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []string{
+		"a.md",
+		"b.md",
+		"dir1/a.md",
+		"dir1/b.md",
+		"dir1/dir1/a.md",
+		"dir2/a.md",
 	})
 }
 
 func TestWalkSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1", Path: filepath.Join(root, "dir1")}
-	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
-		{Dir: "dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/a.md")},
-		{Dir: "dir1", Filename: "b.md", Abs: filepath.Join(root, "dir1/b.md")},
-		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []string{
+		"dir1/a.md",
+		"dir1/b.md",
+		"dir1/dir1/a.md",
 	})
 }
 
 func TestWalkSubSubDir(t *testing.T) {
 	dir := zk.Dir{Name: "dir1/dir1", Path: filepath.Join(root, "dir1/dir1")}
-	testEqual(t, Walk(dir, "md", &util.NullLogger), []Path{
-		{Dir: "dir1/dir1", Filename: "a.md", Abs: filepath.Join(root, "dir1/dir1/a.md")},
+	testEqual(t, Walk(dir, "md", &util.NullLogger), []string{
+		"dir1/dir1/a.md",
 	})
 }
 
@@ -46,10 +46,10 @@ func date(s string) time.Time {
 	return date
 }
 
-func testEqual(t *testing.T, actual <-chan Metadata, expected []Path) {
-	popExpected := func() (Path, bool) {
+func testEqual(t *testing.T, actual <-chan Metadata, expected []string) {
+	popExpected := func() (string, bool) {
 		if len(expected) == 0 {
-			return Path{}, false
+			return "", false
 		}
 		item := expected[0]
 		expected = expected[1:]
