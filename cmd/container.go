@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/mickael-menu/zk/adapter/handlebars"
 	"github.com/mickael-menu/zk/adapter/sqlite"
+	"github.com/mickael-menu/zk/adapter/tty"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
 )
@@ -26,7 +27,7 @@ func NewContainer() *Container {
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Logger)
+		handlebars.Init(lang, c.Logger, tty.NewStyler())
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader

@@ -10,7 +10,7 @@ import (
 //
 // {{slug "This will be slugified!"}} -> this-will-be-slugified
 // {{#slug}}This will be slugified!{{/slug}} -> this-will-be-slugified
-func RegisterSlug(logger util.Logger, lang string) {
+func RegisterSlug(lang string, logger util.Logger) {
 	raymond.RegisterHelper("slug", func(opt interface{}) string {
 		switch arg := opt.(type) {
 		case *raymond.Options:

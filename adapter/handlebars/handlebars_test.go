@@ -1,16 +1,29 @@
 package handlebars
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/fixtures"
 )
 
 func init() {
-	Init("en", &util.NullLogger)
+	Init("en", &util.NullLogger, &styler{})
+}
+
+// styler is a test double for core.Styler
+// "hello", "red" -> "red(hello)"
+type styler struct{}
+
+func (s *styler) Style(text string, rules ...core.StyleRule) (string, error) {
+	for _, rule := range rules {
+		text = fmt.Sprintf("%s(%s)", rule, text)
+	}
+	return text, nil
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
@@ -125,4 +138,13 @@ func TestShellHelper(t *testing.T) {
 		nil,
 		"Hello, world!\n",
 	)
+}
+
+func TestStyleHelper(t *testing.T) {
+	// inline
+	testString(t, "{{style 'single' 'Some text'}}", nil, "single(Some text)")
+	testString(t, "{{style 'red bold' 'Another text'}}", nil, "bold(red(Another text))")
+
+	// block
+	testString(t, "{{#style 'single'}}A multiline\ntext{{/style}}", nil, "single(A multiline\ntext)")
 }

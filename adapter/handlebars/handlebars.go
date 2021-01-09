@@ -6,16 +6,18 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-func Init(lang string, logger util.Logger) {
+func Init(lang string, logger util.Logger, styler core.Styler) {
 	helpers.RegisterDate(logger)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
-	helpers.RegisterSlug(logger, lang)
+	helpers.RegisterSlug(lang, logger)
+	helpers.RegisterStyle(styler, logger)
 }
 
 // Template renders a parsed handlebars template.
