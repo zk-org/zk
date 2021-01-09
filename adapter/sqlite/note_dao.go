@@ -152,7 +152,7 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 				 ORDER BY title ASC
 			`)
 		} else {
-			filter := filters[0].(note.QueryFilter)
+			filter := filters[0].(note.MatchFilter)
 			return d.tx.Query(`
 				SELECT n.id, n.path, n.title, n.body, n.word_count,
 				       n.created, n.modified, n.checksum,
@@ -187,7 +187,6 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 		}
 
 		callback(note.Match{
-			ID:      id,
 			Snippet: snippet,
 			Metadata: note.Metadata{
 				Path:      path,
