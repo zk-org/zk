@@ -1,4 +1,4 @@
-package file
+package paths
 
 // DiffChange represents a file change made in a directory.
 type DiffChange struct {
@@ -15,10 +15,10 @@ const (
 	DiffRemoved
 )
 
-// Diff compares two sources of file.Metadata and report the file changes, using
-// the file modification date.
+// Diff compares two sources of Metadata and report the file changes, using the
+// file modification date.
 //
-// Warning: The file.Metadata have to be sorted by their Path for the diffing to
+// Warning: The Metadata have to be sorted by their Path for the diffing to
 // work properly.
 func Diff(source, target <-chan Metadata, callback func(DiffChange) error) error {
 	var err error

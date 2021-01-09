@@ -4,7 +4,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+// Metadata holds information about a file path.
+type Metadata struct {
+	Path     string
+	Modified time.Time
+}
 
 // Exists returns whether the given path exists on the file system.
 func Exists(path string) (bool, error) {

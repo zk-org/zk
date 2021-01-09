@@ -5,17 +5,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/core/file"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
+	"github.com/mickael-menu/zk/util/paths"
 )
 
 func TestNoteDAOIndexed(t *testing.T) {
 	testTransaction(t, func(tx Transaction) {
 		dao := NewNoteDAO(tx, &util.NullLogger)
 
-		expected := []file.Metadata{
+		expected := []paths.Metadata{
 			{
 				Path:     "f39c8.md",
 				Modified: date("2020-01-20T08:52:42.321024+01:00"),

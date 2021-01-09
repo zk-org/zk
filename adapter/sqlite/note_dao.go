@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/mickael-menu/zk/core/file"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
+	"github.com/mickael-menu/zk/util/paths"
 )
 
 // NoteDAO persists notes in the SQLite database.
@@ -51,7 +51,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 	}
 }
 
-func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
+func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 	wrap := errors.Wrapper("failed to get indexed notes")
 
 	rows, err := d.indexedStmt.Query()
@@ -59,7 +59,7 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 		return nil, wrap(err)
 	}
 
-	c := make(chan file.Metadata)
+	c := make(chan paths.Metadata)
 	go func() {
 		defer close(c)
 		defer rows.Close()
@@ -74,7 +74,7 @@ func (d *NoteDAO) Indexed() (<-chan file.Metadata, error) {
 				d.logger.Err(wrap(err))
 			}
 
-			c <- file.Metadata{
+			c <- paths.Metadata{
 				Path:     path,
 				Modified: modified,
 			}

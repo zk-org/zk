@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/core/file"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
+	"github.com/mickael-menu/zk/util/paths"
 	"gopkg.in/djherbis/times.v1"
 )
 
@@ -29,7 +29,7 @@ type Metadata struct {
 // Indexer persists the notes index.
 type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.
-	Indexed() (<-chan file.Metadata, error)
+	Indexed() (<-chan paths.Metadata, error)
 	// Add indexes a new note from its metadata.
 	Add(metadata Metadata) error
 	// Update updates the metadata of an already indexed note.
@@ -42,29 +42,29 @@ type Indexer interface {
 func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 	wrap := errors.Wrapper("indexation failed")
 
-	source := file.Walk(dir, dir.Config.Extension, logger)
+	source := paths.Walk(dir.Path, dir.Config.Extension, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
 		return wrap(err)
 	}
 
-	err = file.Diff(source, target, func(change file.DiffChange) error {
+	err = paths.Diff(source, target, func(change paths.DiffChange) error {
 		switch change.Kind {
-		case file.DiffAdded:
+		case paths.DiffAdded:
 			metadata, err := metadata(change.Path, dir.Path)
 			if err == nil {
 				err = indexer.Add(metadata)
 			}
 			logger.Err(err)
 
-		case file.DiffModified:
+		case paths.DiffModified:
 			metadata, err := metadata(change.Path, dir.Path)
 			if err == nil {
 				err = indexer.Update(metadata)
 			}
 			logger.Err(err)
 
-		case file.DiffRemoved:
+		case paths.DiffRemoved:
 			err := indexer.Remove(change.Path)
 			logger.Err(err)
 		}
