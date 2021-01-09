@@ -6,13 +6,13 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/adapter/handlebars/helpers"
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-func Init(lang string, logger util.Logger, styler core.Styler) {
+func Init(lang string, logger util.Logger, styler style.Styler) {
 	helpers.RegisterDate(logger)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)

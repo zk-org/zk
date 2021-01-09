@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/util/assert"
 )
 
@@ -20,29 +20,33 @@ func TestStyleNoRule(t *testing.T) {
 }
 
 func TestStyleOneRule(t *testing.T) {
-	res, err := createStyler().Style("Hello", core.StyleRule("red"))
+	res, err := createStyler().Style("Hello", style.Rule("red"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31mHello\033[0m")
 }
 
 func TestStyleMultipleRule(t *testing.T) {
-	res, err := createStyler().Style("Hello", core.StyleRule("red"), core.StyleRule("bold"))
+	res, err := createStyler().Style("Hello", style.Rule("red"), style.Rule("bold"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31;1mHello\033[0m")
 }
 
 func TestStyleUnknownRule(t *testing.T) {
-	_, err := createStyler().Style("Hello", core.StyleRule("unknown"))
+	_, err := createStyler().Style("Hello", style.Rule("unknown"))
 	assert.Err(t, err, "unknown styling rule: unknown")
 }
 
 func TestStyleAllRules(t *testing.T) {
 	styler := createStyler()
 	test := func(rule string, expected string) {
-		res, err := styler.Style("Hello", core.StyleRule(rule))
+		res, err := styler.Style("Hello", style.Rule(rule))
 		assert.Nil(t, err)
 		assert.Equal(t, res, "\033["+expected+"Hello\033[0m")
 	}
+
+	test("title", "1;33m")
+	test("path", "36m")
+	test("match", "31m")
 
 	test("reset", "0m")
 	test("bold", "1m")

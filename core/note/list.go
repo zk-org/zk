@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util/opt"
 )
@@ -26,20 +25,6 @@ type Match struct {
 type Finder interface {
 	Find(callback func(Match) error, filters ...Filter) error
 }
-
-// Unit represents a type of component of note, for example its path or its title.
-type Unit int
-
-const (
-	UnitPath Unit = iota + 1
-	UnitTitle
-	UnitBody
-	UnitSnippet
-	UnitMatch
-	UnitWordCount
-	UnitDate
-	UnitChecksum
-)
 
 type ListOpts struct {
 	Format  opt.String
@@ -62,7 +47,7 @@ func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) erro
 	}
 
 	return deps.Finder.Find(func(note Match) error {
-		ft, err := format(note, deps.BasePath)
+		ft, err := format(note, deps.BasePath, deps.Templates)
 		if err != nil {
 			return err
 		}
@@ -77,27 +62,27 @@ func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) erro
 var templates = map[string]string{
 	"path": `{{path}}`,
 
-	"oneline": `{{path}} {{title}} ({{date created "elapsed"}})`,
+	"oneline": `{{style "path" path}} {{style "title" title}} ({{date created "elapsed"}})`,
 
-	"short": `{{path}} {{title}} ({{date created "elapsed"}})
+	"short": `{{style "path" path}} {{style "title" title}} ({{date created "elapsed"}})
 
 {{prepend "  " snippet}}
 `,
 
-	"medium": `{{path}} {{title}}
+	"medium": `{{style "path" path}} {{style "title" title}}
 Created: {{date created "short"}}
 
 {{prepend "  " snippet}}
 `,
 
-	"long": `{{path}} {{title}}
+	"long": `{{style "path" path}} {{style "title" title}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
 {{prepend "  " snippet}}
 `,
 
-	"full": `{{path}} {{title}}
+	"full": `{{style "path" path}} {{style "title" title}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
@@ -116,29 +101,34 @@ func matchTemplate(format opt.String) string {
 	return templ
 }
 
-func format(match Match, basePath string) (*matchRenderContext, error) {
-	color.NoColor = false // Otherwise the colors are not displayed in `less -r`.
-	path := color.New(color.FgCyan).SprintFunc()
-	title := color.New(color.FgYellow).SprintFunc()
-	term := color.New(color.FgRed).SprintFunc()
-
+func format(match Match, basePath string, templates templ.Loader) (*matchRenderContext, error) {
 	re := regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
 
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
-	pth, err := filepath.Rel(wd, filepath.Join(basePath, match.Path))
+	path, err := filepath.Rel(wd, filepath.Join(basePath, match.Path))
+	if err != nil {
+		return nil, err
+	}
+
+	snippet := strings.TrimSpace(re.ReplaceAllString(match.Snippet, `{{#style "match"}}$1{{/style}}`))
+	snippetTempl, err := templates.Load(snippet)
+	if err != nil {
+		return nil, err
+	}
+	snippet, err = snippetTempl.Render(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &matchRenderContext{
-		Path:      path(pth),
-		Title:     title(match.Title),
+		Path:      path,
+		Title:     match.Title,
 		Body:      match.Body,
 		WordCount: match.WordCount,
-		Snippet:   strings.TrimSpace(re.ReplaceAllString(match.Snippet, term("$1"))),
+		Snippet:   snippet,
 		Created:   match.Created,
 		Modified:  match.Modified,
 	}, err

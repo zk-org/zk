@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/util"
 )
 
@@ -13,11 +13,11 @@ import (
 //
 // {{style "date" created}}
 // {{#style "red"}}Hello, world{{/style}}
-func RegisterStyle(styler core.Styler, logger util.Logger) {
+func RegisterStyle(styler style.Styler, logger util.Logger) {
 	style := func(keys string, text string) string {
-		rules := make([]core.StyleRule, 0)
+		rules := make([]style.Rule, 0)
 		for _, key := range strings.Fields(keys) {
-			rules = append(rules, core.StyleRule(key))
+			rules = append(rules, style.Rule(key))
 		}
 		res, err := styler.Style(text, rules...)
 		if err != nil {

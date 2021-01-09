@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/style"
 )
 
 // Styler is a text styler using ANSI escape codes to be used with a TTY.
@@ -14,9 +14,8 @@ func NewStyler() *Styler {
 	return &Styler{}
 }
 
-// FIXME: Semantic rules
-func (s *Styler) Style(text string, rules ...core.StyleRule) (string, error) {
-	attrs, err := s.attributes(rules)
+func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
+	attrs, err := s.attributes(expandThemeAliases(rules))
 	if err != nil {
 		return "", err
 	}
@@ -26,7 +25,32 @@ func (s *Styler) Style(text string, rules ...core.StyleRule) (string, error) {
 	return color.New(attrs...).Sprint(text), nil
 }
 
-var attrsMapping = map[core.StyleRule]color.Attribute{
+// FIXME: User config
+var themeAliases = map[style.Rule][]style.Rule{
+	"title": {"bold", "yellow"},
+	"path":  {"cyan"},
+	"match": {"red"},
+}
+
+func expandThemeAliases(rules []style.Rule) []style.Rule {
+	expanded := make([]style.Rule, 0)
+	for _, rule := range rules {
+		aliases, ok := themeAliases[rule]
+		if ok {
+			aliases = expandThemeAliases(aliases)
+			for _, alias := range aliases {
+				expanded = append(expanded, alias)
+			}
+
+		} else {
+			expanded = append(expanded, rule)
+		}
+	}
+
+	return expanded
+}
+
+var attrsMapping = map[style.Rule]color.Attribute{
 	"reset":         color.Reset,
 	"bold":          color.Bold,
 	"faint":         color.Faint,
@@ -74,7 +98,7 @@ var attrsMapping = map[core.StyleRule]color.Attribute{
 	"bright-white-bg":   color.BgHiWhite,
 }
 
-func (s *Styler) attributes(rules []core.StyleRule) ([]color.Attribute, error) {
+func (s *Styler) attributes(rules []style.Rule) ([]color.Attribute, error) {
 	attrs := make([]color.Attribute, 0)
 
 	for _, rule := range rules {

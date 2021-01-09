@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/fixtures"
@@ -19,7 +19,7 @@ func init() {
 // "hello", "red" -> "red(hello)"
 type styler struct{}
 
-func (s *styler) Style(text string, rules ...core.StyleRule) (string, error) {
+func (s *styler) Style(text string, rules ...style.Rule) (string, error) {
 	for _, rule := range rules {
 		text = fmt.Sprintf("%s(%s)", rule, text)
 	}
