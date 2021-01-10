@@ -4,8 +4,8 @@
   body: "A daily note"
   word_count: 3
   checksum: "qwfpgj"
-  created: "2020-11-22T16:27:45.734392408+01:00"
-  modified: "2020-11-22T16:27:45.734454655+01:00"
+  created: "2020-11-22T16:27:45+01:00"
+  modified: "2020-11-22T16:27:45+01:00"
 
 - id: 2
   path: "log/2021-01-04.md"
@@ -13,8 +13,8 @@
   body: "A second daily note"
   word_count: 4
   checksum: "arstde"
-  created: "2020-11-29T08:20:18.138816226+01:00"
-  modified: "2020-11-29T08:20:18.138907236+01:00"
+  created: "2020-11-29T08:20:18+01:00"
+  modified: "2020-11-29T08:20:18+01:00"
 
 - id: 3
   path: "index.md"
@@ -22,8 +22,8 @@
   body: "Index of the Zettelkasten"
   word_count: 4
   checksum: "iaefhv"
-  created: "2019-12-04T11:59:11.927409053+01:00"
-  modified: "2019-12-04T12:17:21.720747+01:00"
+  created: "2019-12-04T11:59:11+01:00"
+  modified: "2019-12-04T12:17:21+01:00"
 
 - id: 4
   path: "f39c8.md"
@@ -31,8 +31,8 @@
   body: "Its content will surprise you"
   word_count: 5
   checksum: "irkwyc"
-  created: "2020-01-19T10:58:41.567911029+01:00"
-  modified: "2020-01-20T08:52:42.321024+01:00"
+  created: "2020-01-19T10:58:41+01:00"
+  modified: "2020-01-20T08:52:42+01:00"
 
 - id: 5
   path: "ref/test/b.md"
@@ -40,8 +40,8 @@
   body: "This one is in a sub sub directory"
   word_count: 8
   checksum: "yvwbae"
-  created: "2019-11-20T20:32:56.107028961+01:00"
-  modified: "2019-11-20T20:34:06.120375+01:00"
+  created: "2019-11-20T20:32:56+01:00"
+  modified: "2019-11-20T20:34:06+01:00"
 
 - id: 6
   path: "ref/test/a.md"
@@ -49,5 +49,5 @@
   body: "It shall appear before b.md"
   word_count: 5
   checksum: "iecywst"
-  created: "2019-11-20T20:32:56.107028961+01:00"
-  modified: "2019-11-20T20:34:06.120375+01:00"
+  created: "2019-11-20T20:32:56+01:00"
+  modified: "2019-11-20T20:34:06+01:00"

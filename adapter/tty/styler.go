@@ -28,7 +28,7 @@ func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
 // FIXME: User config
 var themeAliases = map[style.Rule][]style.Rule{
 	"title": {"bold", "yellow"},
-	"path":  {"cyan"},
+	"path":  {"underline", "cyan"},
 	"match": {"red"},
 }
 

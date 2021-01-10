@@ -26,6 +26,18 @@ type Metadata struct {
 	Checksum  string
 }
 
+func (m Metadata) String() string {
+	return fmt.Sprintf(`note.Metadata{
+	Path: "%v",
+	Title: "%v",
+	Body: "%v",
+	WordCount: %v,
+	Created: "%v",
+	Modified: "%v",
+	Checksum: "%v",
+}`, m.Path, m.Title, m.Body, m.WordCount, m.Created.Format(time.RFC3339), m.Modified.Format(time.RFC3339), m.Checksum)
+}
+
 // Indexer persists the notes index.
 type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.

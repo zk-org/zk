@@ -1,6 +1,7 @@
 package note
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -19,6 +20,13 @@ type Match struct {
 	// Snippet is an excerpt of the note.
 	Snippet string
 	Metadata
+}
+
+func (m Match) String() string {
+	return fmt.Sprintf(`note.Match{
+	Snippet: "%v",
+	Metadata: %v,
+}`, m.Snippet, m.Metadata)
 }
 
 // Finder retrieves notes matching the given Filter.
@@ -62,27 +70,27 @@ func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) erro
 var templates = map[string]string{
 	"path": `{{path}}`,
 
-	"oneline": `{{style "path" path}} {{style "title" title}} ({{date created "elapsed"}})`,
+	"oneline": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})`,
 
-	"short": `{{style "path" path}} {{style "title" title}} ({{date created "elapsed"}})
+	"short": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
 {{prepend "  " snippet}}
 `,
 
-	"medium": `{{style "path" path}} {{style "title" title}}
+	"medium": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 
 {{prepend "  " snippet}}
 `,
 
-	"long": `{{style "path" path}} {{style "title" title}}
+	"long": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
 {{prepend "  " snippet}}
 `,
 
-	"full": `{{style "path" path}} {{style "title" title}}
+	"full": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
