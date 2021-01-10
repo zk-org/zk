@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/mickael-menu/zk/core/note"
@@ -163,7 +164,7 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 				 WHERE notes_fts MATCH ?
 				 ORDER BY bm25(notes_fts, 1000.0, 500.0, 1.0)
 				 --- ORDER BY rank
-			`, filter)
+			`, escapeForFTS5(string(filter)))
 		}
 	}()
 
@@ -201,4 +202,82 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 	}
 
 	return nil
+}
+
+func escapeForFTS5(query string) string {
+	quote := false
+	out := ""
+	term := ""
+
+	endTerm := func() {
+		if term == "" {
+			return
+		}
+		switch term {
+		case "AND", "OR", "NOT":
+			out += term
+		default:
+			isPrefixToken := strings.HasSuffix(term, "*")
+			if isPrefixToken {
+				term = strings.TrimSuffix(term, "*")
+			}
+			out += `"` + term + `"`
+			if isPrefixToken {
+				out += "*"
+			}
+		}
+		term = ""
+	}
+
+	for _, c := range query {
+		switch {
+		case c == '"':
+			if quote {
+				endTerm()
+			}
+			quote = !quote
+
+		case c == '^' || c == '*':
+			if term != "" {
+				term += string(c)
+			} else {
+				out += string(c)
+			}
+
+		case c == '-':
+			if term == "" {
+				out += " NOT "
+			} else {
+				term += string(c)
+			}
+
+		case c == ':':
+			if term != "" && !quote {
+				out += term + string(c)
+				term = ""
+			} else {
+				term += string(c)
+			}
+
+		case c == '+':
+			if term != "" || quote {
+				term += string(c)
+			}
+
+		case c == ' ', c == '\t', c == '\n', c == '(', c == ')':
+			if !quote {
+				endTerm()
+				out += string(c)
+			} else {
+				term += string(c)
+			}
+
+		default:
+			term = term + string(c)
+		}
+	}
+
+	endTerm()
+
+	return out
 }

@@ -11,9 +11,9 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Path   string `arg optional placeholder:"PATH"`
-	Match  string `help:"Terms to search for in the notes" placeholder:"TERMS"`
-	Format string `help:"Pretty prints the list using the given format" placeholder:"TEMPLATE"`
+	Path   []string `arg optional placeholder:"PATHS"`
+	Match  string   `help:"Terms to search for in the notes" placeholder:"TERMS"`
+	Format string   `help:"Pretty prints the list using the given format" placeholder:"TEMPLATE"`
 }
 
 func (cmd *List) Run(container *Container) error {

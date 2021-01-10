@@ -214,13 +214,44 @@ func TestNoteDAOFindAll(t *testing.T) {
 	})
 }
 
-func testNoteDAOFind(t *testing.T, expected []note.Match) {
+func TestNoteDAOFindMatch(t *testing.T) {
+	expected := []note.Match{
+		{
+			Snippet: "A <zk:match>daily</zk:match> note",
+			Metadata: note.Metadata{
+				Path:      "log/2021-01-03.md",
+				Title:     "January 3, 2021",
+				Body:      "A daily note",
+				WordCount: 3,
+				Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+				Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+				Checksum:  "qwfpgj",
+			},
+		},
+		{
+			Snippet: "A second <zk:match>daily</zk:match> note",
+			Metadata: note.Metadata{
+				Path:      "log/2021-01-04.md",
+				Title:     "January 4, 2021",
+				Body:      "A second daily note",
+				WordCount: 4,
+				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+				Checksum:  "arstde",
+			},
+		},
+	}
+
+	testNoteDAOFind(t, expected, note.MatchFilter("daily"))
+}
+
+func testNoteDAOFind(t *testing.T, expected []note.Match, filters ...note.Filter) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		actual := make([]note.Match, 0)
 		err := dao.Find(func(m note.Match) error {
 			actual = append(actual, m)
 			return nil
-		})
+		}, filters...)
 		assert.Nil(t, err)
 		assert.Equal(t, actual, expected)
 	})
@@ -246,4 +277,62 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 		 WHERE %v
 	`, where)).Scan(&row.Path, &row.Title, &row.Body, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
 	return row, err
+}
+
+func TestEscapeForFTS5(t *testing.T) {
+	test := func(text, expected string) {
+		assert.Equal(t, escapeForFTS5(text), expected)
+	}
+
+	test(`foo`, `"foo"`)
+	test(`foo bar`, `"foo" "bar"`)
+	test(`"foo"`, `"foo"`)
+	test(`"foo bar"`, `"foo bar"`)
+	test(`"foo bar" qux`, `"foo bar" "qux"`)
+
+	test(`foo AND bar`, `"foo" AND "bar"`)
+	test(`foo AN bar`, `"foo" "AN" "bar"`)
+	test(`foo ANT bar`, `"foo" "ANT" "bar"`)
+	test(`"foo AND bar"`, `"foo AND bar"`)
+	test(`foo OR bar`, `"foo" OR "bar"`)
+	test(`foo NOT bar`, `"foo" NOT "bar"`)
+	test(`(foo AND bar) OR qux`, `("foo" AND "bar") OR "qux"`)
+
+	test(`foo -bar`, `"foo"  NOT "bar"`)
+	test(`"foo -bar"`, `"foo -bar"`)
+	test(`foo-bar`, `"foo-bar"`)
+
+	test(`foo/bar`, `"foo/bar"`)
+	test(`foo;bar`, `"foo;bar"`)
+	test(`foo,bar`, `"foo,bar"`)
+	test(`foo&bar`, `"foo&bar"`)
+	test(`foo's bar`, `"foo's" "bar"`)
+
+	test(`foo ba*`, `"foo" "ba"*`)
+	test(`foo ba* qux`, `"foo" "ba"* "qux"`)
+	test(`"foo ba"*`, `"foo ba"*`)
+	test(`(foo ba*)`, `("foo" "ba"*)`)
+	test(`foo*bar`, `"foo*bar"`)
+	test(`"foo*bar"`, `"foo*bar"`)
+
+	test(`col:foo bar`, `col:"foo" "bar"`)
+	test(`foo col:bar`, `"foo" col:"bar"`)
+	test(`foo "col:bar"`, `"foo" "col:bar"`)
+	test(`":foo"`, `":foo"`)
+	test(`-col:foo bar`, ` NOT col:"foo" "bar"`)
+	test(`col:(foo bar)`, `col:("foo" "bar")`)
+
+	test(`^foo`, `^"foo"`)
+	test(`^foo bar`, `^"foo" "bar"`)
+	test(`foo ^bar`, `"foo" ^"bar"`)
+	test(`^"foo bar"`, `^"foo bar"`)
+	test(`"foo ^bar"`, `"foo ^bar"`)
+	test(`col:^foo`, `col:^"foo"`)
+
+	test(`foo + bar`, `"foo"  "bar"`)
+	test(`"foo + bar"`, `"foo + bar"`)
+	test(`"+foo"`, `"+foo"`)
+
+	// NEAR is not supported
+	test(`NEAR(foo, bar, 4)`, `"NEAR"("foo," "bar," "4")`)
 }
