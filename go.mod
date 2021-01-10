@@ -15,6 +15,8 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.3
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/mickael-menu/pretty v0.2.3
+	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rvflash/elapsed v0.2.0
 	github.com/tebeka/strftime v0.1.5 // indirect
 	golang.org/x/sys v0.0.0-20210104204734-6f8348627aad // indirect

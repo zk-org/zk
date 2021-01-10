@@ -3,7 +3,7 @@ package strings
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/util/assert"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestPrepend(t *testing.T) {

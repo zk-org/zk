@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/mickael-menu/zk/core/zk"
-	"github.com/mickael-menu/zk/util/assert"
+	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/opt"
 )
 

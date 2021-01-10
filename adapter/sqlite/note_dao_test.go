@@ -7,8 +7,9 @@ import (
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
-	"github.com/mickael-menu/zk/util/assert"
 	"github.com/mickael-menu/zk/util/paths"
+	"github.com/mickael-menu/zk/util/test"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestNoteDAOIndexed(t *testing.T) {
@@ -16,27 +17,27 @@ func TestNoteDAOIndexed(t *testing.T) {
 		expected := []paths.Metadata{
 			{
 				Path:     "f39c8.md",
-				Modified: date("2020-01-20T08:52:42+01:00"),
+				Modified: test.Date("2020-01-20T08:52:42+01:00"),
 			},
 			{
 				Path:     "index.md",
-				Modified: date("2019-12-04T12:17:21+01:00"),
+				Modified: test.Date("2019-12-04T12:17:21+01:00"),
 			},
 			{
 				Path:     "log/2021-01-03.md",
-				Modified: date("2020-11-22T16:27:45+01:00"),
+				Modified: test.Date("2020-11-22T16:27:45+01:00"),
 			},
 			{
 				Path:     "log/2021-01-04.md",
-				Modified: date("2020-11-29T08:20:18+01:00"),
+				Modified: test.Date("2020-11-29T08:20:18+01:00"),
 			},
 			{
 				Path:     "ref/test/a.md",
-				Modified: date("2019-11-20T20:34:06+01:00"),
+				Modified: test.Date("2019-11-20T20:34:06+01:00"),
 			},
 			{
 				Path:     "ref/test/b.md",
-				Modified: date("2019-11-20T20:34:06+01:00"),
+				Modified: test.Date("2019-11-20T20:34:06+01:00"),
 			},
 		}
 
@@ -58,8 +59,8 @@ func TestNoteDAOAdd(t *testing.T) {
 			Title:     "Added note",
 			Body:      "Note body",
 			WordCount: 2,
-			Created:   date("2019-11-19T15:33:31+01:00"),
-			Modified:  date("2020-01-16T16:04:59+01:00"),
+			Created:   test.Date("2019-11-19T15:33:31+01:00"),
+			Modified:  test.Date("2020-01-16T16:04:59+01:00"),
 			Checksum:  "check",
 		})
 		assert.Nil(t, err)
@@ -72,8 +73,8 @@ func TestNoteDAOAdd(t *testing.T) {
 			Body:      "Note body",
 			WordCount: 2,
 			Checksum:  "check",
-			Created:   date("2019-11-19T15:33:31+01:00"),
-			Modified:  date("2020-01-16T16:04:59+01:00"),
+			Created:   test.Date("2019-11-19T15:33:31+01:00"),
+			Modified:  test.Date("2020-01-16T16:04:59+01:00"),
 		})
 	})
 }
@@ -93,8 +94,8 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Title:     "Updated note",
 			Body:      "Updated body",
 			WordCount: 42,
-			Created:   date("2020-11-22T16:49:47+01:00"),
-			Modified:  date("2020-11-22T16:49:47+01:00"),
+			Created:   test.Date("2020-11-22T16:49:47+01:00"),
+			Modified:  test.Date("2020-11-22T16:49:47+01:00"),
 			Checksum:  "updated checksum",
 		})
 		assert.Nil(t, err)
@@ -107,8 +108,8 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Body:      "Updated body",
 			WordCount: 42,
 			Checksum:  "updated checksum",
-			Created:   date("2019-11-20T20:32:56+01:00"),
-			Modified:  date("2020-11-22T16:49:47+01:00"),
+			Created:   test.Date("2019-11-20T20:32:56+01:00"),
+			Modified:  test.Date("2020-11-22T16:49:47+01:00"),
 		})
 	})
 }
@@ -138,75 +139,75 @@ func TestNoteDAORemoveUnknown(t *testing.T) {
 
 func TestNoteDAOFindAll(t *testing.T) {
 	testNoteDAOFind(t, []note.Match{
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "ref/test/b.md",
 				Title:     "A nested note",
 				Body:      "This one is in a sub sub directory",
 				WordCount: 8,
-				Created:   date("2019-11-20T20:32:56+01:00"),
-				Modified:  date("2019-11-20T20:34:06+01:00"),
+				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.Local),
+				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.Local),
 				Checksum:  "yvwbae",
 			},
 		},
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "f39c8.md",
 				Title:     "An interesting note",
 				Body:      "Its content will surprise you",
 				WordCount: 5,
-				Created:   date("2020-01-19T10:58:41+01:00"),
-				Modified:  date("2020-01-20T08:52:42+01:00"),
+				Created:   time.Date(2020, 1, 19, 10, 58, 41, 0, time.Local),
+				Modified:  time.Date(2020, 1, 20, 8, 52, 42, 0, time.Local),
 				Checksum:  "irkwyc",
 			},
 		},
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "ref/test/a.md",
 				Title:     "Another nested note",
 				Body:      "It shall appear before b.md",
 				WordCount: 5,
-				Created:   date("2019-11-20T20:32:56+01:00"),
-				Modified:  date("2019-11-20T20:34:06+01:00"),
+				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.Local),
+				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.Local),
 				Checksum:  "iecywst",
 			},
 		},
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "index.md",
 				Title:     "Index",
 				Body:      "Index of the Zettelkasten",
 				WordCount: 4,
-				Created:   date("2019-12-04T11:59:11+01:00"),
-				Modified:  date("2019-12-04T12:17:21+01:00"),
+				Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.Local),
+				Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.Local),
 				Checksum:  "iaefhv",
 			},
 		},
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "log/2021-01-03.md",
 				Title:     "January 3, 2021",
 				Body:      "A daily note",
 				WordCount: 3,
-				Created:   date("2020-11-22T16:27:45+01:00"),
-				Modified:  date("2020-11-22T16:27:45+01:00"),
+				Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+				Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
 				Checksum:  "qwfpgj",
 			},
 		},
-		note.Match{
+		{
 			Snippet: "",
 			Metadata: note.Metadata{
 				Path:      "log/2021-01-04.md",
 				Title:     "January 4, 2021",
 				Body:      "A second daily note",
 				WordCount: 4,
-				Created:   date("2020-11-29T08:20:18+01:00"),
-				Modified:  date("2020-11-29T08:20:18+01:00"),
+				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
 				Checksum:  "arstde",
 			},
 		},
@@ -221,28 +222,7 @@ func testNoteDAOFind(t *testing.T, expected []note.Match) {
 			return nil
 		})
 		assert.Nil(t, err)
-
-		popExpected := func() (note.Match, bool) {
-			if len(expected) == 0 {
-				return note.Match{}, false
-			}
-			item := expected[0]
-			expected = expected[1:]
-			return item, true
-		}
-
-		for _, act := range actual {
-			exp, ok := popExpected()
-			if !ok {
-				t.Errorf("More matches than expected: %v", actual)
-				return
-			}
-			assert.Equal(t, act, exp)
-		}
-
-		if len(expected) > 0 {
-			t.Errorf("Missing expected matches: %v", expected)
-		}
+		assert.Equal(t, actual, expected)
 	})
 }
 
@@ -266,9 +246,4 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 		 WHERE %v
 	`, where)).Scan(&row.Path, &row.Title, &row.Body, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
 	return row, err
-}
-
-func date(s string) time.Time {
-	date, _ := time.Parse(time.RFC3339, s)
-	return date
 }

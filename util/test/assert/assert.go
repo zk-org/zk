@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/mickael-menu/pretty"
 )
 
 func Nil(t *testing.T, value interface{}) {
@@ -28,7 +29,14 @@ func isNil(value interface{}) bool {
 
 func Equal(t *testing.T, actual, expected interface{}) {
 	if !(reflect.DeepEqual(actual, expected) || cmp.Equal(actual, expected)) {
-		t.Errorf("Received (type %v):\n%+v\n---\nBut expected (type %v):\n%+v", reflect.TypeOf(actual), toJSON(t, actual), reflect.TypeOf(expected), toJSON(t, expected))
+		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
+		t.Errorf("\n---\n")
+		t.Errorf("But expected (type %v):\n% #v", reflect.TypeOf(expected), pretty.Formatter(expected))
+		t.Errorf("\n---\n")
+		t.Errorf("Diff:\n")
+		for _, diff := range pretty.Diff(actual, expected) {
+			t.Errorf("\t% #v", diff)
+		}
 	}
 }
 

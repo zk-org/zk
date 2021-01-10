@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-testfixtures/testfixtures/v3"
-	"github.com/mickael-menu/zk/util/assert"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 // testTransaction is an utility function used to test a SQLite transaction to
