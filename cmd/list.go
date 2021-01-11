@@ -47,7 +47,7 @@ func (cmd *List) Run(container *Container) error {
 			filters = append(filters, note.MatchFilter(cmd.Match))
 		}
 
-		return note.List(
+		count, err := note.List(
 			note.ListOpts{
 				Format:  opt.NewNotEmptyString(cmd.Format),
 				Filters: filters,
@@ -59,6 +59,12 @@ func (cmd *List) Run(container *Container) error {
 			},
 			printNote,
 		)
+
+		if err == nil {
+			fmt.Printf("\nFound %d result(s)\n", count)
+		}
+
+		return err
 	})
 }
 

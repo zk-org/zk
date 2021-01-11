@@ -33,8 +33,9 @@ func (m Match) String() string {
 }
 
 // Finder retrieves notes matching the given Filter.
+// Returns the number of matches.
 type Finder interface {
-	Find(callback func(Match) error, filters ...Filter) error
+	Find(callback func(Match) error, filters ...Filter) (int, error)
 }
 
 type ListOpts struct {
@@ -50,11 +51,11 @@ type ListDeps struct {
 
 // List finds notes matching given criteria and formats them according to user
 // preference.
-func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) error) error {
+func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) error) (int, error) {
 	templ := matchTemplate(opts.Format)
 	template, err := deps.Templates.Load(templ)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	return deps.Finder.Find(func(note Match) error {

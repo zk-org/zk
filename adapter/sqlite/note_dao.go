@@ -146,7 +146,7 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 	return exists, nil
 }
 
-func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) error {
+func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) (int, error) {
 	rows, err := func() (*sql.Rows, error) {
 		snippetCol := `""`
 		orderTerm := `n.title ASC`
@@ -196,11 +196,14 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 	}()
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer rows.Close()
 
+	count := 0
 	for rows.Next() {
+		count++
+
 		var (
 			id, wordCount        int
 			title, body, snippet string
@@ -228,5 +231,5 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 		})
 	}
 
-	return nil
+	return count, nil
 }

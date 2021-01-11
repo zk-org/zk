@@ -362,11 +362,12 @@ func TestNoteDAOFindInMultiplePath(t *testing.T) {
 func testNoteDAOFind(t *testing.T, expected []note.Match, filters ...note.Filter) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		actual := make([]note.Match, 0)
-		err := dao.Find(func(m note.Match) error {
+		count, err := dao.Find(func(m note.Match) error {
 			actual = append(actual, m)
 			return nil
 		}, filters...)
 		assert.Nil(t, err)
+		assert.Equal(t, count, len(expected))
 		assert.Equal(t, actual, expected)
 	})
 }
