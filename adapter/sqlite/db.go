@@ -64,7 +64,7 @@ func (db *DB) Migrate() error {
 					path, title, body,
 					content = notes,
 					content_rowid = id,
-					tokenize = 'porter unicode61 remove_diacritics 1'
+					tokenize = "porter unicode61 remove_diacritics 1 tokenchars '''&/'"
 				)`,
 				// Triggers to keep the FTS index up to date.
 				`CREATE TRIGGER IF NOT EXISTS trigger_notes_ai AFTER INSERT ON notes BEGIN
