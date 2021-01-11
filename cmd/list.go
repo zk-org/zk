@@ -11,7 +11,7 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Path   []string `arg optional placeholder:"PATHS"`
+	Paths  []string `arg optional placeholder:"PATHS"`
 	Match  string   `help:"Terms to search for in the notes" placeholder:"TERMS"`
 	Format string   `help:"Pretty prints the list using the given format" placeholder:"TEMPLATE"`
 }
@@ -31,6 +31,18 @@ func (cmd *List) Run(container *Container) error {
 		notes := sqlite.NewNoteDAO(tx, container.Logger)
 
 		filters := make([]note.Filter, 0)
+
+		paths := make([]string, 0)
+		for _, p := range cmd.Paths {
+			dir, err := zk.DirAt(p)
+			if err == nil {
+				paths = append(paths, dir.Name)
+			}
+		}
+		if len(paths) > 0 {
+			filters = append(filters, note.PathFilter(paths))
+		}
+
 		if cmd.Match != "" {
 			filters = append(filters, note.MatchFilter(cmd.Match))
 		}

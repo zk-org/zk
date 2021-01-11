@@ -51,3 +51,12 @@
   checksum: "iecywst"
   created: "2019-11-20T20:32:56+01:00"
   modified: "2019-11-20T20:34:06+01:00"
+
+- id: 7
+  path: "log/2021-02-04.md"
+  title: "February 4, 2021"
+  body: "A third daily note"
+  word_count: 4
+  checksum: "earkte"
+  created: "2020-11-29T08:20:18+01:00"
+  modified: "2020-11-29T08:20:18+01:00"

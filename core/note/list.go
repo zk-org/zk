@@ -15,6 +15,9 @@ import (
 // MatchFilter is a note filter used to match its content with FTS predicates.
 type MatchFilter string
 
+// PathFilter is a note filter using path globs to match notes.
+type PathFilter []string
+
 // Match holds information about a note matching the list filters.
 type Match struct {
 	// Snippet is an excerpt of the note.
@@ -156,3 +159,4 @@ type matchRenderContext struct {
 type Filter interface{ sealed() }
 
 func (f MatchFilter) sealed() {}
+func (f PathFilter) sealed()  {}

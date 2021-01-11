@@ -2,6 +2,8 @@ package sqlite
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mickael-menu/zk/core/note"
@@ -146,26 +148,51 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 
 func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) error {
 	rows, err := func() (*sql.Rows, error) {
-		if len(filters) == 0 {
-			return d.tx.Query(`
-				SELECT id, path, title, body, word_count, created, modified,
-					   checksum, "" as snippet from notes
-				 ORDER BY title ASC
-			`)
-		} else {
-			filter := filters[0].(note.MatchFilter)
-			return d.tx.Query(`
-				SELECT n.id, n.path, n.title, n.body, n.word_count,
-				       n.created, n.modified, n.checksum,
-					   snippet(notes_fts, -1, '<zk:match>', '</zk:match>', '…', 20) as snippet
-				  FROM notes n
-				  JOIN notes_fts
-					ON n.id = notes_fts.rowid
-				 WHERE notes_fts MATCH ?
-				 ORDER BY bm25(notes_fts, 1000.0, 500.0, 1.0)
-				 --- ORDER BY rank
-			`, fts5.ConvertQuery(string(filter)))
+		snippetCol := `""`
+		orderTerm := `n.title ASC`
+		whereExprs := make([]string, 0)
+		args := make([]interface{}, 0)
+
+		for _, filter := range filters {
+			switch filter := filter.(type) {
+
+			case note.MatchFilter:
+				snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
+				orderTerm = `bm25(notes_fts, 1000.0, 500.0, 1.0)`
+				whereExprs = append(whereExprs, "notes_fts MATCH ?")
+				args = append(args, fts5.ConvertQuery(string(filter)))
+
+			case note.PathFilter:
+				if len(filter) == 0 {
+					break
+				}
+				globs := make([]string, 0)
+				for _, path := range filter {
+					globs = append(globs, "n.path GLOB ?")
+					args = append(args, path+"*")
+				}
+				whereExprs = append(whereExprs, strings.Join(globs, " OR "))
+
+			default:
+				panic("unknown filter type")
+			}
 		}
+
+		query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
+
+		query += `
+			FROM notes n
+			JOIN notes_fts
+			  ON n.id = notes_fts.rowid
+		`
+
+		if len(whereExprs) > 0 {
+			query += " WHERE " + strings.Join(whereExprs, " AND ")
+		}
+
+		query += " ORDER BY " + orderTerm
+
+		return d.tx.Query(query, args...)
 	}()
 
 	if err != nil {
