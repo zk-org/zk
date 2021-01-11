@@ -142,7 +142,7 @@ func TestNoteDAORemoveUnknown(t *testing.T) {
 }
 
 func TestNoteDAOFindAll(t *testing.T) {
-	testNoteDAOFind(t, []note.Match{
+	testNoteDAOFind(t, note.FinderOpts{}, []note.Match{
 		{
 			Snippet: "",
 			Metadata: note.Metadata{
@@ -230,94 +230,8 @@ func TestNoteDAOFindAll(t *testing.T) {
 	})
 }
 
-func TestNoteDAOFindMatch(t *testing.T) {
-	expected := []note.Match{
-		{
-			Snippet: "<zk:match>Index</zk:match> of the Zettelkasten",
-			Metadata: note.Metadata{
-				Path:      "index.md",
-				Title:     "Index",
-				Body:      "Index of the Zettelkasten",
-				WordCount: 4,
-				Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.Local),
-				Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.Local),
-				Checksum:  "iaefhv",
-			},
-		},
-		{
-			Snippet: "A <zk:match>daily</zk:match> note",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-03.md",
-				Title:     "January 3, 2021",
-				Body:      "A daily note",
-				WordCount: 3,
-				Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
-				Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
-				Checksum:  "qwfpgj",
-			},
-		},
-		{
-			Snippet: "A second <zk:match>daily</zk:match> note",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-04.md",
-				Title:     "January 4, 2021",
-				Body:      "A second daily note",
-				WordCount: 4,
-				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Checksum:  "arstde",
-			},
-		},
-		{
-			Snippet: "A third <zk:match>daily</zk:match> note",
-			Metadata: note.Metadata{
-				Path:      "log/2021-02-04.md",
-				Title:     "February 4, 2021",
-				Body:      "A third daily note",
-				WordCount: 4,
-				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Checksum:  "earkte",
-			},
-		},
-	}
-
-	testNoteDAOFind(t, expected, note.MatchFilter("daily | index"))
-}
-
-func TestNoteDAOFindInPath(t *testing.T) {
-	expected := []note.Match{
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-03.md",
-				Title:     "January 3, 2021",
-				Body:      "A daily note",
-				WordCount: 3,
-				Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
-				Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
-				Checksum:  "qwfpgj",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-04.md",
-				Title:     "January 4, 2021",
-				Body:      "A second daily note",
-				WordCount: 4,
-				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
-				Checksum:  "arstde",
-			},
-		},
-	}
-
-	testNoteDAOFind(t, expected, note.PathFilter([]string{"log/2021-01-*"}))
-}
-
-func TestNoteDAOFindInMultiplePath(t *testing.T) {
-	expected := []note.Match{
+func TestNoteDAOFindLimit(t *testing.T) {
+	testNoteDAOFind(t, note.FinderOpts{Limit: 2}, []note.Match{
 		{
 			Snippet: "",
 			Metadata: note.Metadata{
@@ -333,39 +247,163 @@ func TestNoteDAOFindInMultiplePath(t *testing.T) {
 		{
 			Snippet: "",
 			Metadata: note.Metadata{
-				Path:      "ref/test/a.md",
-				Title:     "Another nested note",
-				Body:      "It shall appear before b.md",
+				Path:      "f39c8.md",
+				Title:     "An interesting note",
+				Body:      "Its content will surprise you",
 				WordCount: 5,
-				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.Local),
-				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.Local),
-				Checksum:  "iecywst",
+				Created:   time.Date(2020, 1, 19, 10, 58, 41, 0, time.Local),
+				Modified:  time.Date(2020, 1, 20, 8, 52, 42, 0, time.Local),
+				Checksum:  "irkwyc",
 			},
 		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "index.md",
-				Title:     "Index",
-				Body:      "Index of the Zettelkasten",
-				WordCount: 4,
-				Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.Local),
-				Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.Local),
-				Checksum:  "iaefhv",
-			},
-		},
-	}
-
-	testNoteDAOFind(t, expected, note.PathFilter([]string{"ref", "index.md"}))
+	})
 }
 
-func testNoteDAOFind(t *testing.T, expected []note.Match, filters ...note.Filter) {
+func TestNoteDAOFindMatch(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.MatchFilter("daily | index")},
+		},
+		[]note.Match{
+			{
+				Snippet: "<zk:match>Index</zk:match> of the Zettelkasten",
+				Metadata: note.Metadata{
+					Path:      "index.md",
+					Title:     "Index",
+					Body:      "Index of the Zettelkasten",
+					WordCount: 4,
+					Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.Local),
+					Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.Local),
+					Checksum:  "iaefhv",
+				},
+			},
+			{
+				Snippet: "A <zk:match>daily</zk:match> note",
+				Metadata: note.Metadata{
+					Path:      "log/2021-01-03.md",
+					Title:     "January 3, 2021",
+					Body:      "A daily note",
+					WordCount: 3,
+					Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+					Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+					Checksum:  "qwfpgj",
+				},
+			},
+			{
+				Snippet: "A second <zk:match>daily</zk:match> note",
+				Metadata: note.Metadata{
+					Path:      "log/2021-01-04.md",
+					Title:     "January 4, 2021",
+					Body:      "A second daily note",
+					WordCount: 4,
+					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Checksum:  "arstde",
+				},
+			},
+			{
+				Snippet: "A third <zk:match>daily</zk:match> note",
+				Metadata: note.Metadata{
+					Path:      "log/2021-02-04.md",
+					Title:     "February 4, 2021",
+					Body:      "A third daily note",
+					WordCount: 4,
+					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Checksum:  "earkte",
+				},
+			},
+		},
+	)
+}
+
+func TestNoteDAOFindInPath(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01-*"})},
+		},
+		[]note.Match{
+			{
+				Snippet: "",
+				Metadata: note.Metadata{
+					Path:      "log/2021-01-03.md",
+					Title:     "January 3, 2021",
+					Body:      "A daily note",
+					WordCount: 3,
+					Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+					Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.Local),
+					Checksum:  "qwfpgj",
+				},
+			},
+			{
+				Snippet: "",
+				Metadata: note.Metadata{
+					Path:      "log/2021-01-04.md",
+					Title:     "January 4, 2021",
+					Body:      "A second daily note",
+					WordCount: 4,
+					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.Local),
+					Checksum:  "arstde",
+				},
+			},
+		},
+	)
+}
+
+func TestNoteDAOFindInMultiplePath(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.PathFilter([]string{"ref", "index.md"})},
+		},
+		[]note.Match{
+			{
+				Snippet: "",
+				Metadata: note.Metadata{
+					Path:      "ref/test/b.md",
+					Title:     "A nested note",
+					Body:      "This one is in a sub sub directory",
+					WordCount: 8,
+					Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.Local),
+					Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.Local),
+					Checksum:  "yvwbae",
+				},
+			},
+			{
+				Snippet: "",
+				Metadata: note.Metadata{
+					Path:      "ref/test/a.md",
+					Title:     "Another nested note",
+					Body:      "It shall appear before b.md",
+					WordCount: 5,
+					Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.Local),
+					Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.Local),
+					Checksum:  "iecywst",
+				},
+			},
+			{
+				Snippet: "",
+				Metadata: note.Metadata{
+					Path:      "index.md",
+					Title:     "Index",
+					Body:      "Index of the Zettelkasten",
+					WordCount: 4,
+					Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.Local),
+					Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.Local),
+					Checksum:  "iaefhv",
+				},
+			},
+		},
+	)
+}
+
+func testNoteDAOFind(t *testing.T, opts note.FinderOpts, expected []note.Match) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		actual := make([]note.Match, 0)
-		count, err := dao.Find(func(m note.Match) error {
+		count, err := dao.Find(opts, func(m note.Match) error {
 			actual = append(actual, m)
 			return nil
-		}, filters...)
+		})
 		assert.Nil(t, err)
 		assert.Equal(t, count, len(expected))
 		assert.Equal(t, actual, expected)

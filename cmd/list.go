@@ -12,8 +12,9 @@ import (
 // List displays notes matching a set of criteria.
 type List struct {
 	Paths  []string `arg optional placeholder:"PATHS"`
-	Match  string   `help:"Terms to search for in the notes" placeholder:"TERMS"`
 	Format string   `help:"Pretty prints the list using the given format" placeholder:"TEMPLATE"`
+	Match  string   `help:"Terms to search for in the notes" placeholder:"TERMS"`
+	Limit  int      `help:"Limit the number of results" placeholder:"MAX"`
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -49,8 +50,11 @@ func (cmd *List) Run(container *Container) error {
 
 		count, err := note.List(
 			note.ListOpts{
-				Format:  opt.NewNotEmptyString(cmd.Format),
-				Filters: filters,
+				Format: opt.NewNotEmptyString(cmd.Format),
+				FinderOpts: note.FinderOpts{
+					Filters: filters,
+					Limit:   cmd.Limit,
+				},
 			},
 			note.ListDeps{
 				BasePath:  zk.Path,

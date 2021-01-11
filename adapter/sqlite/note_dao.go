@@ -146,14 +146,14 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 	return exists, nil
 }
 
-func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) (int, error) {
+func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (int, error) {
 	rows, err := func() (*sql.Rows, error) {
 		snippetCol := `""`
 		orderTerm := `n.title ASC`
 		whereExprs := make([]string, 0)
 		args := make([]interface{}, 0)
 
-		for _, filter := range filters {
+		for _, filter := range opts.Filters {
 			switch filter := filter.(type) {
 
 			case note.MatchFilter:
@@ -181,16 +181,19 @@ func (d *NoteDAO) Find(callback func(note.Match) error, filters ...note.Filter) 
 		query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
 
 		query += `
-			FROM notes n
-			JOIN notes_fts
-			  ON n.id = notes_fts.rowid
-		`
+FROM notes n
+JOIN notes_fts
+ON n.id = notes_fts.rowid`
 
 		if len(whereExprs) > 0 {
-			query += " WHERE " + strings.Join(whereExprs, " AND ")
+			query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
 		}
 
-		query += " ORDER BY " + orderTerm
+		query += "\nORDER BY " + orderTerm
+
+		if opts.Limit > 0 {
+			query += fmt.Sprintf("\nLIMIT %d", opts.Limit)
+		}
 
 		return d.tx.Query(query, args...)
 	}()
