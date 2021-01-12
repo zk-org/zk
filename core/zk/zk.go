@@ -126,21 +126,34 @@ func (zk *Zk) DBPath() string {
 	return filepath.Join(zk.Path, ".zk/data.db")
 }
 
-// DirAt returns a Dir representation of the slip box directory at the given path.
-func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
-	wrap := errors.Wrapperf("%v: not a valid slip box directory", path)
+// RelPath returns the path relative to the slip box root to the given path.
+func (zk *Zk) RelPath(path string) (string, error) {
+	wrap := errors.Wrapperf("%v: not a valid slip box path", path)
 
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return nil, wrap(err)
+		return path, wrap(err)
+	}
+	path, err = filepath.Rel(zk.Path, path)
+	if err != nil {
+		return path, wrap(err)
+	}
+	if path == "." {
+		path = ""
+	}
+	return path, nil
+}
+
+// DirAt returns a Dir representation of the slip box directory at the given path.
+func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%v: not a valid slip box directory", path)
 	}
 
-	name, err := filepath.Rel(zk.Path, path)
+	name, err := zk.RelPath(path)
 	if err != nil {
-		return nil, wrap(err)
-	}
-	if name == "." {
-		name = ""
+		return nil, err
 	}
 
 	config, ok := zk.Config.Dirs[name]

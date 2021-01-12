@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestDBPath(t *testing.T) {
@@ -14,6 +14,26 @@ func TestDBPath(t *testing.T) {
 	zk := &Zk{Path: wd}
 
 	assert.Equal(t, zk.DBPath(), filepath.Join(wd, ".zk/data.db"))
+}
+
+func TestRelativePathFromGivenPath(t *testing.T) {
+	// The tests are relative to the working directory, for convenience.
+	wd, _ := os.Getwd()
+
+	zk := &Zk{Path: wd}
+
+	for path, expected := range map[string]string{
+		"log":                        "log",
+		"log/sub":                    "log/sub",
+		"log/sub/..":                 "log",
+		"log/sub/../sub":             "log/sub",
+		filepath.Join(wd, "log"):     "log",
+		filepath.Join(wd, "log/sub"): "log/sub",
+	} {
+		actual, err := zk.RelPath(path)
+		assert.Nil(t, err)
+		assert.Equal(t, actual, expected)
+	}
 }
 
 func TestDirAtGivenPath(t *testing.T) {

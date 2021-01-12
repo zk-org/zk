@@ -35,9 +35,9 @@ func (cmd *List) Run(container *Container) error {
 
 		paths := make([]string, 0)
 		for _, p := range cmd.Paths {
-			dir, err := zk.DirAt(p)
+			path, err := zk.RelPath(p)
 			if err == nil {
-				paths = append(paths, dir.Name)
+				paths = append(paths, path)
 			}
 		}
 		if len(paths) > 0 {
