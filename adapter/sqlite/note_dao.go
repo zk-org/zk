@@ -173,6 +173,18 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 				}
 				whereExprs = append(whereExprs, strings.Join(globs, " OR "))
 
+			case note.DateFilter:
+				value := "?"
+				field := "n." + dateField(filter)
+				op, ignoreTime := dateDirection(filter)
+				if ignoreTime {
+					field = "date(" + field + ")"
+					value = "date(?)"
+				}
+
+				whereExprs = append(whereExprs, fmt.Sprintf("%s %s %s", field, op, value))
+				args = append(args, filter.Date)
+
 			default:
 				panic("unknown filter type")
 			}
@@ -235,4 +247,28 @@ ON n.id = notes_fts.rowid`
 	}
 
 	return count, nil
+}
+
+func dateField(filter note.DateFilter) string {
+	switch filter.Field {
+	case note.DateCreated:
+		return "created"
+	case note.DateModified:
+		return "modified"
+	default:
+		panic("unknown DateFilter field")
+	}
+}
+
+func dateDirection(filter note.DateFilter) (op string, ignoreTime bool) {
+	switch filter.Direction {
+	case note.DateOn:
+		return "=", true
+	case note.DateBefore:
+		return "<=", false
+	case note.DateAfter:
+		return ">=", false
+	default:
+		panic("unknown DateFilter direction")
+	}
 }

@@ -18,6 +18,28 @@ type MatchFilter string
 // PathFilter is a note filter using path globs to match notes.
 type PathFilter []string
 
+// DateFilter can be used to filter notes created or modified before, after or on a given date.
+type DateFilter struct {
+	Date      time.Time
+	Direction DateDirection
+	Field     DateField
+}
+
+type DateDirection int
+
+const (
+	DateOn DateDirection = iota + 1
+	DateBefore
+	DateAfter
+)
+
+type DateField int
+
+const (
+	DateCreated DateField = iota + 1
+	DateModified
+)
+
 // Match holds information about a note matching the list filters.
 type Match struct {
 	// Snippet is an excerpt of the note.
@@ -166,3 +188,4 @@ type Filter interface{ sealed() }
 
 func (f MatchFilter) sealed() {}
 func (f PathFilter) sealed()  {}
+func (f DateFilter) sealed()  {}
