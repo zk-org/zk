@@ -109,11 +109,11 @@ func metadata(path string, basePath string) (Metadata, error) {
 		return metadata, err
 	}
 
-	metadata.Modified = times.ModTime()
+	metadata.Modified = times.ModTime().UTC()
 	if times.HasBirthTime() {
-		metadata.Created = times.BirthTime()
+		metadata.Created = times.BirthTime().UTC()
 	} else {
-		metadata.Created = time.Now()
+		metadata.Created = time.Now().UTC()
 	}
 
 	return metadata, nil

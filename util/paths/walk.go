@@ -48,7 +48,7 @@ func Walk(basePath string, extension string, logger util.Logger) <-chan Metadata
 
 				c <- Metadata{
 					Path:     path,
-					Modified: info.ModTime(),
+					Modified: info.ModTime().UTC(),
 				}
 			}
 
