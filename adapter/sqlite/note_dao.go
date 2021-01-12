@@ -265,7 +265,7 @@ func dateDirection(filter note.DateFilter) (op string, ignoreTime bool) {
 	case note.DateOn:
 		return "=", true
 	case note.DateBefore:
-		return "<=", false
+		return "<", false
 	case note.DateAfter:
 		return ">=", false
 	default:

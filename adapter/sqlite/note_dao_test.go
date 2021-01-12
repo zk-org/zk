@@ -32,7 +32,7 @@ func TestNoteDAOIndexed(t *testing.T) {
 			},
 			{
 				Path:     "log/2021-02-04.md",
-				Modified: time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+				Modified: time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 			},
 			{
 				Path:     "ref/test/a.md",
@@ -141,120 +141,21 @@ func TestNoteDAORemoveUnknown(t *testing.T) {
 }
 
 func TestNoteDAOFindAll(t *testing.T) {
-	testNoteDAOFind(t, note.FinderOpts{}, []note.Match{
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "ref/test/b.md",
-				Title:     "A nested note",
-				Body:      "This one is in a sub sub directory",
-				WordCount: 8,
-				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-				Checksum:  "yvwbae",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "f39c8.md",
-				Title:     "An interesting note",
-				Body:      "Its content will surprise you",
-				WordCount: 5,
-				Created:   time.Date(2020, 1, 19, 10, 58, 41, 0, time.UTC),
-				Modified:  time.Date(2020, 1, 20, 8, 52, 42, 0, time.UTC),
-				Checksum:  "irkwyc",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "ref/test/a.md",
-				Title:     "Another nested note",
-				Body:      "It shall appear before b.md",
-				WordCount: 5,
-				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-				Checksum:  "iecywst",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "log/2021-02-04.md",
-				Title:     "February 4, 2021",
-				Body:      "A third daily note",
-				WordCount: 4,
-				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-				Checksum:  "earkte",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "index.md",
-				Title:     "Index",
-				Body:      "Index of the Zettelkasten",
-				WordCount: 4,
-				Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
-				Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
-				Checksum:  "iaefhv",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-03.md",
-				Title:     "January 3, 2021",
-				Body:      "A daily note",
-				WordCount: 3,
-				Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-				Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-				Checksum:  "qwfpgj",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "log/2021-01-04.md",
-				Title:     "January 4, 2021",
-				Body:      "A second daily note",
-				WordCount: 4,
-				Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-				Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-				Checksum:  "arstde",
-			},
-		},
+	testNoteDAOFindPaths(t, note.FinderOpts{}, []string{
+		"ref/test/b.md",
+		"f39c8.md",
+		"ref/test/a.md",
+		"log/2021-02-04.md",
+		"index.md",
+		"log/2021-01-03.md",
+		"log/2021-01-04.md",
 	})
 }
 
 func TestNoteDAOFindLimit(t *testing.T) {
-	testNoteDAOFind(t, note.FinderOpts{Limit: 2}, []note.Match{
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "ref/test/b.md",
-				Title:     "A nested note",
-				Body:      "This one is in a sub sub directory",
-				WordCount: 8,
-				Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-				Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-				Checksum:  "yvwbae",
-			},
-		},
-		{
-			Snippet: "",
-			Metadata: note.Metadata{
-				Path:      "f39c8.md",
-				Title:     "An interesting note",
-				Body:      "Its content will surprise you",
-				WordCount: 5,
-				Created:   time.Date(2020, 1, 19, 10, 58, 41, 0, time.UTC),
-				Modified:  time.Date(2020, 1, 20, 8, 52, 42, 0, time.UTC),
-				Checksum:  "irkwyc",
-			},
-		},
+	testNoteDAOFindPaths(t, note.FinderOpts{Limit: 2}, []string{
+		"ref/test/b.md",
+		"f39c8.md",
 	})
 }
 
@@ -308,7 +209,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Body:      "A third daily note",
 					WordCount: 4,
 					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:  time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 					Checksum:  "earkte",
 				},
 			},
@@ -317,83 +218,124 @@ func TestNoteDAOFindMatch(t *testing.T) {
 }
 
 func TestNoteDAOFindInPath(t *testing.T) {
-	testNoteDAOFind(t,
+	testNoteDAOFindPaths(t,
 		note.FinderOpts{
 			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01-*"})},
 		},
-		[]note.Match{
-			{
-				Snippet: "",
-				Metadata: note.Metadata{
-					Path:      "log/2021-01-03.md",
-					Title:     "January 3, 2021",
-					Body:      "A daily note",
-					WordCount: 3,
-					Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Checksum:  "qwfpgj",
-				},
-			},
-			{
-				Snippet: "",
-				Metadata: note.Metadata{
-					Path:      "log/2021-01-04.md",
-					Title:     "January 4, 2021",
-					Body:      "A second daily note",
-					WordCount: 4,
-					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Checksum:  "arstde",
-				},
-			},
-		},
+		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
 	)
 }
 
 func TestNoteDAOFindInMultiplePath(t *testing.T) {
-	testNoteDAOFind(t,
+	testNoteDAOFindPaths(t,
 		note.FinderOpts{
 			Filters: []note.Filter{note.PathFilter([]string{"ref", "index.md"})},
 		},
-		[]note.Match{
-			{
-				Snippet: "",
-				Metadata: note.Metadata{
-					Path:      "ref/test/b.md",
-					Title:     "A nested note",
-					Body:      "This one is in a sub sub directory",
-					WordCount: 8,
-					Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-					Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-					Checksum:  "yvwbae",
-				},
-			},
-			{
-				Snippet: "",
-				Metadata: note.Metadata{
-					Path:      "ref/test/a.md",
-					Title:     "Another nested note",
-					Body:      "It shall appear before b.md",
-					WordCount: 5,
-					Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-					Modified:  time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-					Checksum:  "iecywst",
-				},
-			},
-			{
-				Snippet: "",
-				Metadata: note.Metadata{
-					Path:      "index.md",
-					Title:     "Index",
-					Body:      "Index of the Zettelkasten",
-					WordCount: 4,
-					Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
-					Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
-					Checksum:  "iaefhv",
+		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindCreatedOn(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2020, 11, 22, 10, 12, 45, 0, time.UTC),
+					Field:     note.DateCreated,
+					Direction: note.DateOn,
 				},
 			},
 		},
+		[]string{"log/2021-01-03.md"},
 	)
+}
+
+func TestNoteDAOFindCreatedBefore(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2019, 12, 04, 11, 59, 11, 0, time.UTC),
+					Field:     note.DateCreated,
+					Direction: note.DateBefore,
+				},
+			},
+		},
+		[]string{"ref/test/b.md", "ref/test/a.md"},
+	)
+}
+
+func TestNoteDAOFindCreatedAfter(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Field:     note.DateCreated,
+					Direction: note.DateAfter,
+				},
+			},
+		},
+		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func TestNoteDAOFindModifiedOn(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2020, 01, 20, 10, 12, 45, 0, time.UTC),
+					Field:     note.DateModified,
+					Direction: note.DateOn,
+				},
+			},
+		},
+		[]string{"f39c8.md"},
+	)
+}
+
+func TestNoteDAOFindModifiedBefore(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2020, 01, 20, 8, 52, 42, 0, time.UTC),
+					Field:     note.DateModified,
+					Direction: note.DateBefore,
+				},
+			},
+		},
+		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindModifiedAfter(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{
+				note.DateFilter{
+					Date:      time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Field:     note.DateModified,
+					Direction: note.DateAfter,
+				},
+			},
+		},
+		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func testNoteDAOFindPaths(t *testing.T, opts note.FinderOpts, expected []string) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		actual := make([]string, 0)
+		count, err := dao.Find(opts, func(m note.Match) error {
+			actual = append(actual, m.Path)
+			return nil
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, count, len(expected))
+		assert.Equal(t, actual, expected)
+	})
 }
 
 func testNoteDAOFind(t *testing.T, opts note.FinderOpts, expected []note.Match) {
