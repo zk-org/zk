@@ -18,6 +18,9 @@ type MatchFilter string
 // PathFilter is a note filter using path globs to match notes.
 type PathFilter []string
 
+// ExcludePathFilter is a note filter using path globs to exclude notes from the list.
+type ExcludePathFilter []string
+
 // DateFilter can be used to filter notes created or modified before, after or on a given date.
 type DateFilter struct {
 	Date      time.Time
@@ -186,6 +189,7 @@ type matchRenderContext struct {
 // Filter is a sealed interface implemented by Finder filter criteria.
 type Filter interface{ sealed() }
 
-func (f MatchFilter) sealed() {}
-func (f PathFilter) sealed()  {}
-func (f DateFilter) sealed()  {}
+func (f MatchFilter) sealed()       {}
+func (f PathFilter) sealed()        {}
+func (f ExcludePathFilter) sealed() {}
+func (f DateFilter) sealed()        {}

@@ -173,6 +173,17 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 				}
 				whereExprs = append(whereExprs, strings.Join(globs, " OR "))
 
+			case note.ExcludePathFilter:
+				if len(filter) == 0 {
+					break
+				}
+				globs := make([]string, 0)
+				for _, path := range filter {
+					globs = append(globs, "n.path NOT GLOB ?")
+					args = append(args, path+"*")
+				}
+				whereExprs = append(whereExprs, strings.Join(globs, " AND "))
+
 			case note.DateFilter:
 				value := "?"
 				field := "n." + dateField(filter)

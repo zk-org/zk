@@ -14,7 +14,7 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Path           []string `arg optional placeholder:"PATH"`
+	Path           []string `arg optional placeholder:"GLOB"`
 	Format         string   `help:"Pretty prints the list using the given format" short:"f" placeholder:"TEMPLATE"`
 	Match          string   `help:"Terms to search for in the notes" short:"m" placeholder:"TERMS"`
 	Limit          int      `help:"Limit the number of results" short:"l" placeholder:"MAX"`
@@ -24,6 +24,7 @@ type List struct {
 	Modified       string   `help:"Show only the notes modified on the given date" placeholder:"DATE"`
 	ModifiedBefore string   `help:"Show only the notes modified before the given date" placeholder:"DATE"`
 	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"DATE"`
+	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" placeholder:"GLOB"`
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -63,15 +64,14 @@ func (cmd *List) Run(container *Container) error {
 func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
 	filters := make([]note.Filter, 0)
 
-	paths := make([]string, 0)
-	for _, p := range cmd.Path {
-		path, err := zk.RelPath(p)
-		if err == nil {
-			paths = append(paths, path)
-		}
-	}
-	if len(paths) > 0 {
+	paths, ok := relPaths(zk, cmd.Path)
+	if ok {
 		filters = append(filters, note.PathFilter(paths))
+	}
+
+	excludePaths, ok := relPaths(zk, cmd.Exclude)
+	if ok {
+		filters = append(filters, note.ExcludePathFilter(excludePaths))
 	}
 
 	if cmd.Match != "" {
@@ -157,6 +157,17 @@ func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
 			Limit:   cmd.Limit,
 		},
 	}, nil
+}
+
+func relPaths(zk *zk.Zk, paths []string) ([]string, bool) {
+	relPaths := make([]string, 0)
+	for _, p := range paths {
+		path, err := zk.RelPath(p)
+		if err == nil {
+			relPaths = append(relPaths, path)
+		}
+	}
+	return relPaths, len(relPaths) > 0
 }
 
 func printNote(note string) error {

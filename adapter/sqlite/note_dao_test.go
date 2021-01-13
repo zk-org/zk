@@ -226,12 +226,30 @@ func TestNoteDAOFindInPath(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindInMultiplePath(t *testing.T) {
+func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
 			Filters: []note.Filter{note.PathFilter([]string{"ref", "index.md"})},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindExcludingPath(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.ExcludePathFilter([]string{"log"})},
+		},
+		[]string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.ExcludePathFilter([]string{"ref", "log/2021-01-*"})},
+		},
+		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
 }
 
