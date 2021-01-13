@@ -149,8 +149,8 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (int, error) {
 	rows, err := func() (*sql.Rows, error) {
 		snippetCol := `""`
-		orderTerm := `n.title ASC`
 		whereExprs := make([]string, 0)
+		orderTerms := make([]string, 0)
 		args := make([]interface{}, 0)
 
 		for _, filter := range opts.Filters {
@@ -158,7 +158,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 
 			case note.MatchFilter:
 				snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
-				orderTerm = `bm25(notes_fts, 1000.0, 500.0, 1.0)`
+				orderTerms = append(orderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
 				whereExprs = append(whereExprs, "notes_fts MATCH ?")
 				args = append(args, fts5.ConvertQuery(string(filter)))
 
@@ -197,9 +197,14 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 				args = append(args, filter.Date)
 
 			default:
-				panic("unknown filter type")
+				panic(fmt.Sprintf("%v: unknown filter type", filter))
 			}
 		}
+
+		for _, sorter := range opts.Sorters {
+			orderTerms = append(orderTerms, orderTerm(sorter))
+		}
+		orderTerms = append(orderTerms, `n.title ASC`)
 
 		query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
 
@@ -212,7 +217,7 @@ ON n.id = notes_fts.rowid`
 			query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
 		}
 
-		query += "\nORDER BY " + orderTerm
+		query += "\nORDER BY " + strings.Join(orderTerms, ", ")
 
 		if opts.Limit > 0 {
 			query += fmt.Sprintf("\nLIMIT %d", opts.Limit)
@@ -267,7 +272,7 @@ func dateField(filter note.DateFilter) string {
 	case note.DateModified:
 		return "modified"
 	default:
-		panic("unknown DateFilter field")
+		panic(fmt.Sprintf("%v: unknown note.DateField", filter.Field))
 	}
 }
 
@@ -280,6 +285,30 @@ func dateDirection(filter note.DateFilter) (op string, ignoreTime bool) {
 	case note.DateAfter:
 		return ">=", false
 	default:
-		panic("unknown DateFilter direction")
+		panic(fmt.Sprintf("%v: unknown note.DateDirection", filter.Direction))
+	}
+}
+
+func orderTerm(sorter note.Sorter) string {
+	order := " ASC"
+	if !sorter.Ascending {
+		order = " DESC"
+	}
+
+	switch sorter.Term {
+	case note.SortCreated:
+		return "n.created" + order
+	case note.SortModified:
+		return "n.modified" + order
+	case note.SortPath:
+		return "n.path" + order
+	case note.SortRandom:
+		return "RANDOM()"
+	case note.SortTitle:
+		return "n.title" + order
+	case note.SortWordCount:
+		return "n.word_count" + order
+	default:
+		panic(fmt.Sprintf("%v: unknown note.SortTerm", sorter.Term))
 	}
 }

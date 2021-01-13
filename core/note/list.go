@@ -43,6 +43,28 @@ const (
 	DateModified
 )
 
+type Sorter struct {
+	Term      SortTerm
+	Ascending bool
+}
+
+type SortTerm int
+
+const (
+	// Sort by creation date.
+	SortCreated SortTerm = iota + 1
+	// Sort by modification date.
+	SortModified
+	// Sort by the file paths.
+	SortPath
+	// Sort randomly.
+	SortRandom
+	// Sort by the note titles.
+	SortTitle
+	// Sort by the number of words in the note bodies.
+	SortWordCount
+)
+
 // Match holds information about a note matching the list filters.
 type Match struct {
 	// Snippet is an excerpt of the note.
@@ -65,6 +87,7 @@ type Finder interface {
 
 type FinderOpts struct {
 	Filters []Filter
+	Sorters []Sorter
 	Limit   int
 }
 

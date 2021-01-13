@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
@@ -25,6 +27,7 @@ type List struct {
 	ModifiedBefore string   `help:"Show only the notes modified before the given date" placeholder:"DATE"`
 	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"DATE"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" placeholder:"GLOB"`
+	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"CRITERION"`
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -150,10 +153,16 @@ func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
 		})
 	}
 
+	sorters, err := sorters(cmd.Sort)
+	if err != nil {
+		return nil, err
+	}
+
 	return &note.ListOpts{
 		Format: opt.NewNotEmptyString(cmd.Format),
 		FinderOpts: note.FinderOpts{
 			Filters: filters,
+			Sorters: sorters,
 			Limit:   cmd.Limit,
 		},
 	}, nil
@@ -178,4 +187,68 @@ func printNote(note string) error {
 func parseDate(date string) (time.Time, error) {
 	// FIXME: support years
 	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
+}
+
+func sorters(terms []string) ([]note.Sorter, error) {
+	sorters := make([]note.Sorter, 0)
+	for _, term := range terms {
+		orderSymbol, _ := utf8.DecodeLastRuneInString(term)
+		term = strings.TrimRight(term, "+-")
+
+		sorter, err := sorter(term)
+		if err != nil {
+			return sorters, err
+		}
+
+		switch orderSymbol {
+		case '+':
+			sorter.Ascending = true
+		case '-':
+			sorter.Ascending = false
+		}
+
+		sorters = append(sorters, sorter)
+	}
+
+	return sorters, nil
+}
+
+func sorter(term string) (sorter note.Sorter, err error) {
+	switch {
+	case strings.HasPrefix("created", term):
+		sorter = note.Sorter{Term: note.SortCreated, Ascending: false}
+	case strings.HasPrefix("modified", term):
+		sorter = note.Sorter{Term: note.SortModified, Ascending: false}
+	case strings.HasPrefix("path", term):
+		sorter = note.Sorter{Term: note.SortPath, Ascending: true}
+	case strings.HasPrefix("title", term):
+		sorter = note.Sorter{Term: note.SortTitle, Ascending: true}
+	case strings.HasPrefix("random", term):
+		sorter = note.Sorter{Term: note.SortRandom, Ascending: true}
+	case strings.HasPrefix("word-count", term):
+		sorter = note.Sorter{Term: note.SortWordCount, Ascending: true}
+	default:
+		err = fmt.Errorf("%s: unknown sorting term", term)
+	}
+	return
+}
+
+func sortAscending(symbol rune, term string) bool {
+
+	switch term {
+	case "created":
+		return false
+	case "modified":
+		return false
+	case "path":
+		return true
+	case "title":
+		return true
+	case "random":
+		return true
+	case "word-count":
+		return true
+	}
+
+	return true
 }

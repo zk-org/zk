@@ -190,18 +190,6 @@ func TestNoteDAOFindMatch(t *testing.T) {
 				},
 			},
 			{
-				Snippet: "A second <zk:match>daily</zk:match> note",
-				Metadata: note.Metadata{
-					Path:      "log/2021-01-04.md",
-					Title:     "January 4, 2021",
-					Body:      "A second daily note",
-					WordCount: 4,
-					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Checksum:  "arstde",
-				},
-			},
-			{
 				Snippet: "A third <zk:match>daily</zk:match> note",
 				Metadata: note.Metadata{
 					Path:      "log/2021-02-04.md",
@@ -211,6 +199,18 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Modified:  time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 					Checksum:  "earkte",
+				},
+			},
+			{
+				Snippet: "A second <zk:match>daily</zk:match> note",
+				Metadata: note.Metadata{
+					Path:      "log/2021-01-04.md",
+					Title:     "January 4, 2021",
+					Body:      "A second daily note",
+					WordCount: 4,
+					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Checksum:  "arstde",
 				},
 			},
 		},
@@ -340,6 +340,70 @@ func TestNoteDAOFindModifiedAfter(t *testing.T) {
 			},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func TestNoteDAOFindSortCreated(t *testing.T) {
+	testNoteDAOFindSort(t, note.SortCreated, true, []string{
+		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
+		"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md",
+	})
+	testNoteDAOFindSort(t, note.SortCreated, false, []string{
+		"log/2021-02-04.md", "log/2021-01-04.md", "log/2021-01-03.md",
+		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
+	})
+}
+
+func TestNoteDAOFindSortModified(t *testing.T) {
+	testNoteDAOFindSort(t, note.SortModified, true, []string{
+		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
+		"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md",
+	})
+	testNoteDAOFindSort(t, note.SortModified, false, []string{
+		"log/2021-01-04.md", "log/2021-01-03.md", "log/2021-02-04.md",
+		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
+	})
+}
+
+func TestNoteDAOFindSortPath(t *testing.T) {
+	testNoteDAOFindSort(t, note.SortPath, true, []string{
+		"f39c8.md", "index.md", "log/2021-01-03.md", "log/2021-01-04.md",
+		"log/2021-02-04.md", "ref/test/a.md", "ref/test/b.md",
+	})
+	testNoteDAOFindSort(t, note.SortPath, false, []string{
+		"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md",
+		"log/2021-01-04.md", "log/2021-01-03.md", "index.md", "f39c8.md",
+	})
+}
+
+func TestNoteDAOFindSortTitle(t *testing.T) {
+	testNoteDAOFindSort(t, note.SortTitle, true, []string{
+		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
+		"index.md", "log/2021-01-03.md", "log/2021-01-04.md",
+	})
+	testNoteDAOFindSort(t, note.SortTitle, false, []string{
+		"log/2021-01-04.md", "log/2021-01-03.md", "index.md",
+		"log/2021-02-04.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md",
+	})
+}
+
+func TestNoteDAOFindSortWordCount(t *testing.T) {
+	testNoteDAOFindSort(t, note.SortWordCount, true, []string{
+		"log/2021-01-03.md", "log/2021-02-04.md", "index.md",
+		"log/2021-01-04.md", "f39c8.md", "ref/test/a.md", "ref/test/b.md",
+	})
+	testNoteDAOFindSort(t, note.SortWordCount, false, []string{
+		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
+		"index.md", "log/2021-01-04.md", "log/2021-01-03.md",
+	})
+}
+
+func testNoteDAOFindSort(t *testing.T, term note.SortTerm, ascending bool, expected []string) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Sorters: []note.Sorter{{Term: term, Ascending: ascending}},
+		},
+		expected,
 	)
 }
 
