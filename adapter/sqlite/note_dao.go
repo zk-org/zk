@@ -295,7 +295,7 @@ func orderTerm(sorter note.Sorter) string {
 		order = " DESC"
 	}
 
-	switch sorter.Term {
+	switch sorter.Field {
 	case note.SortCreated:
 		return "n.created" + order
 	case note.SortModified:
@@ -309,6 +309,6 @@ func orderTerm(sorter note.Sorter) string {
 	case note.SortWordCount:
 		return "n.word_count" + order
 	default:
-		panic(fmt.Sprintf("%v: unknown note.SortTerm", sorter.Term))
+		panic(fmt.Sprintf("%v: unknown note.SortField", sorter.Field))
 	}
 }

@@ -1,7 +1,6 @@
 package note
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,85 +10,6 @@ import (
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/util/opt"
 )
-
-// MatchFilter is a note filter used to match its content with FTS predicates.
-type MatchFilter string
-
-// PathFilter is a note filter using path globs to match notes.
-type PathFilter []string
-
-// ExcludePathFilter is a note filter using path globs to exclude notes from the list.
-type ExcludePathFilter []string
-
-// DateFilter can be used to filter notes created or modified before, after or on a given date.
-type DateFilter struct {
-	Date      time.Time
-	Direction DateDirection
-	Field     DateField
-}
-
-type DateDirection int
-
-const (
-	DateOn DateDirection = iota + 1
-	DateBefore
-	DateAfter
-)
-
-type DateField int
-
-const (
-	DateCreated DateField = iota + 1
-	DateModified
-)
-
-type Sorter struct {
-	Term      SortTerm
-	Ascending bool
-}
-
-type SortTerm int
-
-const (
-	// Sort by creation date.
-	SortCreated SortTerm = iota + 1
-	// Sort by modification date.
-	SortModified
-	// Sort by the file paths.
-	SortPath
-	// Sort randomly.
-	SortRandom
-	// Sort by the note titles.
-	SortTitle
-	// Sort by the number of words in the note bodies.
-	SortWordCount
-)
-
-// Match holds information about a note matching the list filters.
-type Match struct {
-	// Snippet is an excerpt of the note.
-	Snippet string
-	Metadata
-}
-
-func (m Match) String() string {
-	return fmt.Sprintf(`note.Match{
-	Snippet: "%v",
-	Metadata: %v,
-}`, m.Snippet, m.Metadata)
-}
-
-// Finder retrieves notes matching the given Filter.
-// Returns the number of matches.
-type Finder interface {
-	Find(opts FinderOpts, callback func(Match) error) (int, error)
-}
-
-type FinderOpts struct {
-	Filters []Filter
-	Sorters []Sorter
-	Limit   int
-}
 
 type ListOpts struct {
 	Format opt.String
@@ -208,11 +128,3 @@ type matchRenderContext struct {
 	Created   time.Time
 	Modified  time.Time
 }
-
-// Filter is a sealed interface implemented by Finder filter criteria.
-type Filter interface{ sealed() }
-
-func (f MatchFilter) sealed()       {}
-func (f PathFilter) sealed()        {}
-func (f ExcludePathFilter) sealed() {}
-func (f DateFilter) sealed()        {}

@@ -398,10 +398,10 @@ func TestNoteDAOFindSortWordCount(t *testing.T) {
 	})
 }
 
-func testNoteDAOFindSort(t *testing.T, term note.SortTerm, ascending bool, expected []string) {
+func testNoteDAOFindSort(t *testing.T, field note.SortField, ascending bool, expected []string) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Sorters: []note.Sorter{{Term: term, Ascending: ascending}},
+			Sorters: []note.Sorter{{Field: field, Ascending: ascending}},
 		},
 		expected,
 	)

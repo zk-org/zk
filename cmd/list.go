@@ -19,14 +19,14 @@ type List struct {
 	Path           []string `arg optional placeholder:"GLOB"`
 	Format         string   `help:"Pretty prints the list using the given format" short:"f" placeholder:"TEMPLATE"`
 	Match          string   `help:"Terms to search for in the notes" short:"m" placeholder:"TERMS"`
-	Limit          int      `help:"Limit the number of results" short:"l" placeholder:"MAX"`
+	Limit          int      `help:"Limit the number of results" short:"n" placeholder:"MAX"`
 	Created        string   `help:"Show only the notes created on the given date" placeholder:"DATE"`
 	CreatedBefore  string   `help:"Show only the notes created before the given date" placeholder:"DATE"`
 	CreatedAfter   string   `help:"Show only the notes created after the given date" placeholder:"DATE"`
 	Modified       string   `help:"Show only the notes modified on the given date" placeholder:"DATE"`
 	ModifiedBefore string   `help:"Show only the notes modified before the given date" placeholder:"DATE"`
 	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"DATE"`
-	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" placeholder:"GLOB"`
+	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"GLOB"`
 	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"CRITERION"`
 }
 
@@ -38,7 +38,7 @@ func (cmd *List) Run(container *Container) error {
 
 	opts, err := cmd.ListOpts(zk)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect arguments")
+		return errors.Wrapf(err, "incorrect criteria")
 	}
 
 	db, err := container.Database(zk.DBPath())
@@ -216,17 +216,17 @@ func sorters(terms []string) ([]note.Sorter, error) {
 func sorter(term string) (sorter note.Sorter, err error) {
 	switch {
 	case strings.HasPrefix("created", term):
-		sorter = note.Sorter{Term: note.SortCreated, Ascending: false}
+		sorter = note.Sorter{Field: note.SortCreated, Ascending: false}
 	case strings.HasPrefix("modified", term):
-		sorter = note.Sorter{Term: note.SortModified, Ascending: false}
+		sorter = note.Sorter{Field: note.SortModified, Ascending: false}
 	case strings.HasPrefix("path", term):
-		sorter = note.Sorter{Term: note.SortPath, Ascending: true}
+		sorter = note.Sorter{Field: note.SortPath, Ascending: true}
 	case strings.HasPrefix("title", term):
-		sorter = note.Sorter{Term: note.SortTitle, Ascending: true}
+		sorter = note.Sorter{Field: note.SortTitle, Ascending: true}
 	case strings.HasPrefix("random", term):
-		sorter = note.Sorter{Term: note.SortRandom, Ascending: true}
-	case strings.HasPrefix("word-count", term):
-		sorter = note.Sorter{Term: note.SortWordCount, Ascending: true}
+		sorter = note.Sorter{Field: note.SortRandom, Ascending: true}
+	case strings.HasPrefix("word-count", term) || term == "wc":
+		sorter = note.Sorter{Field: note.SortWordCount, Ascending: true}
 	default:
 		err = fmt.Errorf("%s: unknown sorting term", term)
 	}
@@ -234,7 +234,6 @@ func sorter(term string) (sorter note.Sorter, err error) {
 }
 
 func sortAscending(symbol rune, term string) bool {
-
 	switch term {
 	case "created":
 		return false
@@ -249,6 +248,5 @@ func sortAscending(symbol rune, term string) bool {
 	case "word-count":
 		return true
 	}
-
 	return true
 }
