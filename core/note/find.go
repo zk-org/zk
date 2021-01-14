@@ -1,7 +1,10 @@
 package note
 
 import (
+	"fmt"
+	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Finder retrieves notes matching the given options.
@@ -87,3 +90,53 @@ const (
 	// Sort by the number of words in the note bodies.
 	SortWordCount
 )
+
+// SorterFromString returns a Sorter from its string representation.
+//
+// If the input str has for suffix `+`, then the order will be ascending, while
+// descending for `-`. If no suffix is given, then the default order for the
+// sorting field will be used.
+func SorterFromString(str string) (Sorter, error) {
+	orderSymbol, _ := utf8.DecodeLastRuneInString(str)
+	str = strings.TrimRight(str, "+-")
+
+	var sorter Sorter
+	switch str {
+	case "created", "c":
+		sorter = Sorter{Field: SortCreated, Ascending: false}
+	case "modified", "m":
+		sorter = Sorter{Field: SortModified, Ascending: false}
+	case "path", "p":
+		sorter = Sorter{Field: SortPath, Ascending: true}
+	case "title", "t":
+		sorter = Sorter{Field: SortTitle, Ascending: true}
+	case "random", "r":
+		sorter = Sorter{Field: SortRandom, Ascending: true}
+	case "word-count", "wc":
+		sorter = Sorter{Field: SortWordCount, Ascending: true}
+	default:
+		return sorter, fmt.Errorf("%s: unknown sorting term", str)
+	}
+
+	switch orderSymbol {
+	case '+':
+		sorter.Ascending = true
+	case '-':
+		sorter.Ascending = false
+	}
+
+	return sorter, nil
+}
+
+// SortersFromStrings returns a list of Sorter from their string representation.
+func SortersFromStrings(strs []string) ([]Sorter, error) {
+	sorters := make([]Sorter, 0)
+	for _, str := range strs {
+		sorter, err := SorterFromString(str)
+		if err != nil {
+			return sorters, err
+		}
+		sorters = append(sorters, sorter)
+	}
+	return sorters, nil
+}

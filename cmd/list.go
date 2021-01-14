@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
@@ -16,18 +14,18 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Path           []string `arg optional placeholder:"GLOB"`
-	Format         string   `help:"Pretty prints the list using the given format" short:"f" placeholder:"TEMPLATE"`
-	Match          string   `help:"Terms to search for in the notes" short:"m" placeholder:"TERMS"`
-	Limit          int      `help:"Limit the number of results" short:"n" placeholder:"MAX"`
-	Created        string   `help:"Show only the notes created on the given date" placeholder:"DATE"`
-	CreatedBefore  string   `help:"Show only the notes created before the given date" placeholder:"DATE"`
-	CreatedAfter   string   `help:"Show only the notes created after the given date" placeholder:"DATE"`
-	Modified       string   `help:"Show only the notes modified on the given date" placeholder:"DATE"`
-	ModifiedBefore string   `help:"Show only the notes modified before the given date" placeholder:"DATE"`
-	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"DATE"`
-	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"GLOB"`
-	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"CRITERION"`
+	Path           []string `arg optional placeholder:"<glob>"`
+	Format         string   `help:"Pretty prints the list using the given format" short:"f" placeholder:"<template>"`
+	Match          string   `help:"Terms to search for in the notes" short:"m" placeholder:"<query>"`
+	Limit          int      `help:"Limit the number of results" short:"n" placeholder:"<count>"`
+	Created        string   `help:"Show only the notes created on the given date" placeholder:"<date>"`
+	CreatedBefore  string   `help:"Show only the notes created before the given date" placeholder:"<date>"`
+	CreatedAfter   string   `help:"Show only the notes created after the given date" placeholder:"<date>"`
+	Modified       string   `help:"Show only the notes modified on the given date" placeholder:"<date>"`
+	ModifiedBefore string   `help:"Show only the notes modified before the given date" placeholder:"<date>"`
+	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"<date>"`
+	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
+	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"<term>"`
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -153,7 +151,7 @@ func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
 		})
 	}
 
-	sorters, err := sorters(cmd.Sort)
+	sorters, err := note.SortersFromStrings(cmd.Sort)
 	if err != nil {
 		return nil, err
 	}
@@ -187,66 +185,4 @@ func printNote(note string) error {
 func parseDate(date string) (time.Time, error) {
 	// FIXME: support years
 	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
-}
-
-func sorters(terms []string) ([]note.Sorter, error) {
-	sorters := make([]note.Sorter, 0)
-	for _, term := range terms {
-		orderSymbol, _ := utf8.DecodeLastRuneInString(term)
-		term = strings.TrimRight(term, "+-")
-
-		sorter, err := sorter(term)
-		if err != nil {
-			return sorters, err
-		}
-
-		switch orderSymbol {
-		case '+':
-			sorter.Ascending = true
-		case '-':
-			sorter.Ascending = false
-		}
-
-		sorters = append(sorters, sorter)
-	}
-
-	return sorters, nil
-}
-
-func sorter(term string) (sorter note.Sorter, err error) {
-	switch {
-	case strings.HasPrefix("created", term):
-		sorter = note.Sorter{Field: note.SortCreated, Ascending: false}
-	case strings.HasPrefix("modified", term):
-		sorter = note.Sorter{Field: note.SortModified, Ascending: false}
-	case strings.HasPrefix("path", term):
-		sorter = note.Sorter{Field: note.SortPath, Ascending: true}
-	case strings.HasPrefix("title", term):
-		sorter = note.Sorter{Field: note.SortTitle, Ascending: true}
-	case strings.HasPrefix("random", term):
-		sorter = note.Sorter{Field: note.SortRandom, Ascending: true}
-	case strings.HasPrefix("word-count", term) || term == "wc":
-		sorter = note.Sorter{Field: note.SortWordCount, Ascending: true}
-	default:
-		err = fmt.Errorf("%s: unknown sorting term", term)
-	}
-	return
-}
-
-func sortAscending(symbol rune, term string) bool {
-	switch term {
-	case "created":
-		return false
-	case "modified":
-		return false
-	case "path":
-		return true
-	case "title":
-		return true
-	case "random":
-		return true
-	case "word-count":
-		return true
-	}
-	return true
 }
