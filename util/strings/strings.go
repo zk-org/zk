@@ -16,3 +16,12 @@ func Prepend(text string, prefix string) string {
 
 	return strings.Join(append([]string{""}, lines...), prefix)
 }
+
+// Pluralize adds an `s` at the end of word if the count is more than 1.
+func Pluralize(word string, count int) string {
+	if word == "" || (count >= -1 && count <= 1) {
+		return word
+	} else {
+		return word + "s"
+	}
+}

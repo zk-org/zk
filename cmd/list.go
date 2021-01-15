@@ -9,6 +9,8 @@ import (
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/pager"
+	"github.com/mickael-menu/zk/util/strings"
 	"github.com/tj/go-naturaldate"
 )
 
@@ -26,6 +28,7 @@ type List struct {
 	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"<date>"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
 	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"<term>"`
+	NoPager        bool     `help:"Do not pipe zk output into a pager" short:"P"`
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -44,8 +47,10 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
+	logger := container.Logger
+
 	return db.WithTransaction(func(tx sqlite.Transaction) error {
-		notes := sqlite.NewNoteDAO(tx, container.Logger)
+		notes := sqlite.NewNoteDAO(tx, logger)
 
 		deps := note.ListDeps{
 			BasePath:  zk.Path,
@@ -53,9 +58,20 @@ func (cmd *List) Run(container *Container) error {
 			Templates: container.TemplateLoader(zk.Config.Lang),
 		}
 
-		count, err := note.List(*opts, deps, printNote)
+		p := pager.PassthroughPager
+		if !cmd.NoPager {
+			p, err = pager.New(logger)
+			if err != nil {
+				return err
+			}
+		}
+
+		count, err := note.List(*opts, deps, p.WriteString)
+
+		p.Close()
+
 		if err == nil {
-			fmt.Printf("\nFound %d result(s)\n", count)
+			fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("result", count))
 		}
 
 		return err
@@ -175,11 +191,6 @@ func relPaths(zk *zk.Zk, paths []string) ([]string, bool) {
 		}
 	}
 	return relPaths, len(relPaths) > 0
-}
-
-func printNote(note string) error {
-	_, err := fmt.Println(note)
-	return err
 }
 
 func parseDate(date string) (time.Time, error) {
