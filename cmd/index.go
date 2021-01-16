@@ -29,6 +29,6 @@ func (cmd *Index) Run(container *Container) error {
 
 	return db.WithTransaction(func(tx sqlite.Transaction) error {
 		notes := sqlite.NewNoteDAO(tx, container.Logger)
-		return note.Index(*dir, notes, container.Logger)
+		return note.Index(*dir, container.Parser(), notes, container.Logger)
 	})
 }

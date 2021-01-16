@@ -51,7 +51,7 @@ type Indexer interface {
 }
 
 // Index indexes the content of the notes in the given directory.
-func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
+func Index(dir zk.Dir, parser Parser, indexer Indexer, logger util.Logger) error {
 	wrap := errors.Wrapper("indexation failed")
 
 	source := paths.Walk(dir.Path, dir.Config.Extension, logger)
@@ -63,14 +63,14 @@ func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 	err = paths.Diff(source, target, func(change paths.DiffChange) error {
 		switch change.Kind {
 		case paths.DiffAdded:
-			metadata, err := metadata(change.Path, dir.Path)
+			metadata, err := metadata(change.Path, dir.Path, parser)
 			if err == nil {
 				err = indexer.Add(metadata)
 			}
 			logger.Err(err)
 
 		case paths.DiffModified:
-			metadata, err := metadata(change.Path, dir.Path)
+			metadata, err := metadata(change.Path, dir.Path, parser)
 			if err == nil {
 				err = indexer.Update(metadata)
 			}
@@ -87,7 +87,7 @@ func Index(dir zk.Dir, indexer Indexer, logger util.Logger) error {
 }
 
 // metadata retrieves note metadata for the given file.
-func metadata(path string, basePath string) (Metadata, error) {
+func metadata(path string, basePath string, parser Parser) (Metadata, error) {
 	metadata := Metadata{
 		Path: path,
 	}
@@ -98,9 +98,12 @@ func metadata(path string, basePath string) (Metadata, error) {
 		return metadata, err
 	}
 	contentStr := string(content)
-	contentParts := Parse(contentStr)
-	metadata.Title = contentParts.Title
-	metadata.Body = contentParts.Body
+	contentParts, err := parser.Parse(contentStr)
+	if err != nil {
+		return metadata, err
+	}
+	metadata.Title = contentParts.Title.String()
+	metadata.Body = contentParts.Body.String()
 	metadata.WordCount = len(strings.Fields(contentStr))
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
 

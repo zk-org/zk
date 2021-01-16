@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/mickael-menu/zk/adapter/handlebars"
+	"github.com/mickael-menu/zk/adapter/markdown"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/adapter/tty"
 	"github.com/mickael-menu/zk/core/zk"
@@ -35,6 +36,10 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader
+}
+
+func (c *Container) Parser() *markdown.Parser {
+	return markdown.NewParser()
 }
 
 // Database returns the DB instance for the given slip box, after executing any

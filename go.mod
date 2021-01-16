@@ -20,6 +20,7 @@ require (
 	github.com/rvflash/elapsed v0.2.0
 	github.com/tebeka/strftime v0.1.5 // indirect
 	github.com/tj/go-naturaldate v1.3.0
+	github.com/yuin/goldmark v1.3.1
 	golang.org/x/sys v0.0.0-20210104204734-6f8348627aad // indirect
 	gopkg.in/djherbis/times.v1 v1.2.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect

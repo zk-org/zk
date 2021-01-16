@@ -1,26 +1,18 @@
 package note
 
 import (
-	"regexp"
-	"strings"
+	"github.com/mickael-menu/zk/util/opt"
 )
 
 type Content struct {
-	Title string
-	Body  string
+	// Title is the heading of the note.
+	Title opt.String
+	// Lead is the opening paragraph or section of the note.
+	Lead opt.String
+	// Body is the content of the note, including the Lead but without the Title.
+	Body opt.String
 }
 
-var contentRegex = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
-
-func Parse(content string) Content {
-	var res Content
-
-	if match := contentRegex.FindStringSubmatchIndex(content); len(match) >= 4 {
-		res.Title = content[match[2]:match[3]]
-		res.Body = strings.TrimSpace(content[match[3]:])
-	} else {
-		res.Body = strings.TrimSpace(content)
-	}
-
-	return res
+type Parser interface {
+	Parse(source string) (Content, error)
 }
