@@ -11,8 +11,10 @@ import (
 // Config holds the global user configuration.
 type Config struct {
 	DirConfig
-	Dirs   map[string]DirConfig
-	Editor opt.String
+	Dirs    map[string]DirConfig
+	Editor  opt.String
+	Pager   opt.String
+	NoPager bool
 }
 
 // DirConfig holds the user configuration for a given directory.
@@ -115,6 +117,8 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		DirConfig: root,
 		Dirs:      make(map[string]DirConfig),
 		Editor:    opt.NewNotEmptyString(hcl.Editor),
+		Pager:     opt.NewNotEmptyString(hcl.Pager),
+		NoPager:   hcl.NoPager,
 	}
 
 	for _, dirHCL := range hcl.Dirs {
@@ -183,6 +187,8 @@ type hclConfig struct {
 	Extra        map[string]string `hcl:"extra,optional"`
 	Dirs         []hclDirConfig    `hcl:"dir,block"`
 	Editor       string            `hcl:"editor,optional"`
+	Pager        string            `hcl:"pager,optional"`
+	NoPager      bool              `hcl:"no-pager,optional"`
 }
 
 type hclDirConfig struct {

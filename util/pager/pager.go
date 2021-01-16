@@ -31,10 +31,10 @@ var PassthroughPager = &Pager{
 }
 
 // New creates a pager.Pager to be used to write a paginated text to the TTY.
-func New(logger util.Logger) (*Pager, error) {
+func New(pagerCmd opt.String, logger util.Logger) (*Pager, error) {
 	wrap := errors.Wrapper("failed to paginate the output, try again with --no-pager or fix your PAGER environment variable")
 
-	pagerCmd := locatePager()
+	pagerCmd = selectPagerCmd(pagerCmd)
 	if pagerCmd.IsNull() {
 		return PassthroughPager, nil
 	}
@@ -98,17 +98,24 @@ func (p *Pager) WriteString(text string) error {
 	return err
 }
 
-func locatePager() opt.String {
+// selectPagerCmd returns the paging command meant to be run.
+//
+// By order of precedence: ZK_PAGER, config.pager, PAGER then the default
+// pagers.
+func selectPagerCmd(userPager opt.String) opt.String {
 	return osutil.GetOptEnv("ZK_PAGER").
+		Or(userPager).
 		Or(osutil.GetOptEnv("PAGER")).
-		Or(locateDefaultPager())
+		Or(selectDefaultPager())
 }
 
 var defaultPagers = []string{
 	"less -FIRX", "more -R",
 }
 
-func locateDefaultPager() opt.String {
+// selectDefaultPager returns the first pager in the list of defaultPagers
+// available on the execution paths.
+func selectDefaultPager() opt.String {
 	for _, pager := range defaultPagers {
 		parts, err := shellquote.Split(pager)
 		if err != nil {

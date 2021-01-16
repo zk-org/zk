@@ -56,7 +56,8 @@ func (s String) Unwrap() string {
 }
 
 func (s String) Equal(other String) bool {
-	return s.value == other.value || *s.value == *other.value
+	return s.value == other.value ||
+		(s.value != nil && other.value != nil && *s.value == *other.value)
 }
 
 func (s String) String() string {

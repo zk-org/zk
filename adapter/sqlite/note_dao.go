@@ -147,85 +147,7 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 }
 
 func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (int, error) {
-	rows, err := func() (*sql.Rows, error) {
-		snippetCol := `""`
-		whereExprs := make([]string, 0)
-		orderTerms := make([]string, 0)
-		args := make([]interface{}, 0)
-
-		for _, filter := range opts.Filters {
-			switch filter := filter.(type) {
-
-			case note.MatchFilter:
-				snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
-				orderTerms = append(orderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
-				whereExprs = append(whereExprs, "notes_fts MATCH ?")
-				args = append(args, fts5.ConvertQuery(string(filter)))
-
-			case note.PathFilter:
-				if len(filter) == 0 {
-					break
-				}
-				globs := make([]string, 0)
-				for _, path := range filter {
-					globs = append(globs, "n.path GLOB ?")
-					args = append(args, path+"*")
-				}
-				whereExprs = append(whereExprs, strings.Join(globs, " OR "))
-
-			case note.ExcludePathFilter:
-				if len(filter) == 0 {
-					break
-				}
-				globs := make([]string, 0)
-				for _, path := range filter {
-					globs = append(globs, "n.path NOT GLOB ?")
-					args = append(args, path+"*")
-				}
-				whereExprs = append(whereExprs, strings.Join(globs, " AND "))
-
-			case note.DateFilter:
-				value := "?"
-				field := "n." + dateField(filter)
-				op, ignoreTime := dateDirection(filter)
-				if ignoreTime {
-					field = "date(" + field + ")"
-					value = "date(?)"
-				}
-
-				whereExprs = append(whereExprs, fmt.Sprintf("%s %s %s", field, op, value))
-				args = append(args, filter.Date)
-
-			default:
-				panic(fmt.Sprintf("%v: unknown filter type", filter))
-			}
-		}
-
-		for _, sorter := range opts.Sorters {
-			orderTerms = append(orderTerms, orderTerm(sorter))
-		}
-		orderTerms = append(orderTerms, `n.title ASC`)
-
-		query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
-
-		query += `
-FROM notes n
-JOIN notes_fts
-ON n.id = notes_fts.rowid`
-
-		if len(whereExprs) > 0 {
-			query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
-		}
-
-		query += "\nORDER BY " + strings.Join(orderTerms, ", ")
-
-		if opts.Limit > 0 {
-			query += fmt.Sprintf("\nLIMIT %d", opts.Limit)
-		}
-
-		return d.tx.Query(query, args...)
-	}()
-
+	rows, err := d.findRows(opts)
 	if err != nil {
 		return 0, err
 	}
@@ -263,6 +185,94 @@ ON n.id = notes_fts.rowid`
 	}
 
 	return count, nil
+}
+
+type findQuery struct {
+	SnippetCol string
+	WhereExprs []string
+	OrderTerms []string
+	Args       []interface{}
+}
+
+func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
+	snippetCol := `""`
+	whereExprs := make([]string, 0)
+	orderTerms := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	for _, filter := range opts.Filters {
+		switch filter := filter.(type) {
+
+		case note.MatchFilter:
+			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
+			orderTerms = append(orderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
+			whereExprs = append(whereExprs, "notes_fts MATCH ?")
+			args = append(args, fts5.ConvertQuery(string(filter)))
+
+		case note.PathFilter:
+			if len(filter) == 0 {
+				break
+			}
+			globs := make([]string, 0)
+			for _, path := range filter {
+				globs = append(globs, "n.path GLOB ?")
+				args = append(args, path+"*")
+			}
+			whereExprs = append(whereExprs, strings.Join(globs, " OR "))
+
+		case note.ExcludePathFilter:
+			if len(filter) == 0 {
+				break
+			}
+			globs := make([]string, 0)
+			for _, path := range filter {
+				globs = append(globs, "n.path NOT GLOB ?")
+				args = append(args, path+"*")
+			}
+			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
+
+		case note.DateFilter:
+			value := "?"
+			field := "n." + dateField(filter)
+			op, ignoreTime := dateDirection(filter)
+			if ignoreTime {
+				field = "date(" + field + ")"
+				value = "date(?)"
+			}
+
+			whereExprs = append(whereExprs, fmt.Sprintf("%s %s %s", field, op, value))
+			args = append(args, filter.Date)
+
+		default:
+			panic(fmt.Sprintf("%v: unknown filter type", filter))
+		}
+	}
+
+	for _, sorter := range opts.Sorters {
+		orderTerms = append(orderTerms, orderTerm(sorter))
+	}
+	orderTerms = append(orderTerms, `n.title ASC`)
+
+	query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
+
+	query += `
+FROM notes n
+JOIN notes_fts
+ON n.id = notes_fts.rowid`
+
+	if len(whereExprs) > 0 {
+		query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
+	}
+
+	query += "\nORDER BY " + strings.Join(orderTerms, ", ")
+
+	if opts.Limit > 0 {
+		query += fmt.Sprintf("\nLIMIT %d", opts.Limit)
+	}
+
+	// fmt.Println(query)
+	// fmt.Println(args)
+	return d.tx.Query(query, args...)
 }
 
 func dateField(filter note.DateFilter) string {

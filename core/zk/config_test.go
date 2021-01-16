@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestParseDefaultConfig(t *testing.T) {
@@ -43,6 +43,8 @@ func TestParseComplete(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		// Comment
 		editor = "vim"
+		pager = "less"
+		no-pager = true
 		filename = "{{id}}.note"
 		extension = "txt"
 		template = "default.note"
@@ -130,7 +132,9 @@ func TestParseComplete(t *testing.T) {
 				},
 			},
 		},
-		Editor: opt.NewString("vim"),
+		Editor:  opt.NewString("vim"),
+		Pager:   opt.NewString("less"),
+		NoPager: true,
 	})
 }
 

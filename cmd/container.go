@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/mickael-menu/zk/adapter/handlebars"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/adapter/tty"
+	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
+	"github.com/mickael-menu/zk/util/pager"
 )
 
 type Container struct {
@@ -42,4 +46,26 @@ func (c *Container) Database(path string) (*sqlite.DB, error) {
 	}
 	err = db.Migrate()
 	return db, err
+}
+
+// Paginate creates an auto-closing io.Writer which will be automatically
+// paginated if noPager is false, using the user's pager.
+//
+// You can write to the pager only in the run callback.
+func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Writer) error) error {
+	pager, err := c.pager(noPager || config.NoPager, config)
+	if err != nil {
+		return err
+	}
+	err = run(pager)
+	pager.Close()
+	return err
+}
+
+func (c *Container) pager(noPager bool, config zk.Config) (*pager.Pager, error) {
+	if noPager {
+		return pager.PassthroughPager, nil
+	} else {
+		return pager.New(config.Pager, c.Logger)
+	}
 }

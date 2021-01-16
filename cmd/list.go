@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
@@ -9,7 +10,6 @@ import (
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
-	"github.com/mickael-menu/zk/util/pager"
 	"github.com/mickael-menu/zk/util/strings"
 	"github.com/tj/go-naturaldate"
 )
@@ -58,17 +58,11 @@ func (cmd *List) Run(container *Container) error {
 			Templates: container.TemplateLoader(zk.Config.Lang),
 		}
 
-		p := pager.PassthroughPager
-		if !cmd.NoPager {
-			p, err = pager.New(logger)
-			if err != nil {
-				return err
-			}
-		}
-
-		count, err := note.List(*opts, deps, p.WriteString)
-
-		p.Close()
+		count := 0
+		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
+			count, err = note.List(*opts, deps, out)
+			return err
+		})
 
 		if err == nil {
 			fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("result", count))

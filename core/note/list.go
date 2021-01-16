@@ -1,6 +1,8 @@
 package note
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,7 +26,7 @@ type ListDeps struct {
 
 // List finds notes matching given criteria and formats them according to user
 // preference.
-func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) error) (int, error) {
+func List(opts ListOpts, deps ListDeps, out io.Writer) (int, error) {
 	templ := matchTemplate(opts.Format)
 	template, err := deps.Templates.Load(templ)
 	if err != nil {
@@ -40,7 +42,9 @@ func List(opts ListOpts, deps ListDeps, callback func(formattedNote string) erro
 		if err != nil {
 			return err
 		}
-		return callback(res)
+
+		_, err = fmt.Fprintln(out, res)
+		return err
 	})
 }
 
