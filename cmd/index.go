@@ -9,6 +9,7 @@ import (
 // Index indexes the content of all the notes in the slip box.
 type Index struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory containing the notes to index"`
+	Force     bool   `help:"Force indexing all the notes" short:"f"`
 }
 
 func (cmd *Index) Run(container *Container) error {
@@ -29,6 +30,6 @@ func (cmd *Index) Run(container *Container) error {
 
 	return db.WithTransaction(func(tx sqlite.Transaction) error {
 		notes := sqlite.NewNoteDAO(tx, container.Logger)
-		return note.Index(*dir, container.Parser(), notes, container.Logger)
+		return note.Index(*dir, cmd.Force, container.Parser(), notes, container.Logger)
 	})
 }

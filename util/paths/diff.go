@@ -20,7 +20,7 @@ const (
 //
 // Warning: The Metadata have to be sorted by their Path for the diffing to
 // work properly.
-func Diff(source, target <-chan Metadata, callback func(DiffChange) error) error {
+func Diff(source, target <-chan Metadata, forceModified bool, callback func(DiffChange) error) error {
 	var err error
 	var sourceFile, targetFile Metadata
 	var sourceOpened, targetOpened bool = true, true
@@ -39,7 +39,7 @@ func Diff(source, target <-chan Metadata, callback func(DiffChange) error) error
 				pair.target = &targetFile
 			}
 		}
-		change := pair.diff()
+		change := pair.diff(forceModified)
 		if change != nil {
 			err = callback(*change)
 		}
@@ -59,7 +59,7 @@ type diffPair struct {
 // If the source and target file are at the same path, we check for any change.
 // If the files are different, that means that either the source file was
 // added, or the target file was removed.
-func (p *diffPair) diff() *DiffChange {
+func (p *diffPair) diff(forceModified bool) *DiffChange {
 	var change *DiffChange
 
 	switch {
@@ -75,7 +75,7 @@ func (p *diffPair) diff() *DiffChange {
 		p.source = nil
 
 	case p.source.Path == p.target.Path: // Same files, compare their modification date.
-		if p.source.Modified != p.target.Modified {
+		if forceModified || p.source.Modified != p.target.Modified {
 			change = &DiffChange{p.source.Path, DiffModified}
 		}
 		p.source = nil
