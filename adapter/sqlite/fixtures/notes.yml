@@ -1,7 +1,9 @@
 - id: 1
   path: "log/2021-01-03.md"
   title: "January 3, 2021"
-  body: "A daily note"
+  lead: "A daily note"
+  body: "A daily note\n\nWith lot of content"
+  raw_content: "# A daily note\nA daily note\n\nWith lot of content"
   word_count: 3
   checksum: "qwfpgj"
   created: "2020-11-22T16:27:45Z"
@@ -10,7 +12,9 @@
 - id: 2
   path: "log/2021-01-04.md"
   title: "January 4, 2021"
+  lead: "A second daily note"
   body: "A second daily note"
+  raw_content: "# A second daily note"
   word_count: 4
   checksum: "arstde"
   created: "2020-11-29T08:20:18Z"
@@ -19,7 +23,9 @@
 - id: 3
   path: "index.md"
   title: "Index"
+  lead: "Index of the Zettelkasten"
   body: "Index of the Zettelkasten"
+  raw_content: "# Index\nIndex of the Zettelkasten"
   word_count: 4
   checksum: "iaefhv"
   created: "2019-12-04T11:59:11Z"
@@ -28,7 +34,9 @@
 - id: 4
   path: "f39c8.md"
   title: "An interesting note"
+  lead: "Its content will surprise you"
   body: "Its content will surprise you"
+  raw_content: "# An interesting note\nIts content will surprise you"
   word_count: 5
   checksum: "irkwyc"
   created: "2020-01-19T10:58:41Z"
@@ -37,7 +45,9 @@
 - id: 5
   path: "ref/test/b.md"
   title: "A nested note"
+  lead: "This one is in a sub sub directory"
   body: "This one is in a sub sub directory"
+  raw_content: "# A nested note\nThis one is in a sub sub directory"
   word_count: 8
   checksum: "yvwbae"
   created: "2019-11-20T20:32:56Z"
@@ -46,7 +56,9 @@
 - id: 6
   path: "ref/test/a.md"
   title: "Another nested note"
+  lead: "It shall appear before b.md"
   body: "It shall appear before b.md"
+  raw_content: "#Another nested note\nIt shall appear before b.md"
   word_count: 5
   checksum: "iecywst"
   created: "2019-11-20T20:32:56Z"
@@ -55,7 +67,9 @@
 - id: 7
   path: "log/2021-02-04.md"
   title: "February 4, 2021"
+  lead: "A third daily note"
   body: "A third daily note"
+  raw_content: "# A third daily note"
   word_count: 4
   checksum: "earkte"
   created: "2020-11-29T08:20:18Z"

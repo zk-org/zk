@@ -17,25 +17,15 @@ import (
 
 // Metadata holds information about a particular note.
 type Metadata struct {
-	Path      string
-	Title     string
-	Body      string
-	WordCount int
-	Created   time.Time
-	Modified  time.Time
-	Checksum  string
-}
-
-func (m Metadata) String() string {
-	return fmt.Sprintf(`note.Metadata{
-	Path: "%v",
-	Title: "%v",
-	Body: "%v",
-	WordCount: %v,
-	Created: "%v",
-	Modified: "%v",
-	Checksum: "%v",
-}`, m.Path, m.Title, m.Body, m.WordCount, m.Created.Format(time.RFC3339), m.Modified.Format(time.RFC3339), m.Checksum)
+	Path       string
+	Title      string
+	Lead       string
+	Body       string
+	RawContent string
+	WordCount  int
+	Created    time.Time
+	Modified   time.Time
+	Checksum   string
 }
 
 // Indexer persists the notes index.
@@ -103,7 +93,9 @@ func metadata(path string, basePath string, parser Parser) (Metadata, error) {
 		return metadata, err
 	}
 	metadata.Title = contentParts.Title.String()
+	metadata.Lead = contentParts.Lead.String()
 	metadata.Body = contentParts.Body.String()
+	metadata.RawContent = contentStr
 	metadata.WordCount = len(strings.Fields(contentStr))
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
 

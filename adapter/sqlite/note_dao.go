@@ -36,12 +36,12 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 			 ORDER BY path ASC
 		`),
 		addStmt: tx.PrepareLazy(`
-			INSERT INTO notes (path, title, body, word_count, checksum, created, modified)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO notes (path, title, lead, body, raw_content, word_count, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
-			   SET title = ?, body = ?, word_count = ?, checksum = ?, modified = ?
+			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, checksum = ?, modified = ?
 			 WHERE path = ?
 		`),
 		removeStmt: tx.PrepareLazy(`
@@ -94,7 +94,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 
 func (d *NoteDAO) Add(note note.Metadata) error {
 	_, err := d.addStmt.Exec(
-		note.Path, note.Title, note.Body, note.WordCount, note.Checksum,
+		note.Path, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
 		note.Created, note.Modified,
 	)
 	return errors.Wrapf(err, "%v: can't add note to the index", note.Path)
@@ -112,7 +112,7 @@ func (d *NoteDAO) Update(note note.Metadata) error {
 	}
 
 	_, err = d.updateStmt.Exec(
-		note.Title, note.Body, note.WordCount, note.Checksum, note.Modified,
+		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum, note.Modified,
 		note.Path,
 	)
 	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
@@ -158,13 +158,13 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 		count++
 
 		var (
-			id, wordCount        int
-			title, body, snippet string
-			path, checksum       string
-			created, modified    time.Time
+			id, wordCount                          int
+			title, lead, body, rawContent, snippet string
+			path, checksum                         string
+			created, modified                      time.Time
 		)
 
-		err := rows.Scan(&id, &path, &title, &body, &wordCount, &created, &modified, &checksum, &snippet)
+		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &snippet)
 		if err != nil {
 			d.logger.Err(err)
 			continue
@@ -173,13 +173,15 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 		callback(note.Match{
 			Snippet: snippet,
 			Metadata: note.Metadata{
-				Path:      path,
-				Title:     title,
-				Body:      body,
-				WordCount: wordCount,
-				Created:   created,
-				Modified:  modified,
-				Checksum:  checksum,
+				Path:       path,
+				Title:      title,
+				Lead:       lead,
+				Body:       body,
+				RawContent: rawContent,
+				WordCount:  wordCount,
+				Created:    created,
+				Modified:   modified,
+				Checksum:   checksum,
 			},
 		})
 	}
@@ -195,7 +197,7 @@ type findQuery struct {
 }
 
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
-	snippetCol := `""`
+	snippetCol := `n.lead`
 	whereExprs := make([]string, 0)
 	orderTerms := make([]string, 0)
 	args := make([]interface{}, 0)
@@ -253,7 +255,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	}
 	orderTerms = append(orderTerms, `n.title ASC`)
 
-	query := "SELECT n.id, n.path, n.title, n.body, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
+	query := "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
 
 	query += `
 FROM notes n

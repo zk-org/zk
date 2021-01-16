@@ -113,22 +113,26 @@ func format(match Match, basePath string, templates templ.Loader) (*matchRenderC
 	}
 
 	return &matchRenderContext{
-		Path:      path,
-		Title:     match.Title,
-		Body:      match.Body,
-		WordCount: match.WordCount,
-		Snippet:   snippet,
-		Created:   match.Created,
-		Modified:  match.Modified,
+		Path:       path,
+		Title:      match.Title,
+		Lead:       match.Lead,
+		Body:       match.Body,
+		RawContent: match.RawContent,
+		WordCount:  match.WordCount,
+		Snippet:    snippet,
+		Created:    match.Created,
+		Modified:   match.Modified,
 	}, err
 }
 
 type matchRenderContext struct {
-	Path      string
-	Title     string
-	Body      string
-	WordCount int
-	Snippet   string
-	Created   time.Time
-	Modified  time.Time
+	Path       string
+	Title      string
+	Lead       string
+	Body       string
+	RawContent string
+	WordCount  int
+	Snippet    string
+	Created    time.Time
+	Modified   time.Time
 }

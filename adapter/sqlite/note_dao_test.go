@@ -58,26 +58,30 @@ func TestNoteDAOIndexed(t *testing.T) {
 func TestNoteDAOAdd(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		err := dao.Add(note.Metadata{
-			Path:      "log/added.md",
-			Title:     "Added note",
-			Body:      "Note body",
-			WordCount: 2,
-			Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-			Modified:  time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
-			Checksum:  "check",
+			Path:       "log/added.md",
+			Title:      "Added note",
+			Lead:       "Note",
+			Body:       "Note body",
+			RawContent: "# Added note\nNote body",
+			WordCount:  2,
+			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Checksum:   "check",
 		})
 		assert.Nil(t, err)
 
 		row, err := queryNoteRow(tx, `path = "log/added.md"`)
 		assert.Nil(t, err)
 		assert.Equal(t, row, noteRow{
-			Path:      "log/added.md",
-			Title:     "Added note",
-			Body:      "Note body",
-			WordCount: 2,
-			Checksum:  "check",
-			Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-			Modified:  time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Path:       "log/added.md",
+			Title:      "Added note",
+			Lead:       "Note",
+			Body:       "Note body",
+			RawContent: "# Added note\nNote body",
+			WordCount:  2,
+			Checksum:   "check",
+			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 	})
 }
@@ -93,26 +97,30 @@ func TestNoteDAOAddExistingNote(t *testing.T) {
 func TestNoteDAOUpdate(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		err := dao.Update(note.Metadata{
-			Path:      "ref/test/a.md",
-			Title:     "Updated note",
-			Body:      "Updated body",
-			Checksum:  "updated checksum",
-			WordCount: 42,
-			Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-			Modified:  time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Path:       "ref/test/a.md",
+			Title:      "Updated note",
+			Lead:       "Updated lead",
+			Body:       "Updated body",
+			RawContent: "Updated raw content",
+			Checksum:   "updated checksum",
+			WordCount:  42,
+			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 		assert.Nil(t, err)
 
 		row, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
 		assert.Equal(t, row, noteRow{
-			Path:      "ref/test/a.md",
-			Title:     "Updated note",
-			Body:      "Updated body",
-			Checksum:  "updated checksum",
-			WordCount: 42,
-			Created:   time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-			Modified:  time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Path:       "ref/test/a.md",
+			Title:      "Updated note",
+			Lead:       "Updated lead",
+			Body:       "Updated body",
+			RawContent: "Updated raw content",
+			Checksum:   "updated checksum",
+			WordCount:  42,
+			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 	})
 }
@@ -166,52 +174,60 @@ func TestNoteDAOFindMatch(t *testing.T) {
 		},
 		[]note.Match{
 			{
+				Metadata: note.Metadata{
+					Path:       "index.md",
+					Title:      "Index",
+					Lead:       "Index of the Zettelkasten",
+					Body:       "Index of the Zettelkasten",
+					RawContent: "# Index\nIndex of the Zettelkasten",
+					WordCount:  4,
+					Created:    time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
+					Modified:   time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
+					Checksum:   "iaefhv",
+				},
 				Snippet: "<zk:match>Index</zk:match> of the Zettelkasten",
-				Metadata: note.Metadata{
-					Path:      "index.md",
-					Title:     "Index",
-					Body:      "Index of the Zettelkasten",
-					WordCount: 4,
-					Created:   time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
-					Modified:  time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
-					Checksum:  "iaefhv",
-				},
 			},
 			{
-				Snippet: "A <zk:match>daily</zk:match> note",
 				Metadata: note.Metadata{
-					Path:      "log/2021-01-03.md",
-					Title:     "January 3, 2021",
-					Body:      "A daily note",
-					WordCount: 3,
-					Created:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Checksum:  "qwfpgj",
+					Path:       "log/2021-02-04.md",
+					Title:      "February 4, 2021",
+					Lead:       "A third daily note",
+					Body:       "A third daily note",
+					RawContent: "# A third daily note",
+					WordCount:  4,
+					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
+					Checksum:   "earkte",
 				},
-			},
-			{
 				Snippet: "A third <zk:match>daily</zk:match> note",
-				Metadata: note.Metadata{
-					Path:      "log/2021-02-04.md",
-					Title:     "February 4, 2021",
-					Body:      "A third daily note",
-					WordCount: 4,
-					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
-					Checksum:  "earkte",
-				},
 			},
 			{
-				Snippet: "A second <zk:match>daily</zk:match> note",
 				Metadata: note.Metadata{
-					Path:      "log/2021-01-04.md",
-					Title:     "January 4, 2021",
-					Body:      "A second daily note",
-					WordCount: 4,
-					Created:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Modified:  time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
-					Checksum:  "arstde",
+					Path:       "log/2021-01-04.md",
+					Title:      "January 4, 2021",
+					Lead:       "A second daily note",
+					Body:       "A second daily note",
+					RawContent: "# A second daily note",
+					WordCount:  4,
+					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Checksum:   "arstde",
 				},
+				Snippet: "A second <zk:match>daily</zk:match> note",
+			},
+			{
+				Metadata: note.Metadata{
+					Path:       "log/2021-01-03.md",
+					Title:      "January 3, 2021",
+					Lead:       "A daily note",
+					Body:       "A daily note\n\nWith lot of content",
+					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					WordCount:  3,
+					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum:   "qwfpgj",
+				},
+				Snippet: "A <zk:match>daily</zk:match> note\n\nWith lot of content",
 			},
 		},
 	)
@@ -440,17 +456,17 @@ func testNoteDAO(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
 }
 
 type noteRow struct {
-	Path, Title, Body, Checksum string
-	WordCount                   int
-	Created, Modified           time.Time
+	Path, Title, Lead, Body, RawContent, Checksum string
+	WordCount                                     int
+	Created, Modified                             time.Time
 }
 
 func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 	var row noteRow
 	err := tx.QueryRow(fmt.Sprintf(`
-		SELECT path, title, body, word_count, checksum, created, modified
+		SELECT path, title, lead, body, raw_content, word_count, checksum, created, modified
 		  FROM notes
 		 WHERE %v
-	`, where)).Scan(&row.Path, &row.Title, &row.Body, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
+	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
 	return row, err
 }
