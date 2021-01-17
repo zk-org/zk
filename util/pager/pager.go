@@ -63,7 +63,14 @@ func New(pagerCmd opt.String, logger util.Logger) (*Pager, error) {
 	}
 
 	go func() {
-		defer close(done)
+		defer func() {
+			close(done)
+
+			// Close manually to make sure that writers are not blocked if the
+			// pager process is closed before writing is complete.
+			// E.g. when listing a huge number of results.
+			pager.Close()
+		}()
 
 		err := cmd.Run()
 		if err != nil {
