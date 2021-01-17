@@ -39,18 +39,22 @@ func (k DiffKind) String() string {
 // Diff compares two sources of Metadata and report the file changes, using the
 // file modification date.
 //
+// Returns the number of files in the source.
+//
 // Warning: The Metadata have to be sorted by their Path for the diffing to
 // work properly.
-func Diff(source, target <-chan Metadata, forceModified bool, callback func(DiffChange) error) error {
+func Diff(source, target <-chan Metadata, forceModified bool, callback func(DiffChange) error) (int, error) {
 	var err error
 	var sourceFile, targetFile Metadata
 	var sourceOpened, targetOpened bool = true, true
+	sourceCount := 0
 	pair := diffPair{}
 
 	for err == nil && (sourceOpened || targetOpened) {
 		if pair.source == nil {
 			sourceFile, sourceOpened = <-source
 			if sourceOpened {
+				sourceCount += 1
 				pair.source = &sourceFile
 			}
 		}
@@ -66,7 +70,7 @@ func Diff(source, target <-chan Metadata, forceModified bool, callback func(Diff
 		}
 	}
 
-	return err
+	return sourceCount, err
 }
 
 // diffPair holds the current two files to be diffed.

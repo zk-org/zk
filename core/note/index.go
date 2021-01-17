@@ -12,6 +12,7 @@ import (
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/paths"
+	strutil "github.com/mickael-menu/zk/util/strings"
 	"gopkg.in/djherbis/times.v1"
 )
 
@@ -28,6 +29,28 @@ type Metadata struct {
 	Checksum   string
 }
 
+// IndexingStats holds metrics about an indexing process.
+type IndexingStats struct {
+	SourceCount   int
+	AddedCount    int
+	ModifiedCount int
+	RemovedCount  int
+	Duration      time.Duration
+}
+
+// String implements Stringer
+func (s IndexingStats) String() string {
+	return fmt.Sprintf(`Indexed %d %v in %v
+  + %d added
+  ~ %d modified
+  - %d removed`,
+		s.SourceCount,
+		strutil.Pluralize("note", s.SourceCount),
+		s.Duration.Round(500*time.Millisecond),
+		s.AddedCount, s.ModifiedCount, s.RemovedCount,
+	)
+}
+
 // Indexer persists the notes index.
 type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.
@@ -41,20 +64,24 @@ type Indexer interface {
 }
 
 // Index indexes the content of the notes in the given directory.
-func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) error {
+func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) (IndexingStats, error) {
 	wrap := errors.Wrapper("indexing failed")
+
+	stats := IndexingStats{}
+	startTime := time.Now()
 
 	source := paths.Walk(dir.Path, dir.Config.Extension, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
-		return wrap(err)
+		return stats, wrap(err)
 	}
 
-	err = paths.Diff(source, target, force, func(change paths.DiffChange) error {
+	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
 		callback(change)
 
 		switch change.Kind {
 		case paths.DiffAdded:
+			stats.AddedCount += 1
 			metadata, err := metadata(change.Path, dir.Path, parser)
 			if err == nil {
 				err = indexer.Add(metadata)
@@ -62,6 +89,7 @@ func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.L
 			logger.Err(err)
 
 		case paths.DiffModified:
+			stats.ModifiedCount += 1
 			metadata, err := metadata(change.Path, dir.Path, parser)
 			if err == nil {
 				err = indexer.Update(metadata)
@@ -69,13 +97,17 @@ func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.L
 			logger.Err(err)
 
 		case paths.DiffRemoved:
+			stats.RemovedCount += 1
 			err := indexer.Remove(change.Path)
 			logger.Err(err)
 		}
 		return nil
 	})
 
-	return wrap(err)
+	stats.SourceCount = count
+	stats.Duration = time.Since(startTime)
+
+	return stats, wrap(err)
 }
 
 // metadata retrieves note metadata for the given file.

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 type Index struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory containing the notes to index"`
 	Force     bool   `help:"Force indexing all the notes" short:"f"`
+	Quiet     bool   `help:"Do not print statistics nor progress" short:"q"`
 }
 
 func (cmd *Index) Run(container *Container) error {
@@ -33,29 +35,42 @@ func (cmd *Index) Run(container *Container) error {
 		return err
 	}
 
-	bar := progressbar.NewOptions(-1,
-		progressbar.OptionSetWriter(os.Stderr),
-		progressbar.OptionThrottle(100*time.Millisecond),
-		progressbar.OptionSpinnerType(14),
-	)
+	var bar *progressbar.ProgressBar
+	if !cmd.Quiet {
+		bar = progressbar.NewOptions(-1,
+			progressbar.OptionSetWriter(os.Stderr),
+			progressbar.OptionThrottle(100*time.Millisecond),
+			progressbar.OptionSpinnerType(14),
+		)
+	}
 
+	var stats note.IndexingStats
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		notes := sqlite.NewNoteDAO(tx, container.Logger)
 
-		return note.Index(
+		stats, err = note.Index(
 			*dir,
 			cmd.Force,
 			container.Parser(),
 			notes,
 			container.Logger,
 			func(change paths.DiffChange) {
-				bar.Add(1)
-				bar.Describe(change.String())
+				if bar != nil {
+					bar.Add(1)
+					bar.Describe(change.String())
+				}
 			},
 		)
+		return err
 	})
 
-	bar.Clear()
+	if bar != nil {
+		bar.Clear()
+	}
+
+	if err == nil && !cmd.Quiet {
+		fmt.Println(stats)
+	}
 
 	return err
 }

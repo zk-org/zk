@@ -266,7 +266,7 @@ func TestDiffCancellation(t *testing.T) {
 	target := []Metadata{}
 
 	received := make([]DiffChange, 0)
-	err := Diff(toChannel(source), toChannel(target), false, func(change DiffChange) error {
+	_, err := Diff(toChannel(source), toChannel(target), false, func(change DiffChange) error {
 		received = append(received, change)
 
 		if len(received) == 1 {
@@ -286,12 +286,14 @@ func TestDiffCancellation(t *testing.T) {
 }
 
 func test(t *testing.T, source, target []Metadata, forceModified bool, expected []DiffChange) {
+	expectedCount := len(source)
 	received := make([]DiffChange, 0)
-	err := Diff(toChannel(source), toChannel(target), forceModified, func(change DiffChange) error {
+	actualCount, err := Diff(toChannel(source), toChannel(target), forceModified, func(change DiffChange) error {
 		received = append(received, change)
 		return nil
 	})
 	assert.Nil(t, err)
+	assert.Equal(t, actualCount, expectedCount)
 	assert.Equal(t, received, expected)
 }
 
