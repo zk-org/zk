@@ -18,11 +18,13 @@ func TestWalk(t *testing.T) {
 	}
 
 	assert.Equal(t, actual, []string{
+		"Dir3/a.md",
 		"a.md",
 		"b.md",
 		"dir1/a.md",
 		"dir1/b.md",
 		"dir1/dir1/a.md",
+		"dir1 a space/a.md",
 		"dir2/a.md",
 	})
 }

@@ -1,5 +1,6 @@
 - id: 1
   path: "log/2021-01-03.md"
+  sortable_path: "log/2021-01-03.md"
   title: "January 3, 2021"
   lead: "A daily note"
   body: "A daily note\n\nWith lot of content"
@@ -11,6 +12,7 @@
 
 - id: 2
   path: "log/2021-01-04.md"
+  sortable_path: "log/2021-01-04.md"
   title: "January 4, 2021"
   lead: "A second daily note"
   body: "A second daily note"
@@ -22,6 +24,7 @@
 
 - id: 3
   path: "index.md"
+  sortable_path: "index.md"
   title: "Index"
   lead: "Index of the Zettelkasten"
   body: "Index of the Zettelkasten"
@@ -33,6 +36,7 @@
 
 - id: 4
   path: "f39c8.md"
+  sortable_path: "f39c8.md"
   title: "An interesting note"
   lead: "Its content will surprise you"
   body: "Its content will surprise you"
@@ -44,6 +48,7 @@
 
 - id: 5
   path: "ref/test/b.md"
+  sortable_path: "ref/test/b.md"
   title: "A nested note"
   lead: "This one is in a sub sub directory"
   body: "This one is in a sub sub directory"
@@ -55,6 +60,7 @@
 
 - id: 6
   path: "ref/test/a.md"
+  sortable_path: "ref/test/a.md"
   title: "Another nested note"
   lead: "It shall appear before b.md"
   body: "It shall appear before b.md"
@@ -66,6 +72,7 @@
 
 - id: 7
   path: "log/2021-02-04.md"
+  sortable_path: "log/2021-02-04.md"
   title: "February 4, 2021"
   lead: "A third daily note"
   body: "A third daily note"

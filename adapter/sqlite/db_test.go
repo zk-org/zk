@@ -3,8 +3,8 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/fixtures"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestOpen(t *testing.T) {
@@ -36,8 +36,8 @@ func TestMigrateFrom0(t *testing.T) {
 		assert.Equal(t, version, 1)
 
 		_, err = tx.Exec(`
-			INSERT INTO notes (path, title, body, word_count, checksum)
-			VALUES ("ref/tx1.md", "A reference", "Content", 1, "qwfpg")
+			INSERT INTO notes (path, sortable_path, title, body, word_count, checksum)
+			VALUES ("ref/tx1.md", "reftx1.md", "A reference", "Content", 1, "qwfpg")
 		`)
 		assert.Nil(t, err)
 

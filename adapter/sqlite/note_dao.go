@@ -33,11 +33,11 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		logger: logger,
 		indexedStmt: tx.PrepareLazy(`
 			SELECT path, modified from notes
-			 ORDER BY path ASC
+			 ORDER BY sortable_path ASC
 		`),
 		addStmt: tx.PrepareLazy(`
-			INSERT INTO notes (path, title, lead, body, raw_content, word_count, checksum, created, modified)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
@@ -93,8 +93,16 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 }
 
 func (d *NoteDAO) Add(note note.Metadata) error {
+	// For sortable_path, we replace in path / by the shortest non printable
+	// character available to make it sortable. Without this, sorting by the
+	// path would be a lexicographical sort instead of being the same order
+	// returned by filepath.Walk.
+	// \x01 is used instead of \x00, because SQLite treats \x00 as and end of
+	// string.
+	sortablePath := strings.ReplaceAll(note.Path, "/", "\x01")
+
 	_, err := d.addStmt.Exec(
-		note.Path, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
+		note.Path, sortablePath, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
 		note.Created, note.Modified,
 	)
 	return errors.Wrapf(err, "%v: can't add note to the index", note.Path)

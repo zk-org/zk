@@ -12,34 +12,78 @@ import (
 )
 
 func TestNoteDAOIndexed(t *testing.T) {
-	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		expected := []paths.Metadata{
+	testNoteDAOWithoutFixtures(t, func(tx Transaction, dao *NoteDAO) {
+		for _, note := range []note.Metadata{
 			{
-				Path:     "f39c8.md",
+				Path:     "a.md",
 				Modified: time.Date(2020, 1, 20, 8, 52, 42, 0, time.UTC),
 			},
 			{
-				Path:     "index.md",
+				Path:     "dir1/a.md",
 				Modified: time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
 			},
 			{
-				Path:     "log/2021-01-03.md",
+				Path:     "b.md",
 				Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 			},
 			{
-				Path:     "log/2021-01-04.md",
+				Path:     "dir1/b.md",
 				Modified: time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 			},
 			{
-				Path:     "log/2021-02-04.md",
+				Path:     "dir1/dir1/a.md",
 				Modified: time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 			},
 			{
-				Path:     "ref/test/a.md",
+				Path:     "dir2/a.md",
 				Modified: time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
 			},
 			{
-				Path:     "ref/test/b.md",
+				Path:     "dir1 a space/a.md",
+				Modified: time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
+			},
+			{
+				Path:     "Dir3/a.md",
+				Modified: time.Date(2019, 11, 12, 20, 34, 6, 0, time.UTC),
+			},
+		} {
+			assert.Nil(t, dao.Add(note))
+		}
+
+		// We check that the metadata are sorted by the path but not
+		// lexicographically. Instead it needs to be sorted on each path
+		// component, like filepath.Walk would.
+		expected := []paths.Metadata{
+			{
+				Path:     "Dir3/a.md",
+				Modified: time.Date(2019, 11, 12, 20, 34, 6, 0, time.UTC),
+			},
+			{
+				Path:     "a.md",
+				Modified: time.Date(2020, 1, 20, 8, 52, 42, 0, time.UTC),
+			},
+			{
+				Path:     "b.md",
+				Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			},
+			{
+				Path:     "dir1/a.md",
+				Modified: time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
+			},
+			{
+				Path:     "dir1/b.md",
+				Modified: time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+			},
+			{
+				Path:     "dir1/dir1/a.md",
+				Modified: time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
+			},
+			{
+				Path:     "dir1 a space/a.md",
+				Modified: time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
+			},
+			{
+				Path:     "dir2/a.md",
 				Modified: time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
 			},
 		}
@@ -451,6 +495,12 @@ func testNoteDAOFind(t *testing.T, opts note.FinderOpts, expected []note.Match) 
 
 func testNoteDAO(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
 	testTransaction(t, func(tx Transaction) {
+		callback(tx, NewNoteDAO(tx, &util.NullLogger))
+	})
+}
+
+func testNoteDAOWithoutFixtures(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
+	testTransactionWithoutFixtures(t, func(tx Transaction) {
 		callback(tx, NewNoteDAO(tx, &util.NullLogger))
 	})
 }

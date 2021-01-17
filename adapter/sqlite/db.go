@@ -50,6 +50,7 @@ func (db *DB) Migrate() error {
 				`CREATE TABLE IF NOT EXISTS notes (
 					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 					path TEXT NOT NULL,
+					sortable_path TEXT NOT NULL,
 					title TEXT DEFAULT('') NOT NULL,
 					lead TEXT DEFAULT('') NOT NULL,
 					body TEXT DEFAULT('') NOT NULL,
