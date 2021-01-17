@@ -1,9 +1,16 @@
 package paths
 
+import "fmt"
+
 // DiffChange represents a file change made in a directory.
 type DiffChange struct {
 	Path string
 	Kind DiffKind
+}
+
+// String implements Stringer.
+func (c DiffChange) String() string {
+	return fmt.Sprintf("%v %v", c.Kind, c.Path)
 }
 
 // DiffKind represents a type of file change made in a directory.
@@ -14,6 +21,20 @@ const (
 	DiffModified
 	DiffRemoved
 )
+
+// String implements Stringer.
+func (k DiffKind) String() string {
+	switch k {
+	case DiffAdded:
+		return "+"
+	case DiffModified:
+		return "~"
+	case DiffRemoved:
+		return "-"
+	default:
+		panic(fmt.Sprintf("%d: unknown DiffKind", int(k)))
+	}
+}
 
 // Diff compares two sources of Metadata and report the file changes, using the
 // file modification date.

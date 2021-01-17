@@ -41,8 +41,8 @@ type Indexer interface {
 }
 
 // Index indexes the content of the notes in the given directory.
-func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.Logger) error {
-	wrap := errors.Wrapper("indexation failed")
+func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) error {
+	wrap := errors.Wrapper("indexing failed")
 
 	source := paths.Walk(dir.Path, dir.Config.Extension, logger)
 	target, err := indexer.Indexed()
@@ -51,6 +51,8 @@ func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.L
 	}
 
 	err = paths.Diff(source, target, force, func(change paths.DiffChange) error {
+		callback(change)
+
 		switch change.Kind {
 		case paths.DiffAdded:
 			metadata, err := metadata(change.Path, dir.Path, parser)
