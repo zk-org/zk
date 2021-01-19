@@ -3,19 +3,16 @@ package note
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
-var now = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
-
 func TestCreate(t *testing.T) {
-	filenameTemplate := spyTemplateString("filename")
-	bodyTemplate := spyTemplateString("body")
+	filenameTemplate := NewRendererSpyString("filename")
+	bodyTemplate := NewRendererSpyString("body")
 
 	res, err := create(
 		CreateOpts{
@@ -33,11 +30,11 @@ func TestCreate(t *testing.T) {
 			Content: opt.NewString("Note content"),
 		},
 		createDeps{
-			filenameTemplate: &filenameTemplate,
-			bodyTemplate:     &bodyTemplate,
+			filenameTemplate: filenameTemplate,
+			bodyTemplate:     bodyTemplate,
 			genId:            func() string { return "abc" },
 			validatePath:     func(path string) (bool, error) { return true, nil },
-			now:              now,
+			now:              Now,
 		},
 	)
 
@@ -49,7 +46,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	// Check that the templates received the proper render contexts.
-	assert.Equal(t, filenameTemplate.Contexts, []renderContext{{
+	assert.Equal(t, filenameTemplate.Contexts, []interface{}{renderContext{
 		ID:      "abc",
 		Title:   "Note title",
 		Content: "Note content",
@@ -57,9 +54,9 @@ func TestCreate(t *testing.T) {
 		Extra: map[string]string{
 			"hello": "world",
 		},
-		Now: now,
+		Now: Now,
 	}})
-	assert.Equal(t, bodyTemplate.Contexts, []renderContext{{
+	assert.Equal(t, bodyTemplate.Contexts, []interface{}{renderContext{
 		ID:           "abc",
 		Title:        "Note title",
 		Content:      "Note content",
@@ -69,15 +66,15 @@ func TestCreate(t *testing.T) {
 		Extra: map[string]string{
 			"hello": "world",
 		},
-		Now: now,
+		Now: Now,
 	}})
 }
 
 func TestCreateTriesUntilValidPath(t *testing.T) {
-	filenameTemplate := spyTemplate(func(context renderContext) string {
-		return context.ID
+	filenameTemplate := NewRendererSpy(func(context interface{}) string {
+		return context.(renderContext).ID
 	})
-	bodyTemplate := spyTemplateString("body")
+	bodyTemplate := NewRendererSpyString("body")
 
 	res, err := create(
 		CreateOpts{
@@ -91,13 +88,13 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 			Title: opt.NewString("Note title"),
 		},
 		createDeps{
-			filenameTemplate: &filenameTemplate,
-			bodyTemplate:     &bodyTemplate,
+			filenameTemplate: filenameTemplate,
+			bodyTemplate:     bodyTemplate,
 			genId:            incrementingID(),
 			validatePath: func(path string) (bool, error) {
 				return path == "/test/log/3.md", nil
 			},
-			now: now,
+			now: Now,
 		},
 	)
 
@@ -108,24 +105,24 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 		content: "body",
 	})
 
-	assert.Equal(t, filenameTemplate.Contexts, []renderContext{
-		{
+	assert.Equal(t, filenameTemplate.Contexts, []interface{}{
+		renderContext{
 			ID:    "1",
 			Title: "Note title",
 			Dir:   "log",
-			Now:   now,
+			Now:   Now,
 		},
-		{
+		renderContext{
 			ID:    "2",
 			Title: "Note title",
 			Dir:   "log",
-			Now:   now,
+			Now:   Now,
 		},
-		{
+		renderContext{
 			ID:    "3",
 			Title: "Note title",
 			Dir:   "log",
-			Now:   now,
+			Now:   Now,
 		},
 	})
 }
@@ -148,38 +145,14 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 			bodyTemplate: templ.NullRenderer,
 			genId:        func() string { return "abc" },
 			validatePath: func(path string) (bool, error) { return false, nil },
-			now:          now,
+			now:          Now,
 		},
 	)
 
 	assert.Err(t, err, "/test/log/filename.md: note already exists")
 }
 
-func spyTemplate(result func(renderContext) string) TemplateSpy {
-	return TemplateSpy{
-		Contexts: make([]renderContext, 0),
-		Result:   result,
-	}
-}
-
-func spyTemplateString(result string) TemplateSpy {
-	return TemplateSpy{
-		Contexts: make([]renderContext, 0),
-		Result:   func(_ renderContext) string { return result },
-	}
-}
-
-type TemplateSpy struct {
-	Result   func(renderContext) string
-	Contexts []renderContext
-}
-
-func (m *TemplateSpy) Render(context interface{}) (string, error) {
-	renderContext := context.(renderContext)
-	m.Contexts = append(m.Contexts, renderContext)
-	return m.Result(renderContext), nil
-}
-
+// incrementingID returns a generator of incrementing string ID.
 func incrementingID() func() string {
 	i := 0
 	return func() string {

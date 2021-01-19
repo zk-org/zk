@@ -7,8 +7,8 @@ import (
 
 	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/util"
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/fixtures"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func init() {

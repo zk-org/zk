@@ -63,28 +63,24 @@ var formatTemplates = map[string]string{
 
 	"short": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}
-`,
+{{prepend "  " snippet}}`,
 
 	"medium": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 
-{{prepend "  " snippet}}
-`,
+{{prepend "  " snippet}}`,
 
 	"long": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " snippet}}
-`,
+{{prepend "  " snippet}}`,
 
 	"full": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " body}}
-`,
+{{prepend "  " body}}`,
 }
 
 var termRegex = regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
@@ -108,6 +104,7 @@ func (f *Formatter) Format(match Match) (string, error) {
 		WordCount:  match.WordCount,
 		Created:    match.Created,
 		Modified:   match.Modified,
+		Checksum:   match.Checksum,
 	})
 }
 
@@ -121,4 +118,5 @@ type formatRenderContext struct {
 	WordCount  int    `handlebars:"word-count"`
 	Created    time.Time
 	Modified   time.Time
+	Checksum   string
 }
