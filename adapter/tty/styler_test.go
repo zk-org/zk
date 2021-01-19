@@ -48,13 +48,12 @@ func TestStyleAllRules(t *testing.T) {
 	test("path", "4;36m")
 	test("match", "31m")
 
-	test("reset", "0m")
 	test("bold", "1m")
 	test("faint", "2m")
 	test("italic", "3m")
 	test("underline", "4m")
-	test("blink-slow", "5m")
-	test("blink-fast", "6m")
+	test("blink", "5m")
+	test("reverse", "7m")
 	test("hidden", "8m")
 	test("strikethrough", "9m")
 

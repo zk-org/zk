@@ -19,7 +19,7 @@ func WithMatchFilter(callback func(func(Match) error)) ([]string, error) {
 			fmt.Fprintf(w, "%v\x01  %v  %v\n",
 				m.Path,
 				styler.MustStyle(m.Title, style.Rule("yellow")),
-				styler.MustStyle(strings.JoinLines(m.Body), style.Rule("black")),
+				styler.MustStyle(strings.JoinLines(m.Body), style.Rule("faint")),
 			)
 			return nil
 		})
