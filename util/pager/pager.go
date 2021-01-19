@@ -11,6 +11,7 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
+	executil "github.com/mickael-menu/zk/util/exec"
 	"github.com/mickael-menu/zk/util/opt"
 	osutil "github.com/mickael-menu/zk/util/os"
 )
@@ -39,11 +40,7 @@ func New(pagerCmd opt.String, logger util.Logger) (*Pager, error) {
 		return PassthroughPager, nil
 	}
 
-	args, err := shellquote.Split(pagerCmd.String())
-	if err != nil {
-		return nil, wrap(err)
-	}
-	cmd := exec.Command(args[0], args[1:]...)
+	cmd := executil.CommandFromString(pagerCmd.String())
 
 	r, w, err := os.Pipe()
 	if err != nil {

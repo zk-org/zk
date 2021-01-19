@@ -3,11 +3,11 @@ package note
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
+	"github.com/mickael-menu/zk/util/exec"
 	"github.com/mickael-menu/zk/util/opt"
 	osutil "github.com/mickael-menu/zk/util/os"
 )
@@ -30,7 +30,7 @@ func Edit(zk *zk.Zk, path string) error {
 	}
 	args = append(args, path)
 
-	cmd := exec.Command(args[0], args[1:]...)
+	cmd := exec.CommandFromString(editor.String() + " '" + path + "'")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 

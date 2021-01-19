@@ -25,6 +25,14 @@ func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
 	return color.New(attrs...).Sprint(text), nil
 }
 
+func (s *Styler) MustStyle(text string, rules ...style.Rule) string {
+	text, err := s.Style(text, rules...)
+	if err != nil {
+		panic(err.Error())
+	}
+	return text
+}
+
 // FIXME: User config
 var themeAliases = map[style.Rule][]style.Rule{
 	"title": {"bold", "yellow"},

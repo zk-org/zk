@@ -32,3 +32,26 @@ func TestPluralize(t *testing.T) {
 	test("word", 2, "words")
 	test("word", 1000, "words")
 }
+
+func TestSplitLines(t *testing.T) {
+	test := func(text string, expected ...string) {
+		assert.Equal(t, SplitLines(text), expected)
+	}
+
+	test("")
+	test("One line", "One line")
+	test("One line\nTwo lines", "One line", "Two lines")
+	test("One line\nTwo lines\n\nThree lines", "One line", "Two lines", "", "Three lines")
+}
+
+func TestJoinLines(t *testing.T) {
+	test := func(text string, expected string) {
+		assert.Equal(t, JoinLines(text), expected)
+	}
+
+	test("", "")
+	test("One line", "One line")
+	test("One line\nTwo lines", "One line Two lines")
+	test("One line\nTwo lines\n\nThree lines", "One line Two lines  Three lines")
+	test("One line\nTwo lines\n Three lines", "One line Two lines  Three lines")
+}
