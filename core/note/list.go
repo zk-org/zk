@@ -130,8 +130,8 @@ type matchRenderContext struct {
 	Title      string
 	Lead       string
 	Body       string
-	RawContent string
-	WordCount  int
+	RawContent string `handlebars:"raw-content"`
+	WordCount  int    `handlebars:"word-count"`
 	Snippet    string
 	Created    time.Time
 	Modified   time.Time
