@@ -12,6 +12,10 @@ type Rule string
 
 // Predefined styling rules.
 var (
+	RuleTitle = Rule("title")
+	RulePath  = Rule("path")
+	RuleTerm  = Rule("term")
+
 	RuleBold          = Rule("bold")
 	RuleItalic        = Rule("italic")
 	RuleFaint         = Rule("faint")

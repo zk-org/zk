@@ -37,7 +37,7 @@ func (s *Styler) MustStyle(text string, rules ...style.Rule) string {
 var themeAliases = map[style.Rule][]style.Rule{
 	"title": {"bold", "yellow"},
 	"path":  {"underline", "cyan"},
-	"match": {"red"},
+	"term":  {"red"},
 }
 
 func expandThemeAliases(rules []style.Rule) []style.Rule {

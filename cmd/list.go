@@ -56,6 +56,7 @@ func (cmd *List) Run(container *Container) error {
 			BasePath:  zk.Path,
 			Finder:    notes,
 			Templates: container.TemplateLoader(zk.Config.Lang),
+			Styler:    container.Styler(),
 		}
 
 		count := 0

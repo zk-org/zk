@@ -38,6 +38,10 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	return c.templateLoader
 }
 
+func (c *Container) Styler() *tty.Styler {
+	return tty.NewStyler()
+}
+
 func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser()
 }
