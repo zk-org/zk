@@ -37,6 +37,6 @@ func main() {
 type NoInput bool
 
 func (f NoInput) BeforeApply(container *cmd.Container) error {
-	container.TTY.NoInput = true
+	container.Terminal.NoInput = true
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/mickael-menu/zk/adapter/handlebars"
 	"github.com/mickael-menu/zk/adapter/markdown"
 	"github.com/mickael-menu/zk/adapter/sqlite"
-	"github.com/mickael-menu/zk/adapter/tty"
+	"github.com/mickael-menu/zk/adapter/term"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
@@ -18,7 +18,7 @@ import (
 type Container struct {
 	Date           date.Provider
 	Logger         util.Logger
-	TTY            *tty.TTY
+	Terminal       *term.Terminal
 	templateLoader *handlebars.Loader
 }
 
@@ -29,14 +29,14 @@ func NewContainer() *Container {
 		Logger: util.NewStdLogger("zk: ", 0),
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any rendering during the execution.
-		Date: &date,
-		TTY:  tty.New(),
+		Date:     &date,
+		Terminal: term.New(),
 	}
 }
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Logger, c.TTY)
+		handlebars.Init(lang, c.Logger, c.Terminal)
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader
@@ -48,7 +48,7 @@ func (c *Container) Parser() *markdown.Parser {
 
 func (c *Container) NoteFinder(tx sqlite.Transaction) note.Finder {
 	notes := sqlite.NewNoteDAO(tx, c.Logger)
-	return fzf.NewNoteFinder(notes, c.TTY)
+	return fzf.NewNoteFinder(notes, c.Terminal)
 }
 
 // Database returns the DB instance for the given slip box, after executing any

@@ -1,4 +1,4 @@
-package tty
+package term
 
 import (
 	"testing"
@@ -8,42 +8,42 @@ import (
 	"github.com/mickael-menu/zk/util/test/assert"
 )
 
-func createTTY() *TTY {
+func createTerminal() *Terminal {
 	color.NoColor = false // Otherwise the color codes are not injected during tests
 	return New()
 }
 
 func TestStyleNoRule(t *testing.T) {
-	res, err := createTTY().Style("Hello")
+	res, err := createTerminal().Style("Hello")
 	assert.Nil(t, err)
 	assert.Equal(t, res, "Hello")
 }
 
 func TestStyleOneRule(t *testing.T) {
-	res, err := createTTY().Style("Hello", style.Rule("red"))
+	res, err := createTerminal().Style("Hello", style.Rule("red"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31mHello\033[0m")
 }
 
 func TestStyleMultipleRule(t *testing.T) {
-	res, err := createTTY().Style("Hello", style.Rule("red"), style.Rule("bold"))
+	res, err := createTerminal().Style("Hello", style.Rule("red"), style.Rule("bold"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31;1mHello\033[0m")
 }
 
 func TestStyleUnknownRule(t *testing.T) {
-	_, err := createTTY().Style("Hello", style.Rule("unknown"))
+	_, err := createTerminal().Style("Hello", style.Rule("unknown"))
 	assert.Err(t, err, "unknown styling rule: unknown")
 }
 
 func TestStyleEmptyString(t *testing.T) {
-	res, err := createTTY().Style("", style.Rule("bold"))
+	res, err := createTerminal().Style("", style.Rule("bold"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "")
 }
 
 func TestStyleAllRules(t *testing.T) {
-	styler := createTTY()
+	styler := createTerminal()
 	test := func(rule string, expected string) {
 		res, err := styler.Style("Hello", style.Rule(rule))
 		assert.Nil(t, err)

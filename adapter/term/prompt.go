@@ -1,4 +1,4 @@
-package tty
+package term
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ type PromptOpt struct {
 // Prompt displays a message and waits for the user to input one of the
 // available options.
 // Returns the selected option index.
-func (t *TTY) Prompt(msg string, defaultOpt int, options []PromptOpt) int {
+func (t *Terminal) Prompt(msg string, defaultOpt int, options []PromptOpt) int {
 	responses := ""
 	for i, opt := range options {
 		if i == len(options)-1 {
@@ -42,8 +42,7 @@ func (t *TTY) Prompt(msg string, defaultOpt int, options []PromptOpt) int {
 	for {
 		fmt.Printf("%s\n%s > ", msg, responses)
 
-		// Don't prompt when --no-input is on.
-		if t.NoInput {
+		if !t.IsInteractive() {
 			fmt.Println(options[defaultOpt].AllowedResponses[0])
 			return defaultOpt
 		}
@@ -68,7 +67,7 @@ func (t *TTY) Prompt(msg string, defaultOpt int, options []PromptOpt) int {
 }
 
 // Confirm is a shortcut to prompt a yes/no question to the user.
-func (t *TTY) Confirm(msg string, yesDescription string, noDescription string) bool {
+func (t *Terminal) Confirm(msg string, yesDescription string, noDescription string) bool {
 	return t.Prompt(msg, 1, []PromptOpt{
 		{
 			Label:            t.MustStyle("y", style.RuleEmphasis) + "es",

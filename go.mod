@@ -14,6 +14,7 @@ require (
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.3
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/mickael-menu/pretty v0.2.3

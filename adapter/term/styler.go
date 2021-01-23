@@ -1,4 +1,4 @@
-package tty
+package term
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/mickael-menu/zk/core/style"
 )
 
-// Style implements style.Styler using ANSI escape codes to be used with a TTY.
-func (t *TTY) Style(text string, rules ...style.Rule) (string, error) {
+// Style implements style.Styler using ANSI escape codes to be used with a terminal.
+func (t *Terminal) Style(text string, rules ...style.Rule) (string, error) {
 	if text == "" {
 		return text, nil
 	}
@@ -22,7 +22,7 @@ func (t *TTY) Style(text string, rules ...style.Rule) (string, error) {
 	return color.New(attrs...).Sprint(text), nil
 }
 
-func (t *TTY) MustStyle(text string, rules ...style.Rule) string {
+func (t *Terminal) MustStyle(text string, rules ...style.Rule) string {
 	text, err := t.Style(text, rules...)
 	if err != nil {
 		panic(err.Error())

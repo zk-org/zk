@@ -16,7 +16,7 @@ import (
 	osutil "github.com/mickael-menu/zk/util/os"
 )
 
-// Pager writes text to a TTY using the user's pager.
+// Pager writes text to a terminal using the user's pager.
 type Pager struct {
 	io.WriteCloser
 	done        chan bool
@@ -31,7 +31,7 @@ var PassthroughPager = &Pager{
 	isCloseable: false,
 }
 
-// New creates a pager.Pager to be used to write a paginated text to the TTY.
+// New creates a pager.Pager to be used to write a paginated text to the terminal.
 func New(pagerCmd opt.String, logger util.Logger) (*Pager, error) {
 	wrap := errors.Wrapper("failed to paginate the output, try again with --no-pager or fix your PAGER environment variable")
 
