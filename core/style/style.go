@@ -13,9 +13,14 @@ type Rule string
 
 // Predefined styling rules.
 var (
+	// Title of a note.
 	RuleTitle = Rule("title")
-	RulePath  = Rule("path")
-	RuleTerm  = Rule("term")
+	// Path to slip box file.
+	RulePath = Rule("path")
+	// Searched for term in a note.
+	RuleTerm = Rule("term")
+	// Element to emphasize, for example the short version of a prompt response: [y]es.
+	RuleEmphasis = Rule("emphasis")
 
 	RuleBold          = Rule("bold")
 	RuleItalic        = Rule("italic")

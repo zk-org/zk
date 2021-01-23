@@ -43,7 +43,7 @@ func (cmd *List) Run(container *Container) error {
 	}
 
 	templates := container.TemplateLoader(zk.Config.Lang)
-	styler := container.Styler()
+	styler := container.TTY
 	format := opt.NewNotEmptyString(cmd.Format)
 	formatter, err := note.NewFormatter(zk.Path, wd, format, templates, styler)
 	if err != nil {

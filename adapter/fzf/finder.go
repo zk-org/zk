@@ -46,8 +46,8 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	for _, match := range matches {
 		fzf.Add([]string{
 			match.Path,
-			f.styler.MustStyle(match.Title, style.Rule("yellow")),
-			f.styler.MustStyle(stringsutil.JoinLines(match.Body), style.Rule("faint")),
+			f.styler.MustStyle(match.Title, style.RuleYellow),
+			f.styler.MustStyle(stringsutil.JoinLines(match.Body), style.RuleBlack),
 		})
 	}
 

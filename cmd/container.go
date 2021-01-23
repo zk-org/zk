@@ -18,6 +18,7 @@ import (
 type Container struct {
 	Date           date.Provider
 	Logger         util.Logger
+	TTY            *tty.TTY
 	templateLoader *handlebars.Loader
 }
 
@@ -29,19 +30,16 @@ func NewContainer() *Container {
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any rendering during the execution.
 		Date: &date,
+		TTY:  tty.New(),
 	}
 }
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Logger, tty.NewStyler())
+		handlebars.Init(lang, c.Logger, c.TTY)
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader
-}
-
-func (c *Container) Styler() *tty.Styler {
-	return tty.NewStyler()
 }
 
 func (c *Container) Parser() *markdown.Parser {
@@ -50,7 +48,7 @@ func (c *Container) Parser() *markdown.Parser {
 
 func (c *Container) NoteFinder(tx sqlite.Transaction) note.Finder {
 	notes := sqlite.NewNoteDAO(tx, c.Logger)
-	return fzf.NewNoteFinder(notes, c.Styler())
+	return fzf.NewNoteFinder(notes, c.TTY)
 }
 
 // Database returns the DB instance for the given slip box, after executing any

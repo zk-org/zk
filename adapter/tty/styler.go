@@ -7,18 +7,12 @@ import (
 	"github.com/mickael-menu/zk/core/style"
 )
 
-// Styler is a text styler using ANSI escape codes to be used with a TTY.
-type Styler struct{}
-
-func NewStyler() *Styler {
-	return &Styler{}
-}
-
-func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
+// Style implements style.Styler using ANSI escape codes to be used with a TTY.
+func (t *TTY) Style(text string, rules ...style.Rule) (string, error) {
 	if text == "" {
 		return text, nil
 	}
-	attrs, err := s.attributes(expandThemeAliases(rules))
+	attrs, err := attributes(expandThemeAliases(rules))
 	if err != nil {
 		return "", err
 	}
@@ -28,8 +22,8 @@ func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
 	return color.New(attrs...).Sprint(text), nil
 }
 
-func (s *Styler) MustStyle(text string, rules ...style.Rule) string {
-	text, err := s.Style(text, rules...)
+func (t *TTY) MustStyle(text string, rules ...style.Rule) string {
+	text, err := t.Style(text, rules...)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -38,9 +32,10 @@ func (s *Styler) MustStyle(text string, rules ...style.Rule) string {
 
 // FIXME: User config
 var themeAliases = map[style.Rule][]style.Rule{
-	"title": {"bold", "yellow"},
-	"path":  {"underline", "cyan"},
-	"term":  {"red"},
+	"title":    {"bold", "yellow"},
+	"path":     {"underline", "cyan"},
+	"term":     {"red"},
+	"emphasis": {"bold", "cyan"},
 }
 
 func expandThemeAliases(rules []style.Rule) []style.Rule {
@@ -108,7 +103,7 @@ var attrsMapping = map[style.Rule]color.Attribute{
 	style.RuleBrightWhiteBg:   color.BgHiWhite,
 }
 
-func (s *Styler) attributes(rules []style.Rule) ([]color.Attribute, error) {
+func attributes(rules []style.Rule) ([]color.Attribute, error) {
 	attrs := make([]color.Attribute, 0)
 
 	for _, rule := range rules {
