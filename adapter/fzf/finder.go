@@ -1,12 +1,11 @@
 package fzf
 
 import (
-	"fmt"
-	"io"
-	"strings"
+	"os"
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/style"
+	"github.com/mickael-menu/zk/util/opt"
 	stringsutil "github.com/mickael-menu/zk/util/strings"
 )
 
@@ -24,28 +23,41 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	isInteractive, opts := popInteractiveFilter(opts)
 	matches, err := f.finder.Find(opts)
 
-	if !isInteractive || err != nil {
+	if !isInteractive || err != nil || len(matches) == 0 {
 		return matches, err
 	}
 
 	selectedMatches := make([]note.Match, 0)
 
-	selection, err := withFzf(func(fzf io.Writer) error {
-		for _, match := range matches {
-			fmt.Fprintf(fzf, "%v\x01  %v  %v\n",
-				match.Path,
-				f.styler.MustStyle(match.Title, style.Rule("yellow")),
-				f.styler.MustStyle(stringsutil.JoinLines(match.Body), style.Rule("faint")),
-			)
-		}
-		return nil
+	zkBin, err := os.Executable()
+	if err != nil {
+		return selectedMatches, err
+	}
+
+	fzf, err := New(Opts{
+		// PreviewCmd: opt.NewString("bat -p --theme Nord --color always {1}"),
+		PreviewCmd: opt.NewString(zkBin + " list -f {{raw-content}} {1}"),
+		Padding:    2,
 	})
 	if err != nil {
 		return selectedMatches, err
 	}
 
+	for _, match := range matches {
+		fzf.Add([]string{
+			match.Path,
+			f.styler.MustStyle(match.Title, style.Rule("yellow")),
+			f.styler.MustStyle(stringsutil.JoinLines(match.Body), style.Rule("faint")),
+		})
+	}
+
+	selection, err := fzf.Selection()
+	if err != nil {
+		return selectedMatches, err
+	}
+
 	for _, s := range selection {
-		path := strings.Split(s, "\x01")[0]
+		path := s[0]
 		for _, m := range matches {
 			if m.Path == path {
 				selectedMatches = append(selectedMatches, m)

@@ -80,10 +80,7 @@ func (cmd *List) Run(container *Container) error {
 					return err
 				}
 
-				_, err = fmt.Fprintf(out, "%v\n", ft)
-				if err != nil {
-					return err
-				}
+				fmt.Fprintf(out, "%v\n", ft)
 			}
 
 			return nil
@@ -91,7 +88,7 @@ func (cmd *List) Run(container *Container) error {
 	}
 
 	if err == nil {
-		fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("result", count))
+		fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
 	return err

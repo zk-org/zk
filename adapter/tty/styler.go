@@ -15,6 +15,9 @@ func NewStyler() *Styler {
 }
 
 func (s *Styler) Style(text string, rules ...style.Rule) (string, error) {
+	if text == "" {
+		return text, nil
+	}
 	attrs, err := s.attributes(expandThemeAliases(rules))
 	if err != nil {
 		return "", err

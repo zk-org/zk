@@ -36,6 +36,12 @@ func TestStyleUnknownRule(t *testing.T) {
 	assert.Err(t, err, "unknown styling rule: unknown")
 }
 
+func TestStyleEmptyString(t *testing.T) {
+	res, err := createStyler().Style("", style.Rule("bold"))
+	assert.Nil(t, err)
+	assert.Equal(t, res, "")
+}
+
 func TestStyleAllRules(t *testing.T) {
 	styler := createStyler()
 	test := func(rule string, expected string) {
