@@ -3,17 +3,17 @@ package note
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
-	"github.com/mickael-menu/zk/util/exec"
 	"github.com/mickael-menu/zk/util/opt"
 	osutil "github.com/mickael-menu/zk/util/os"
 )
 
-// Edit starts the editor with the note at given path.
-func Edit(zk *zk.Zk, path string) error {
+// Edit starts the editor with the notes at given paths.
+func Edit(zk *zk.Zk, paths ...string) error {
 	editor := editor(zk)
 	if editor.IsNull() {
 		return fmt.Errorf("no editor set in config")
@@ -28,9 +28,9 @@ func Edit(zk *zk.Zk, path string) error {
 	if len(args) == 0 {
 		return wrap(fmt.Errorf("editor command is not valid: %v", editor))
 	}
-	args = append(args, path)
+	args = append(args, paths...)
 
-	cmd := exec.CommandFromString(editor.String() + " '" + path + "'")
+	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 
