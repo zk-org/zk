@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
@@ -28,6 +29,7 @@ type List struct {
 	ModifiedAfter  string   `help:"Show only the notes modified after the given date" placeholder:"<date>"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
 	Sort           []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"<term>"`
+	Interactive    bool     `help:"Further filter the list of notes interactively" short:"i"`
 	NoPager        bool     `help:"Do not pipe zk output into a pager" short:"P"`
 }
 
@@ -37,7 +39,7 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	opts, err := cmd.ListOpts(zk)
+	opts, err := cmd.FinderOpts(zk)
 	if err != nil {
 		return errors.Wrapf(err, "incorrect criteria")
 	}
@@ -47,33 +49,55 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	logger := container.Logger
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
 
-	return db.WithTransaction(func(tx sqlite.Transaction) error {
-		notes := sqlite.NewNoteDAO(tx, logger)
+	templates := container.TemplateLoader(zk.Config.Lang)
+	styler := container.Styler()
+	format := opt.NewNotEmptyString(cmd.Format)
+	formatter, err := note.NewFormatter(zk.Path, wd, format, templates, styler)
+	if err != nil {
+		return err
+	}
 
-		deps := note.ListDeps{
-			BasePath:  zk.Path,
-			Finder:    notes,
-			Templates: container.TemplateLoader(zk.Config.Lang),
-			Styler:    container.Styler(),
-		}
-
-		count := 0
-		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
-			count, err = note.List(*opts, deps, out)
-			return err
-		})
-
-		if err == nil {
-			fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("result", count))
-		}
-
+	var notes []note.Match
+	err = db.WithTransaction(func(tx sqlite.Transaction) error {
+		notes, err = container.NoteFinder(tx).Find(*opts)
 		return err
 	})
+	if err != nil {
+		return err
+	}
+
+	count := len(notes)
+	if count > 0 {
+		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
+			for _, note := range notes {
+				ft, err := formatter.Format(note)
+				if err != nil {
+					return err
+				}
+
+				_, err = fmt.Fprintf(out, "%v\n", ft)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	}
+
+	if err == nil {
+		fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("result", count))
+	}
+
+	return err
 }
 
-func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
+func (cmd *List) FinderOpts(zk *zk.Zk) (*note.FinderOpts, error) {
 	filters := make([]note.Filter, 0)
 
 	paths, ok := relPaths(zk, cmd.Path)
@@ -162,18 +186,19 @@ func (cmd *List) ListOpts(zk *zk.Zk) (*note.ListOpts, error) {
 		})
 	}
 
+	if cmd.Interactive {
+		filters = append(filters, note.InteractiveFilter(true))
+	}
+
 	sorters, err := note.SortersFromStrings(cmd.Sort)
 	if err != nil {
 		return nil, err
 	}
 
-	return &note.ListOpts{
-		Format: opt.NewNotEmptyString(cmd.Format),
-		FinderOpts: note.FinderOpts{
-			Filters: filters,
-			Sorters: sorters,
-			Limit:   cmd.Limit,
-		},
+	return &note.FinderOpts{
+		Filters: filters,
+		Sorters: sorters,
+		Limit:   cmd.Limit,
 	}, nil
 }
 

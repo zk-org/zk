@@ -5,6 +5,7 @@ package style
 // A rule key can be either semantic, e.g. "title" or explicit, e.g. "red".
 type Styler interface {
 	Style(text string, rules ...Rule) (string, error)
+	MustStyle(text string, rules ...Rule) string
 }
 
 // Rule is a key representing a single styling rule.

@@ -469,26 +469,21 @@ func testNoteDAOFindSort(t *testing.T, field note.SortField, ascending bool, exp
 
 func testNoteDAOFindPaths(t *testing.T, opts note.FinderOpts, expected []string) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		actual := make([]string, 0)
-		count, err := dao.Find(opts, func(m note.Match) error {
-			actual = append(actual, m.Path)
-			return nil
-		})
+		matches, err := dao.Find(opts)
 		assert.Nil(t, err)
-		assert.Equal(t, count, len(expected))
+
+		actual := make([]string, 0)
+		for _, m := range matches {
+			actual = append(actual, m.Path)
+		}
 		assert.Equal(t, actual, expected)
 	})
 }
 
 func testNoteDAOFind(t *testing.T, opts note.FinderOpts, expected []note.Match) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		actual := make([]note.Match, 0)
-		count, err := dao.Find(opts, func(m note.Match) error {
-			actual = append(actual, m)
-			return nil
-		})
+		actual, err := dao.Find(opts)
 		assert.Nil(t, err)
-		assert.Equal(t, count, len(expected))
 		assert.Equal(t, actual, expected)
 	})
 }

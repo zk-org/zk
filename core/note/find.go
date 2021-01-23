@@ -11,7 +11,7 @@ import (
 //
 // Returns the number of matches found.
 type Finder interface {
-	Find(opts FinderOpts, callback func(Match) error) (int, error)
+	Find(opts FinderOpts) ([]Match, error)
 }
 
 // FinderOpts holds the option used to filter and order a list of notes.
@@ -40,17 +40,21 @@ type PathFilter []string
 // ExcludePathFilter is a note filter using path globs to exclude notes from the list.
 type ExcludePathFilter []string
 
-func (f MatchFilter) sealed()       {}
-func (f PathFilter) sealed()        {}
-func (f ExcludePathFilter) sealed() {}
-func (f DateFilter) sealed()        {}
-
 // DateFilter can be used to filter notes created or modified before, after or on a given date.
 type DateFilter struct {
 	Date      time.Time
 	Direction DateDirection
 	Field     DateField
 }
+
+// InteractiveFilter lets the user select manually the notes.
+type InteractiveFilter bool
+
+func (f MatchFilter) sealed()       {}
+func (f PathFilter) sealed()        {}
+func (f ExcludePathFilter) sealed() {}
+func (f DateFilter) sealed()        {}
+func (f InteractiveFilter) sealed() {}
 
 type DateDirection int
 

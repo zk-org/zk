@@ -21,7 +21,8 @@ func TestDefaultFormat(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, res, `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}`)
+{{prepend "  " snippet}}
+`)
 }
 
 func TestFormats(t *testing.T) {
@@ -39,24 +40,28 @@ func TestFormats(t *testing.T) {
 
 	test("short", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}`)
+{{prepend "  " snippet}}
+`)
 
 	test("medium", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 
-{{prepend "  " snippet}}`)
+{{prepend "  " snippet}}
+`)
 
 	test("long", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " snippet}}`)
+{{prepend "  " snippet}}
+`)
 
 	test("full", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " body}}`)
+{{prepend "  " body}}
+`)
 
 	// Known formats are case sensitive.
 	test("Path", "Path")

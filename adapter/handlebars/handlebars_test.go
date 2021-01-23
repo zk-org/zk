@@ -20,10 +20,14 @@ func init() {
 type styler struct{}
 
 func (s *styler) Style(text string, rules ...style.Rule) (string, error) {
+	return s.MustStyle(text, rules...), nil
+}
+
+func (s *styler) MustStyle(text string, rules ...style.Rule) string {
 	for _, rule := range rules {
 		text = fmt.Sprintf("%s(%s)", rule, text)
 	}
-	return text, nil
+	return text
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {

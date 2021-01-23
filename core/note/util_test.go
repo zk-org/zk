@@ -66,8 +66,12 @@ func (m *RendererSpy) Render(context interface{}) (string, error) {
 type StylerMock struct{}
 
 func (s *StylerMock) Style(text string, rules ...style.Rule) (string, error) {
+	return s.MustStyle(text, rules...), nil
+}
+
+func (s *StylerMock) MustStyle(text string, rules ...style.Rule) string {
 	for _, rule := range rules {
 		text = fmt.Sprintf("%s(%s)", rule, text)
 	}
-	return text, nil
+	return text
 }

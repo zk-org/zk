@@ -154,17 +154,16 @@ func (d *NoteDAO) exists(path string) (bool, error) {
 	return exists, nil
 }
 
-func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (int, error) {
+func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
+	matches := make([]note.Match, 0)
+
 	rows, err := d.findRows(opts)
 	if err != nil {
-		return 0, err
+		return matches, err
 	}
 	defer rows.Close()
 
-	count := 0
 	for rows.Next() {
-		count++
-
 		var (
 			id, wordCount                          int
 			title, lead, body, rawContent, snippet string
@@ -178,7 +177,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 			continue
 		}
 
-		callback(note.Match{
+		matches = append(matches, note.Match{
 			Snippet: snippet,
 			Metadata: note.Metadata{
 				Path:       path,
@@ -194,7 +193,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts, callback func(note.Match) error) (i
 		})
 	}
 
-	return count, nil
+	return matches, nil
 }
 
 type findQuery struct {
@@ -252,6 +251,10 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 			whereExprs = append(whereExprs, fmt.Sprintf("%s %s %s", field, op, value))
 			args = append(args, filter.Date)
+
+		case note.InteractiveFilter:
+			// No user interaction possible from here.
+			break
 
 		default:
 			panic(fmt.Sprintf("%v: unknown filter type", filter))
