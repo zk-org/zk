@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"io"
+	"sync"
 
 	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/handlebars"
@@ -20,6 +21,10 @@ type Container struct {
 	Logger         util.Logger
 	Terminal       *term.Terminal
 	templateLoader *handlebars.Loader
+
+	zkOnce sync.Once
+	zk     *zk.Zk
+	zkErr  error
 }
 
 func NewContainer() *Container {
@@ -32,6 +37,13 @@ func NewContainer() *Container {
 		Date:     &date,
 		Terminal: term.New(),
 	}
+}
+
+func (c *Container) OpenZk() (*zk.Zk, error) {
+	c.zkOnce.Do(func() {
+		c.zk, c.zkErr = zk.Open(".")
+	})
+	return c.zk, c.zkErr
 }
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {

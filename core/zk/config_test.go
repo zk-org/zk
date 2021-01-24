@@ -28,7 +28,8 @@ func TestParseDefaultConfig(t *testing.T) {
 			Lang:         "en",
 			Extra:        make(map[string]string),
 		},
-		Dirs: make(map[string]DirConfig),
+		Dirs:    make(map[string]DirConfig),
+		Aliases: make(map[string]string),
 	})
 }
 
@@ -45,6 +46,11 @@ func TestParseComplete(t *testing.T) {
 		editor = "vim"
 		pager = "less"
 		no-pager = true
+		aliases = {
+			ls = "zk list $@"
+			ed = "zk edit $@"
+		}
+
 		filename = "{{id}}.note"
 		extension = "txt"
 		template = "default.note"
@@ -135,6 +141,10 @@ func TestParseComplete(t *testing.T) {
 		Editor:  opt.NewString("vim"),
 		Pager:   opt.NewString("less"),
 		NoPager: true,
+		Aliases: map[string]string{
+			"ls": "zk list $@",
+			"ed": "zk edit $@",
+		},
 	})
 }
 
@@ -223,6 +233,7 @@ func TestParseMergesDirConfig(t *testing.T) {
 				},
 			},
 		},
+		Aliases: make(map[string]string),
 	})
 }
 

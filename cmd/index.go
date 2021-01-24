@@ -7,7 +7,6 @@ import (
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
-	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/paths"
 	"github.com/schollz/progressbar/v3"
 )
@@ -20,7 +19,7 @@ type Index struct {
 }
 
 func (cmd *Index) Run(container *Container) error {
-	zk, err := zk.Open(".")
+	zk, err := container.OpenZk()
 	if err != nil {
 		return err
 	}

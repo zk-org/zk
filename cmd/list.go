@@ -7,7 +7,6 @@ import (
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
-	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/strings"
@@ -22,7 +21,7 @@ type List struct {
 }
 
 func (cmd *List) Run(container *Container) error {
-	zk, err := zk.Open(".")
+	zk, err := container.OpenZk()
 	if err != nil {
 		return err
 	}

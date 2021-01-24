@@ -15,6 +15,7 @@ type Config struct {
 	Editor  opt.String
 	Pager   opt.String
 	NoPager bool
+	Aliases map[string]string
 }
 
 // DirConfig holds the user configuration for a given directory.
@@ -113,19 +114,26 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		}
 	}
 
-	config := Config{
+	dirs := make(map[string]DirConfig)
+	for _, dirHCL := range hcl.Dirs {
+		dirs[dirHCL.Dir] = root.merge(dirHCL, templatesDir)
+	}
+
+	aliases := make(map[string]string)
+	if hcl.Aliases != nil {
+		for k, v := range hcl.Aliases {
+			aliases[k] = v
+		}
+	}
+
+	return &Config{
 		DirConfig: root,
-		Dirs:      make(map[string]DirConfig),
+		Dirs:      dirs,
 		Editor:    opt.NewNotEmptyString(hcl.Editor),
 		Pager:     opt.NewNotEmptyString(hcl.Pager),
 		NoPager:   hcl.NoPager,
-	}
-
-	for _, dirHCL := range hcl.Dirs {
-		config.Dirs[dirHCL.Dir] = root.merge(dirHCL, templatesDir)
-	}
-
-	return &config, nil
+		Aliases:   aliases,
+	}, nil
 }
 
 func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
@@ -189,6 +197,7 @@ type hclConfig struct {
 	Editor       string            `hcl:"editor,optional"`
 	Pager        string            `hcl:"pager,optional"`
 	NoPager      bool              `hcl:"no-pager,optional"`
+	Aliases      map[string]string `hcl:"aliases,optional"`
 }
 
 type hclDirConfig struct {

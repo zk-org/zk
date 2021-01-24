@@ -6,7 +6,6 @@ import (
 
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
-	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
@@ -18,7 +17,7 @@ type Edit struct {
 }
 
 func (cmd *Edit) Run(container *Container) error {
-	zk, err := zk.Open(".")
+	zk, err := container.OpenZk()
 	if err != nil {
 		return err
 	}
@@ -61,6 +60,8 @@ func (cmd *Edit) Run(container *Container) error {
 		}
 
 		note.Edit(zk, paths...)
+	} else {
+		fmt.Println("Found 0 note")
 	}
 
 	return err
