@@ -25,6 +25,7 @@ require (
 	github.com/tebeka/strftime v0.1.5 // indirect
 	github.com/tj/go-naturaldate v1.3.0
 	github.com/yuin/goldmark v1.3.1
+	github.com/yuin/goldmark-meta v1.0.0
 	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78 // indirect
 	gopkg.in/djherbis/times.v1 v1.2.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect

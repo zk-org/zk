@@ -25,6 +25,22 @@ func TestParseTitle(t *testing.T) {
 	test("# Heading 1\n## Heading 1.a\n# Heading 2", "Heading 1")
 	test("## Small Heading\n# Bigger Heading", "Bigger Heading")
 	test("# A **title** with [formatting](http://stripped)", "A title with formatting")
+
+	// From a YAML frontmatter
+	test(`---
+Title:     A title
+Tags:
+    - tag1
+    - tag2
+---
+
+# Heading
+`, "A title")
+	test(`---
+title: lowercase key
+---
+Paragraph
+`, "lowercase key")
 }
 
 func TestParseBody(t *testing.T) {
@@ -63,6 +79,12 @@ Paragraph:
 * item1
 * item2`,
 	)
+	test(`---
+title: A title
+---
+
+Paragraph
+`, "Paragraph")
 }
 
 func TestParseLead(t *testing.T) {
