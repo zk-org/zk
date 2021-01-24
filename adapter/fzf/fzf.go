@@ -77,7 +77,12 @@ func New(opts Opts) (*Fzf, error) {
 		args = append(args, "--preview", opts.PreviewCmd.String())
 	}
 
-	cmd := exec.Command("fzf", args...)
+	fzfPath, err := exec.LookPath("fzf")
+	if err != nil {
+		return nil, fmt.Errorf("interactive mode requires fzf, try without --interactive or install fzf from https://github.com/junegunn/fzf")
+	}
+
+	cmd := exec.Command(fzfPath, args...)
 	cmd.Stderr = os.Stderr
 
 	pipe, err := cmd.StdinPipe()
