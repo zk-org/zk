@@ -153,8 +153,56 @@ Paragraph`,
 	)
 }
 
+func TestParseLinks(t *testing.T) {
+	test := func(source string, links []note.Link) {
+		content := parse(t, source)
+		assert.Equal(t, content.Links, links)
+	}
+
+	test("", []note.Link{})
+	test("No links around here", []note.Link{})
+
+	test(`
+# Heading with a [link](heading)
+
+Paragraph containing [multiple **links**](stripped-formatting) some [external like this one](http://example.com), and other [relative](../other).
+A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").
+`, []note.Link{
+		{
+			Title:  "link",
+			Target: "heading",
+			Rels:   []string{},
+		},
+		{
+			Title:  "multiple links",
+			Target: "stripped-formatting",
+			Rels:   []string{},
+		},
+		{
+			Title:  "external like this one",
+			Target: "http://example.com",
+			Rels:   []string{},
+		},
+		{
+			Title:  "relative",
+			Target: "../other",
+			Rels:   []string{},
+		},
+		{
+			Title:  "one relation",
+			Target: "one",
+			Rels:   []string{"rel-1"},
+		},
+		{
+			Title:  "several relations",
+			Target: "several",
+			Rels:   []string{"rel-1", "rel-2"},
+		},
+	})
+}
+
 func parse(t *testing.T, source string) note.Content {
 	content, err := NewParser().Parse(source)
 	assert.Nil(t, err)
-	return content
+	return *content
 }

@@ -31,9 +31,7 @@ func NewParser() *Parser {
 }
 
 // Parse implements note.Parse.
-func (p *Parser) Parse(source string) (note.Content, error) {
-	out := note.Content{}
-
+func (p *Parser) Parse(source string) (*note.Content, error) {
 	bytes := []byte(source)
 
 	context := parser.NewContext()
@@ -42,21 +40,28 @@ func (p *Parser) Parse(source string) (note.Content, error) {
 		parser.WithContext(context),
 	)
 
+	links, err := parseLinks(root, bytes)
+	if err != nil {
+		return nil, err
+	}
+
 	frontmatter, err := parseFrontmatter(context, bytes)
 	if err != nil {
-		return out, err
+		return nil, err
 	}
 
 	title, bodyStart, err := parseTitle(frontmatter, root, bytes)
 	if err != nil {
-		return out, err
+		return nil, err
 	}
+	body := parseBody(bodyStart, bytes)
 
-	out.Title = title
-	out.Body = parseBody(bodyStart, bytes)
-	out.Lead = parseLead(out.Body)
-
-	return out, nil
+	return &note.Content{
+		Title: title,
+		Body:  body,
+		Lead:  parseLead(body),
+		Links: links,
+	}, nil
 }
 
 // parseTitle extracts the note title with its node.
@@ -114,6 +119,26 @@ func parseLead(body opt.String) opt.String {
 	}
 
 	return opt.NewNotEmptyString(strings.TrimSpace(lead))
+}
+
+// parseLinks extracts outbound links from the note.
+func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
+	links := make([]note.Link, 0)
+
+	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if link, ok := n.(*ast.Link); ok && entering {
+			target := string(link.Destination)
+			if target != "" {
+				links = append(links, note.Link{
+					Title:  string(link.Text(source)),
+					Target: target,
+					Rels:   strings.Fields(string(link.Title)),
+				})
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+	return links, err
 }
 
 // frontmatter contains metadata parsed from a YAML frontmatter.

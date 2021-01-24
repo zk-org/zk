@@ -11,8 +11,16 @@ type Content struct {
 	Lead opt.String
 	// Body is the content of the note, including the Lead but without the Title.
 	Body opt.String
+	// Links is the list of outbound links found in the note.
+	Links []Link
+}
+
+type Link struct {
+	Title  string
+	Target string
+	Rels   []string
 }
 
 type Parser interface {
-	Parse(source string) (Content, error)
+	Parse(source string) (*Content, error)
 }
