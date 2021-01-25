@@ -11,6 +11,7 @@ import (
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/fts5"
 	"github.com/mickael-menu/zk/util/paths"
+	strutil "github.com/mickael-menu/zk/util/strings"
 )
 
 // NoteDAO persists notes in the SQLite database.
@@ -246,6 +247,20 @@ func (d *NoteDAO) findIdByPath(path string) (sql.NullInt64, error) {
 	return idForRow(row)
 }
 
+func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]int64, error) {
+	ids := make([]int64, 0)
+	for _, path := range paths {
+		id, err := d.findIdByPathPrefix(path)
+		if err != nil {
+			return ids, err
+		}
+		if id.Valid {
+			ids = append(ids, id.Int64)
+		}
+	}
+	return ids, nil
+}
+
 func (d *NoteDAO) findIdByPathPrefix(path string) (sql.NullInt64, error) {
 	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
 	if err != nil {
@@ -354,6 +369,20 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 				args = append(args, path+"*")
 			}
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
+
+		case note.LinkedByFilter:
+			ids, err := d.findIdsByPathPrefixes(filter)
+			if err != nil {
+				return nil, err
+			}
+			if len(filter) == 0 {
+				break
+			}
+
+			whereExprs = append(whereExprs, fmt.Sprintf(
+				"n.id IN (SELECT target_id FROM links WHERE source_id IN %v)",
+				"("+strutil.JoinInt64(ids, ",")+")"),
+			)
 
 		case note.DateFilter:
 			value := "?"

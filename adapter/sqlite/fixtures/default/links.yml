@@ -25,3 +25,10 @@
   title: "Another link"
   href: "log/2021-01-03.md"
   external: false
+
+- id: 5
+  source_id: 4
+  target_id: 6
+  title: "Link from 4 to 6"
+  href: "ref/test/a"
+  external: false

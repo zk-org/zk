@@ -56,6 +56,17 @@ func TestJoinLines(t *testing.T) {
 	test("One line\nTwo lines\n Three lines", "One line Two lines  Three lines")
 }
 
+func TestJoinInt64(t *testing.T) {
+	test := func(ints []int64, expected string) {
+		assert.Equal(t, JoinInt64(ints, ","), expected)
+	}
+
+	test([]int64{}, "")
+	test([]int64{1}, "1")
+	test([]int64{1, 2}, "1,2")
+	test([]int64{1, 2, 3}, "1,2,3")
+}
+
 func TestIsURL(t *testing.T) {
 	test := func(text string, expected bool) {
 		assert.Equal(t, IsURL(text), expected)

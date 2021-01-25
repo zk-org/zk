@@ -491,6 +491,15 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindLinkedBy(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkedByFilter([]string{"f39c8.md", "log/2021-01-03"})},
+		},
+		[]string{"ref/test/a.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
 func TestNoteDAOFindCreatedOn(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{

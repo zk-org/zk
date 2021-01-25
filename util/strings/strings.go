@@ -3,6 +3,7 @@ package strings
 import (
 	"bufio"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -45,6 +46,16 @@ func SplitLines(s string) []string {
 // a single space.
 func JoinLines(s string) string {
 	return strings.Join(SplitLines(s), " ")
+}
+
+// JoinInt64 joins a list of int64 into a single string with the given
+// delimiter.
+func JoinInt64(ints []int64, delimiter string) string {
+	strs := make([]string, 0)
+	for _, i := range ints {
+		strs = append(strs, strconv.FormatInt(i, 10))
+	}
+	return strings.Join(strs, delimiter)
 }
 
 // IsURL returns whether the given string is a valid URL.
