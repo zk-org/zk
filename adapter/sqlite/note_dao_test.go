@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -47,7 +48,8 @@ func TestNoteDAOIndexed(t *testing.T) {
 				Modified: time.Date(2019, 11, 12, 20, 34, 6, 0, time.UTC),
 			},
 		} {
-			assert.Nil(t, dao.Add(note))
+			_, err := dao.Add(note)
+			assert.Nil(t, err)
 		}
 
 		// We check that the metadata are sorted by the path but not
@@ -101,7 +103,7 @@ func TestNoteDAOIndexed(t *testing.T) {
 
 func TestNoteDAOAdd(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		err := dao.Add(note.Metadata{
+		_, err := dao.Add(note.Metadata{
 			Path:       "log/added.md",
 			Title:      "Added note",
 			Lead:       "Note",
@@ -130,10 +132,103 @@ func TestNoteDAOAdd(t *testing.T) {
 	})
 }
 
+func TestNoteDAOAddWithLinks(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		id, err := dao.Add(note.Metadata{
+			Path: "log/added.md",
+			Links: []note.Link{
+				{
+					Title: "Same dir",
+					Href:  "log/2021-01-04",
+					Rels:  []string{"rel-1", "rel-2"},
+				},
+				{
+					Title: "Relative",
+					Href:  "f39c8",
+				},
+				{
+					Title: "Second is added",
+					Href:  "f39c8",
+					Rels:  []string{"second"},
+				},
+				{
+					Title: "Unknown",
+					Href:  "unknown",
+				},
+				{
+					Title:    "URL",
+					Href:     "http://example.com",
+					External: true,
+				},
+			},
+		})
+		assert.Nil(t, err)
+
+		rows := queryLinkRows(t, tx, fmt.Sprintf("source_id = %d", id))
+		assert.Equal(t, rows, []linkRow{
+			{
+				SourceId: id,
+				TargetId: intPointer(2),
+				Title:    "Same dir",
+				Href:     "log/2021-01-04",
+				Rels:     "\x01rel-1\x01rel-2\x01",
+			},
+			{
+				SourceId: id,
+				TargetId: intPointer(4),
+				Title:    "Relative",
+				Href:     "f39c8",
+				Rels:     "",
+			},
+			{
+				SourceId: id,
+				TargetId: intPointer(4),
+				Title:    "Second is added",
+				Href:     "f39c8",
+				Rels:     "\x01second\x01",
+			},
+			{
+				SourceId: id,
+				TargetId: nil,
+				Title:    "Unknown",
+				Href:     "unknown",
+				Rels:     "",
+			},
+			{
+				SourceId: id,
+				TargetId: nil,
+				Title:    "URL",
+				Href:     "http://example.com",
+				External: true,
+				Rels:     "",
+			},
+		})
+	})
+}
+
+func TestNoteDAOAddFillsLinksMissingTargetId(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		id, err := dao.Add(note.Metadata{
+			Path: "missing_target.md",
+		})
+		assert.Nil(t, err)
+
+		rows := queryLinkRows(t, tx, fmt.Sprintf("target_id = %d", id))
+		assert.Equal(t, rows, []linkRow{
+			{
+				SourceId: 3,
+				TargetId: &id,
+				Title:    "Missing target",
+				Href:     "missing",
+			},
+		})
+	})
+}
+
 // Check that we can't add a duplicate note with an existing path.
 func TestNoteDAOAddExistingNote(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		err := dao.Add(note.Metadata{Path: "ref/test/a.md"})
+		_, err := dao.Add(note.Metadata{Path: "ref/test/a.md"})
 		assert.Err(t, err, "ref/test/a.md: can't add note to the index: UNIQUE constraint failed: notes.path")
 	})
 }
@@ -178,10 +273,73 @@ func TestNoteDAOUpdateUnknown(t *testing.T) {
 	})
 }
 
+func TestNoteDAOUpdateWithLinks(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		links := queryLinkRows(t, tx, "source_id = 1")
+		assert.Equal(t, links, []linkRow{
+			{
+				SourceId: 1,
+				TargetId: intPointer(2),
+				Title:    "An internal link",
+				Href:     "log/2021-01-04.md",
+			},
+			{
+				SourceId: 1,
+				TargetId: nil,
+				Title:    "An external link",
+				Href:     "https://domain.com",
+				External: true,
+			},
+		})
+
+		err := dao.Update(note.Metadata{
+			Path: "log/2021-01-03.md",
+			Links: []note.Link{
+				{
+					Title:    "A new link",
+					Href:     "index",
+					External: false,
+					Rels:     []string{"rel"},
+				},
+				{
+					Title:    "An external link",
+					Href:     "https://domain.com",
+					External: true,
+				},
+			},
+		})
+		assert.Nil(t, err)
+
+		links = queryLinkRows(t, tx, "source_id = 1")
+		assert.Equal(t, links, []linkRow{
+			{
+				SourceId: 1,
+				TargetId: intPointer(3),
+				Title:    "A new link",
+				Href:     "index",
+				Rels:     "\x01rel\x01",
+			},
+			{
+				SourceId: 1,
+				TargetId: nil,
+				Title:    "An external link",
+				Href:     "https://domain.com",
+				External: true,
+			},
+		})
+	})
+}
+
 func TestNoteDAORemove(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		err := dao.Remove("ref/test/a.md")
+		_, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
+
+		err = dao.Remove("ref/test/a.md")
+		assert.Nil(t, err)
+
+		_, err = queryNoteRow(tx, `path = "ref/test/a.md"`)
+		assert.Equal(t, err, sql.ErrNoRows)
 	})
 }
 
@@ -189,6 +347,26 @@ func TestNoteDAORemoveUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		err := dao.Remove("unknown/unknown.md")
 		assert.Err(t, err, "unknown/unknown.md: failed to remove note index: note not found in the index")
+	})
+}
+
+// Also remove the outbound links, and set the target_id of inbound links to NULL.
+func TestNoteDAORemoveCascadeLinks(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		links := queryLinkRows(t, tx, `source_id = 1`)
+		assert.Equal(t, len(links) > 0, true)
+
+		links = queryLinkRows(t, tx, `id = 4`)
+		assert.Equal(t, *links[0].TargetId, int64(1))
+
+		err := dao.Remove("log/2021-01-03.md")
+		assert.Nil(t, err)
+
+		links = queryLinkRows(t, tx, `source_id = 1`)
+		assert.Equal(t, len(links), 0)
+
+		links = queryLinkRows(t, tx, `id = 4`)
+		assert.Nil(t, links[0].TargetId)
 	})
 }
 
@@ -514,4 +692,38 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 		 WHERE %v
 	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
 	return row, err
+}
+
+type linkRow struct {
+	SourceId          int64
+	TargetId          *int64
+	Href, Title, Rels string
+	External          bool
+}
+
+func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
+	links := make([]linkRow, 0)
+
+	rows, err := tx.Query(fmt.Sprintf(`
+		SELECT source_id, target_id, title, href, external, rels
+		  FROM links
+		 WHERE %v
+		 ORDER BY id
+	`, where))
+	assert.Nil(t, err)
+
+	for rows.Next() {
+		var row linkRow
+		err = rows.Scan(&row.SourceId, &row.TargetId, &row.Title, &row.Href, &row.External, &row.Rels)
+		assert.Nil(t, err)
+		links = append(links, row)
+	}
+	rows.Close()
+	assert.Nil(t, rows.Err())
+
+	return links
+}
+
+func intPointer(i int64) *int64 {
+	return &i
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/opt"
+	strutil "github.com/mickael-menu/zk/util/strings"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/ast"
@@ -127,12 +128,13 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if link, ok := n.(*ast.Link); ok && entering {
-			target := string(link.Destination)
-			if target != "" {
+			href := string(link.Destination)
+			if href != "" {
 				links = append(links, note.Link{
-					Title:  string(link.Text(source)),
-					Target: target,
-					Rels:   strings.Fields(string(link.Title)),
+					Title:    string(link.Text(source)),
+					Href:     href,
+					Rels:     strings.Fields(string(link.Title)),
+					External: strutil.IsURL(href),
 				})
 			}
 		}

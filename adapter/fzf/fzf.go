@@ -71,7 +71,7 @@ func New(opts Opts) (*Fzf, error) {
 		"--no-hscroll",
 		// Don't highlight search terms
 		"--color", "hl:-1,hl+:-1",
-		// "--preview-window", "noborder:wrap",
+		"--preview-window", "wrap",
 	}
 	if !opts.PreviewCmd.IsNull() {
 		args = append(args, "--preview", opts.PreviewCmd.String())

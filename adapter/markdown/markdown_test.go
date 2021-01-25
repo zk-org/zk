@@ -165,38 +165,52 @@ func TestParseLinks(t *testing.T) {
 	test(`
 # Heading with a [link](heading)
 
-Paragraph containing [multiple **links**](stripped-formatting) some [external like this one](http://example.com), and other [relative](../other).
+Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").
+
+[External links](http://example.com) are marked [as such](ftp://domain).
 `, []note.Link{
 		{
-			Title:  "link",
-			Target: "heading",
-			Rels:   []string{},
+			Title:    "link",
+			Href:     "heading",
+			Rels:     []string{},
+			External: false,
 		},
 		{
-			Title:  "multiple links",
-			Target: "stripped-formatting",
-			Rels:   []string{},
+			Title:    "multiple links",
+			Href:     "stripped-formatting",
+			Rels:     []string{},
+			External: false,
 		},
 		{
-			Title:  "external like this one",
-			Target: "http://example.com",
-			Rels:   []string{},
+			Title:    "relative",
+			Href:     "../other",
+			Rels:     []string{},
+			External: false,
 		},
 		{
-			Title:  "relative",
-			Target: "../other",
-			Rels:   []string{},
+			Title:    "one relation",
+			Href:     "one",
+			Rels:     []string{"rel-1"},
+			External: false,
 		},
 		{
-			Title:  "one relation",
-			Target: "one",
-			Rels:   []string{"rel-1"},
+			Title:    "several relations",
+			Href:     "several",
+			Rels:     []string{"rel-1", "rel-2"},
+			External: false,
 		},
 		{
-			Title:  "several relations",
-			Target: "several",
-			Rels:   []string{"rel-1", "rel-2"},
+			Title:    "External links",
+			Href:     "http://example.com",
+			Rels:     []string{},
+			External: true,
+		},
+		{
+			Title:    "as such",
+			Href:     "ftp://domain",
+			Rels:     []string{},
+			External: true,
 		},
 	})
 }

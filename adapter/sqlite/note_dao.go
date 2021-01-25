@@ -20,40 +20,84 @@ type NoteDAO struct {
 	logger util.Logger
 
 	// Prepared SQL statements
-	indexedStmt *LazyStmt
-	addStmt     *LazyStmt
-	updateStmt  *LazyStmt
-	removeStmt  *LazyStmt
-	existsStmt  *LazyStmt
+	indexedStmt            *LazyStmt
+	addStmt                *LazyStmt
+	updateStmt             *LazyStmt
+	removeStmt             *LazyStmt
+	findIdByPathStmt       *LazyStmt
+	findIdByPathPrefixStmt *LazyStmt
+	addLinkStmt            *LazyStmt
+	setLinksTargetStmt     *LazyStmt
+	removeLinksStmt        *LazyStmt
 }
 
+// NewNoteDAO creates a new instance of a DAO working on the given database
+// transaction.
 func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 	return &NoteDAO{
 		tx:     tx,
 		logger: logger,
+
+		// Get file info about all indexed notes.
 		indexedStmt: tx.PrepareLazy(`
 			SELECT path, modified from notes
 			 ORDER BY sortable_path ASC
 		`),
+
+		// Add a new note to the index.
 		addStmt: tx.PrepareLazy(`
 			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, checksum, created, modified)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
+
+		// Update the content of a note.
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
 			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, checksum = ?, modified = ?
 			 WHERE path = ?
 		`),
+
+		// Remove a note.
 		removeStmt: tx.PrepareLazy(`
 			DELETE FROM notes
+			 WHERE id = ?
+		`),
+
+		// Find a note ID from its exact path.
+		findIdByPathStmt: tx.PrepareLazy(`
+			SELECT id FROM notes
 			 WHERE path = ?
 		`),
-		existsStmt: tx.PrepareLazy(`
-			SELECT EXISTS (SELECT 1 FROM notes WHERE path = ?)
+
+		// Find a note ID from a prefix of its path.
+		findIdByPathPrefixStmt: tx.PrepareLazy(`
+			SELECT id FROM notes
+			 WHERE path LIKE ? || '%'
+		`),
+
+		// Add a new link.
+		addLinkStmt: tx.PrepareLazy(`
+			INSERT INTO links (source_id, target_id, title, href, external, rels)
+			VALUES (?, ?, ?, ?, ?, ?)
+		`),
+
+		// Set links matching a given href and missing a target ID to the given
+		// target ID.
+		setLinksTargetStmt: tx.PrepareLazy(`
+			UPDATE links
+			   SET target_id = ?
+			 WHERE target_id IS NULL AND external = 0 AND ? LIKE href || '%'
+		`),
+
+		// Remove all the outbound links of a note.
+		removeLinksStmt: tx.PrepareLazy(`
+			DELETE FROM links
+			 WHERE source_id = ?
 		`),
 	}
 }
 
+// Indexed returns file info of all indexed notes.
 func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 	wrap := errors.Wrapper("failed to get indexed notes")
 
@@ -92,7 +136,10 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 	return c, nil
 }
 
-func (d *NoteDAO) Add(note note.Metadata) error {
+// Add inserts a new note to the index.
+func (d *NoteDAO) Add(note note.Metadata) (int64, error) {
+	wrap := errors.Wrapperf("%v: can't add note to the index", note.Path)
+
 	// For sortable_path, we replace in path / by the shortest non printable
 	// character available to make it sortable. Without this, sorting by the
 	// path would be a lexicographical sort instead of being the same order
@@ -101,21 +148,32 @@ func (d *NoteDAO) Add(note note.Metadata) error {
 	// string.
 	sortablePath := strings.ReplaceAll(note.Path, "/", "\x01")
 
-	_, err := d.addStmt.Exec(
+	res, err := d.addStmt.Exec(
 		note.Path, sortablePath, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
 		note.Created, note.Modified,
 	)
-	return errors.Wrapf(err, "%v: can't add note to the index", note.Path)
+	if err != nil {
+		return 0, wrap(err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, wrap(err)
+	}
+
+	err = d.addLinks(id, note)
+	return id, err
 }
 
+// Update modifies an existing note.
 func (d *NoteDAO) Update(note note.Metadata) error {
 	wrap := errors.Wrapperf("%v: failed to update note index", note.Path)
 
-	exists, err := d.exists(note.Path)
+	id, err := d.findIdByPath(note.Path)
 	if err != nil {
 		return wrap(err)
 	}
-	if !exists {
+	if !id.Valid {
 		return wrap(errors.New("note not found in the index"))
 	}
 
@@ -123,37 +181,94 @@ func (d *NoteDAO) Update(note note.Metadata) error {
 		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum, note.Modified,
 		note.Path,
 	)
-	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
-}
-
-func (d *NoteDAO) Remove(path string) error {
-	wrap := errors.Wrapperf("%v: failed to remove note index", path)
-
-	exists, err := d.exists(path)
 	if err != nil {
 		return wrap(err)
 	}
-	if !exists {
-		return wrap(errors.New("note not found in the index"))
+
+	_, err = d.removeLinksStmt.Exec(id.Int64)
+	if err != nil {
+		return wrap(err)
 	}
 
-	_, err = d.removeStmt.Exec(path)
+	err = d.addLinks(id.Int64, note)
 	return wrap(err)
 }
 
-func (d *NoteDAO) exists(path string) (bool, error) {
-	row, err := d.existsStmt.QueryRow(path)
-	if err != nil {
-		return false, err
+// addLinks inserts all the outbound links of the given note.
+func (d *NoteDAO) addLinks(id int64, note note.Metadata) error {
+	for _, link := range note.Links {
+		targetId, err := d.findIdByPathPrefix(link.Href)
+		if err != nil {
+			return err
+		}
+
+		_, err = d.addLinkStmt.Exec(id, targetId, link.Title, link.Href, link.External, joinLinkRels(link.Rels))
+		if err != nil {
+			return err
+		}
 	}
-	var exists bool
-	row.Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
+
+	_, err := d.setLinksTargetStmt.Exec(id, note.Path)
+	return err
 }
 
+// joinLinkRels will concatenate a list of rels into a SQLite ready string.
+// Each rel is delimited by \x01 for easy matching in queries.
+func joinLinkRels(rels []string) string {
+	if len(rels) == 0 {
+		return ""
+	}
+	delimiter := "\x01"
+	return delimiter + strings.Join(rels, delimiter) + delimiter
+}
+
+// Remove deletes the note with the given path from the index.
+func (d *NoteDAO) Remove(path string) error {
+	wrap := errors.Wrapperf("%v: failed to remove note index", path)
+
+	id, err := d.findIdByPath(path)
+	if err != nil {
+		return wrap(err)
+	}
+	if !id.Valid {
+		return wrap(errors.New("note not found in the index"))
+	}
+
+	_, err = d.removeStmt.Exec(id)
+	return wrap(err)
+}
+
+func (d *NoteDAO) findIdByPath(path string) (sql.NullInt64, error) {
+	row, err := d.findIdByPathStmt.QueryRow(path)
+	if err != nil {
+		return sql.NullInt64{}, err
+	}
+	return idForRow(row)
+}
+
+func (d *NoteDAO) findIdByPathPrefix(path string) (sql.NullInt64, error) {
+	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
+	if err != nil {
+		return sql.NullInt64{}, err
+	}
+	return idForRow(row)
+}
+
+func idForRow(row *sql.Row) (sql.NullInt64, error) {
+	var id sql.NullInt64
+	err := row.Scan(&id)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return id, nil
+	case err != nil:
+		return id, err
+	default:
+		return id, err
+	}
+}
+
+// Find returns all the notes matching the given criteria.
 func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	matches := make([]note.Match, 0)
 

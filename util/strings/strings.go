@@ -2,6 +2,7 @@ package strings
 
 import (
 	"bufio"
+	"net/url"
 	"strings"
 )
 
@@ -44,4 +45,19 @@ func SplitLines(s string) []string {
 // a single space.
 func JoinLines(s string) string {
 	return strings.Join(SplitLines(s), " ")
+}
+
+// IsURL returns whether the given string is a valid URL.
+func IsURL(s string) bool {
+	_, err := url.ParseRequestURI(s)
+	if err != nil {
+		return false
+	}
+
+	u, err := url.Parse(s)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+
+	return true
 }

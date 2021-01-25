@@ -16,9 +16,10 @@ type Content struct {
 }
 
 type Link struct {
-	Title  string
-	Target string
-	Rels   []string
+	Title    string
+	Href     string
+	External bool
+	Rels     []string
 }
 
 type Parser interface {

@@ -16,6 +16,7 @@ import (
 type List struct {
 	Format    string `help:"Pretty prints the list using the given format" short:"f" placeholder:"<template>"`
 	NoPager   bool   `help:"Do not pipe zk output into a pager" short:"P"`
+	Quiet     bool   `help:"Don't show anything besides the notes themselves" short:"q"`
 	Filtering `embed`
 	Sorting   `embed`
 }
@@ -74,7 +75,7 @@ func (cmd *List) Run(container *Container) error {
 		})
 	}
 
-	if err == nil {
+	if err == nil && !cmd.Quiet {
 		fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 

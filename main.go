@@ -63,7 +63,9 @@ func fatalIfError(err error) {
 
 // indexZk will index any slip box in the working directory.
 func indexZk(container *cmd.Container) {
-	(&cmd.Index{Quiet: true}).Run(container)
+	if len(os.Args) > 1 && os.Args[1] != "index" {
+		(&cmd.Index{Quiet: true}).Run(container)
+	}
 }
 
 // runAlias will execute a user alias if the command is one of them.

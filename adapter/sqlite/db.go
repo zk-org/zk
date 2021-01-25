@@ -23,10 +23,20 @@ func OpenInMemory() (*DB, error) {
 }
 
 func open(uri string) (*DB, error) {
+	wrap := errors.Wrapper("failed to open the database")
+
 	db, err := sql.Open("sqlite3", uri)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open the database")
+		return nil, wrap(err)
 	}
+
+	// Make sure that CASCADE statements are properly applied by enabling
+	// foreign keys.
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		return nil, wrap(err)
+	}
+
 	return &DB{db}, nil
 }
 
@@ -47,6 +57,7 @@ func (db *DB) Migrate() error {
 
 		if version == 0 {
 			err = tx.ExecStmts([]string{
+				// Notes
 				`CREATE TABLE IF NOT EXISTS notes (
 					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 					path TEXT NOT NULL,
@@ -63,6 +74,22 @@ func (db *DB) Migrate() error {
 				)`,
 				`CREATE INDEX IF NOT EXISTS index_notes_checksum ON notes (checksum)`,
 				`CREATE INDEX IF NOT EXISTS index_notes_path ON notes (path)`,
+
+				// Links
+				`CREATE TABLE IF NOT EXISTS links (
+					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+					source_id INTEGER NOT NULL REFERENCES notes(id)
+						ON DELETE CASCADE,
+					target_id INTEGER REFERENCES notes(id)
+						ON DELETE SET NULL,
+					title TEXT DEFAULT('') NOT NULL,
+					href TEXT NOT NULL,
+					external INT DEFAULT(0) NOT NULL,
+					rels TEXT DEFAULT('') NOT NULL
+				)`,
+				`CREATE INDEX IF NOT EXISTS index_links_source_id_target_id ON links (source_id, target_id)`,
+
+				// FTS index
 				`CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
 					path, title, body,
 					content = notes,

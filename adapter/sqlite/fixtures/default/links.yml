@@ -1,0 +1,27 @@
+- id: 1
+  source_id: 3
+  target_id: null
+  title: "Missing target"
+  href: "missing"
+  external: false
+
+- id: 2
+  source_id: 1
+  target_id: 2
+  title: "An internal link"
+  href: "log/2021-01-04.md"
+  external: false
+
+- id: 3
+  source_id: 1
+  target_id: null
+  title: "An external link"
+  href: "https://domain.com"
+  external: true
+
+- id: 4
+  source_id: 4
+  target_id: 1
+  title: "Another link"
+  href: "log/2021-01-03.md"
+  external: false

@@ -55,3 +55,17 @@ func TestJoinLines(t *testing.T) {
 	test("One line\nTwo lines\n\nThree lines", "One line Two lines  Three lines")
 	test("One line\nTwo lines\n Three lines", "One line Two lines  Three lines")
 }
+
+func TestIsURL(t *testing.T) {
+	test := func(text string, expected bool) {
+		assert.Equal(t, IsURL(text), expected)
+	}
+
+	test("", false)
+	test("example.com/", false)
+	test("path", false)
+	test("http://example.com", true)
+	test("https://example.com/dir", true)
+	test("http://example.com/dir", true)
+	test("ftp://example.com/", true)
+}

@@ -24,6 +24,7 @@ type Metadata struct {
 	Body       string
 	RawContent string
 	WordCount  int
+	Links      []Link
 	Created    time.Time
 	Modified   time.Time
 	Checksum   string
@@ -56,21 +57,21 @@ type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.
 	Indexed() (<-chan paths.Metadata, error)
 	// Add indexes a new note from its metadata.
-	Add(metadata Metadata) error
+	Add(metadata Metadata) (int64, error)
 	// Update updates the metadata of an already indexed note.
 	Update(metadata Metadata) error
 	// Remove deletes a note from the index.
 	Remove(path string) error
 }
 
-// Index indexes the content of the notes in the given directory.
-func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) (IndexingStats, error) {
+// Index indexes the content of the notes in the given slip box.
+func Index(zk *zk.Zk, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) (IndexingStats, error) {
 	wrap := errors.Wrapper("indexing failed")
 
 	stats := IndexingStats{}
 	startTime := time.Now()
 
-	source := paths.Walk(dir.Path, dir.Config.Extension, logger)
+	source := paths.Walk(zk.Path, zk.Config.Extension, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
 		return stats, wrap(err)
@@ -82,15 +83,15 @@ func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.L
 		switch change.Kind {
 		case paths.DiffAdded:
 			stats.AddedCount += 1
-			metadata, err := metadata(change.Path, dir.Path, parser)
+			metadata, err := metadata(change.Path, zk, parser)
 			if err == nil {
-				err = indexer.Add(metadata)
+				_, err = indexer.Add(metadata)
 			}
 			logger.Err(err)
 
 		case paths.DiffModified:
 			stats.ModifiedCount += 1
-			metadata, err := metadata(change.Path, dir.Path, parser)
+			metadata, err := metadata(change.Path, zk, parser)
 			if err == nil {
 				err = indexer.Update(metadata)
 			}
@@ -111,12 +112,13 @@ func Index(dir zk.Dir, force bool, parser Parser, indexer Indexer, logger util.L
 }
 
 // metadata retrieves note metadata for the given file.
-func metadata(path string, basePath string, parser Parser) (Metadata, error) {
+func metadata(path string, zk *zk.Zk, parser Parser) (Metadata, error) {
 	metadata := Metadata{
-		Path: path,
+		Path:  path,
+		Links: make([]Link, 0),
 	}
 
-	absPath := filepath.Join(basePath, path)
+	absPath := filepath.Join(zk.Path, path)
 	content, err := ioutil.ReadFile(absPath)
 	if err != nil {
 		return metadata, err
@@ -131,7 +133,20 @@ func metadata(path string, basePath string, parser Parser) (Metadata, error) {
 	metadata.Body = contentParts.Body.String()
 	metadata.RawContent = contentStr
 	metadata.WordCount = len(strings.Fields(contentStr))
+	metadata.Links = make([]Link, 0)
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
+
+	for _, link := range contentParts.Links {
+		if !strutil.IsURL(link.Href) {
+			// Make the href relative to the slip box root.
+			href := filepath.Join(filepath.Dir(absPath), link.Href)
+			link.Href, err = zk.RelPath(href)
+			if err != nil {
+				return metadata, err
+			}
+		}
+		metadata.Links = append(metadata.Links, link)
+	}
 
 	times, err := times.Stat(absPath)
 	if err != nil {
