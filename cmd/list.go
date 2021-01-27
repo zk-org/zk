@@ -17,6 +17,8 @@ type List struct {
 	Format    string `help:"Pretty prints the list using the given format" short:"f" placeholder:"<template>"`
 	NoPager   bool   `help:"Do not pipe zk output into a pager" short:"P"`
 	Quiet     bool   `help:"Don't show anything besides the notes themselves" short:"q"`
+	Delimiter string `default:"
+" help:"Delimiter separating each result" short:"d"`
 	Filtering `embed`
 	Sorting   `embed`
 }
@@ -62,13 +64,16 @@ func (cmd *List) Run(container *Container) error {
 	count := len(notes)
 	if count > 0 {
 		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
-			for _, note := range notes {
+			for i, note := range notes {
+				if i > 0 {
+					fmt.Fprintf(out, cmd.Delimiter)
+				}
+
 				ft, err := formatter.Format(note)
 				if err != nil {
 					return err
 				}
-
-				fmt.Fprintf(out, "%v\n", ft)
+				fmt.Fprintf(out, ft)
 			}
 
 			return nil
@@ -76,7 +81,7 @@ func (cmd *List) Run(container *Container) error {
 	}
 
 	if err == nil && !cmd.Quiet {
-		fmt.Printf("\nFound %d %s\n", count, strings.Pluralize("note", count))
+		fmt.Printf("\n\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
 	return err
