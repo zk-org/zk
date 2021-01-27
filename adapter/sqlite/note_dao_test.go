@@ -494,18 +494,36 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter([]string{"f39c8.md", "log/2021-01-03"})},
+			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md", "log/2021-01-03"}, Negate: false}},
 		},
 		[]string{"ref/test/a.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func TestNoteDAOFindNotLinkedBy(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md", "log/2021-01-03"}, Negate: true}},
+		},
+		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
 }
 
 func TestNoteDAOFindLinkingTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter([]string{"log/2021-01-04", "ref/test/a.md"})},
+			Filters: []note.Filter{note.LinkingToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: false}},
 		},
 		[]string{"f39c8.md", "log/2021-01-03.md"},
+	)
+}
+
+func TestNoteDAOFindNotLinkingTo(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkingToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true}},
+		},
+		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
 }
 

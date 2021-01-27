@@ -41,10 +41,16 @@ type PathFilter []string
 type ExcludePathFilter []string
 
 // LinkedByFilter is a note filter used to select notes being linked by another one.
-type LinkedByFilter []string
+type LinkedByFilter struct {
+	Paths  []string
+	Negate bool
+}
 
 // LinkingToFilter is a note filter used to select notes being linked by another one.
-type LinkingToFilter []string
+type LinkingToFilter struct {
+	Paths  []string
+	Negate bool
+}
 
 // DateFilter can be used to filter notes created or modified before, after or on a given date.
 type DateFilter struct {

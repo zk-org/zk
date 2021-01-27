@@ -371,32 +371,44 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
 
 		case note.LinkedByFilter:
-			ids, err := d.findIdsByPathPrefixes(filter)
+			ids, err := d.findIdsByPathPrefixes(filter.Paths)
 			if err != nil {
 				return nil, err
 			}
-			if len(filter) == 0 {
+			if len(ids) == 0 {
 				break
 			}
 
-			whereExprs = append(whereExprs, fmt.Sprintf(
-				"n.id IN (SELECT target_id FROM links WHERE source_id IN %v)",
-				"("+strutil.JoinInt64(ids, ",")+")"),
+			expr := "n.id"
+			if filter.Negate {
+				expr += " NOT"
+			}
+			expr += fmt.Sprintf(
+				" IN (SELECT target_id FROM links WHERE target_id IS NOT NULL AND source_id IN %v)",
+				"("+strutil.JoinInt64(ids, ",")+")",
 			)
+
+			whereExprs = append(whereExprs, expr)
 
 		case note.LinkingToFilter:
-			ids, err := d.findIdsByPathPrefixes(filter)
+			ids, err := d.findIdsByPathPrefixes(filter.Paths)
 			if err != nil {
 				return nil, err
 			}
-			if len(filter) == 0 {
+			if len(ids) == 0 {
 				break
 			}
 
-			whereExprs = append(whereExprs, fmt.Sprintf(
-				"n.id IN (SELECT source_id FROM links WHERE target_id IN %v)",
-				"("+strutil.JoinInt64(ids, ",")+")"),
+			expr := "n.id"
+			if filter.Negate {
+				expr += " NOT"
+			}
+			expr += fmt.Sprintf(
+				" IN (SELECT source_id FROM links WHERE target_id IN %v)",
+				"("+strutil.JoinInt64(ids, ",")+")",
 			)
+
+			whereExprs = append(whereExprs, expr)
 
 		case note.DateFilter:
 			value := "?"
