@@ -384,6 +384,20 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 				"("+strutil.JoinInt64(ids, ",")+")"),
 			)
 
+		case note.LinkingToFilter:
+			ids, err := d.findIdsByPathPrefixes(filter)
+			if err != nil {
+				return nil, err
+			}
+			if len(filter) == 0 {
+				break
+			}
+
+			whereExprs = append(whereExprs, fmt.Sprintf(
+				"n.id IN (SELECT source_id FROM links WHERE target_id IN %v)",
+				"("+strutil.JoinInt64(ids, ",")+")"),
+			)
+
 		case note.DateFilter:
 			value := "?"
 			field := "n." + dateField(filter)

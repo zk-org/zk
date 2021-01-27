@@ -500,6 +500,15 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindLinkingTo(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkingToFilter([]string{"log/2021-01-04", "ref/test/a.md"})},
+		},
+		[]string{"f39c8.md", "log/2021-01-03.md"},
+	)
+}
+
 func TestNoteDAOFindCreatedOn(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{

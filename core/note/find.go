@@ -43,6 +43,9 @@ type ExcludePathFilter []string
 // LinkedByFilter is a note filter used to select notes being linked by another one.
 type LinkedByFilter []string
 
+// LinkingToFilter is a note filter used to select notes being linked by another one.
+type LinkingToFilter []string
+
 // DateFilter can be used to filter notes created or modified before, after or on a given date.
 type DateFilter struct {
 	Date      time.Time
@@ -57,6 +60,7 @@ func (f MatchFilter) sealed()       {}
 func (f PathFilter) sealed()        {}
 func (f ExcludePathFilter) sealed() {}
 func (f LinkedByFilter) sealed()    {}
+func (f LinkingToFilter) sealed()   {}
 func (f DateFilter) sealed()        {}
 func (f InteractiveFilter) sealed() {}
 

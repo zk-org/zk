@@ -19,7 +19,8 @@ type Filtering struct {
 	Modified       string   `help:"Only the notes modified on the given date" placeholder:"<date>"`
 	ModifiedBefore string   `help:"Only the notes modified before the given date" placeholder:"<date>"`
 	ModifiedAfter  string   `help:"Only the notes modified after the given date" placeholder:"<date>"`
-	LinkedBy       []string `help:"Only the notes linked by the given notes" placeholder:"<path>"`
+	LinkedBy       []string `help:"Only the notes linked by the given notes" placeholder:"<path>" short:"l"`
+	LinkingTo      []string `help:"Only the notes linking to the given notes" placeholder:"<path>" short:"L"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
 	Interactive    bool     `help:"Further filter the list of notes interactively" short:"i"`
 }
@@ -122,6 +123,11 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 	linkedByPaths, ok := relPaths(zk, filtering.LinkedBy)
 	if ok {
 		filters = append(filters, note.LinkedByFilter(linkedByPaths))
+	}
+
+	linkingToPaths, ok := relPaths(zk, filtering.LinkingTo)
+	if ok {
+		filters = append(filters, note.LinkingToFilter(linkingToPaths))
 	}
 
 	if filtering.Interactive {
