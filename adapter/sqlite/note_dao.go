@@ -410,6 +410,11 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 			whereExprs = append(whereExprs, expr)
 
+		case note.OrphanFilter:
+			whereExprs = append(whereExprs, `n.id NOT IN (
+				SELECT target_id FROM links WHERE target_id IS NOT NULL
+			)`)
+
 		case note.DateFilter:
 			value := "?"
 			field := "n." + dateField(filter)

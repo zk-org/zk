@@ -23,6 +23,7 @@ type Filtering struct {
 	LinkingTo      []string `help:"Only the notes linking to the given notes" placeholder:"<path>" short:"L"`
 	NotLinkedBy    []string `help:"Only the notes not linked by the given notes" placeholder:"<path>"`
 	NotLinkingTo   []string `help:"Only the notes not linking to the given notes" placeholder:"<path>"`
+	Orphan         bool     `help:"Only the notes which don't have any other note linking to them"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
 	Interactive    bool     `help:"Further filter the list of notes interactively" short:"i"`
 }
@@ -152,6 +153,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 			Paths:  notLinkingToPaths,
 			Negate: true,
 		})
+	}
+
+	if filtering.Orphan {
+		filters = append(filters, note.OrphanFilter{})
 	}
 
 	if filtering.Interactive {

@@ -52,6 +52,9 @@ type LinkingToFilter struct {
 	Negate bool
 }
 
+// OrphanFilter is a note filter used to select notes having no other notes linking to them.
+type OrphanFilter struct{}
+
 // DateFilter can be used to filter notes created or modified before, after or on a given date.
 type DateFilter struct {
 	Date      time.Time
@@ -67,6 +70,7 @@ func (f PathFilter) sealed()        {}
 func (f ExcludePathFilter) sealed() {}
 func (f LinkedByFilter) sealed()    {}
 func (f LinkingToFilter) sealed()   {}
+func (f OrphanFilter) sealed()      {}
 func (f DateFilter) sealed()        {}
 func (f InteractiveFilter) sealed() {}
 

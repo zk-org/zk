@@ -527,6 +527,15 @@ func TestNoteDAOFindNotLinkingTo(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindOrphan(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.OrphanFilter{}},
+		},
+		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
+	)
+}
+
 func TestNoteDAOFindCreatedOn(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
