@@ -35,6 +35,6 @@ func RegisterShell(logger util.Logger) {
 			return ""
 		}
 
-		return string(output)
+		return strings.TrimSpace(string(output))
 	})
 }
