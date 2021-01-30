@@ -143,8 +143,9 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 					Rels:  []string{"rel-1", "rel-2"},
 				},
 				{
-					Title: "Relative",
-					Href:  "f39c8",
+					Title:   "Relative",
+					Href:    "f39c8",
+					Snippet: "[Relative](f39c8) link",
 				},
 				{
 					Title: "Second is added",
@@ -159,6 +160,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 					Title:    "URL",
 					Href:     "http://example.com",
 					External: true,
+					Snippet:  "External [URL](http://example.com)",
 				},
 			},
 		})
@@ -179,6 +181,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				Title:    "Relative",
 				Href:     "f39c8",
 				Rels:     "",
+				Snippet:  "[Relative](f39c8) link",
 			},
 			{
 				SourceId: id,
@@ -201,6 +204,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				Href:     "http://example.com",
 				External: true,
 				Rels:     "",
+				Snippet:  "External [URL](http://example.com)",
 			},
 		})
 	})
@@ -220,6 +224,7 @@ func TestNoteDAOAddFillsLinksMissingTargetId(t *testing.T) {
 				TargetId: &id,
 				Title:    "Missing target",
 				Href:     "missing",
+				Snippet:  "There's a Missing target",
 			},
 		})
 	})
@@ -282,6 +287,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				TargetId: intPointer(2),
 				Title:    "An internal link",
 				Href:     "log/2021-01-04.md",
+				Snippet:  "[[An internal link]]",
 			},
 			{
 				SourceId: 1,
@@ -289,6 +295,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				Title:    "An external link",
 				Href:     "https://domain.com",
 				External: true,
+				Snippet:  "[[An external link]]",
 			},
 		})
 
@@ -300,11 +307,13 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 					Href:     "index",
 					External: false,
 					Rels:     []string{"rel"},
+					Snippet:  "[[A new link]]",
 				},
 				{
 					Title:    "An external link",
 					Href:     "https://domain.com",
 					External: true,
+					Snippet:  "[[An external link]]",
 				},
 			},
 		})
@@ -318,6 +327,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				Title:    "A new link",
 				Href:     "index",
 				Rels:     "\x01rel\x01",
+				Snippet:  "[[A new link]]",
 			},
 			{
 				SourceId: 1,
@@ -325,6 +335,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				Title:    "An external link",
 				Href:     "https://domain.com",
 				External: true,
+				Snippet:  "[[An external link]]",
 			},
 		})
 	})
@@ -740,17 +751,17 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 }
 
 type linkRow struct {
-	SourceId          int64
-	TargetId          *int64
-	Href, Title, Rels string
-	External          bool
+	SourceId                   int64
+	TargetId                   *int64
+	Href, Title, Rels, Snippet string
+	External                   bool
 }
 
 func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	links := make([]linkRow, 0)
 
 	rows, err := tx.Query(fmt.Sprintf(`
-		SELECT source_id, target_id, title, href, external, rels
+		SELECT source_id, target_id, title, href, external, rels, snippet
 		  FROM links
 		 WHERE %v
 		 ORDER BY id
@@ -759,7 +770,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 
 	for rows.Next() {
 		var row linkRow
-		err = rows.Scan(&row.SourceId, &row.TargetId, &row.Title, &row.Href, &row.External, &row.Rels)
+		err = rows.Scan(&row.SourceId, &row.TargetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet)
 		assert.Nil(t, err)
 		links = append(links, row)
 	}

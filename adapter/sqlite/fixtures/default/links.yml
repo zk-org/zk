@@ -4,6 +4,7 @@
   title: "Missing target"
   href: "missing"
   external: false
+  snippet: "There's a Missing target"
 
 - id: 2
   source_id: 1
@@ -11,6 +12,7 @@
   title: "An internal link"
   href: "log/2021-01-04.md"
   external: false
+  snippet: "[[An internal link]]"
 
 - id: 3
   source_id: 1
@@ -18,6 +20,7 @@
   title: "An external link"
   href: "https://domain.com"
   external: true
+  snippet: "[[An external link]]"
 
 - id: 4
   source_id: 4
@@ -25,6 +28,7 @@
   title: "Another link"
   href: "log/2021-01-03.md"
   external: false
+  snippet: "[[Another link]]"
 
 - id: 5
   source_id: 4
@@ -32,3 +36,4 @@
   title: "Link from 4 to 6"
   href: "ref/test/a"
   external: false
+  snippet: "[[Link from 4 to 6]]"

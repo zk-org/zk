@@ -135,12 +135,26 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 					Href:     href,
 					Rels:     strings.Fields(string(link.Title)),
 					External: strutil.IsURL(href),
+					Snippet:  extractLines(n.Parent(), source),
 				})
 			}
 		}
 		return ast.WalkContinue, nil
 	})
 	return links, err
+}
+
+func extractLines(n ast.Node, source []byte) string {
+	if n == nil {
+		return ""
+	}
+	segs := n.Lines()
+	if segs.Len() == 0 {
+		return ""
+	}
+	start := segs.At(0).Start
+	end := segs.At(segs.Len() - 1).Stop
+	return string(source[start:end])
 }
 
 // frontmatter contains metadata parsed from a YAML frontmatter.

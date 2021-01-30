@@ -175,42 +175,53 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			Href:     "heading",
 			Rels:     []string{},
 			External: false,
+			Snippet:  "Heading with a [link](heading)",
 		},
 		{
 			Title:    "multiple links",
 			Href:     "stripped-formatting",
 			Rels:     []string{},
 			External: false,
+			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
+A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 		},
 		{
 			Title:    "relative",
 			Href:     "../other",
 			Rels:     []string{},
 			External: false,
+			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
+A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 		},
 		{
 			Title:    "one relation",
 			Href:     "one",
 			Rels:     []string{"rel-1"},
 			External: false,
+			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
+A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 		},
 		{
 			Title:    "several relations",
 			Href:     "several",
 			Rels:     []string{"rel-1", "rel-2"},
 			External: false,
+			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
+A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 		},
 		{
 			Title:    "External links",
 			Href:     "http://example.com",
 			Rels:     []string{},
 			External: true,
+			Snippet:  `[External links](http://example.com) are marked [as such](ftp://domain).`,
 		},
 		{
 			Title:    "as such",
 			Href:     "ftp://domain",
 			Rels:     []string{},
 			External: true,
+			Snippet:  `[External links](http://example.com) are marked [as such](ftp://domain).`,
 		},
 	})
 }

@@ -85,7 +85,8 @@ func (db *DB) Migrate() error {
 					title TEXT DEFAULT('') NOT NULL,
 					href TEXT NOT NULL,
 					external INT DEFAULT(0) NOT NULL,
-					rels TEXT DEFAULT('') NOT NULL
+					rels TEXT DEFAULT('') NOT NULL,
+					snippet TEXT DEFAULT('') NOT NULL
 				)`,
 				`CREATE INDEX IF NOT EXISTS index_links_source_id_target_id ON links (source_id, target_id)`,
 

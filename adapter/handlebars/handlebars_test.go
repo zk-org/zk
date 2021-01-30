@@ -140,7 +140,7 @@ func TestShellHelper(t *testing.T) {
 	testString(t,
 		`{{sh "echo 'Hello, world!'"}}`,
 		nil,
-		"Hello, world!\n",
+		"Hello, world!",
 	)
 }
 

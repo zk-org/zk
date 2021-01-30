@@ -20,6 +20,7 @@ type Link struct {
 	Href     string
 	External bool
 	Rels     []string
+	Snippet  string
 }
 
 type Parser interface {

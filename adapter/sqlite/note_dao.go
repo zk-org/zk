@@ -78,8 +78,8 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 		// Add a new link.
 		addLinkStmt: tx.PrepareLazy(`
-			INSERT INTO links (source_id, target_id, title, href, external, rels)
-			VALUES (?, ?, ?, ?, ?, ?)
+			INSERT INTO links (source_id, target_id, title, href, external, rels, snippet)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Set links matching a given href and missing a target ID to the given
@@ -203,7 +203,7 @@ func (d *NoteDAO) addLinks(id int64, note note.Metadata) error {
 			return err
 		}
 
-		_, err = d.addLinkStmt.Exec(id, targetId, link.Title, link.Href, link.External, joinLinkRels(link.Rels))
+		_, err = d.addLinkStmt.Exec(id, targetId, link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet)
 		if err != nil {
 			return err
 		}
