@@ -350,6 +350,14 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		}
 		idsList := "(" + strutil.JoinInt64(ids, ",") + ")"
 
+		alias := "l"
+		if forward {
+			alias += "f"
+		}
+		if negate {
+			alias += "n"
+		}
+
 		from := "source_id"
 		to := "target_id"
 		if !forward {
@@ -358,15 +366,15 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 		if !negate {
 			groupById = true
-			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN links l ON n.id = l.%s AND l.%s IN %v`, from, to, idsList))
-			snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01') AS snippet"
+			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN links %[1]s ON n.id = %[1]s.%[2]s AND %[1]s.%[3]s IN %[4]s`, alias, from, to, idsList))
+			snippetCol = fmt.Sprintf("GROUP_CONCAT(REPLACE(%[1]s.snippet, %[1]s.title, '<zk:match>' || %[1]s.title || '</zk:match>'), '\x01') AS snippet", alias)
 		}
 
 		expr := "n.id"
 		if negate {
 			expr += " NOT"
 		}
-		expr += fmt.Sprintf(" IN (SELECT %v FROM links WHERE target_id IS NOT NULL AND %v IN %v)", from, to, idsList)
+		expr += fmt.Sprintf(" IN (SELECT %s FROM links WHERE target_id IS NOT NULL AND %s IN %s)", from, to, idsList)
 
 		whereExprs = append(whereExprs, expr)
 
