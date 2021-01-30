@@ -418,7 +418,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Modified:   time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
 					Checksum:   "iaefhv",
 				},
-				Snippet: "<zk:match>Index</zk:match> of the Zettelkasten",
+				Snippets: []string{"<zk:match>Index</zk:match> of the Zettelkasten"},
 			},
 			{
 				Metadata: note.Metadata{
@@ -432,7 +432,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Modified:   time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 					Checksum:   "earkte",
 				},
-				Snippet: "A third <zk:match>daily</zk:match> note",
+				Snippets: []string{"A third <zk:match>daily</zk:match> note"},
 			},
 			{
 				Metadata: note.Metadata{
@@ -446,7 +446,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Modified:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Checksum:   "arstde",
 				},
-				Snippet: "A second <zk:match>daily</zk:match> note",
+				Snippets: []string{"A second <zk:match>daily</zk:match> note"},
 			},
 			{
 				Metadata: note.Metadata{
@@ -460,7 +460,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 					Checksum:   "qwfpgj",
 				},
-				Snippet: "A <zk:match>daily</zk:match> note\n\nWith lot of content",
+				Snippets: []string{"A <zk:match>daily</zk:match> note\n\nWith lot of content"},
 			},
 		},
 	)
@@ -508,6 +508,51 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md", "log/2021-01-03"}, Negate: false}},
 		},
 		[]string{"ref/test/a.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md"}}},
+		},
+		[]note.Match{
+			{
+				Metadata: note.Metadata{
+					Path:       "ref/test/a.md",
+					Title:      "Another nested note",
+					Lead:       "It shall appear before b.md",
+					Body:       "It shall appear before b.md",
+					RawContent: "#Another nested note\nIt shall appear before b.md",
+					WordCount:  5,
+					Links:      nil,
+					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+					Modified:   time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
+					Checksum:   "iecywst",
+				},
+				Snippets: []string{
+					"[[<zk:match>Link from 4 to 6</zk:match>]]",
+					"[[<zk:match>Duplicated link</zk:match>]]",
+				},
+			},
+			{
+				Metadata: note.Metadata{
+					Path:       "log/2021-01-03.md",
+					Title:      "January 3, 2021",
+					Lead:       "A daily note",
+					Body:       "A daily note\n\nWith lot of content",
+					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					WordCount:  3,
+					Links:      nil,
+					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum:   "qwfpgj",
+				},
+				Snippets: []string{
+					"[[<zk:match>Another link</zk:match>]]",
+				},
+			},
+		},
 	)
 }
 

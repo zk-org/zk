@@ -37,3 +37,11 @@
   href: "ref/test/a"
   external: false
   snippet: "[[Link from 4 to 6]]"
+
+- id: 6
+  source_id: 4
+  target_id: 6
+  title: "Duplicated link"
+  href: "ref/test/a"
+  external: false
+  snippet: "[[Duplicated link]]"

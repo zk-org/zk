@@ -21,7 +21,9 @@ func TestDefaultFormat(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, res, `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `)
 }
 
@@ -40,20 +42,26 @@ func TestFormats(t *testing.T) {
 
 	test("short", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `)
 
 	test("medium", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `)
 
 	test("long", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `)
 
 	test("full", `{{style "title" title}} {{style "path" path}}
@@ -77,7 +85,7 @@ func TestFormatRenderContext(t *testing.T) {
 	f, templs := newFormatter(t, opt.NewString("path"))
 
 	_, err := f.Format(Match{
-		Snippet: "Note snippet",
+		Snippets: []string{"Note snippet"},
 		Metadata: Metadata{
 			Path:       "dir/note.md",
 			Title:      "Note title",
@@ -100,7 +108,7 @@ func TestFormatRenderContext(t *testing.T) {
 			Title:      "Note title",
 			Lead:       "Lead paragraph",
 			Body:       "Note body",
-			Snippet:    "Note snippet",
+			Snippets:   []string{"Note snippet"},
 			RawContent: "Raw content",
 			WordCount:  42,
 			Created:    Now,
@@ -119,7 +127,8 @@ func TestFormatPath(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, templs.Contexts, []interface{}{
 			formatRenderContext{
-				Path: expected,
+				Path:     expected,
+				Snippets: []string{},
 			},
 		})
 	}
@@ -139,13 +148,13 @@ func TestFormatStylesSnippetTerm(t *testing.T) {
 	test := func(snippet string, expected string) {
 		f, templs := newFormatter(t, opt.NullString)
 		_, err := f.Format(Match{
-			Snippet: snippet,
+			Snippets: []string{snippet},
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, templs.Contexts, []interface{}{
 			formatRenderContext{
-				Path:    ".",
-				Snippet: expected,
+				Path:     ".",
+				Snippets: []string{expected},
 			},
 		})
 	}

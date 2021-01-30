@@ -295,20 +295,26 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 
 	for rows.Next() {
 		var (
-			id, wordCount                          int
-			title, lead, body, rawContent, snippet string
-			path, checksum                         string
-			created, modified                      time.Time
+			id, wordCount                 int
+			title, lead, body, rawContent string
+			nullableSnippets              sql.NullString
+			path, checksum                string
+			created, modified             time.Time
 		)
 
-		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &snippet)
+		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &nullableSnippets)
 		if err != nil {
 			d.logger.Err(err)
 			continue
 		}
 
+		snippets := make([]string, 0)
+		if nullableSnippets.Valid && nullableSnippets.String != "" {
+			snippets = strings.Split(nullableSnippets.String, "\x01")
+		}
+
 		matches = append(matches, note.Match{
-			Snippet: snippet,
+			Snippets: snippets,
 			Metadata: note.Metadata{
 				Path:       path,
 				Title:      title,
@@ -326,24 +332,53 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	return matches, nil
 }
 
-type findQuery struct {
-	SnippetCol string
-	WhereExprs []string
-	OrderTerms []string
-	Args       []interface{}
-}
-
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
+	joinClauses := make([]string, 0)
 	whereExprs := make([]string, 0)
 	orderTerms := make([]string, 0)
+	groupById := false
 	args := make([]interface{}, 0)
+
+	setupLinkFilter := func(paths []string, forward, negate bool) error {
+		ids, err := d.findIdsByPathPrefixes(paths)
+		if err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			return nil
+		}
+		idsList := "(" + strutil.JoinInt64(ids, ",") + ")"
+
+		from := "source_id"
+		to := "target_id"
+		if !forward {
+			from, to = to, from
+		}
+
+		if !negate {
+			groupById = true
+			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN links l ON n.id = l.%s AND l.%s IN %v`, from, to, idsList))
+			snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01') AS snippet"
+		}
+
+		expr := "n.id"
+		if negate {
+			expr += " NOT"
+		}
+		expr += fmt.Sprintf(" IN (SELECT %v FROM links WHERE target_id IS NOT NULL AND %v IN %v)", from, to, idsList)
+
+		whereExprs = append(whereExprs, expr)
+
+		return nil
+	}
 
 	for _, filter := range opts.Filters {
 		switch filter := filter.(type) {
 
 		case note.MatchFilter:
 			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
+			joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
 			orderTerms = append(orderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
 			whereExprs = append(whereExprs, "notes_fts MATCH ?")
 			args = append(args, fts5.ConvertQuery(string(filter)))
@@ -371,44 +406,16 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
 
 		case note.LinkedByFilter:
-			ids, err := d.findIdsByPathPrefixes(filter.Paths)
+			err := setupLinkFilter(filter.Paths, false, filter.Negate)
 			if err != nil {
 				return nil, err
 			}
-			if len(ids) == 0 {
-				break
-			}
-
-			expr := "n.id"
-			if filter.Negate {
-				expr += " NOT"
-			}
-			expr += fmt.Sprintf(
-				" IN (SELECT target_id FROM links WHERE target_id IS NOT NULL AND source_id IN %v)",
-				"("+strutil.JoinInt64(ids, ",")+")",
-			)
-
-			whereExprs = append(whereExprs, expr)
 
 		case note.LinkingToFilter:
-			ids, err := d.findIdsByPathPrefixes(filter.Paths)
+			err := setupLinkFilter(filter.Paths, true, filter.Negate)
 			if err != nil {
 				return nil, err
 			}
-			if len(ids) == 0 {
-				break
-			}
-
-			expr := "n.id"
-			if filter.Negate {
-				expr += " NOT"
-			}
-			expr += fmt.Sprintf(
-				" IN (SELECT source_id FROM links WHERE target_id IN %v)",
-				"("+strutil.JoinInt64(ids, ",")+")",
-			)
-
-			whereExprs = append(whereExprs, expr)
 
 		case note.OrphanFilter:
 			whereExprs = append(whereExprs, `n.id NOT IN (
@@ -443,13 +450,18 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 	query := "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
 
-	query += `
-FROM notes n
-JOIN notes_fts
-ON n.id = notes_fts.rowid`
+	query += "\nFROM notes n"
+
+	for _, clause := range joinClauses {
+		query += "\n" + clause
+	}
 
 	if len(whereExprs) > 0 {
 		query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
+	}
+
+	if groupById {
+		query += "\nGROUP BY n.id"
 	}
 
 	query += "\nORDER BY " + strings.Join(orderTerms, ", ")

@@ -63,20 +63,26 @@ var formatTemplates = map[string]string{
 
 	"short": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `,
 
 	"medium": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `,
 
 	"long": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
-{{prepend "  " snippet}}
+{{#each snippets}}
+  ‣ {{.}}
+{{/each}}
 `,
 
 	"full": `{{style "title" title}} {{style "path" path}}
@@ -96,14 +102,17 @@ func (f *Formatter) Format(match Match) (string, error) {
 		return "", err
 	}
 
+	snippets := make([]string, 0)
+	for _, snippet := range match.Snippets {
+		snippets = append(snippets, termRegex.ReplaceAllString(snippet, f.snippetTermReplacement))
+	}
+
 	return f.renderer.Render(formatRenderContext{
-		Path:  path,
-		Title: match.Title,
-		Lead:  match.Lead,
-		Body:  match.Body,
-		Snippet: strings.TrimSpace(
-			termRegex.ReplaceAllString(match.Snippet, f.snippetTermReplacement),
-		),
+		Path:       path,
+		Title:      match.Title,
+		Lead:       match.Lead,
+		Body:       match.Body,
+		Snippets:   snippets,
 		RawContent: match.RawContent,
 		WordCount:  match.WordCount,
 		Created:    match.Created,
@@ -117,7 +126,7 @@ type formatRenderContext struct {
 	Title      string
 	Lead       string
 	Body       string
-	Snippet    string
+	Snippets   []string
 	RawContent string `handlebars:"raw-content"`
 	WordCount  int    `handlebars:"word-count"`
 	Created    time.Time

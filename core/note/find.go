@@ -24,8 +24,8 @@ type FinderOpts struct {
 // Match holds information about a note matching the find options.
 type Match struct {
 	Metadata
-	// Snippet is an excerpt of the note.
-	Snippet string
+	// Snippets are relevant excerpts in the note.
+	Snippets []string
 }
 
 // Filter is a sealed interface implemented by Finder filter criteria.
