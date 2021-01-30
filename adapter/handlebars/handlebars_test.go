@@ -90,6 +90,10 @@ func TestDoesntEscapeHTML(t *testing.T) {
 	)
 }
 
+func TestConcatHelper(t *testing.T) {
+	testString(t, "{{concat '> ' 'A quote'}}", nil, "> A quote")
+}
+
 func TestPrependHelper(t *testing.T) {
 	// inline
 	testString(t, "{{prepend '> ' 'A quote'}}", nil, "> A quote")

@@ -64,7 +64,7 @@ var formatTemplates = map[string]string{
 	"short": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `,
 
@@ -72,7 +72,7 @@ var formatTemplates = map[string]string{
 Created: {{date created "short"}}
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `,
 
@@ -81,7 +81,7 @@ Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `,
 

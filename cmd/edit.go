@@ -44,7 +44,7 @@ func (cmd *Edit) Run(container *Container) error {
 	count := len(notes)
 
 	if count > 0 {
-		if !cmd.Force && count > 2 {
+		if !cmd.Force && count > 5 {
 			if !container.Terminal.Confirm(
 				fmt.Sprintf("Are you sure you want to open %v notes in the editor?", count),
 				"Open all the notes",

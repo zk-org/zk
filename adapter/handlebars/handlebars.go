@@ -13,6 +13,7 @@ import (
 )
 
 func Init(lang string, logger util.Logger, styler style.Styler) {
+	helpers.RegisterConcat(logger)
 	helpers.RegisterDate(logger)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)

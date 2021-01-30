@@ -22,7 +22,7 @@ func TestDefaultFormat(t *testing.T) {
 	assert.Equal(t, res, `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `)
 }
@@ -43,7 +43,7 @@ func TestFormats(t *testing.T) {
 	test("short", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `)
 
@@ -51,7 +51,7 @@ func TestFormats(t *testing.T) {
 Created: {{date created "short"}}
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `)
 
@@ -60,7 +60,7 @@ Created: {{date created "short"}}
 Modified: {{date created "short"}}
 
 {{#each snippets}}
-  ‣ {{.}}
+{{prepend "  " (concat "‣ " .)}}
 {{/each}}
 `)
 
