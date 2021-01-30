@@ -103,6 +103,18 @@ func TestPrependHelper(t *testing.T) {
 	testString(t, "{{#prepend '> '}}A quote on\nseveral lines{{/prepend}}", nil, "> A quote on\n> several lines")
 }
 
+func TestListHelper(t *testing.T) {
+	test := func(items []string, expected string) {
+		context := map[string]interface{}{"items": items}
+		testString(t, "{{list items}}", context, expected)
+	}
+	test([]string{}, "")
+	test([]string{"Item 1"}, "  ‣ Item 1\n")
+	test([]string{"Item 1", "Item 2"}, "  ‣ Item 1\n  ‣ Item 2\n")
+	test([]string{"Item 1", "Item 2", "Item 3"}, "  ‣ Item 1\n  ‣ Item 2\n  ‣ Item 3\n")
+	test([]string{"An item\non several\nlines\n"}, "  ‣ An item\n    on several\n    lines\n")
+}
+
 func TestSlugHelper(t *testing.T) {
 	// inline
 	testString(t,

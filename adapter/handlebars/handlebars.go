@@ -13,8 +13,9 @@ import (
 )
 
 func Init(lang string, logger util.Logger, styler style.Styler) {
-	helpers.RegisterConcat(logger)
+	helpers.RegisterConcat()
 	helpers.RegisterDate(logger)
+	helpers.RegisterList()
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
 	helpers.RegisterSlug(lang, logger)
