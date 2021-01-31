@@ -528,6 +528,20 @@ func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkedByFilter{
+				Paths:       []string{"log/2021-01-04.md"},
+				Negate:      false,
+				Recursive:   true,
+				MaxDistance: 2,
+			}},
+		},
+		[]string{"index.md", "f39c8.md"},
+	)
+}
+
 func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{
@@ -609,6 +623,20 @@ func TestNoteDAOFindLinkingToRecursive(t *testing.T) {
 			}},
 		},
 		[]string{"log/2021-01-03.md", "f39c8.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindLinkingToRecursiveWithMaxDistance(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkingToFilter{
+				Paths:       []string{"log/2021-01-04.md"},
+				Negate:      false,
+				Recursive:   true,
+				MaxDistance: 2,
+			}},
+		},
+		[]string{"log/2021-01-03.md", "f39c8.md"},
 	)
 }
 

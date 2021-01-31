@@ -42,16 +42,18 @@ type ExcludePathFilter []string
 
 // LinkedByFilter is a note filter used to select notes being linked by another one.
 type LinkedByFilter struct {
-	Paths     []string
-	Negate    bool
-	Recursive bool
+	Paths       []string
+	Negate      bool
+	Recursive   bool
+	MaxDistance int
 }
 
 // LinkingToFilter is a note filter used to select notes being linked by another one.
 type LinkingToFilter struct {
-	Paths     []string
-	Negate    bool
-	Recursive bool
+	Paths       []string
+	Negate      bool
+	Recursive   bool
+	MaxDistance int
 }
 
 // OrphanFilter is a note filter used to select notes having no other notes linking to them.

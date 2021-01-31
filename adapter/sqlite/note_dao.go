@@ -342,7 +342,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	groupById := false
 	args := make([]interface{}, 0)
 
-	setupLinkFilter := func(paths []string, forward, negate bool, recursive bool) error {
+	setupLinkFilter := func(paths []string, forward, negate, recursive bool, maxDistance int) error {
 		ids, err := d.findIdsByPathPrefixes(paths)
 		if err != nil {
 			return err
@@ -371,7 +371,12 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
 			links_src = "links_transitive_closure"
 			orderTerms = append(orderTerms, alias+".distance")
-			cteClauses = append(cteClauses, `WITH RECURSIVE links_transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
+
+			if maxDistance == 0 {
+				maxDistance = 1000
+			}
+
+			cteClauses = append(cteClauses, fmt.Sprintf(`WITH RECURSIVE links_transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
     SELECT source_id, target_id, title, snippet,
 	       1 AS distance,
            source_id || '.' || target_id || '.' AS path
@@ -385,8 +390,8 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
       FROM links AS l
       JOIN links_transitive_closure AS tc
         ON l.source_id = tc.target_id
-     WHERE tc.path NOT LIKE '%' || l.target_id || '.%'
-)`)
+     WHERE tc.distance < %d AND tc.path NOT LIKE '%%' || l.target_id || '.%%'
+)`, maxDistance))
 		}
 
 		if !negate {
@@ -439,13 +444,13 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
 
 		case note.LinkedByFilter:
-			err := setupLinkFilter(filter.Paths, false, filter.Negate, filter.Recursive)
+			err := setupLinkFilter(filter.Paths, false, filter.Negate, filter.Recursive, filter.MaxDistance)
 			if err != nil {
 				return nil, err
 			}
 
 		case note.LinkingToFilter:
-			err := setupLinkFilter(filter.Paths, true, filter.Negate, filter.Recursive)
+			err := setupLinkFilter(filter.Paths, true, filter.Negate, filter.Recursive, filter.MaxDistance)
 			if err != nil {
 				return nil, err
 			}
