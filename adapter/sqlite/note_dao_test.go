@@ -505,9 +505,26 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md", "log/2021-01-03"}, Negate: false}},
+			Filters: []note.Filter{note.LinkedByFilter{
+				Paths:     []string{"f39c8.md", "log/2021-01-03"},
+				Negate:    false,
+				Recursive: false,
+			}},
 		},
 		[]string{"ref/test/a.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkedByFilter{
+				Paths:     []string{"log/2021-01-04.md"},
+				Negate:    false,
+				Recursive: true,
+			}},
+		},
+		[]string{"index.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md"},
 	)
 }
 
@@ -559,7 +576,11 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md", "log/2021-01-03"}, Negate: true}},
+			Filters: []note.Filter{note.LinkedByFilter{
+				Paths:     []string{"f39c8.md", "log/2021-01-03"},
+				Negate:    true,
+				Recursive: false,
+			}},
 		},
 		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
@@ -568,9 +589,26 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 func TestNoteDAOFindLinkingTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: false}},
+			Filters: []note.Filter{note.LinkingToFilter{
+				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
+				Negate:    false,
+				Recursive: false,
+			}},
 		},
 		[]string{"f39c8.md", "log/2021-01-03.md"},
+	)
+}
+
+func TestNoteDAOFindLinkingToRecursive(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.LinkingToFilter{
+				Paths:     []string{"log/2021-01-04.md"},
+				Negate:    false,
+				Recursive: true,
+			}},
+		},
+		[]string{"log/2021-01-03.md", "f39c8.md", "index.md"},
 	)
 }
 
@@ -588,7 +626,7 @@ func TestNoteDAOFindOrphan(t *testing.T) {
 		note.FinderOpts{
 			Filters: []note.Filter{note.OrphanFilter{}},
 		},
-		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
+		[]string{"ref/test/b.md", "log/2021-02-04.md"},
 	)
 }
 

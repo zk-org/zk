@@ -45,3 +45,19 @@
   href: "ref/test/a"
   external: false
   snippet: "[[Duplicated link]]"
+
+- id: 7
+  source_id: 2
+  target_id: 3
+  title: "A transition link"
+  href: "index.md"
+  external: false
+  snippet: "[[A transition link]]"
+
+- id: 8
+  source_id: 3
+  target_id: 4
+  title: "Another transition link"
+  href: "f39c8.md"
+  external: false
+  snippet: "[[Another transition link]]"

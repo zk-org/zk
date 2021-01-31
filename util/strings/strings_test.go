@@ -80,3 +80,16 @@ func TestIsURL(t *testing.T) {
 	test("http://example.com/dir", true)
 	test("ftp://example.com/", true)
 }
+
+func TestRemoveDuplicates(t *testing.T) {
+	test := func(items []string, expected []string) {
+		assert.Equal(t, RemoveDuplicates(items), expected)
+	}
+
+	test([]string{}, []string{})
+	test([]string{"One"}, []string{"One"})
+	test([]string{"One", "Two"}, []string{"One", "Two"})
+	test([]string{"One", "Two", "One"}, []string{"One", "Two"})
+	test([]string{"Two", "One", "Two", "One"}, []string{"Two", "One"})
+	test([]string{"One", "Two", "OneTwo"}, []string{"One", "Two", "OneTwo"})
+}

@@ -72,3 +72,18 @@ func IsURL(s string) bool {
 
 	return true
 }
+
+// RemoveDuplicates keeps only unique strings in the source.
+func RemoveDuplicates(strings []string) []string {
+	check := make(map[string]bool)
+	res := make([]string, 0)
+	for _, val := range strings {
+		if _, ok := check[val]; ok {
+			continue
+		}
+		check[val] = true
+		res = append(res, val)
+	}
+
+	return res
+}

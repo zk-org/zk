@@ -311,6 +311,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 		snippets := make([]string, 0)
 		if nullableSnippets.Valid && nullableSnippets.String != "" {
 			snippets = strings.Split(nullableSnippets.String, "\x01")
+			snippets = strutil.RemoveDuplicates(snippets)
 		}
 
 		matches = append(matches, note.Match{
@@ -334,13 +335,14 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
+	cteClauses := make([]string, 0)
 	joinClauses := make([]string, 0)
 	whereExprs := make([]string, 0)
 	orderTerms := make([]string, 0)
 	groupById := false
 	args := make([]interface{}, 0)
 
-	setupLinkFilter := func(paths []string, forward, negate bool) error {
+	setupLinkFilter := func(paths []string, forward, negate bool, recursive bool) error {
 		ids, err := d.findIdsByPathPrefixes(paths)
 		if err != nil {
 			return err
@@ -358,15 +360,38 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			alias += "n"
 		}
 
+		links_src := "links"
 		from := "source_id"
 		to := "target_id"
 		if !forward {
 			from, to = to, from
 		}
 
+		if recursive {
+			// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
+			links_src = "links_transitive_closure"
+			orderTerms = append(orderTerms, alias+".distance")
+			cteClauses = append(cteClauses, `WITH RECURSIVE links_transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
+    SELECT source_id, target_id, title, snippet,
+	       1 AS distance,
+           source_id || '.' || target_id || '.' AS path
+      FROM links
+ 
+     UNION ALL
+ 
+    SELECT tc.source_id, l.target_id, l.title, l.snippet,
+	       tc.distance + 1,
+           tc.path || l.target_id || '.' AS path
+      FROM links AS l
+      JOIN links_transitive_closure AS tc
+        ON l.source_id = tc.target_id
+     WHERE tc.path NOT LIKE '%' || l.target_id || '.%'
+)`)
+		}
+
 		if !negate {
 			groupById = true
-			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN links %[1]s ON n.id = %[1]s.%[2]s AND %[1]s.%[3]s IN %[4]s`, alias, from, to, idsList))
+			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN %[1]s %[2]s ON n.id = %[2]s.%[3]s AND %[2]s.%[4]s IN %[5]s`, links_src, alias, from, to, idsList))
 			snippetCol = fmt.Sprintf("GROUP_CONCAT(REPLACE(%[1]s.snippet, %[1]s.title, '<zk:match>' || %[1]s.title || '</zk:match>'), '\x01') AS snippet", alias)
 		}
 
@@ -374,7 +399,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		if negate {
 			expr += " NOT"
 		}
-		expr += fmt.Sprintf(" IN (SELECT %s FROM links WHERE target_id IS NOT NULL AND %s IN %s)", from, to, idsList)
+		expr += fmt.Sprintf(" IN (SELECT %[2]s FROM %[1]s WHERE target_id IS NOT NULL AND %[3]s IN %[4]s)", links_src, from, to, idsList)
 
 		whereExprs = append(whereExprs, expr)
 
@@ -414,13 +439,13 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
 
 		case note.LinkedByFilter:
-			err := setupLinkFilter(filter.Paths, false, filter.Negate)
+			err := setupLinkFilter(filter.Paths, false, filter.Negate, filter.Recursive)
 			if err != nil {
 				return nil, err
 			}
 
 		case note.LinkingToFilter:
-			err := setupLinkFilter(filter.Paths, true, filter.Negate)
+			err := setupLinkFilter(filter.Paths, true, filter.Negate, filter.Recursive)
 			if err != nil {
 				return nil, err
 			}
@@ -456,26 +481,32 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	}
 	orderTerms = append(orderTerms, `n.title ASC`)
 
-	query := "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol
+	query := ""
 
-	query += "\nFROM notes n"
+	for _, clause := range cteClauses {
+		query += clause + "\n"
+	}
+
+	query += "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol + "\n"
+
+	query += "FROM notes n\n"
 
 	for _, clause := range joinClauses {
-		query += "\n" + clause
+		query += clause + "\n"
 	}
 
 	if len(whereExprs) > 0 {
-		query += "\nWHERE " + strings.Join(whereExprs, "\nAND ")
+		query += "WHERE " + strings.Join(whereExprs, "\nAND ") + "\n"
 	}
 
 	if groupById {
-		query += "\nGROUP BY n.id"
+		query += "GROUP BY n.id\n"
 	}
 
-	query += "\nORDER BY " + strings.Join(orderTerms, ", ")
+	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
 
 	if opts.Limit > 0 {
-		query += fmt.Sprintf("\nLIMIT %d", opts.Limit)
+		query += fmt.Sprintf("LIMIT %d\n", opts.Limit)
 	}
 
 	// fmt.Println(query)
