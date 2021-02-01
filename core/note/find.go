@@ -56,6 +56,10 @@ type LinkingToFilter struct {
 	MaxDistance int
 }
 
+// RelatedFilter is a note filter used to select notes which could might be
+// related to the given notes.
+type RelatedFilter []string
+
 // OrphanFilter is a note filter used to select notes having no other notes linking to them.
 type OrphanFilter struct{}
 
@@ -74,6 +78,7 @@ func (f PathFilter) sealed()        {}
 func (f ExcludePathFilter) sealed() {}
 func (f LinkedByFilter) sealed()    {}
 func (f LinkingToFilter) sealed()   {}
+func (f RelatedFilter) sealed()     {}
 func (f OrphanFilter) sealed()      {}
 func (f DateFilter) sealed()        {}
 func (f InteractiveFilter) sealed() {}

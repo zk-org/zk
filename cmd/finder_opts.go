@@ -25,6 +25,7 @@ type Filtering struct {
 	NotLinkedBy    []string `help:"Only the notes not linked by the given notes" placeholder:"<path>"`
 	NotLinkingTo   []string `help:"Only the notes not linking to the given notes" placeholder:"<path>"`
 	MaxDistance    int      `help:"Maximum distance between two linked notes"`
+	Related        []string `help:"Only the notes which might be related to the given notes"`
 	Orphan         bool     `help:"Only the notes which don't have any other note linking to them"`
 	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
 	Recursive      bool     `help:"Follow links recursively" short:"r"`
@@ -160,6 +161,11 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 			Paths:  notLinkingToPaths,
 			Negate: true,
 		})
+	}
+
+	relatedPaths, ok := relPaths(zk, filtering.Related)
+	if ok {
+		filters = append(filters, note.RelatedFilter(relatedPaths))
 	}
 
 	if filtering.Orphan {

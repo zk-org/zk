@@ -335,14 +335,16 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
-	cteClauses := make([]string, 0)
 	joinClauses := make([]string, 0)
 	whereExprs := make([]string, 0)
 	orderTerms := make([]string, 0)
-	groupById := false
 	args := make([]interface{}, 0)
+	groupBy := ""
 
-	setupLinkFilter := func(paths []string, forward, negate, recursive bool, maxDistance int) error {
+	transitiveClosure := false
+	maxDistance := 0
+
+	setupLinkFilter := func(paths []string, direction int, negate, recursive bool) error {
 		ids, err := d.findIdsByPathPrefixes(paths)
 		if err != nil {
 			return err
@@ -352,61 +354,61 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		}
 		idsList := "(" + strutil.JoinInt64(ids, ",") + ")"
 
-		alias := "l"
-		if forward {
-			alias += "f"
-		}
-		if negate {
-			alias += "n"
-		}
-
-		links_src := "links"
-		from := "source_id"
-		to := "target_id"
-		if !forward {
-			from, to = to, from
-		}
+		linksSrc := "links"
 
 		if recursive {
-			// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
-			links_src = "links_transitive_closure"
-			orderTerms = append(orderTerms, alias+".distance")
-
-			if maxDistance == 0 {
-				maxDistance = 1000
-			}
-
-			cteClauses = append(cteClauses, fmt.Sprintf(`WITH RECURSIVE links_transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
-    SELECT source_id, target_id, title, snippet,
-	       1 AS distance,
-           source_id || '.' || target_id || '.' AS path
-      FROM links
- 
-     UNION ALL
- 
-    SELECT tc.source_id, l.target_id, l.title, l.snippet,
-	       tc.distance + 1,
-           tc.path || l.target_id || '.' AS path
-      FROM links AS l
-      JOIN links_transitive_closure AS tc
-        ON l.source_id = tc.target_id
-     WHERE tc.distance < %d AND tc.path NOT LIKE '%%' || l.target_id || '.%%'
-)`, maxDistance))
+			transitiveClosure = true
+			linksSrc = "transitive_closure"
 		}
 
 		if !negate {
-			groupById = true
-			joinClauses = append(joinClauses, fmt.Sprintf(`LEFT JOIN %[1]s %[2]s ON n.id = %[2]s.%[3]s AND %[2]s.%[4]s IN %[5]s`, links_src, alias, from, to, idsList))
-			snippetCol = fmt.Sprintf("GROUP_CONCAT(REPLACE(%[1]s.snippet, %[1]s.title, '<zk:match>' || %[1]s.title || '</zk:match>'), '\x01') AS snippet", alias)
+			if direction != 0 {
+				snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01') AS snippet"
+			}
+
+			joinOns := make([]string, 0)
+			if direction <= 0 {
+				joinOns = append(joinOns, fmt.Sprintf(
+					"(n.id = l.target_id AND l.source_id IN %s)", idsList,
+				))
+			}
+			if direction >= 0 {
+				joinOns = append(joinOns, fmt.Sprintf(
+					"(n.id = l.source_id AND l.target_id IN %s)", idsList,
+				))
+			}
+
+			joinClauses = append(joinClauses, fmt.Sprintf(
+				"LEFT JOIN %s l ON %s",
+				linksSrc,
+				strings.Join(joinOns, " OR "),
+			))
+
+			groupBy = "GROUP BY n.id"
 		}
 
-		expr := "n.id"
+		idExpr := "n.id"
 		if negate {
-			expr += " NOT"
+			idExpr += " NOT"
 		}
-		expr += fmt.Sprintf(" IN (SELECT %[2]s FROM %[1]s WHERE target_id IS NOT NULL AND %[3]s IN %[4]s)", links_src, from, to, idsList)
 
-		whereExprs = append(whereExprs, expr)
+		idSelects := make([]string, 0)
+		if direction <= 0 {
+			idSelects = append(idSelects, fmt.Sprintf(
+				"    SELECT target_id FROM %s WHERE target_id IS NOT NULL AND source_id IN %s",
+				linksSrc, idsList,
+			))
+		}
+		if direction >= 0 {
+			idSelects = append(idSelects, fmt.Sprintf(
+				"    SELECT source_id FROM %s WHERE target_id IS NOT NULL AND target_id IN %s",
+				linksSrc, idsList,
+			))
+		}
+
+		idExpr += " IN (\n" + strings.Join(idSelects, "\n    UNION\n") + "\n)"
+
+		whereExprs = append(whereExprs, idExpr)
 
 		return nil
 	}
@@ -444,16 +446,26 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
 
 		case note.LinkedByFilter:
-			err := setupLinkFilter(filter.Paths, false, filter.Negate, filter.Recursive, filter.MaxDistance)
+			maxDistance = filter.MaxDistance
+			err := setupLinkFilter(filter.Paths, -1, filter.Negate, filter.Recursive)
 			if err != nil {
 				return nil, err
 			}
 
 		case note.LinkingToFilter:
-			err := setupLinkFilter(filter.Paths, true, filter.Negate, filter.Recursive, filter.MaxDistance)
+			maxDistance = filter.MaxDistance
+			err := setupLinkFilter(filter.Paths, 1, filter.Negate, filter.Recursive)
 			if err != nil {
 				return nil, err
 			}
+
+		case note.RelatedFilter:
+			maxDistance = 2
+			err := setupLinkFilter(filter, 0, false, true)
+			if err != nil {
+				return nil, err
+			}
+			groupBy += " HAVING MIN(l.distance) = 2"
 
 		case note.OrphanFilter:
 			whereExprs = append(whereExprs, `n.id NOT IN (
@@ -488,8 +500,31 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 	query := ""
 
-	for _, clause := range cteClauses {
-		query += clause + "\n"
+	// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
+	if transitiveClosure {
+		orderTerms = append([]string{"l.distance"}, orderTerms...)
+
+		query += `WITH RECURSIVE transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
+    SELECT source_id, target_id, title, snippet,
+	       1 AS distance,
+           '.' || source_id || '.' || target_id || '.' AS path
+      FROM links
+ 
+     UNION ALL
+ 
+    SELECT tc.source_id, l.target_id, l.title, l.snippet,
+	       tc.distance + 1,
+           tc.path || l.target_id || '.' AS path
+      FROM links AS l
+      JOIN transitive_closure AS tc
+        ON l.source_id = tc.target_id
+     WHERE tc.path NOT LIKE '%.' || l.target_id || '.%'`
+
+		if maxDistance != 0 {
+			query += fmt.Sprintf(" AND tc.distance < %d", maxDistance)
+		}
+
+		query += "\n)\n"
 	}
 
 	query += "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol + "\n"
@@ -504,8 +539,8 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		query += "WHERE " + strings.Join(whereExprs, "\nAND ") + "\n"
 	}
 
-	if groupById {
-		query += "GROUP BY n.id\n"
+	if groupBy != "" {
+		query += groupBy + "\n"
 	}
 
 	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
