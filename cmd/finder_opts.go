@@ -11,30 +11,31 @@ import (
 
 // Filtering holds filtering options to select notes.
 type Filtering struct {
-	Path           []string `arg optional placeholder:"<glob>"`
-	Match          string   `help:"Terms to search for in the notes" short:"m" placeholder:"<query>"`
-	Limit          int      `help:"Limit the number of results" short:"n" placeholder:"<count>"`
-	Created        string   `help:"Only the notes created on the given date" placeholder:"<date>"`
-	CreatedBefore  string   `help:"Only the notes created before the given date" placeholder:"<date>"`
-	CreatedAfter   string   `help:"Only the notes created after the given date" placeholder:"<date>"`
-	Modified       string   `help:"Only the notes modified on the given date" placeholder:"<date>"`
-	ModifiedBefore string   `help:"Only the notes modified before the given date" placeholder:"<date>"`
-	ModifiedAfter  string   `help:"Only the notes modified after the given date" placeholder:"<date>"`
-	LinkedBy       []string `help:"Only the notes linked by the given notes" placeholder:"<path>" short:"l"`
-	LinkingTo      []string `help:"Only the notes linking to the given notes" placeholder:"<path>" short:"L"`
-	NotLinkedBy    []string `help:"Only the notes not linked by the given notes" placeholder:"<path>"`
-	NotLinkingTo   []string `help:"Only the notes not linking to the given notes" placeholder:"<path>"`
-	MaxDistance    int      `help:"Maximum distance between two linked notes"`
-	Related        []string `help:"Only the notes which might be related to the given notes"`
-	Orphan         bool     `help:"Only the notes which don't have any other note linking to them"`
-	Exclude        []string `help:"Excludes notes matching the given file path pattern from the list" short:"x" placeholder:"<glob>"`
-	Recursive      bool     `help:"Follow links recursively" short:"r"`
-	Interactive    bool     `help:"Further filter the list of notes interactively" short:"i"`
+	Path []string `arg optional placeholder:"<glob>"`
+
+	Match          string   `short:"m" placeholder:"<query>" help:"Terms to search for in the notes"`
+	Limit          int      `short:"n" placeholder:"<count>" help:"Limit the number of results"`
+	Created        string   `          placeholder:"<date>"  help:"Only the notes created on the given date"`
+	CreatedBefore  string   `          placeholder:"<date>"  help:"Only the notes created before the given date"`
+	CreatedAfter   string   `          placeholder:"<date>"  help:"Only the notes created after the given date"`
+	Modified       string   `          placeholder:"<date>"  help:"Only the notes modified on the given date"`
+	ModifiedBefore string   `          placeholder:"<date>"  help:"Only the notes modified before the given date"`
+	ModifiedAfter  string   `          placeholder:"<date>"  help:"Only the notes modified after the given date"`
+	Related        []string `                                help:"Only the notes which might be related to the given notes" xor:"link"`
+	LinkedBy       []string `short:"l" placeholder:"<path>"  help:"Only the notes linked by the given notes"                 xor:"link"`
+	LinkingTo      []string `short:"L" placeholder:"<path>"  help:"Only the notes linking to the given notes"                xor:"link"`
+	NotLinkedBy    []string `          placeholder:"<path>"  help:"Only the notes not linked by the given notes"             xor:"link"`
+	NotLinkingTo   []string `          placeholder:"<path>"  help:"Only the notes not linking to the given notes"            xor:"link"`
+	MaxDistance    int      `                                help:"Maximum distance between two linked notes"`
+	Orphan         bool     `                                help:"Only the notes which don't have any other note linking to them"`
+	Exclude        []string `short:"x" placeholder:"<glob>"  help:"Excludes notes matching the given file path pattern from the list"`
+	Recursive      bool     `short:"r"                       help:"Follow links recursively"`
+	Interactive    bool     `short:"i"                       help:"Further filter the list of notes interactively"`
 }
 
 // Sorting holds sorting options to order notes.
 type Sorting struct {
-	Sort []string `help:"Sort the notes by the given criterion" short:"s" placeholder:"<term>"`
+	Sort []string `short:"s" placeholder:"<term>" help:"Sort the notes by the given criterion"`
 }
 
 // NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.
