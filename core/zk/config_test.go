@@ -34,7 +34,7 @@ func TestParseDefaultConfig(t *testing.T) {
 }
 
 func TestParseInvalidConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte("unknown = 'value'"), "")
+	conf, err := ParseConfig([]byte(`;`), "")
 
 	assert.NotNil(t, err)
 	assert.Nil(t, conf)
@@ -42,47 +42,46 @@ func TestParseInvalidConfig(t *testing.T) {
 
 func TestParseComplete(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
-		// Comment
+		# Comment
 		editor = "vim"
 		pager = "less"
 		no-pager = true
-		aliases = {
-			ls = "zk list $@"
-			ed = "zk edit $@"
-		}
-
 		filename = "{{id}}.note"
 		extension = "txt"
 		template = "default.note"
-		id {
-			charset = "alphanum"
-			length = 4
-			case = "lower"
-		}
 		language = "fr"
 		default-title = "Sans titre"
-		extra = {
-			hello = "world"
-			salut = "le monde"
-		}
-		dir "log" {
-			filename = "{{date}}.md"
-			extension = "note"
-			template = "log.md"
-			id {
-				charset = "letters"
-				length = 8
-				case = "mixed"
-			}
-			language = "de"
-			default-title = "Ohne Titel"
-			extra = {
-				log-ext = "value"
-			}
-		}
-		dir "ref" {
-			filename = "{{slug title}}.md"
-		}
+
+		[id]
+		charset = "alphanum"
+		length = 4
+		case = "lower"
+
+		[extra]
+		hello = "world"
+		salut = "le monde"
+
+		[alias]
+		ls = "zk list $@"
+		ed = "zk edit $@"
+
+		[dir.log]
+		filename = "{{date}}.md"
+		extension = "note"
+		template = "log.md"
+		language = "de"
+		default-title = "Ohne Titel"
+
+		[dir.log.id]
+		charset = "letters"
+		length = 8
+		case = "mixed"
+		
+		[dir.log.extra]
+		log-ext = "value"
+
+		[dir.ref]
+		filename = "{{slug title}}.md"
 	`), "")
 
 	assert.Nil(t, err)
@@ -153,31 +152,32 @@ func TestParseMergesDirConfig(t *testing.T) {
 		filename = "root-filename"
 		extension = "txt"
 		template = "root-template"
-		id {
-			charset = "letters"
-			length = 42
-			case = "upper"
-		}
 		language = "fr"
 		default-title = "Sans titre"
-		extra = {
-			hello = "world"
-			salut = "le monde"
-		}
-		dir "log" {
-			filename = "log-filename"
-			template = "log-template"
-			id {
-				charset = "numbers"
-				length = 8
-				case = "mixed"
-			}
-			extra = {
-				hello = "override"
-				log-ext = "value"
-			}
-		}
-		dir "inherited" {}
+
+		[id]
+		charset = "letters"
+		length = 42
+		case = "upper"
+
+		[extra]
+		hello = "world"
+		salut = "le monde"
+
+		[dir.log]
+		filename = "log-filename"
+		template = "log-template"
+
+		[dir.log.id]
+		charset = "numbers"
+		length = 8
+		case = "mixed"
+
+		[dir.log.extra]
+		hello = "override"
+		log-ext = "value"
+
+		[dir.inherited]
 	`), "")
 
 	assert.Nil(t, err)
@@ -239,8 +239,11 @@ func TestParseMergesDirConfig(t *testing.T) {
 
 func TestParseIDCharset(t *testing.T) {
 	test := func(charset string, expected Charset) {
-		hcl := fmt.Sprintf(`id { charset = "%v" }`, charset)
-		conf, err := ParseConfig([]byte(hcl), "")
+		toml := fmt.Sprintf(`
+			[id]
+			charset = "%v"
+		`, charset)
+		conf, err := ParseConfig([]byte(toml), "")
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.IDOptions.Charset, expected) {
 			t.Errorf("Didn't parse ID charset `%v` as expected", charset)
@@ -257,8 +260,11 @@ func TestParseIDCharset(t *testing.T) {
 
 func TestParseIDCase(t *testing.T) {
 	test := func(letterCase string, expected Case) {
-		hcl := fmt.Sprintf(`id { case = "%v" }`, letterCase)
-		conf, err := ParseConfig([]byte(hcl), "")
+		toml := fmt.Sprintf(`
+			[id]
+			case = "%v"
+		`, letterCase)
+		conf, err := ParseConfig([]byte(toml), "")
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.IDOptions.Case, expected) {
 			t.Errorf("Didn't parse ID case `%v` as expected", letterCase)
@@ -273,8 +279,8 @@ func TestParseIDCase(t *testing.T) {
 
 func TestParseResolvesTemplatePaths(t *testing.T) {
 	test := func(template string, expected string) {
-		hcl := fmt.Sprintf(`template = "%v"`, template)
-		conf, err := ParseConfig([]byte(hcl), "/test/.zk/templates")
+		toml := fmt.Sprintf(`template = "%v"`, template)
+		conf, err := ParseConfig([]byte(toml), "/test/.zk/templates")
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.BodyTemplatePath, opt.NewString(expected)) {
 			t.Errorf("Didn't resolve template `%v` as expected: %v", template, conf.BodyTemplatePath)

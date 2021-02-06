@@ -3,9 +3,9 @@ package zk
 import (
 	"path/filepath"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
+	toml "github.com/pelletier/go-toml"
 )
 
 // Config holds the global user configuration.
@@ -59,11 +59,11 @@ func (c *DirConfig) Override(overrides ConfigOverrides) {
 	}
 }
 
-// ParseConfig creates a new Config instance from its HCL representation.
+// ParseConfig creates a new Config instance from its TOML representation.
 // templatesDir is the base path for the relative templates.
 func ParseConfig(content []byte, templatesDir string) (*Config, error) {
-	var hcl hclConfig
-	err := hclsimple.Decode(".zk/config.hcl", content, nil, &hcl)
+	var tomlConf tomlConfig
+	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read config")
 	}
@@ -82,46 +82,44 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		Extra:        make(map[string]string),
 	}
 
-	if hcl.Filename != "" {
-		root.FilenameTemplate = hcl.Filename
+	if tomlConf.Filename != "" {
+		root.FilenameTemplate = tomlConf.Filename
 	}
-	if hcl.Extension != "" {
-		root.Extension = hcl.Extension
+	if tomlConf.Extension != "" {
+		root.Extension = tomlConf.Extension
 	}
-	if hcl.Template != "" {
-		root.BodyTemplatePath = templatePathFromString(hcl.Template, templatesDir)
+	if tomlConf.Template != "" {
+		root.BodyTemplatePath = templatePathFromString(tomlConf.Template, templatesDir)
 	}
-	if hcl.ID != nil {
-		if hcl.ID.Length != 0 {
-			root.IDOptions.Length = hcl.ID.Length
-		}
-		if hcl.ID.Charset != "" {
-			root.IDOptions.Charset = charsetFromString(hcl.ID.Charset)
-		}
-		if hcl.ID.Case != "" {
-			root.IDOptions.Case = caseFromString(hcl.ID.Case)
-		}
+	if tomlConf.ID.Length != 0 {
+		root.IDOptions.Length = tomlConf.ID.Length
 	}
-	if hcl.Lang != "" {
-		root.Lang = hcl.Lang
+	if tomlConf.ID.Charset != "" {
+		root.IDOptions.Charset = charsetFromString(tomlConf.ID.Charset)
 	}
-	if hcl.DefaultTitle != "" {
-		root.DefaultTitle = hcl.DefaultTitle
+	if tomlConf.ID.Case != "" {
+		root.IDOptions.Case = caseFromString(tomlConf.ID.Case)
 	}
-	if hcl.Extra != nil {
-		for k, v := range hcl.Extra {
+	if tomlConf.Lang != "" {
+		root.Lang = tomlConf.Lang
+	}
+	if tomlConf.DefaultTitle != "" {
+		root.DefaultTitle = tomlConf.DefaultTitle
+	}
+	if tomlConf.Extra != nil {
+		for k, v := range tomlConf.Extra {
 			root.Extra[k] = v
 		}
 	}
 
 	dirs := make(map[string]DirConfig)
-	for _, dirHCL := range hcl.Dirs {
-		dirs[dirHCL.Dir] = root.merge(dirHCL, templatesDir)
+	for name, dirTOML := range tomlConf.Dirs {
+		dirs[name] = root.merge(dirTOML, templatesDir)
 	}
 
 	aliases := make(map[string]string)
-	if hcl.Aliases != nil {
-		for k, v := range hcl.Aliases {
+	if tomlConf.Aliases != nil {
+		for k, v := range tomlConf.Aliases {
 			aliases[k] = v
 		}
 	}
@@ -129,14 +127,14 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	return &Config{
 		DirConfig: root,
 		Dirs:      dirs,
-		Editor:    opt.NewNotEmptyString(hcl.Editor),
-		Pager:     opt.NewNotEmptyString(hcl.Pager),
-		NoPager:   hcl.NoPager,
+		Editor:    opt.NewNotEmptyString(tomlConf.Editor),
+		Pager:     opt.NewNotEmptyString(tomlConf.Pager),
+		NoPager:   tomlConf.NoPager,
 		Aliases:   aliases,
 	}, nil
 }
 
-func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
+func (c DirConfig) merge(tomlConf tomlDirConfig, templatesDir string) DirConfig {
 	res := DirConfig{
 		FilenameTemplate: c.FilenameTemplate,
 		Extension:        c.Extension,
@@ -150,71 +148,68 @@ func (c DirConfig) merge(hcl hclDirConfig, templatesDir string) DirConfig {
 		res.Extra[k] = v
 	}
 
-	if hcl.Filename != "" {
-		res.FilenameTemplate = hcl.Filename
+	if tomlConf.Filename != "" {
+		res.FilenameTemplate = tomlConf.Filename
 	}
-	if hcl.Extension != "" {
-		res.Extension = hcl.Extension
+	if tomlConf.Extension != "" {
+		res.Extension = tomlConf.Extension
 	}
-	if hcl.Template != "" {
-		res.BodyTemplatePath = templatePathFromString(hcl.Template, templatesDir)
+	if tomlConf.Template != "" {
+		res.BodyTemplatePath = templatePathFromString(tomlConf.Template, templatesDir)
 	}
-	if hcl.ID != nil {
-		if hcl.ID.Length != 0 {
-			res.IDOptions.Length = hcl.ID.Length
-		}
-		if hcl.ID.Charset != "" {
-			res.IDOptions.Charset = charsetFromString(hcl.ID.Charset)
-		}
-		if hcl.ID.Case != "" {
-			res.IDOptions.Case = caseFromString(hcl.ID.Case)
-		}
+	if tomlConf.ID.Length != 0 {
+		res.IDOptions.Length = tomlConf.ID.Length
 	}
-	if hcl.Lang != "" {
-		res.Lang = hcl.Lang
+	if tomlConf.ID.Charset != "" {
+		res.IDOptions.Charset = charsetFromString(tomlConf.ID.Charset)
 	}
-	if hcl.DefaultTitle != "" {
-		res.DefaultTitle = hcl.DefaultTitle
+	if tomlConf.ID.Case != "" {
+		res.IDOptions.Case = caseFromString(tomlConf.ID.Case)
 	}
-	if hcl.Extra != nil {
-		for k, v := range hcl.Extra {
+	if tomlConf.Lang != "" {
+		res.Lang = tomlConf.Lang
+	}
+	if tomlConf.DefaultTitle != "" {
+		res.DefaultTitle = tomlConf.DefaultTitle
+	}
+	if tomlConf.Extra != nil {
+		for k, v := range tomlConf.Extra {
 			res.Extra[k] = v
 		}
 	}
 	return res
 }
 
-// hclConfig holds the HCL representation of Config
-type hclConfig struct {
-	Filename     string            `hcl:"filename,optional"`
-	Extension    string            `hcl:"extension,optional"`
-	Template     string            `hcl:"template,optional"`
-	ID           *hclIDConfig      `hcl:"id,block"`
-	Lang         string            `hcl:"language,optional"`
-	DefaultTitle string            `hcl:"default-title,optional"`
-	Extra        map[string]string `hcl:"extra,optional"`
-	Dirs         []hclDirConfig    `hcl:"dir,block"`
-	Editor       string            `hcl:"editor,optional"`
-	Pager        string            `hcl:"pager,optional"`
-	NoPager      bool              `hcl:"no-pager,optional"`
-	Aliases      map[string]string `hcl:"aliases,optional"`
+// tomlConfig holds the TOML representation of Config
+type tomlConfig struct {
+	Filename     string
+	Extension    string
+	Template     string
+	ID           tomlIDConfig
+	Lang         string `toml:"language"`
+	DefaultTitle string `toml:"default-title"`
+	Extra        map[string]string
+	Dirs         map[string]tomlDirConfig `toml:"dir"`
+	Editor       string
+	Pager        string
+	NoPager      bool              `toml:"no-pager"`
+	Aliases      map[string]string `toml:"alias"`
 }
 
-type hclDirConfig struct {
-	Dir          string            `hcl:"dir,label"`
-	Filename     string            `hcl:"filename,optional"`
-	Extension    string            `hcl:"extension,optional"`
-	Template     string            `hcl:"template,optional"`
-	ID           *hclIDConfig      `hcl:"id,block"`
-	Lang         string            `hcl:"language,optional"`
-	DefaultTitle string            `hcl:"default-title,optional"`
-	Extra        map[string]string `hcl:"extra,optional"`
+type tomlDirConfig struct {
+	Filename     string
+	Extension    string
+	Template     string
+	ID           tomlIDConfig
+	Lang         string `toml:"language"`
+	DefaultTitle string `toml:"default-title"`
+	Extra        map[string]string
 }
 
-type hclIDConfig struct {
-	Charset string `hcl:"charset,optional"`
-	Length  int    `hcl:"length,optional"`
-	Case    string `hcl:"case,optional"`
+type tomlIDConfig struct {
+	Charset string
+	Length  int
+	Case    string
 }
 
 func charsetFromString(charset string) Charset {

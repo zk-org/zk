@@ -10,7 +10,6 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/google/go-cmp v0.3.1
 	github.com/gosimple/slug v1.9.0
-	github.com/hashicorp/hcl/v2 v2.8.1
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.3
@@ -18,6 +17,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/mickael-menu/pretty v0.2.3
+	github.com/pelletier/go-toml v1.8.1
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rvflash/elapsed v0.2.0

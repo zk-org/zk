@@ -19,8 +19,8 @@ type List struct {
 	Quiet     bool   `help:"Don't show anything besides the notes themselves" short:"q"`
 	Delimiter string `default:"
 " help:"Delimiter separating each result" short:"d"`
-	Filtering `embed`
-	Sorting   `embed`
+	Filtering
+	Sorting
 }
 
 func (cmd *List) Run(container *Container) error {

@@ -47,7 +47,7 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	configContent, err := ioutil.ReadFile(filepath.Join(path, ".zk/config.hcl"))
+	configContent, err := ioutil.ReadFile(filepath.Join(path, ".zk/config.toml"))
 	if err != nil {
 		return nil, wrap(err)
 	}
@@ -84,7 +84,7 @@ func Create(path string) error {
 	}
 
 	// Write default config.toml.
-	f, err := os.Create(filepath.Join(path, ".zk/config.hcl"))
+	f, err := os.Create(filepath.Join(path, ".zk/config.toml"))
 	if err != nil {
 		return wrap(err)
 	}
