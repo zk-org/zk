@@ -78,7 +78,7 @@ func (c *Container) Database(path string) (*sqlite.DB, error) {
 //
 // You can write to the pager only in the run callback.
 func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Writer) error) error {
-	pager, err := c.pager(noPager || config.NoPager, config)
+	pager, err := c.pager(noPager || config.Pager.String() == "no", config)
 	if err != nil {
 		return err
 	}

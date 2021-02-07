@@ -88,7 +88,7 @@ func (cmd *List) Run(container *Container) error {
 	}
 
 	if err == nil && !cmd.Quiet {
-		fmt.Printf("\n\nFound %d %s\n", count, strings.Pluralize("note", count))
+		fmt.Fprintf(os.Stderr, "\n\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
 	return err

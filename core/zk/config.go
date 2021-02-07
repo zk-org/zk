@@ -14,7 +14,6 @@ type Config struct {
 	Dirs    map[string]DirConfig
 	Editor  opt.String
 	Pager   opt.String
-	NoPager bool
 	Aliases map[string]string
 }
 
@@ -129,7 +128,6 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		Dirs:      dirs,
 		Editor:    opt.NewNotEmptyString(tomlConf.Editor),
 		Pager:     opt.NewNotEmptyString(tomlConf.Pager),
-		NoPager:   tomlConf.NoPager,
 		Aliases:   aliases,
 	}, nil
 }
@@ -192,7 +190,6 @@ type tomlConfig struct {
 	Dirs         map[string]tomlDirConfig `toml:"dir"`
 	Editor       string
 	Pager        string
-	NoPager      bool              `toml:"no-pager"`
 	Aliases      map[string]string `toml:"alias"`
 }
 

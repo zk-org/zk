@@ -45,7 +45,6 @@ func TestParseComplete(t *testing.T) {
 		# Comment
 		editor = "vim"
 		pager = "less"
-		no-pager = true
 		filename = "{{id}}.note"
 		extension = "txt"
 		template = "default.note"
@@ -137,9 +136,8 @@ func TestParseComplete(t *testing.T) {
 				},
 			},
 		},
-		Editor:  opt.NewString("vim"),
-		Pager:   opt.NewString("less"),
-		NoPager: true,
+		Editor: opt.NewString("vim"),
+		Pager:  opt.NewString("less"),
 		Aliases: map[string]string{
 			"ls": "zk list $@",
 			"ed": "zk edit $@",
