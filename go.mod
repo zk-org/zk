@@ -3,6 +3,7 @@ module github.com/mickael-menu/zk
 go 1.15
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/alecthomas/kong v0.2.12
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
