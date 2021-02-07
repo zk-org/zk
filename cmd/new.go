@@ -11,11 +11,12 @@ import (
 
 // New adds a new note to the slip box.
 type New struct {
-	Directory string            `arg optional type:"path" default:"." help:"Directory in which to create the note"`
-	PrintPath bool              `help:"Prints the path of the created note to stdin instead of editing it" short:"p"`
-	Title     string            `short:"t" help:"Title of the new note" placeholder:"<title>"`
-	Template  string            `type:"path" help:"Custom template to use to render the note" placeholder:"<path>"`
-	Extra     map[string]string `help:"Extra variables passed to the templates"`
+	Directory string `arg optional type:"path" default:"." help:"Directory in which to create the note."`
+
+	PrintPath bool              `short:"p"                         help:"Prints the path of the created note to stdin instead of editing it."`
+	Title     string            `short:"t"   placeholder:"<title>" help:"Title of the new note."`
+	Template  string            `type:"path" placeholder:"<path>"  help:"Custom template to use to render the note."`
+	Extra     map[string]string `                                  help:"Extra variables passed to the templates."`
 }
 
 func (cmd *New) ConfigOverrides() zk.ConfigOverrides {

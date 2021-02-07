@@ -15,7 +15,7 @@ import (
 type Edit struct {
 	Filtering
 	Sorting
-	Force bool `help:"Don't confirm before editing many notes at the same time" short:"f"`
+	Force bool `help:"Don't confirm before editing many notes at the same time." short:"f"`
 }
 
 func (cmd *Edit) Run(container *Container) error {

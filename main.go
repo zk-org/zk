@@ -14,13 +14,14 @@ var Version = "dev"
 var Build = "dev"
 
 var cli struct {
-	Index   cmd.Index        `cmd help:"Index the notes in the given directory to be searchable"`
-	Init    cmd.Init         `cmd help:"Create a slip box in the given directory"`
-	List    cmd.List         `cmd help:"List notes matching given criteria"`
-	Edit    cmd.Edit         `cmd help:"Edit notes matching given criteria"`
-	New     cmd.New          `cmd help:"Create a new note in the given slip box directory"`
-	NoInput NoInput          `help:"Never prompt or ask for confirmation"`
-	Version kong.VersionFlag `help:"Print zk version"`
+	Index    cmd.Index        `cmd help:"Index the notes in the given directory to be searchable."`
+	Init     cmd.Init         `cmd help:"Create a slip box in the given directory."`
+	List     cmd.List         `cmd help:"List notes matching given criteria."`
+	Edit     cmd.Edit         `cmd help:"Edit notes matching given criteria."`
+	New      cmd.New          `cmd help:"Create a new note in the given slip box directory."`
+	NoInput  NoInput          `help:"Never prompt or ask for confirmation."`
+	Version  kong.VersionFlag `help:"Print zk version."`
+	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
 }
 
 // NoInput is a flag preventing any user prompt when enabled.
@@ -29,6 +30,21 @@ type NoInput bool
 func (f NoInput) BeforeApply(container *cmd.Container) error {
 	container.Terminal.NoInput = true
 	return nil
+}
+
+// ShowHelp is the default command run. It's equivalent to `zk --help`.
+type ShowHelp struct{}
+
+func (cmd *ShowHelp) Run(container *cmd.Container) error {
+	parser, err := kong.New(&cli, options(container)...)
+	if err != nil {
+		return err
+	}
+	ctx, err := parser.Parse([]string{"--help"})
+	if err != nil {
+		return err
+	}
+	return ctx.Run(container)
 }
 
 func main() {
@@ -41,16 +57,23 @@ func main() {
 		fatalIfError(err)
 
 	} else {
-		ctx := kong.Parse(&cli,
-			kong.Bind(container),
-			kong.Name("zk"),
-			kong.Vars{
-				"version": Version,
-			},
-		)
-
+		ctx := kong.Parse(&cli, options(container)...)
 		err := ctx.Run(container)
 		ctx.FatalIfErrorf(err)
+	}
+}
+
+func options(container *cmd.Container) []kong.Option {
+	return []kong.Option{
+		kong.Bind(container),
+		kong.Name("zk"),
+		kong.UsageOnError(),
+		kong.ConfigureHelp(kong.HelpOptions{
+			Compact: true,
+		}),
+		kong.Vars{
+			"version": Version,
+		},
 	}
 }
 
@@ -76,7 +99,7 @@ func runAlias(container *cmd.Container, args []string) (bool, error) {
 				continue
 			}
 
-			cmd := executil.CommandFromString(cmdStr, args...)
+			cmd := executil.CommandFromString(cmdStr, args[1:]...)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr

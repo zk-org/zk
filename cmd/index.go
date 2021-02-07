@@ -13,8 +13,8 @@ import (
 
 // Index indexes the content of all the notes in the slip box.
 type Index struct {
-	Force bool `help:"Force indexing all the notes" short:"f"`
-	Quiet bool `help:"Do not print statistics nor progress" short:"q"`
+	Force bool `short:"f" help:"Force indexing all the notes."`
+	Quiet bool `short:"q" help:"Do not print statistics nor progress."`
 }
 
 func (cmd *Index) Run(container *Container) error {

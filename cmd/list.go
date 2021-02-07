@@ -15,11 +15,11 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Format    string `help:"Pretty prints the list using the given format" short:"f" placeholder:"<template>"`
-	NoPager   bool   `help:"Do not pipe zk output into a pager" short:"P"`
-	Quiet     bool   `help:"Don't show anything besides the notes themselves" short:"q"`
+	Format    string `help:"Pretty prints the list using the given format." short:"f" placeholder:"<template>"`
+	NoPager   bool   `help:"Do not pipe zk output into a pager." short:"P"`
+	Quiet     bool   `help:"Don't show anything besides the notes themselves." short:"q"`
 	Delimiter string `default:"
-" help:"Delimiter separating each result" short:"d"`
+" help:"Delimiter separating each result." short:"d"`
 	Filtering
 	Sorting
 }

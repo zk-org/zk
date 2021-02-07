@@ -9,7 +9,7 @@ import (
 
 // Init creates a slip box in the given directory
 type Init struct {
-	Directory string `arg optional type:"path" default:"." help:"Directory containing the slip box"`
+	Directory string `arg optional type:"path" default:"." help:"Directory containing the slip box."`
 }
 
 func (cmd *Init) Run() error {
