@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
 	stringsutil "github.com/mickael-menu/zk/util/strings"
@@ -27,6 +28,18 @@ type Opts struct {
 	Padding int
 	// Delimiter used by fzf between fields.
 	Delimiter string
+	// List of key bindings enabled in fzf.
+	Bindings []Binding
+}
+
+// Binding represents a keyboard shortcut bound to an action in fzf.
+type Binding struct {
+	// Keyboard shortcut, e.g. `ctrl-n`.
+	Keys string
+	// fzf action, see `man fzf`.
+	Action string
+	// Description which will be displayed as a fzf header if not empty.
+	Description string
 }
 
 // Fzf filters a set of fields using fzf.
@@ -65,14 +78,30 @@ func New(opts Opts) (*Fzf, error) {
 		"--tabstop", "4",
 		"--height", "100%",
 		"--layout", "reverse",
-		// FIXME: Use it to create a new note? Like notational velocity
-		// "--print-query",
+		//"--info", "inline",
 		// Make sure the path and titles are always visible
 		"--no-hscroll",
 		// Don't highlight search terms
 		"--color", "hl:-1,hl+:-1",
 		"--preview-window", "wrap",
 	}
+
+	header := ""
+	binds := []string{}
+	for _, binding := range opts.Bindings {
+		if binding.Description != "" {
+			header += binding.Keys + ": " + binding.Description + "\n"
+		}
+		binds = append(binds, binding.Keys+":"+binding.Action)
+	}
+
+	if header != "" {
+		args = append(args, "--header", strings.TrimSpace(header))
+	}
+	if len(binds) > 0 {
+		args = append(args, "--bind", strings.Join(binds, ","))
+	}
+
 	if !opts.PreviewCmd.IsNull() {
 		args = append(args, "--preview", opts.PreviewCmd.String())
 	}
@@ -108,14 +137,19 @@ func New(opts Opts) (*Fzf, error) {
 		}()
 
 		output, err := cmd.Output()
+
 		if err != nil {
-			if err, ok := err.(*exec.ExitError); ok &&
-				err.ExitCode() != exitInterrupted &&
-				err.ExitCode() != exitNoMatch {
+			exitErr, ok := err.(*exec.ExitError)
+			switch {
+			case ok && exitErr.ExitCode() == exitInterrupted:
+				f.err = note.ErrCanceled
+			case ok && exitErr.ExitCode() == exitNoMatch:
+				break
+			default:
 				f.err = errors.Wrap(err, "failed to filter interactively the output with fzf, try again without --interactive or make sure you have a working fzf installation")
 			}
 		} else {
-			f.parseSelection(string(output))
+			f.parseSelection(output)
 		}
 	}()
 
@@ -123,7 +157,7 @@ func New(opts Opts) (*Fzf, error) {
 }
 
 // parseSelection extracts the fields from fzf's output.
-func (f *Fzf) parseSelection(output string) {
+func (f *Fzf) parseSelection(output []byte) {
 	f.selection = make([][]string, 0)
 	lines := stringsutil.SplitLines(string(output))
 	for _, line := range lines {

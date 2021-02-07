@@ -144,6 +144,15 @@ func (zk *Zk) RelPath(path string) (string, error) {
 	return path, nil
 }
 
+// RootDir returns the root Dir for this slip box.
+func (zk *Zk) RootDir() Dir {
+	return Dir{
+		Name:   "",
+		Path:   zk.Path,
+		Config: zk.Config.DirConfig,
+	}
+}
+
 // DirAt returns a Dir representation of the slip box directory at the given path.
 func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	path, err := filepath.Abs(path)

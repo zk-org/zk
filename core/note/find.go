@@ -1,11 +1,15 @@
 package note
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
 )
+
+// ErrCanceled is returned when the user cancelled an operation.
+var ErrCanceled = errors.New("canceled")
 
 // Finder retrieves notes matching the given options.
 //

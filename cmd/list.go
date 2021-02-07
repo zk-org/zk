@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/errors"
@@ -54,10 +55,16 @@ func (cmd *List) Run(container *Container) error {
 
 	var notes []note.Match
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
-		notes, err = container.NoteFinder(tx).Find(*opts)
+		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
+			AlwaysFilter: false,
+		})
+		notes, err = finder.Find(*opts)
 		return err
 	})
 	if err != nil {
+		if err == note.ErrCanceled {
+			return nil
+		}
 		return err
 	}
 

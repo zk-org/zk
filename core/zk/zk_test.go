@@ -16,6 +16,17 @@ func TestDBPath(t *testing.T) {
 	assert.Equal(t, zk.DBPath(), filepath.Join(wd, ".zk/data.db"))
 }
 
+func TestRootDir(t *testing.T) {
+	wd, _ := os.Getwd()
+	zk := &Zk{Path: wd}
+
+	assert.Equal(t, zk.RootDir(), Dir{
+		Name:   "",
+		Path:   wd,
+		Config: zk.Config.DirConfig,
+	})
+}
+
 func TestRelativePathFromGivenPath(t *testing.T) {
 	// The tests are relative to the working directory, for convenience.
 	wd, _ := os.Getwd()

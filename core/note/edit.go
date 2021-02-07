@@ -3,11 +3,11 @@ package note
 import (
 	"fmt"
 	"os"
-	"os/exec"
+	"strings"
 
-	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
+	executil "github.com/mickael-menu/zk/util/exec"
 	"github.com/mickael-menu/zk/util/opt"
 	osutil "github.com/mickael-menu/zk/util/os"
 )
@@ -19,22 +19,12 @@ func Edit(zk *zk.Zk, paths ...string) error {
 		return fmt.Errorf("no editor set in config")
 	}
 
-	wrap := errors.Wrapperf("failed to launch editor: %v", editor)
-
-	args, err := shellquote.Split(editor.String())
-	if err != nil {
-		return wrap(err)
-	}
-	if len(args) == 0 {
-		return wrap(fmt.Errorf("editor command is not valid: %v", editor))
-	}
-	args = append(args, paths...)
-
-	cmd := exec.Command(args[0], args[1:]...)
+	cmd := executil.CommandFromString(editor.String(), paths...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	return wrap(cmd.Run())
+	return errors.Wrapf(cmd.Run(), "failed to launch editor: %s %s", editor, strings.Join(paths, " "))
 }
 
 // editor returns the editor command to use to edit a note.

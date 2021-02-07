@@ -12,21 +12,21 @@ require (
 	github.com/gosimple/slug v1.9.0
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/lestrrat-go/strftime v1.0.3
+	github.com/lestrrat-go/strftime v1.0.4
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/mickael-menu/pretty v0.2.3
 	github.com/pelletier/go-toml v1.8.1
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rvflash/elapsed v0.2.0
-	github.com/schollz/progressbar/v3 v3.7.3
+	github.com/schollz/progressbar/v3 v3.7.4
 	github.com/tebeka/strftime v0.1.5 // indirect
 	github.com/tj/go-naturaldate v1.3.0
-	github.com/yuin/goldmark v1.3.1
+	github.com/yuin/goldmark v1.3.2
 	github.com/yuin/goldmark-meta v1.0.0
-	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78 // indirect
 	gopkg.in/djherbis/times.v1 v1.2.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

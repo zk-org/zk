@@ -9,7 +9,6 @@ import (
 	"github.com/mickael-menu/zk/adapter/markdown"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/adapter/term"
-	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
@@ -58,9 +57,9 @@ func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser()
 }
 
-func (c *Container) NoteFinder(tx sqlite.Transaction) note.Finder {
+func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *fzf.NoteFinder {
 	notes := sqlite.NewNoteDAO(tx, c.Logger)
-	return fzf.NewNoteFinder(notes, c.Terminal)
+	return fzf.NewNoteFinder(opts, notes, c.Terminal)
 }
 
 // Database returns the DB instance for the given slip box, after executing any
