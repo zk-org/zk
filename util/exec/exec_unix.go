@@ -5,8 +5,6 @@ package exec
 import (
 	"os"
 	"os/exec"
-
-	"github.com/kballard/go-shellquote"
 )
 
 // CommandFromString returns a Cmd running the given command with $SHELL.
@@ -15,6 +13,6 @@ func CommandFromString(command string, args ...string) *exec.Cmd {
 	if len(shell) == 0 {
 		shell = "sh"
 	}
-	args = append([]string{"-c", command + " " + shellquote.Join(args...)})
+	args = append([]string{"-c", command, "--"}, args...)
 	return exec.Command(shell, args...)
 }
