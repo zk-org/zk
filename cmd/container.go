@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"io"
+	"os"
 	"sync"
 
 	"github.com/mickael-menu/zk/adapter/fzf"
@@ -41,6 +42,9 @@ func NewContainer() *Container {
 func (c *Container) OpenZk() (*zk.Zk, error) {
 	c.zkOnce.Do(func() {
 		c.zk, c.zkErr = zk.Open(".")
+		if c.zkErr == nil {
+			os.Setenv("ZK_PATH", c.zk.Path)
+		}
 	})
 	return c.zk, c.zkErr
 }
