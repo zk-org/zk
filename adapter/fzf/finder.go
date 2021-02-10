@@ -3,6 +3,7 @@ package fzf
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/mickael-menu/zk/adapter/term"
 	"github.com/mickael-menu/zk/core/note"
@@ -19,12 +20,21 @@ type NoteFinder struct {
 	terminal *term.Terminal
 }
 
+// NoteFinderOpts holds the configuration for the fzf notes finder.
+//
+// The absolute path to the slip box (BasePath) and the working directory
+// (CurrentPath) are used to make the path of each note relative to the working
+// directory.
 type NoteFinderOpts struct {
 	// Indicates whether fzf is opened for every query, even if empty.
 	AlwaysFilter bool
 	// When non nil, a "create new note from query" binding will be added to
 	// fzf to create a note in this directory.
 	NewNoteDir *zk.Dir
+	// Absolute path to the slip box.
+	BasePath string
+	// Path to the working directory.
+	CurrentPath string
 }
 
 func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, terminal *term.Terminal) *NoteFinder {
@@ -37,13 +47,21 @@ func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, terminal *term.Termi
 
 func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	isInteractive, opts := popInteractiveFilter(opts)
+	selectedMatches := make([]note.Match, 0)
 	matches, err := f.finder.Find(opts)
+	relPaths := []string{}
 
 	if !isInteractive || !f.terminal.IsInteractive() || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
 		return matches, err
 	}
 
-	selectedMatches := make([]note.Match, 0)
+	for _, match := range matches {
+		path, err := filepath.Rel(f.opts.CurrentPath, filepath.Join(f.opts.BasePath, match.Path))
+		if err != nil {
+			return selectedMatches, err
+		}
+		relPaths = append(relPaths, path)
+	}
 
 	zkBin, err := os.Executable()
 	if err != nil {
@@ -75,9 +93,9 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 		return selectedMatches, err
 	}
 
-	for _, match := range matches {
+	for i, match := range matches {
 		fzf.Add([]string{
-			match.Path,
+			relPaths[i],
 			f.terminal.MustStyle(match.Title, style.RuleYellow),
 			f.terminal.MustStyle(stringsutil.JoinLines(match.Body), style.RuleBlack),
 		})
@@ -90,8 +108,8 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 
 	for _, s := range selection {
 		path := s[0]
-		for _, m := range matches {
-			if m.Path == path {
+		for i, m := range matches {
+			if relPaths[i] == path {
 				selectedMatches = append(selectedMatches, m)
 			}
 		}

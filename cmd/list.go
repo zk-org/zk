@@ -61,6 +61,8 @@ func (cmd *List) Run(container *Container) error {
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
 			AlwaysFilter: false,
+			BasePath:     zk.Path,
+			CurrentPath:  wd,
 		})
 		notes, err = finder.Find(*opts)
 		return err
