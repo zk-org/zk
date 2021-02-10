@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/mickael-menu/zk/cmd"
+	"github.com/mickael-menu/zk/core/style"
 	executil "github.com/mickael-menu/zk/util/exec"
 )
 
@@ -14,11 +15,13 @@ var Version = "dev"
 var Build = "dev"
 
 var cli struct {
-	Index    cmd.Index        `cmd help:"Index the notes in the given directory to be searchable."`
-	Init     cmd.Init         `cmd help:"Create a slip box in the given directory."`
-	List     cmd.List         `cmd help:"List notes matching given criteria."`
-	Edit     cmd.Edit         `cmd help:"Edit notes matching given criteria."`
-	New      cmd.New          `cmd help:"Create a new note in the given slip box directory."`
+	Init  cmd.Init  `cmd group:"zk" help:"Create a slip box in the given directory."`
+	Index cmd.Index `cmd group:"zk" help:"Index the notes in the given directory to be searchable."`
+
+	New  cmd.New  `cmd group:"notes" help:"Create a new note in the given slip box directory."`
+	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
+	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
+
 	NoInput  NoInput          `help:"Never prompt or ask for confirmation."`
 	Version  kong.VersionFlag `help:"Print zk version."`
 	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
@@ -64,16 +67,25 @@ func main() {
 }
 
 func options(container *cmd.Container) []kong.Option {
+	term := container.Terminal
 	return []kong.Option{
 		kong.Bind(container),
 		kong.Name("zk"),
 		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact: true,
-		}),
+		kong.HelpOptions{
+			Compact:   true,
+			FlagsLast: true,
+		},
 		kong.Vars{
 			"version": Version,
 		},
+		kong.Groups(map[string]string{
+			"filter": "Filtering",
+			"sort":   "Sorting",
+			"format": "Formatting",
+			"notes":  term.MustStyle("NOTES", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("Edit or browse your notes", style.RuleBold),
+			"zk":     term.MustStyle("SLIP BOX", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("A slip box is a directory containing your notes", style.RuleBold),
+		}),
 	}
 }
 

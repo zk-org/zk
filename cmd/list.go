@@ -8,23 +8,28 @@ import (
 	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
-	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/strings"
 )
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Format    string `help:"Pretty prints the list using the given format." short:"f" placeholder:"<template>"`
-	NoPager   bool   `help:"Do not pipe zk output into a pager." short:"P"`
-	Quiet     bool   `help:"Don't show anything besides the notes themselves." short:"q"`
-	Delimiter string `default:"
-" help:"Delimiter separating each result." short:"d"`
+	NoPager bool `short:P help:"Do not pipe output into a pager."`
+	Quiet   bool `short:q help:"Do not print the total number of notes found."`
+
+	Format     string `group:format short:f placeholder:TEMPLATE help:"Pretty print the list using the given format."`
+	Delimiter  string "group:format short:d default:\n             help:\"Print notes delimited by the given separator.\""
+	Delimiter0 bool   "group:format short:0 name:delimiter0        help:\"Print notes delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
+
 	Filtering
 	Sorting
 }
 
 func (cmd *List) Run(container *Container) error {
+	if cmd.Delimiter0 {
+		cmd.Delimiter = "\x00"
+	}
+
 	zk, err := container.OpenZk()
 	if err != nil {
 		return err
@@ -32,7 +37,7 @@ func (cmd *List) Run(container *Container) error {
 
 	opts, err := NewFinderOpts(zk, cmd.Filtering, cmd.Sorting)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect criteria")
+		return err
 	}
 
 	db, err := container.Database(zk.DBPath())
@@ -81,6 +86,9 @@ func (cmd *List) Run(container *Container) error {
 					return err
 				}
 				fmt.Fprintf(out, ft)
+			}
+			if cmd.Delimiter0 {
+				fmt.Fprintf(out, "\x00")
 			}
 
 			return nil

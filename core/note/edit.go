@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	executil "github.com/mickael-menu/zk/util/exec"
@@ -19,7 +20,7 @@ func Edit(zk *zk.Zk, paths ...string) error {
 		return fmt.Errorf("no editor set in config")
 	}
 
-	cmd := executil.CommandFromString(editor.String(), paths...)
+	cmd := executil.CommandFromString(editor.String() + " " + shellquote.Join(paths...))
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

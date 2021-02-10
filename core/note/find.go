@@ -150,7 +150,7 @@ func SorterFromString(str string) (Sorter, error) {
 	case "word-count", "wc":
 		sorter = Sorter{Field: SortWordCount, Ascending: true}
 	default:
-		return sorter, fmt.Errorf("%s: unknown sorting term", str)
+		return sorter, fmt.Errorf("%s: unknown sorting term\ntry created, modified, path, title, random or word-count", str)
 	}
 
 	switch orderSymbol {
