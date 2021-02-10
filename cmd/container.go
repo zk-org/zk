@@ -88,7 +88,7 @@ func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Wri
 }
 
 func (c *Container) pager(noPager bool, config zk.Config) (*pager.Pager, error) {
-	if noPager {
+	if noPager || !c.Terminal.IsInteractive() {
 		return pager.PassthroughPager, nil
 	} else {
 		return pager.New(config.Pager, c.Logger)

@@ -14,12 +14,11 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	NoPager bool `short:P help:"Do not pipe output into a pager."`
-	Quiet   bool `short:q help:"Do not print the total number of notes found."`
-
 	Format     string `group:format short:f placeholder:TEMPLATE help:"Pretty print the list using the given format."`
 	Delimiter  string "group:format short:d default:\n             help:\"Print notes delimited by the given separator.\""
 	Delimiter0 bool   "group:format short:0 name:delimiter0        help:\"Print notes delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
+	NoPager    bool   `group:format short:P help:"Do not pipe output into a pager."`
+	Quiet      bool   `group:format short:q help:"Do not print the total number of notes found."`
 
 	Filtering
 	Sorting

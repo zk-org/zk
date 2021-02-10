@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mickael-menu/zk/adapter/term"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/style"
 	"github.com/mickael-menu/zk/core/zk"
@@ -13,9 +14,9 @@ import (
 
 // NoteFinder wraps a note.Finder and filters its result interactively using fzf.
 type NoteFinder struct {
-	opts   NoteFinderOpts
-	finder note.Finder
-	styler style.Styler
+	opts     NoteFinderOpts
+	finder   note.Finder
+	terminal *term.Terminal
 }
 
 type NoteFinderOpts struct {
@@ -26,11 +27,11 @@ type NoteFinderOpts struct {
 	NewNoteDir *zk.Dir
 }
 
-func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, styler style.Styler) *NoteFinder {
+func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, terminal *term.Terminal) *NoteFinder {
 	return &NoteFinder{
-		opts:   opts,
-		finder: finder,
-		styler: styler,
+		opts:     opts,
+		finder:   finder,
+		terminal: terminal,
 	}
 }
 
@@ -38,7 +39,7 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	isInteractive, opts := popInteractiveFilter(opts)
 	matches, err := f.finder.Find(opts)
 
-	if !isInteractive || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
+	if !isInteractive || !f.terminal.IsInteractive() || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
 		return matches, err
 	}
 
@@ -77,8 +78,8 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	for _, match := range matches {
 		fzf.Add([]string{
 			match.Path,
-			f.styler.MustStyle(match.Title, style.RuleYellow),
-			f.styler.MustStyle(stringsutil.JoinLines(match.Body), style.RuleBlack),
+			f.terminal.MustStyle(match.Title, style.RuleYellow),
+			f.terminal.MustStyle(stringsutil.JoinLines(match.Body), style.RuleBlack),
 		})
 	}
 

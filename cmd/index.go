@@ -17,6 +17,10 @@ type Index struct {
 	Quiet bool `short:"q" help:"Do not print statistics nor progress."`
 }
 
+func (cmd *Index) Help() string {
+	return "You usually don't need to run `zk index` manually, as notes are indexed automatically before each zk invocation."
+}
+
 func (cmd *Index) Run(container *Container) error {
 	zk, err := container.OpenZk()
 	if err != nil {

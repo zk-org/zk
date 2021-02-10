@@ -13,10 +13,10 @@ import (
 type New struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory in which to create the note."`
 
-	PrintPath bool              `short:p                     help:"Prints the path of the created note to stdin instead of editing it."`
 	Title     string            `short:t   placeholder:TITLE help:"Title of the new note."`
-	Template  string            `type:path placeholder:PATH  help:"Custom template to use to render the note."`
 	Extra     map[string]string `                            help:"Extra variables passed to the templates."`
+	Template  string            `type:path placeholder:PATH  help:"Custom template used to render the note."`
+	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
 }
 
 func (cmd *New) ConfigOverrides() zk.ConfigOverrides {

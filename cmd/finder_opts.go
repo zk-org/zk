@@ -14,9 +14,9 @@ type Filtering struct {
 	Path []string `group:filter arg optional placeholder:PATH help:"Find notes matching the given path, including its descendants."`
 
 	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
-	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes listed."`
+	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
 	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
-	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Do not list notes matching the given path, including its descendants."`
+	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
 	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
 	LinkingTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
@@ -35,7 +35,7 @@ type Filtering struct {
 
 // Sorting holds sorting options to order notes.
 type Sorting struct {
-	Sort []string `group:sort short:s placeholder:TERM help:"Sort the listed notes by the given criterion."`
+	Sort []string `group:sort short:s placeholder:TERM help:"Order the notes by the given criterion."`
 }
 
 // NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.

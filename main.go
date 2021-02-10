@@ -15,16 +15,17 @@ var Version = "dev"
 var Build = "dev"
 
 var cli struct {
-	Init  cmd.Init  `cmd group:"zk" help:"Create a slip box in the given directory."`
-	Index cmd.Index `cmd group:"zk" help:"Index the notes in the given directory to be searchable."`
+	Init  cmd.Init  `cmd group:"zk" help:"Create a new slip box in the given directory."`
+	Index cmd.Index `cmd group:"zk" help:"Index the notes to be searchable."`
 
 	New  cmd.New  `cmd group:"notes" help:"Create a new note in the given slip box directory."`
 	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
 	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
 
-	NoInput  NoInput          `help:"Never prompt or ask for confirmation."`
-	Version  kong.VersionFlag `help:"Print zk version."`
+	NoInput NoInput `help:"Never prompt or ask for confirmation."`
+
 	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
+	Version  kong.VersionFlag `help:"Print zk version." hidden:true`
 }
 
 // NoInput is a flag preventing any user prompt when enabled.

@@ -5,12 +5,16 @@ import (
 )
 
 // Confirm is a shortcut to prompt a yes/no question to the user.
-func (t *Terminal) Confirm(msg string) bool {
-	confirmed := false
+func (t *Terminal) Confirm(msg string, defaultAnswer bool) (confirmed, skipped bool) {
+	if !t.IsInteractive() {
+		return defaultAnswer, true
+	}
+
+	confirmed = false
 	prompt := &survey.Confirm{
 		Message: msg,
-		Default: true,
+		Default: defaultAnswer,
 	}
 	survey.AskOne(prompt, &confirmed)
-	return confirmed
+	return confirmed, false
 }

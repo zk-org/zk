@@ -13,9 +13,10 @@ import (
 
 // Edit opens notes matching a set of criteria with the user editor.
 type Edit struct {
+	Force bool `short:f help:"Do not confirm before editing many notes at the same time."`
+
 	Filtering
 	Sorting
-	Force bool `help:"Don't confirm before editing many notes at the same time." short:"f"`
 }
 
 func (cmd *Edit) Run(container *Container) error {
@@ -54,7 +55,10 @@ func (cmd *Edit) Run(container *Container) error {
 
 	if count > 0 {
 		if !cmd.Force && count > 5 {
-			if !container.Terminal.Confirm(fmt.Sprintf("Are you sure you want to open %v notes in the editor?", count)) {
+			confirmed, skipped := container.Terminal.Confirm(fmt.Sprintf("Are you sure you want to open %v notes in the editor?", count), false)
+			if skipped {
+				return fmt.Errorf("too many notes to be opened in the editor, aborting…")
+			} else if !confirmed {
 				return nil
 			}
 		}
