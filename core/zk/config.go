@@ -127,7 +127,7 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		DirConfig: root,
 		Dirs:      dirs,
 		Editor:    opt.NewNotEmptyString(tomlConf.Editor),
-		Pager:     opt.NewNotEmptyString(tomlConf.Pager),
+		Pager:     opt.NewStringWithPtr(tomlConf.Pager),
 		Aliases:   aliases,
 	}, nil
 }
@@ -189,7 +189,7 @@ type tomlConfig struct {
 	Extra        map[string]string
 	Dirs         map[string]tomlDirConfig `toml:"dir"`
 	Editor       string
-	Pager        string
+	Pager        *string
 	Aliases      map[string]string `toml:"alias"`
 }
 

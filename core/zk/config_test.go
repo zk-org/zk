@@ -15,6 +15,7 @@ func TestParseDefaultConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &Config{
 		Editor: opt.NullString,
+		Pager:  opt.NullString,
 		DirConfig: DirConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -233,6 +234,14 @@ func TestParseMergesDirConfig(t *testing.T) {
 		},
 		Aliases: make(map[string]string),
 	})
+}
+
+func TestParsePreserveEmptyPager(t *testing.T) {
+	conf, err := ParseConfig([]byte(`pager = ""`), "")
+
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Pager.IsNull(), false)
+	assert.Equal(t, conf.Pager, opt.NewString(""))
 }
 
 func TestParseIDCharset(t *testing.T) {

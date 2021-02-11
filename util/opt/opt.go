@@ -15,6 +15,12 @@ func NewString(value string) String {
 	return String{&value}
 }
 
+// NewString creates a new optional String with the given pointer.
+// When nil, the String is considered null, but an empty String is valid.
+func NewStringWithPtr(value *string) String {
+	return String{value}
+}
+
 // NewNotEmptyString creates a new optional String with the given value or
 // returns NullString if the value is an empty string.
 func NewNotEmptyString(value string) String {
@@ -28,6 +34,11 @@ func NewNotEmptyString(value string) String {
 // IsNull returns whether the optional String has no value.
 func (s String) IsNull() bool {
 	return s.value == nil
+}
+
+// IsEmpty returns whether the optional String has an empty string for value.
+func (s String) IsEmpty() bool {
+	return !s.IsNull() && *s.value == ""
 }
 
 // Or returns the receiver if it is not null, otherwise the given optional
