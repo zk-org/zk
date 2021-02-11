@@ -45,6 +45,7 @@ func (cmd *Edit) Run(container *Container) error {
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
 			AlwaysFilter: true,
+			PreviewCmd:   zk.Config.Fzf.Preview,
 			NewNoteDir:   cmd.newNoteDir(zk),
 			BasePath:     zk.Path,
 			CurrentPath:  wd,

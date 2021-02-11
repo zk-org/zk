@@ -46,7 +46,7 @@ func NewFormatter(basePath string, currentPath string, format opt.String, templa
 }
 
 func resolveFormatTemplate(format opt.String) string {
-	templ, ok := formatTemplates[format.OrDefault("short")]
+	templ, ok := formatTemplates[format.OrString("short").Unwrap()]
 	if !ok {
 		templ = format.String()
 		// Replace raw \n and \t by actual newlines and tabs in user format.

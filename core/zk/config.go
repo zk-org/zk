@@ -14,6 +14,7 @@ type Config struct {
 	Dirs    map[string]DirConfig
 	Editor  opt.String
 	Pager   opt.String
+	Fzf     FzfConfig
 	Aliases map[string]string
 }
 
@@ -26,6 +27,11 @@ type DirConfig struct {
 	Lang             string
 	DefaultTitle     string
 	Extra            map[string]string
+}
+
+// FzfConfig holds the user configuration for running fzf.
+type FzfConfig struct {
+	Preview opt.String
 }
 
 // ConfigOverrides holds user configuration overriden values, for example fed
@@ -128,7 +134,10 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		Dirs:      dirs,
 		Editor:    opt.NewNotEmptyString(tomlConf.Editor),
 		Pager:     opt.NewStringWithPtr(tomlConf.Pager),
-		Aliases:   aliases,
+		Fzf: FzfConfig{
+			Preview: opt.NewStringWithPtr(tomlConf.Fzf.Preview),
+		},
+		Aliases: aliases,
 	}, nil
 }
 
@@ -190,6 +199,7 @@ type tomlConfig struct {
 	Dirs         map[string]tomlDirConfig `toml:"dir"`
 	Editor       string
 	Pager        *string
+	Fzf          tomlFzfConfig
 	Aliases      map[string]string `toml:"alias"`
 }
 
@@ -207,6 +217,10 @@ type tomlIDConfig struct {
 	Charset string
 	Length  int
 	Case    string
+}
+
+type tomlFzfConfig struct {
+	Preview *string
 }
 
 func charsetFromString(charset string) Charset {

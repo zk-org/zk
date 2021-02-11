@@ -100,7 +100,7 @@ func create(
 	deps createDeps,
 ) (*createdNote, error) {
 	context := renderContext{
-		Title:   opts.Title.OrDefault(opts.Dir.Config.DefaultTitle),
+		Title:   opts.Title.OrString(opts.Dir.Config.DefaultTitle).Unwrap(),
 		Content: opts.Content.Unwrap(),
 		Dir:     opts.Dir.Name,
 		Extra:   opts.Dir.Config.Extra,

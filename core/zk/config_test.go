@@ -14,8 +14,6 @@ func TestParseDefaultConfig(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &Config{
-		Editor: opt.NullString,
-		Pager:  opt.NullString,
 		DirConfig: DirConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -29,7 +27,12 @@ func TestParseDefaultConfig(t *testing.T) {
 			Lang:         "en",
 			Extra:        make(map[string]string),
 		},
-		Dirs:    make(map[string]DirConfig),
+		Dirs:   make(map[string]DirConfig),
+		Editor: opt.NullString,
+		Pager:  opt.NullString,
+		Fzf: FzfConfig{
+			Preview: opt.NullString,
+		},
 		Aliases: make(map[string]string),
 	})
 }
@@ -56,6 +59,9 @@ func TestParseComplete(t *testing.T) {
 		charset = "alphanum"
 		length = 4
 		case = "lower"
+
+		[fzf]
+		preview = "bat {1}"
 
 		[extra]
 		hello = "world"
@@ -139,6 +145,9 @@ func TestParseComplete(t *testing.T) {
 		},
 		Editor: opt.NewString("vim"),
 		Pager:  opt.NewString("less"),
+		Fzf: FzfConfig{
+			Preview: opt.NewString("bat {1}"),
+		},
 		Aliases: map[string]string{
 			"ls": "zk list $@",
 			"ed": "zk edit $@",
@@ -236,12 +245,20 @@ func TestParseMergesDirConfig(t *testing.T) {
 	})
 }
 
-func TestParsePreserveEmptyPager(t *testing.T) {
-	conf, err := ParseConfig([]byte(`pager = ""`), "")
+// Some properties like `pager` and `fzf.preview` differentiate between not
+// being set and an empty string.
+func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
+	conf, err := ParseConfig([]byte(`
+		pager = ""
+		[fzf]
+		preview = ""
+	`), "")
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf.Pager.IsNull(), false)
 	assert.Equal(t, conf.Pager, opt.NewString(""))
+	assert.Equal(t, conf.Fzf.Preview.IsNull(), false)
+	assert.Equal(t, conf.Fzf.Preview, opt.NewString(""))
 }
 
 func TestParseIDCharset(t *testing.T) {

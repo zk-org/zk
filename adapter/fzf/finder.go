@@ -28,6 +28,8 @@ type NoteFinder struct {
 type NoteFinderOpts struct {
 	// Indicates whether fzf is opened for every query, even if empty.
 	AlwaysFilter bool
+	// Preview command to run when selecting a note.
+	PreviewCmd opt.String
 	// When non nil, a "create new note from query" binding will be added to
 	// fzf to create a note in this directory.
 	NewNoteDir *zk.Dir
@@ -84,10 +86,9 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	fzf, err := New(Opts{
-		// PreviewCmd: opt.NewString("bat -p --theme Nord --color always {1}"),
-		PreviewCmd: opt.NewString(zkBin + " list -f {{raw-content}} {1}"),
+		PreviewCmd: f.opts.PreviewCmd.OrString("cat {1}").NonEmpty(),
 		Padding:    2,
-		Bindings: bindings,
+		Bindings:   bindings,
 	})
 	if err != nil {
 		return selectedMatches, err

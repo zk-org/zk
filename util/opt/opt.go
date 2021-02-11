@@ -41,6 +41,15 @@ func (s String) IsEmpty() bool {
 	return !s.IsNull() && *s.value == ""
 }
 
+// NonEmpty returns a null String if the String is empty.
+func (s String) NonEmpty() String {
+	if s.IsEmpty() {
+		return NullString
+	} else {
+		return s
+	}
+}
+
 // Or returns the receiver if it is not null, otherwise the given optional
 // String.
 func (s String) Or(other String) String {
@@ -51,19 +60,23 @@ func (s String) Or(other String) String {
 	}
 }
 
-// OrDefault returns the optional String value or the given default string if
+// OrString returns the optional String value or the given default string if
 // it is null.
-func (s String) OrDefault(def string) string {
+func (s String) OrString(alt string) String {
 	if s.IsNull() {
-		return def
+		return NewString(alt)
 	} else {
-		return *s.value
+		return s
 	}
 }
 
 // Unwrap returns the optional String value or an empty String if none is set.
 func (s String) Unwrap() string {
-	return s.OrDefault("")
+	if s.IsNull() {
+		return ""
+	} else {
+		return *s.value
+	}
 }
 
 func (s String) Equal(other String) bool {
@@ -72,7 +85,7 @@ func (s String) Equal(other String) bool {
 }
 
 func (s String) String() string {
-	return s.OrDefault("")
+	return s.Unwrap()
 }
 
 func (s String) MarshalJSON() ([]byte, error) {
