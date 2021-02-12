@@ -18,6 +18,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/mickael-menu/pretty v0.2.3
+	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.8.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect

@@ -8,9 +8,11 @@ import (
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/opt"
 	strutil "github.com/mickael-menu/zk/util/strings"
+	"github.com/mvdan/xurls"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 )
@@ -26,6 +28,15 @@ func NewParser() *Parser {
 		md: goldmark.New(
 			goldmark.WithExtensions(
 				meta.Meta,
+				extension.NewLinkify(
+					extension.WithLinkifyAllowedProtocols([][]byte{
+						[]byte("http:"),
+						[]byte("https:"),
+					}),
+					extension.WithLinkifyURLRegexp(
+						xurls.Strict,
+					),
+				),
 			),
 		),
 	}
@@ -127,16 +138,30 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 	links := make([]note.Link, 0)
 
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if link, ok := n.(*ast.Link); ok && entering {
-			href := string(link.Destination)
-			if href != "" {
-				links = append(links, note.Link{
-					Title:    string(link.Text(source)),
-					Href:     href,
-					Rels:     strings.Fields(string(link.Title)),
-					External: strutil.IsURL(href),
-					Snippet:  extractLines(n.Parent(), source),
-				})
+		if entering {
+			switch link := n.(type) {
+			case *ast.Link:
+				href := string(link.Destination)
+				if href != "" {
+					links = append(links, note.Link{
+						Title:    string(link.Text(source)),
+						Href:     href,
+						Rels:     strings.Fields(string(link.Title)),
+						External: strutil.IsURL(href),
+						Snippet:  extractLines(n.Parent(), source),
+					})
+				}
+
+			case *ast.AutoLink:
+				if href := string(link.URL(source)); href != "" && link.AutoLinkType == ast.AutoLinkURL {
+					links = append(links, note.Link{
+						Title:    string(link.Label(source)),
+						Href:     href,
+						Rels:     []string{},
+						External: true,
+						Snippet:  extractLines(n.Parent(), source),
+					})
+				}
 			}
 		}
 		return ast.WalkContinue, nil

@@ -168,6 +168,8 @@ func TestParseLinks(t *testing.T) {
 Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").
 
+An https://inline-link.com and http://another-inline-link.com.
+
 [External links](http://example.com) are marked [as such](ftp://domain).
 `, []note.Link{
 		{
@@ -208,6 +210,20 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			External: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
+		},
+		{
+			Title:    "https://inline-link.com",
+			Href:     "https://inline-link.com",
+			External: true,
+			Rels:     []string{},
+			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
+		},
+		{
+			Title:    "http://another-inline-link.com",
+			Href:     "http://another-inline-link.com",
+			External: true,
+			Rels:     []string{},
+			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
 		},
 		{
 			Title:    "External links",
