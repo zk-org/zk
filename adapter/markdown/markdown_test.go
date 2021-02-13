@@ -170,6 +170,14 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 
 An https://inline-link.com and http://another-inline-link.com.
 
+A [[Wiki link]] is surrounded by two brackets.
+
+A [[[Folgezettel link]]] is surrounded by three brackets.
+
+Neuron also supports a [[trailing hash]]# for Folgezettel links.
+
+A #[[leading hash]] is used for #uplinks.
+
 [External links](http://example.com) are marked [as such](ftp://domain).
 `, []note.Link{
 		{
@@ -224,6 +232,34 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			External: true,
 			Rels:     []string{},
 			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
+		},
+		{
+			Title:    "",
+			Href:     "Wiki link",
+			External: false,
+			Rels:     []string{},
+			Snippet:  "A [[Wiki link]] is surrounded by two brackets.",
+		},
+		{
+			Title:    "",
+			Href:     "Folgezettel link",
+			External: false,
+			Rels:     []string{"down"},
+			Snippet:  "A [[[Folgezettel link]]] is surrounded by three brackets.",
+		},
+		{
+			Title:    "",
+			Href:     "trailing hash",
+			External: false,
+			Rels:     []string{"down"},
+			Snippet:  "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
+		},
+		{
+			Title:    "",
+			Href:     "leading hash",
+			External: false,
+			Rels:     []string{"up"},
+			Snippet:  "A #[[leading hash]] is used for #uplinks.",
 		},
 		{
 			Title:    "External links",

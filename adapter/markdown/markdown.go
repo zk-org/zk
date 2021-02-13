@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mickael-menu/zk/adapter/markdown/extensions"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/opt"
 	strutil "github.com/mickael-menu/zk/util/strings"
@@ -37,6 +38,7 @@ func NewParser() *Parser {
 						xurls.Strict,
 					),
 				),
+				extensions.WikiLink,
 			),
 		),
 	}
