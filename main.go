@@ -106,11 +106,15 @@ func indexZk(container *cmd.Container) {
 
 // runAlias will execute a user alias if the command is one of them.
 func runAlias(container *cmd.Container, args []string) (bool, error) {
+	runningAlias := os.Getenv("ZK_RUNNING_ALIAS")
 	if zk, err := container.OpenZk(); err == nil && len(args) >= 1 {
 		for alias, cmdStr := range zk.Config.Aliases {
-			if alias != args[0] {
+			if alias == runningAlias || alias != args[0] {
 				continue
 			}
+
+			// Prevent infinite loop if an alias calls itself.
+			os.Setenv("ZK_RUNNING_ALIAS", alias)
 
 			cmd := executil.CommandFromString(cmdStr, args[1:]...)
 			cmd.Stdin = os.Stdin
