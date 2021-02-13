@@ -33,13 +33,13 @@ func Create(
 ) (string, error) {
 	wrap := errors.Wrapperf("new note")
 
-	filenameTemplate, err := templateLoader.Load(opts.Dir.Config.FilenameTemplate)
+	filenameTemplate, err := templateLoader.Load(opts.Dir.Config.Note.FilenameTemplate)
 	if err != nil {
 		return "", err
 	}
 
 	var bodyTemplate templ.Renderer = templ.NullRenderer
-	if templatePath := opts.Dir.Config.BodyTemplatePath.Unwrap(); templatePath != "" {
+	if templatePath := opts.Dir.Config.Note.BodyTemplatePath.Unwrap(); templatePath != "" {
 		bodyTemplate, err = templateLoader.LoadFile(templatePath)
 		if err != nil {
 			return "", wrap(err)
@@ -49,7 +49,7 @@ func Create(
 	createdNote, err := create(opts, createDeps{
 		filenameTemplate: filenameTemplate,
 		bodyTemplate:     bodyTemplate,
-		genId:            rand.NewIDGenerator(opts.Dir.Config.IDOptions),
+		genId:            rand.NewIDGenerator(opts.Dir.Config.Note.IDOptions),
 		validatePath:     validatePath,
 		now:              date.Date(),
 	})
@@ -100,7 +100,7 @@ func create(
 	deps createDeps,
 ) (*createdNote, error) {
 	context := renderContext{
-		Title:   opts.Title.OrString(opts.Dir.Config.DefaultTitle).Unwrap(),
+		Title:   opts.Title.OrString(opts.Dir.Config.Note.DefaultTitle).Unwrap(),
 		Content: opts.Content.Unwrap(),
 		Dir:     opts.Dir.Name,
 		Extra:   opts.Dir.Config.Extra,
@@ -134,7 +134,7 @@ func genPath(
 			return "", context, err
 		}
 
-		filename = filename + "." + dir.Config.Extension
+		filename = filename + "." + dir.Config.Note.Extension
 		path = filepath.Join(dir.Path, filename)
 		validPath, err := deps.validatePath(path)
 		if err != nil {

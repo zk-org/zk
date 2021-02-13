@@ -20,7 +20,9 @@ func TestCreate(t *testing.T) {
 				Name: "log",
 				Path: "/test/log",
 				Config: zk.DirConfig{
-					Extension: "md",
+					Note: zk.NoteConfig{
+						Extension: "md",
+					},
 					Extra: map[string]string{
 						"hello": "world",
 					},
@@ -82,7 +84,9 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 				Name: "log",
 				Path: "/test/log",
 				Config: zk.DirConfig{
-					Extension: "md",
+					Note: zk.NoteConfig{
+						Extension: "md",
+					},
 				},
 			},
 			Title: opt.NewString("Note title"),
@@ -134,7 +138,9 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 				Name: "log",
 				Path: "/test/log",
 				Config: zk.DirConfig{
-					Extension: "md",
+					Note: zk.NoteConfig{
+						Extension: "md",
+					},
 				},
 			},
 		},

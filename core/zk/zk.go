@@ -10,11 +10,7 @@ import (
 	"github.com/mickael-menu/zk/util/paths"
 )
 
-const defaultConfig = `editor = "nvim"
-dir "log" {
-	template = "log.md"
-}
-`
+const defaultConfig = ``
 
 // Zk (Zettelkasten) represents an opened slip box.
 type Zk struct {
@@ -149,7 +145,7 @@ func (zk *Zk) RootDir() Dir {
 	return Dir{
 		Name:   "",
 		Path:   zk.Path,
-		Config: zk.Config.DirConfig,
+		Config: zk.Config.RootDirConfig(),
 	}
 }
 
@@ -168,7 +164,7 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	config, ok := zk.Config.Dirs[name]
 	if !ok {
 		// Fallback on root config.
-		config = zk.Config.DirConfig
+		config = zk.Config.RootDirConfig()
 	}
 	config = config.Clone()
 

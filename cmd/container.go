@@ -82,7 +82,7 @@ func (c *Container) Database(path string) (*sqlite.DB, error) {
 //
 // You can write to the pager only in the run callback.
 func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Writer) error) error {
-	pager, err := c.pager(noPager || config.Pager.IsEmpty(), config)
+	pager, err := c.pager(noPager || config.Tool.Pager.IsEmpty(), config)
 	if err != nil {
 		return err
 	}
@@ -95,6 +95,6 @@ func (c *Container) pager(noPager bool, config zk.Config) (*pager.Pager, error) 
 	if noPager || !c.Terminal.IsInteractive() {
 		return pager.PassthroughPager, nil
 	} else {
-		return pager.New(config.Pager, c.Logger)
+		return pager.New(config.Tool.Pager, c.Logger)
 	}
 }

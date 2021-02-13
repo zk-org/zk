@@ -30,7 +30,7 @@ func Edit(zk *zk.Zk, paths ...string) error {
 
 // editor returns the editor command to use to edit a note.
 func editor(zk *zk.Zk) opt.String {
-	return zk.Config.Editor.
+	return zk.Config.Tool.Editor.
 		Or(osutil.GetOptEnv("VISUAL")).
 		Or(osutil.GetOptEnv("EDITOR"))
 }

@@ -49,7 +49,7 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	templates := container.TemplateLoader(zk.Config.Lang)
+	templates := container.TemplateLoader(zk.Config.Note.Lang)
 	styler := container.Terminal
 	format := opt.NewNotEmptyString(cmd.Format)
 	formatter, err := note.NewFormatter(zk.Path, wd, format, templates, styler)
@@ -61,7 +61,7 @@ func (cmd *List) Run(container *Container) error {
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
 			AlwaysFilter: false,
-			PreviewCmd:   zk.Config.Fzf.Preview,
+			PreviewCmd:   zk.Config.Tool.FzfPreview,
 			BasePath:     zk.Path,
 			CurrentPath:  wd,
 		})

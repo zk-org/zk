@@ -71,7 +71,8 @@ func Index(zk *zk.Zk, force bool, parser Parser, indexer Indexer, logger util.Lo
 	stats := IndexingStats{}
 	startTime := time.Now()
 
-	source := paths.Walk(zk.Path, zk.Config.Extension, logger)
+	// FIXME: Use Extension defined in each DirConfig.
+	source := paths.Walk(zk.Path, zk.Config.Note.Extension, logger)
 	target, err := indexer.Indexed()
 	if err != nil {
 		return stats, wrap(err)

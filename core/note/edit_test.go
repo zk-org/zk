@@ -5,13 +5,17 @@ import (
 	"testing"
 
 	"github.com/mickael-menu/zk/core/zk"
-	"github.com/mickael-menu/zk/util/test/assert"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/test/assert"
 )
 
 func TestEditorUsesUserConfigFirst(t *testing.T) {
 	os.Setenv("VISUAL", "editor")
-	zk := zk.Zk{Config: zk.Config{Editor: opt.NewString("custom-editor")}}
+	zk := zk.Zk{Config: zk.Config{
+		Tool: zk.ToolConfig{
+			Editor: opt.NewString("custom-editor"),
+		},
+	}}
 
 	assert.Equal(t, editor(&zk), opt.NewString("custom-editor"))
 }

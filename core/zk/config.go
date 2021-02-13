@@ -10,28 +10,48 @@ import (
 
 // Config holds the global user configuration.
 type Config struct {
-	DirConfig
+	Note    NoteConfig
 	Dirs    map[string]DirConfig
-	Editor  opt.String
-	Pager   opt.String
-	Fzf     FzfConfig
+	Tool    ToolConfig
 	Aliases map[string]string
+	Extra   map[string]string
+}
+
+// RootDirConfig returns the default DirConfig for the root directory and its descendants.
+func (c Config) RootDirConfig() DirConfig {
+	return DirConfig{
+		Note:  c.Note,
+		Extra: c.Extra,
+	}
+}
+
+// ToolConfig holds the external tooling configuration.
+type ToolConfig struct {
+	Editor     opt.String
+	Pager      opt.String
+	FzfPreview opt.String
+}
+
+// NoteConfig holds the user configuration used when generating new notes.
+type NoteConfig struct {
+	// Handlebars template used when generating a new filename.
+	FilenameTemplate string
+	// Extension appended to the filename.
+	Extension string
+	// Path to the handlebars template used when generating the note content.
+	BodyTemplatePath opt.String
+	// Language of the note content.
+	Lang string
+	// Default title to use when none is provided.
+	DefaultTitle string
+	// Settings used when generating a random ID.
+	IDOptions IDOptions
 }
 
 // DirConfig holds the user configuration for a given directory.
 type DirConfig struct {
-	FilenameTemplate string
-	Extension        string
-	BodyTemplatePath opt.String
-	IDOptions        IDOptions
-	Lang             string
-	DefaultTitle     string
-	Extra            map[string]string
-}
-
-// FzfConfig holds the user configuration for running fzf.
-type FzfConfig struct {
-	Preview opt.String
+	Note  NoteConfig
+	Extra map[string]string
 }
 
 // ConfigOverrides holds user configuration overriden values, for example fed
@@ -55,7 +75,7 @@ func (c DirConfig) Clone() DirConfig {
 // overriden in ConfigOverrides.
 func (c *DirConfig) Override(overrides ConfigOverrides) {
 	if !overrides.BodyTemplatePath.IsNull() {
-		c.BodyTemplatePath = overrides.BodyTemplatePath
+		c.Note.BodyTemplatePath = overrides.BodyTemplatePath
 	}
 	if overrides.Extra != nil {
 		for k, v := range overrides.Extra {
@@ -74,42 +94,45 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	}
 
 	root := DirConfig{
-		FilenameTemplate: "{{id}}",
-		Extension:        "md",
-		BodyTemplatePath: opt.NullString,
-		IDOptions: IDOptions{
-			Charset: CharsetAlphanum,
-			Length:  5,
-			Case:    CaseLower,
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}",
+			Extension:        "md",
+			BodyTemplatePath: opt.NullString,
+			Lang:             "en",
+			DefaultTitle:     "Untitled",
+			IDOptions: IDOptions{
+				Charset: CharsetAlphanum,
+				Length:  5,
+				Case:    CaseLower,
+			},
 		},
-		Lang:         "en",
-		DefaultTitle: "Untitled",
-		Extra:        make(map[string]string),
+		Extra: make(map[string]string),
 	}
 
-	if tomlConf.Filename != "" {
-		root.FilenameTemplate = tomlConf.Filename
+	note := tomlConf.Note
+	if note.Filename != "" {
+		root.Note.FilenameTemplate = note.Filename
 	}
-	if tomlConf.Extension != "" {
-		root.Extension = tomlConf.Extension
+	if note.Extension != "" {
+		root.Note.Extension = note.Extension
 	}
-	if tomlConf.Template != "" {
-		root.BodyTemplatePath = templatePathFromString(tomlConf.Template, templatesDir)
+	if note.Template != "" {
+		root.Note.BodyTemplatePath = templatePathFromString(note.Template, templatesDir)
 	}
-	if tomlConf.ID.Length != 0 {
-		root.IDOptions.Length = tomlConf.ID.Length
+	if note.IDLength != 0 {
+		root.Note.IDOptions.Length = note.IDLength
 	}
-	if tomlConf.ID.Charset != "" {
-		root.IDOptions.Charset = charsetFromString(tomlConf.ID.Charset)
+	if note.IDCharset != "" {
+		root.Note.IDOptions.Charset = charsetFromString(note.IDCharset)
 	}
-	if tomlConf.ID.Case != "" {
-		root.IDOptions.Case = caseFromString(tomlConf.ID.Case)
+	if note.IDCase != "" {
+		root.Note.IDOptions.Case = caseFromString(note.IDCase)
 	}
-	if tomlConf.Lang != "" {
-		root.Lang = tomlConf.Lang
+	if note.Lang != "" {
+		root.Note.Lang = note.Lang
 	}
-	if tomlConf.DefaultTitle != "" {
-		root.DefaultTitle = tomlConf.DefaultTitle
+	if note.DefaultTitle != "" {
+		root.Note.DefaultTitle = note.DefaultTitle
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
@@ -130,97 +153,84 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	}
 
 	return &Config{
-		DirConfig: root,
-		Dirs:      dirs,
-		Editor:    opt.NewNotEmptyString(tomlConf.Editor),
-		Pager:     opt.NewStringWithPtr(tomlConf.Pager),
-		Fzf: FzfConfig{
-			Preview: opt.NewStringWithPtr(tomlConf.Fzf.Preview),
+		Note: root.Note,
+		Dirs: dirs,
+		Tool: ToolConfig{
+			Editor:     opt.NewNotEmptyString(tomlConf.Tool.Editor),
+			Pager:      opt.NewStringWithPtr(tomlConf.Tool.Pager),
+			FzfPreview: opt.NewStringWithPtr(tomlConf.Tool.FzfPreview),
 		},
 		Aliases: aliases,
+		Extra:   root.Extra,
 	}, nil
 }
 
 func (c DirConfig) merge(tomlConf tomlDirConfig, templatesDir string) DirConfig {
-	res := DirConfig{
-		FilenameTemplate: c.FilenameTemplate,
-		Extension:        c.Extension,
-		BodyTemplatePath: c.BodyTemplatePath,
-		IDOptions:        c.IDOptions,
-		Lang:             c.Lang,
-		DefaultTitle:     c.DefaultTitle,
-		Extra:            make(map[string]string),
-	}
-	for k, v := range c.Extra {
-		res.Extra[k] = v
-	}
+	res := c.Clone()
 
-	if tomlConf.Filename != "" {
-		res.FilenameTemplate = tomlConf.Filename
+	note := tomlConf.Note
+	if note.Filename != "" {
+		res.Note.FilenameTemplate = note.Filename
 	}
-	if tomlConf.Extension != "" {
-		res.Extension = tomlConf.Extension
+	if note.Extension != "" {
+		res.Note.Extension = note.Extension
 	}
-	if tomlConf.Template != "" {
-		res.BodyTemplatePath = templatePathFromString(tomlConf.Template, templatesDir)
+	if note.Template != "" {
+		res.Note.BodyTemplatePath = templatePathFromString(note.Template, templatesDir)
 	}
-	if tomlConf.ID.Length != 0 {
-		res.IDOptions.Length = tomlConf.ID.Length
+	if note.IDLength != 0 {
+		res.Note.IDOptions.Length = note.IDLength
 	}
-	if tomlConf.ID.Charset != "" {
-		res.IDOptions.Charset = charsetFromString(tomlConf.ID.Charset)
+	if note.IDCharset != "" {
+		res.Note.IDOptions.Charset = charsetFromString(note.IDCharset)
 	}
-	if tomlConf.ID.Case != "" {
-		res.IDOptions.Case = caseFromString(tomlConf.ID.Case)
+	if note.IDCase != "" {
+		res.Note.IDOptions.Case = caseFromString(note.IDCase)
 	}
-	if tomlConf.Lang != "" {
-		res.Lang = tomlConf.Lang
+	if note.Lang != "" {
+		res.Note.Lang = note.Lang
 	}
-	if tomlConf.DefaultTitle != "" {
-		res.DefaultTitle = tomlConf.DefaultTitle
+	if note.DefaultTitle != "" {
+		res.Note.DefaultTitle = note.DefaultTitle
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
 			res.Extra[k] = v
 		}
 	}
+
 	return res
 }
 
 // tomlConfig holds the TOML representation of Config
 type tomlConfig struct {
+	Note    tomlNoteConfig
+	Dirs    map[string]tomlDirConfig `toml:"dir"`
+	Tool    tomlToolConfig
+	Extra   map[string]string
+	Aliases map[string]string `toml:"alias"`
+}
+
+type tomlNoteConfig struct {
 	Filename     string
 	Extension    string
 	Template     string
-	ID           tomlIDConfig
 	Lang         string `toml:"language"`
 	DefaultTitle string `toml:"default-title"`
-	Extra        map[string]string
-	Dirs         map[string]tomlDirConfig `toml:"dir"`
-	Editor       string
-	Pager        *string
-	Fzf          tomlFzfConfig
-	Aliases      map[string]string `toml:"alias"`
+	IDCharset    string `toml:"id-charset"`
+	IDLength     int    `toml:"id-length"`
+	IDCase       string `toml:"id-case"`
 }
 
 type tomlDirConfig struct {
-	Filename     string
-	Extension    string
-	Template     string
-	ID           tomlIDConfig
-	Lang         string `toml:"language"`
-	DefaultTitle string `toml:"default-title"`
-	Extra        map[string]string
+	Note  tomlNoteConfig
+	Extra map[string]string
 }
 
-type tomlIDConfig struct {
-	Charset string
-	Length  int
-	Case    string
-}
-
-type tomlFzfConfig struct {
-	Preview *string
+type tomlToolConfig struct {
+	Editor     string
+	Pager      *string
+	FzfPreview *string `toml:"fzf-preview"`
 }
 
 func charsetFromString(charset string) Charset {

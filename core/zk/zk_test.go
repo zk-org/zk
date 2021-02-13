@@ -23,7 +23,7 @@ func TestRootDir(t *testing.T) {
 	assert.Equal(t, zk.RootDir(), Dir{
 		Name:   "",
 		Path:   wd,
-		Config: zk.Config.DirConfig,
+		Config: zk.Config.RootDirConfig(),
 	})
 }
 
@@ -75,7 +75,7 @@ func TestDirAtRoot(t *testing.T) {
 	zk := Zk{
 		Path: wd,
 		Config: Config{
-			DirConfig: DirConfig{
+			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
 				IDOptions: IDOptions{
@@ -83,14 +83,16 @@ func TestDirAtRoot(t *testing.T) {
 					Charset: CharsetAlphanum,
 					Case:    CaseLower,
 				},
-				Extra: map[string]string{
-					"hello": "world",
-				},
 			},
 			Dirs: map[string]DirConfig{
 				"log": {
-					FilenameTemplate: "{{date}}.md",
+					Note: NoteConfig{
+						FilenameTemplate: "{{date}}.md",
+					},
 				},
+			},
+			Extra: map[string]string{
+				"hello": "world",
 			},
 		},
 	}
@@ -100,12 +102,14 @@ func TestDirAtRoot(t *testing.T) {
 	assert.Equal(t, dir.Name, "")
 	assert.Equal(t, dir.Path, wd)
 	assert.Equal(t, dir.Config, DirConfig{
-		FilenameTemplate: "{{id}}.note",
-		BodyTemplatePath: opt.NewString("default.note"),
-		IDOptions: IDOptions{
-			Length:  4,
-			Charset: CharsetAlphanum,
-			Case:    CaseLower,
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}.note",
+			BodyTemplatePath: opt.NewString("default.note"),
+			IDOptions: IDOptions{
+				Length:  4,
+				Charset: CharsetAlphanum,
+				Case:    CaseLower,
+			},
 		},
 		Extra: map[string]string{
 			"hello": "world",
@@ -118,7 +122,7 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 	zk := Zk{
 		Path: "/test",
 		Config: Config{
-			DirConfig: DirConfig{
+			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
 				IDOptions: IDOptions{
@@ -126,9 +130,9 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 					Charset: CharsetAlphanum,
 					Case:    CaseLower,
 				},
-				Extra: map[string]string{
-					"hello": "world",
-				},
+			},
+			Extra: map[string]string{
+				"hello": "world",
 			},
 		},
 	}
@@ -136,20 +140,22 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 	dir, err := zk.DirAt(".")
 	assert.Nil(t, err)
 
-	dir.Config.FilenameTemplate = "modified"
-	dir.Config.BodyTemplatePath = opt.NewString("modified")
-	dir.Config.IDOptions.Length = 41
-	dir.Config.IDOptions.Charset = CharsetNumbers
-	dir.Config.IDOptions.Case = CaseUpper
+	dir.Config.Note.FilenameTemplate = "modified"
+	dir.Config.Note.BodyTemplatePath = opt.NewString("modified")
+	dir.Config.Note.IDOptions.Length = 41
+	dir.Config.Note.IDOptions.Charset = CharsetNumbers
+	dir.Config.Note.IDOptions.Case = CaseUpper
 	dir.Config.Extra["test"] = "modified"
 
-	assert.Equal(t, zk.Config.DirConfig, DirConfig{
-		FilenameTemplate: "{{id}}.note",
-		BodyTemplatePath: opt.NewString("default.note"),
-		IDOptions: IDOptions{
-			Length:  4,
-			Charset: CharsetAlphanum,
-			Case:    CaseLower,
+	assert.Equal(t, zk.Config.RootDirConfig(), DirConfig{
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}.note",
+			BodyTemplatePath: opt.NewString("default.note"),
+			IDOptions: IDOptions{
+				Length:  4,
+				Charset: CharsetAlphanum,
+				Case:    CaseLower,
+			},
 		},
 		Extra: map[string]string{
 			"hello": "world",
@@ -161,7 +167,7 @@ func TestDirAtWithOverrides(t *testing.T) {
 	zk := Zk{
 		Path: "/test",
 		Config: Config{
-			DirConfig: DirConfig{
+			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
 				IDOptions: IDOptions{
@@ -169,9 +175,9 @@ func TestDirAtWithOverrides(t *testing.T) {
 					Charset: CharsetLetters,
 					Case:    CaseUpper,
 				},
-				Extra: map[string]string{
-					"hello": "world",
-				},
+			},
+			Extra: map[string]string{
+				"hello": "world",
 			},
 		},
 	}
@@ -194,12 +200,14 @@ func TestDirAtWithOverrides(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, dir.Config, DirConfig{
-		FilenameTemplate: "{{id}}.note",
-		BodyTemplatePath: opt.NewString("overriden-template"),
-		IDOptions: IDOptions{
-			Length:  4,
-			Charset: CharsetLetters,
-			Case:    CaseUpper,
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}.note",
+			BodyTemplatePath: opt.NewString("overriden-template"),
+			IDOptions: IDOptions{
+				Length:  4,
+				Charset: CharsetLetters,
+				Case:    CaseUpper,
+			},
 		},
 		Extra: map[string]string{
 			"hello":       "overriden",
@@ -209,13 +217,15 @@ func TestDirAtWithOverrides(t *testing.T) {
 	})
 
 	// Check that the original config was not modified.
-	assert.Equal(t, zk.Config.DirConfig, DirConfig{
-		FilenameTemplate: "{{id}}.note",
-		BodyTemplatePath: opt.NewString("default.note"),
-		IDOptions: IDOptions{
-			Length:  4,
-			Charset: CharsetLetters,
-			Case:    CaseUpper,
+	assert.Equal(t, zk.Config.RootDirConfig(), DirConfig{
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}.note",
+			BodyTemplatePath: opt.NewString("default.note"),
+			IDOptions: IDOptions{
+				Length:  4,
+				Charset: CharsetLetters,
+				Case:    CaseUpper,
+			},
 		},
 		Extra: map[string]string{
 			"hello": "world",
