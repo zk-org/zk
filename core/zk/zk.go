@@ -10,7 +10,130 @@ import (
 	"github.com/mickael-menu/zk/util/paths"
 )
 
-const defaultConfig = ``
+const defaultConfig = `# zk configuration file
+#
+# Uncomment the properties you want to customize.
+
+# NOTE SETTINGS
+#
+# Defines the default options used when generating new notes.
+[note]
+
+# Language used when writing notes.
+# This is used to generate slugs or with date formats.
+#language = "en"
+
+# The default title used for new note, if no ` + "`" + `--title` + "`" + ` flag is provided.
+#default-title = "Untitled"
+
+# Template used to generate a note's filename, without extension.
+#filename = "{{id}}"
+
+# The file extension used for the notes.
+#extension = "md"
+
+# Template used to generate a note's content.
+# If not an absolute path, it is relative to .zk/templates/
+#template = "default.md"
+
+# Configure random ID generation.
+
+# The charset used for random IDs. You can use:
+#   * letters: only letters from a to z.
+#   * numbers: 0 to 9
+#   * alphanum: letters + numbers
+#   * hex: hexadecimal, from a to f and 0 to 9
+#   * custom string: will use any character from the provided value
+#id-charset = "alphanum"
+
+# Length of the generated IDs.
+#id-length = 4
+
+# Letter case for the random IDs, among lower, upper or mixed.
+#id-case = "lower"
+
+
+# EXTRA VARIABLES
+#
+# A dictionary of variables you can use for any custom values when generating
+# new notes. They are accessible in templates with {{extra.<key>}}
+[extra]
+
+#key = "value"
+
+
+# DIRECTORY OVERRIDES
+#
+# You can override global settings from [note] and [extra] for a particular
+# directory by declaring a [dir."<PATH>"] section.
+# <PATH> can contain any character, including slashes for subdirectories.
+
+#[dir."<PATH>".note]
+#filename = "{{date now}}"
+#[dir."<PATH>".extra]
+#key = "value"
+
+
+# EXTERNAL TOOLS
+[tool]
+
+# Default editor used to open notes. When not set, the EDITOR or VISUAL
+# environment variables are used.
+#editor = "vim"
+
+# Pager used to scroll through long output. If you want to disable paging
+# altogether, set it to an empty string "".
+#pager = "less -FIRX"
+
+# Command used to preview a note during interactive fzf mode.
+# Set it to an empty string "" to disable preview.
+
+# bat is a great tool to render Markdown document with syntax highlighting.
+#https://github.com/sharkdp/bat
+#fzf-preview = "bat -p --color always {1}"
+
+
+# COMMAND ALIASES
+#
+#   Aliases are user commands called with ` + "`" + `zk <alias> [<flags>] [<args>]` + "`" + `.
+#
+#   The alias will be executed with ` + "`" + `$SHELL -c` + "`" + `, please refer to your shell's
+#   man page to see the available syntax. In most shells:
+#     * $@ can be used to expand all the provided flags and arguments
+#     * you can pipe commands together with the usual | character
+#
+[alias]
+# Here are a few aliases to get you started.
+
+# Shortcut to a command.
+#ls = "zk list $@"
+
+# Default flags for an existing command.
+#list = "zk list --quiet $@"
+
+# Edit the last modified note.
+#editlast = "zk edit --limit 1 --sort modified- $@"
+
+# Edit the notes selected interactively among the notes created the last two weeks.
+# This alias doesn't take any argument, so we don't use $@.
+#recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
+
+# Print paths separated with colons for the notes found with the given
+# arguments. This can be useful to expand a complex search query into a flag
+# taking only paths. For example:
+#   zk list --linking-to "` + "`" + `zk path -m potatoe` + "`" + `"
+#path = "zk list --quiet --format {{path}} --delimiter , $@"
+
+# Show a random note.
+#lucky = "zk list --quiet --format full --sort random --limit 1"
+
+# Returns the Git history for the notes found with the given arguments.
+# Note the use of a pipe and the location of $@.
+#hist = "zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"
+
+# Edit this configuration file.
+#conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
+`
 
 // Zk (Zettelkasten) represents an opened slip box.
 type Zk struct {
