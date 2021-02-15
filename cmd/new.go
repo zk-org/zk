@@ -9,7 +9,7 @@ import (
 	"github.com/mickael-menu/zk/util/os"
 )
 
-// New adds a new note to the slip box.
+// New adds a new note to the notebook.
 type New struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory in which to create the note."`
 

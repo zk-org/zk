@@ -11,7 +11,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-// Index indexes the content of all the notes in the slip box.
+// Index indexes the content of all the notes in the notebook.
 type Index struct {
 	Force bool `short:"f" help:"Force indexing all the notes."`
 	Quiet bool `short:"q" help:"Do not print statistics nor progress."`

@@ -22,7 +22,7 @@ type Formatter struct {
 
 // NewFormatter creates a Formatter from a given format template.
 //
-// The absolute path to the slip box (basePath) and the working directory
+// The absolute path to the notebook (basePath) and the working directory
 // (currentPath) are used to make the path of each note relative to the working
 // directory.
 func NewFormatter(basePath string, currentPath string, format opt.String, templates templ.Loader, styler style.Styler) (*Formatter, error) {

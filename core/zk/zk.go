@@ -135,17 +135,17 @@ const defaultConfig = `# zk configuration file
 #conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
 `
 
-// Zk (Zettelkasten) represents an opened slip box.
+// Zk (Zettelkasten) represents an opened notebook.
 type Zk struct {
-	// Slip box root path.
+	// Notebook root path.
 	Path string
 	// Global user configuration.
 	Config Config
 }
 
-// Dir represents a directory inside a slip box.
+// Dir represents a directory inside a notebook.
 type Dir struct {
-	// Name of the directory, which is the path relative to the slip box's root.
+	// Name of the directory, which is the path relative to the notebook's root.
 	Name string
 	// Absolute path to the directory.
 	Path string
@@ -153,7 +153,7 @@ type Dir struct {
 	Config DirConfig
 }
 
-// Open locates a slip box at the given path and parses its configuration.
+// Open locates a notebook at the given path and parses its configuration.
 func Open(path string) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
@@ -183,7 +183,7 @@ func Open(path string) (*Zk, error) {
 	}, nil
 }
 
-// Create initializes a new slip box at the given path.
+// Create initializes a new notebook at the given path.
 func Create(path string) error {
 	wrap := errors.Wrapper("init failed")
 
@@ -193,7 +193,7 @@ func Create(path string) error {
 	}
 
 	if existingPath, err := locateRoot(path); err == nil {
-		return wrap(fmt.Errorf("a slip box already exists in %v", existingPath))
+		return wrap(fmt.Errorf("a notebook already exists in %v", existingPath))
 	}
 
 	// Create .zk and .zk/templates directories.
@@ -215,7 +215,7 @@ func Create(path string) error {
 	return nil
 }
 
-// locate finds the root of the slip box containing the given path.
+// locate finds the root of the notebook containing the given path.
 func locateRoot(path string) (string, error) {
 	if !filepath.IsAbs(path) {
 		panic("absolute path expected")
@@ -224,7 +224,7 @@ func locateRoot(path string) (string, error) {
 	var locate func(string) (string, error)
 	locate = func(currentPath string) (string, error) {
 		if currentPath == "/" || currentPath == "." {
-			return "", fmt.Errorf("no slip box found in %v or a parent directory", path)
+			return "", fmt.Errorf("no notebook found in %v or a parent directory", path)
 		}
 		exists, err := paths.DirExists(filepath.Join(currentPath, ".zk"))
 		switch {
@@ -240,14 +240,14 @@ func locateRoot(path string) (string, error) {
 	return locate(path)
 }
 
-// DBPath returns the path to the slip box database.
+// DBPath returns the path to the notebook database.
 func (zk *Zk) DBPath() string {
 	return filepath.Join(zk.Path, ".zk/data.db")
 }
 
-// RelPath returns the path relative to the slip box root to the given path.
+// RelPath returns the path relative to the notebook root to the given path.
 func (zk *Zk) RelPath(path string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid slip box path", path)
+	wrap := errors.Wrapperf("%v: not a valid notebook path", path)
 
 	path, err := filepath.Abs(path)
 	if err != nil {
@@ -263,7 +263,7 @@ func (zk *Zk) RelPath(path string) (string, error) {
 	return path, nil
 }
 
-// RootDir returns the root Dir for this slip box.
+// RootDir returns the root Dir for this notebook.
 func (zk *Zk) RootDir() Dir {
 	return Dir{
 		Name:   "",
@@ -272,11 +272,11 @@ func (zk *Zk) RootDir() Dir {
 	}
 }
 
-// DirAt returns a Dir representation of the slip box directory at the given path.
+// DirAt returns a Dir representation of the notebook directory at the given path.
 func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%v: not a valid slip box directory", path)
+		return nil, errors.Wrapf(err, "%v: not a valid notebook directory", path)
 	}
 
 	name, err := zk.RelPath(path)

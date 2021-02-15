@@ -7,9 +7,9 @@ import (
 	"github.com/mickael-menu/zk/core/zk"
 )
 
-// Init creates a slip box in the given directory
+// Init creates a notebook in the given directory
 type Init struct {
-	Directory string `arg optional type:"path" default:"." help:"Directory containing the slip box."`
+	Directory string `arg optional type:"path" default:"." help:"Directory containing the notebook."`
 }
 
 func (cmd *Init) Run() error {
@@ -20,7 +20,7 @@ func (cmd *Init) Run() error {
 			path = cmd.Directory
 		}
 
-		fmt.Printf("Initialized a slip box in %v\n", path)
+		fmt.Printf("Initialized a notebook in %v\n", path)
 	}
 	return err
 }

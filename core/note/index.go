@@ -64,7 +64,7 @@ type Indexer interface {
 	Remove(path string) error
 }
 
-// Index indexes the content of the notes in the given slip box.
+// Index indexes the content of the notes in the given notebook.
 func Index(zk *zk.Zk, force bool, parser Parser, indexer Indexer, logger util.Logger, callback func(change paths.DiffChange)) (IndexingStats, error) {
 	wrap := errors.Wrapper("indexing failed")
 
@@ -139,7 +139,7 @@ func metadata(path string, zk *zk.Zk, parser Parser) (Metadata, error) {
 
 	for _, link := range contentParts.Links {
 		if !strutil.IsURL(link.Href) {
-			// Make the href relative to the slip box root.
+			// Make the href relative to the notebook root.
 			href := filepath.Join(filepath.Dir(absPath), link.Href)
 			link.Href, err = zk.RelPath(href)
 			if err != nil {

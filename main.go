@@ -15,10 +15,10 @@ var Version = "dev"
 var Build = "dev"
 
 var cli struct {
-	Init  cmd.Init  `cmd group:"zk" help:"Create a new slip box in the given directory."`
+	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
 	Index cmd.Index `cmd group:"zk" help:"Index the notes to be searchable."`
 
-	New  cmd.New  `cmd group:"notes" help:"Create a new note in the given slip box directory."`
+	New  cmd.New  `cmd group:"notes" help:"Create a new note in the given notebook directory."`
 	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
 	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
 
@@ -85,7 +85,7 @@ func options(container *cmd.Container) []kong.Option {
 			"sort":   "Sorting",
 			"format": "Formatting",
 			"notes":  term.MustStyle("NOTES", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("Edit or browse your notes", style.RuleBold),
-			"zk":     term.MustStyle("SLIP BOX", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("A slip box is a directory containing your notes", style.RuleBold),
+			"zk":     term.MustStyle("NOTEBOOK", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("A notebook is a directory containing a collection of notes", style.RuleBold),
 		}),
 	}
 }
@@ -97,7 +97,7 @@ func fatalIfError(err error) {
 	}
 }
 
-// indexZk will index any slip box in the working directory.
+// indexZk will index any notebook in the working directory.
 func indexZk(container *cmd.Container) {
 	if len(os.Args) > 1 && os.Args[1] != "index" {
 		(&cmd.Index{Quiet: true}).Run(container)

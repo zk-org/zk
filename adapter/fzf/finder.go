@@ -22,7 +22,7 @@ type NoteFinder struct {
 
 // NoteFinderOpts holds the configuration for the fzf notes finder.
 //
-// The absolute path to the slip box (BasePath) and the working directory
+// The absolute path to the notebook (BasePath) and the working directory
 // (CurrentPath) are used to make the path of each note relative to the working
 // directory.
 type NoteFinderOpts struct {
@@ -33,7 +33,7 @@ type NoteFinderOpts struct {
 	// When non nil, a "create new note from query" binding will be added to
 	// fzf to create a note in this directory.
 	NewNoteDir *zk.Dir
-	// Absolute path to the slip box.
+	// Absolute path to the notebook.
 	BasePath string
 	// Path to the working directory.
 	CurrentPath string

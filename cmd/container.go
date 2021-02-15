@@ -66,7 +66,7 @@ func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *
 	return fzf.NewNoteFinder(opts, notes, c.Terminal)
 }
 
-// Database returns the DB instance for the given slip box, after executing any
+// Database returns the DB instance for the given notebook, after executing any
 // pending migration.
 func (c *Container) Database(path string) (*sqlite.DB, error) {
 	db, err := sqlite.Open(path)

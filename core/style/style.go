@@ -15,7 +15,7 @@ type Rule string
 var (
 	// Title of a note.
 	RuleTitle = Rule("title")
-	// Path to slip box file.
+	// Path to notebook file.
 	RulePath = Rule("path")
 	// Searched for term in a note.
 	RuleTerm = Rule("term")
