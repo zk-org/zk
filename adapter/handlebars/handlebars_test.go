@@ -158,6 +158,9 @@ func TestShellHelper(t *testing.T) {
 		nil,
 		"Hello, world!",
 	)
+
+	// using pipes
+	testString(t, `{{sh "echo hello | tr '[:lower:]' '[:upper:]'"}}`, nil, "HELLO")
 }
 
 func TestStyleHelper(t *testing.T) {
