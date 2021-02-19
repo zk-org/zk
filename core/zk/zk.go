@@ -62,15 +62,23 @@ const defaultConfig = `# zk configuration file
 #key = "value"
 
 
-# DIRECTORY OVERRIDES
+# GROUP OVERRIDES
 #
 # You can override global settings from [note] and [extra] for a particular
-# directory by declaring a [dir."<PATH>"] section.
-# <PATH> can contain any character, including slashes for subdirectories.
+# group of notes by declaring a [group."<name>"] section.
+#
+# Specify the list of directories which will automatically belong to the group
+# with the optional ` + "`" + `paths` + "`" + ` property.
+#
+# Omiting ` + "`" + `paths` + "`" + ` is equivalent to providing a single path equal to the name of
+# the group. This can be useful to quickly declare a group by the name of the
+# directory it applies to.
 
-#[dir."<PATH>".note]
+#[dir."<NAME>"]
+#paths = ["<DIR1>", "<DIR2>"]
+#[dir."<NAME>".note]
 #filename = "{{date now}}"
-#[dir."<PATH>".extra]
+#[dir."<NAME>".extra]
 #key = "value"
 
 
@@ -150,7 +158,7 @@ type Dir struct {
 	// Absolute path to the directory.
 	Path string
 	// User configuration for this directory.
-	Config DirConfig
+	Config GroupConfig
 }
 
 // Open locates a notebook at the given path and parses its configuration.
@@ -268,7 +276,7 @@ func (zk *Zk) RootDir() Dir {
 	return Dir{
 		Name:   "",
 		Path:   zk.Path,
-		Config: zk.Config.RootDirConfig(),
+		Config: zk.Config.RootGroupConfig(),
 	}
 }
 
@@ -284,13 +292,7 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 		return nil, err
 	}
 
-	config, ok := zk.Config.Dirs[name]
-	if !ok {
-		// Fallback on root config.
-		config = zk.Config.RootDirConfig()
-	}
-	config = config.Clone()
-
+	config := zk.findConfigForDirNamed(name).Clone()
 	for _, v := range overrides {
 		config.Override(v)
 	}
@@ -300,6 +302,18 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 		Path:   path,
 		Config: config,
 	}, nil
+}
+
+func (zk *Zk) findConfigForDirNamed(name string) GroupConfig {
+	for _, group := range zk.Config.Groups {
+		for _, path := range group.Paths {
+			if path == name {
+				return group
+			}
+		}
+	}
+	// Fallback on root config.
+	return zk.Config.RootGroupConfig()
 }
 
 // RequiredDirAt is the same as DirAt, but checks that the directory exists

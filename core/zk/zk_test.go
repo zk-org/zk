@@ -23,7 +23,7 @@ func TestRootDir(t *testing.T) {
 	assert.Equal(t, zk.RootDir(), Dir{
 		Name:   "",
 		Path:   wd,
-		Config: zk.Config.RootDirConfig(),
+		Config: zk.Config.RootGroupConfig(),
 	})
 }
 
@@ -84,7 +84,7 @@ func TestDirAtRoot(t *testing.T) {
 					Case:    CaseLower,
 				},
 			},
-			Dirs: map[string]DirConfig{
+			Groups: map[string]GroupConfig{
 				"log": {
 					Note: NoteConfig{
 						FilenameTemplate: "{{date}}.md",
@@ -101,7 +101,8 @@ func TestDirAtRoot(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, dir.Name, "")
 	assert.Equal(t, dir.Path, wd)
-	assert.Equal(t, dir.Config, DirConfig{
+	assert.Equal(t, dir.Config, GroupConfig{
+		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),
@@ -117,7 +118,54 @@ func TestDirAtRoot(t *testing.T) {
 	})
 }
 
-// Modifying the DirConfig of the returned Dir should not modify the global config.
+// When requesting a directory, the matching GroupConfig will be returned.
+func TestDirAtFindsGroup(t *testing.T) {
+	wd, _ := os.Getwd()
+
+	zk := Zk{
+		Path: wd,
+		Config: Config{
+			Groups: map[string]GroupConfig{
+				"ref": {
+					Paths: []string{"ref"},
+					Note: NoteConfig{
+						BodyTemplatePath: opt.NewString("citation.note"),
+					},
+					Extra: make(map[string]string),
+				},
+				"log": {
+					Paths: []string{"journal/daily", "journal/weekly"},
+					Note: NoteConfig{
+						BodyTemplatePath: opt.NewString("logging.note"),
+					},
+					Extra: make(map[string]string),
+				},
+			},
+		},
+	}
+
+	dir, err := zk.DirAt("ref")
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config, GroupConfig{
+		Paths: []string{"ref"},
+		Note: NoteConfig{
+			BodyTemplatePath: opt.NewString("citation.note"),
+		},
+		Extra: make(map[string]string),
+	})
+
+	dir, err = zk.DirAt("journal/weekly")
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config, GroupConfig{
+		Paths: []string{"journal/daily", "journal/weekly"},
+		Note: NoteConfig{
+			BodyTemplatePath: opt.NewString("logging.note"),
+		},
+		Extra: make(map[string]string),
+	})
+}
+
+// Modifying the GroupConfig of the returned Dir should not modify the global config.
 func TestDirAtReturnsClonedConfig(t *testing.T) {
 	zk := Zk{
 		Path: "/test",
@@ -147,7 +195,8 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 	dir.Config.Note.IDOptions.Case = CaseUpper
 	dir.Config.Extra["test"] = "modified"
 
-	assert.Equal(t, zk.Config.RootDirConfig(), DirConfig{
+	assert.Equal(t, zk.Config.RootGroupConfig(), GroupConfig{
+		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),
@@ -199,7 +248,8 @@ func TestDirAtWithOverrides(t *testing.T) {
 	)
 
 	assert.Nil(t, err)
-	assert.Equal(t, dir.Config, DirConfig{
+	assert.Equal(t, dir.Config, GroupConfig{
+		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("overriden-template"),
@@ -217,7 +267,8 @@ func TestDirAtWithOverrides(t *testing.T) {
 	})
 
 	// Check that the original config was not modified.
-	assert.Equal(t, zk.Config.RootDirConfig(), DirConfig{
+	assert.Equal(t, zk.Config.RootGroupConfig(), GroupConfig{
+		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),

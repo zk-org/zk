@@ -26,7 +26,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			DefaultTitle: "Untitled",
 			Lang:         "en",
 		},
-		Dirs: make(map[string]DirConfig),
+		Groups: make(map[string]GroupConfig),
 		Tool: ToolConfig{
 			Editor:     opt.NullString,
 			Pager:      opt.NullString,
@@ -71,7 +71,10 @@ func TestParseComplete(t *testing.T) {
 		ls = "zk list $@"
 		ed = "zk edit $@"
 
-		[dir.log.note]
+		[group.log]
+		paths = ["journal/daily", "journal/weekly"]
+
+		[group.log.note]
 		filename = "{{date}}.md"
 		extension = "note"
 		template = "log.md"
@@ -81,11 +84,14 @@ func TestParseComplete(t *testing.T) {
 		id-length = 8
 		id-case = "mixed"
 		
-		[dir.log.extra]
+		[group.log.extra]
 		log-ext = "value"
 
-		[dir.ref.note]
+		[group.ref.note]
 		filename = "{{slug title}}.md"
+
+		[group."without path"]
+		paths = []
 	`), "")
 
 	assert.Nil(t, err)
@@ -102,8 +108,9 @@ func TestParseComplete(t *testing.T) {
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
 		},
-		Dirs: map[string]DirConfig{
+		Groups: map[string]GroupConfig{
 			"log": {
+				Paths: []string{"journal/daily", "journal/weekly"},
 				Note: NoteConfig{
 					FilenameTemplate: "{{date}}.md",
 					Extension:        "note",
@@ -123,8 +130,28 @@ func TestParseComplete(t *testing.T) {
 				},
 			},
 			"ref": {
+				Paths: []string{"ref"},
 				Note: NoteConfig{
 					FilenameTemplate: "{{slug title}}.md",
+					Extension:        "txt",
+					BodyTemplatePath: opt.NewString("default.note"),
+					IDOptions: IDOptions{
+						Length:  4,
+						Charset: CharsetAlphanum,
+						Case:    CaseLower,
+					},
+					Lang:         "fr",
+					DefaultTitle: "Sans titre",
+				},
+				Extra: map[string]string{
+					"hello": "world",
+					"salut": "le monde",
+				},
+			},
+			"without path": {
+				Paths: []string{},
+				Note: NoteConfig{
+					FilenameTemplate: "{{id}}.note",
 					Extension:        "txt",
 					BodyTemplatePath: opt.NewString("default.note"),
 					IDOptions: IDOptions{
@@ -157,7 +184,7 @@ func TestParseComplete(t *testing.T) {
 	})
 }
 
-func TestParseMergesDirConfig(t *testing.T) {
+func TestParseMergesGroupConfig(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		[note]
 		filename = "root-filename"
@@ -173,18 +200,18 @@ func TestParseMergesDirConfig(t *testing.T) {
 		hello = "world"
 		salut = "le monde"
 
-		[dir.log.note]
+		[group.log.note]
 		filename = "log-filename"
 		template = "log-template"
 		id-charset = "numbers"
 		id-length = 8
 		id-case = "mixed"
 
-		[dir.log.extra]
+		[group.log.extra]
 		hello = "override"
 		log-ext = "value"
 
-		[dir.inherited]
+		[group.inherited]
 	`), "")
 
 	assert.Nil(t, err)
@@ -201,8 +228,9 @@ func TestParseMergesDirConfig(t *testing.T) {
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
 		},
-		Dirs: map[string]DirConfig{
+		Groups: map[string]GroupConfig{
 			"log": {
+				Paths: []string{"log"},
 				Note: NoteConfig{
 					FilenameTemplate: "log-filename",
 					Extension:        "txt",
@@ -222,6 +250,7 @@ func TestParseMergesDirConfig(t *testing.T) {
 				},
 			},
 			"inherited": {
+				Paths: []string{"inherited"},
 				Note: NoteConfig{
 					FilenameTemplate: "root-filename",
 					Extension:        "txt",
@@ -321,8 +350,9 @@ func TestParseResolvesTemplatePaths(t *testing.T) {
 	test("/abs/template.tpl", "/abs/template.tpl")
 }
 
-func TestDirConfigClone(t *testing.T) {
-	original := DirConfig{
+func TestGroupConfigClone(t *testing.T) {
+	original := GroupConfig{
+		Paths: []string{"original"},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "md",
@@ -344,6 +374,7 @@ func TestDirConfigClone(t *testing.T) {
 	// Check that the clone is equivalent
 	assert.Equal(t, clone, original)
 
+	clone.Paths = []string{"cloned"}
 	clone.Note.FilenameTemplate = "modified"
 	clone.Note.Extension = "txt"
 	clone.Note.BodyTemplatePath = opt.NewString("modified")
@@ -355,7 +386,8 @@ func TestDirConfigClone(t *testing.T) {
 	clone.Extra["test"] = "modified"
 
 	// Check that we didn't modify the original
-	assert.Equal(t, original, DirConfig{
+	assert.Equal(t, original, GroupConfig{
+		Paths: []string{"original"},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "md",
@@ -374,8 +406,9 @@ func TestDirConfigClone(t *testing.T) {
 	})
 }
 
-func TestDirConfigOverride(t *testing.T) {
-	sut := DirConfig{
+func TestGroupConfigOverride(t *testing.T) {
+	sut := GroupConfig{
+		Paths: []string{"path"},
 		Note: NoteConfig{
 			FilenameTemplate: "filename",
 			BodyTemplatePath: opt.NewString("body.tpl"),
@@ -393,7 +426,8 @@ func TestDirConfigOverride(t *testing.T) {
 
 	// Empty overrides
 	sut.Override(ConfigOverrides{})
-	assert.Equal(t, sut, DirConfig{
+	assert.Equal(t, sut, GroupConfig{
+		Paths: []string{"path"},
 		Note: NoteConfig{
 			FilenameTemplate: "filename",
 			BodyTemplatePath: opt.NewString("body.tpl"),
@@ -417,7 +451,8 @@ func TestDirConfigOverride(t *testing.T) {
 			"additional": "value",
 		},
 	})
-	assert.Equal(t, sut, DirConfig{
+	assert.Equal(t, sut, GroupConfig{
+		Paths: []string{"path"},
 		Note: NoteConfig{
 			FilenameTemplate: "filename",
 			BodyTemplatePath: opt.NewString("overriden-template"),

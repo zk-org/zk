@@ -11,15 +11,16 @@ import (
 // Config holds the global user configuration.
 type Config struct {
 	Note    NoteConfig
-	Dirs    map[string]DirConfig
+	Groups  map[string]GroupConfig
 	Tool    ToolConfig
 	Aliases map[string]string
 	Extra   map[string]string
 }
 
-// RootDirConfig returns the default DirConfig for the root directory and its descendants.
-func (c Config) RootDirConfig() DirConfig {
-	return DirConfig{
+// RootGroupConfig returns the default GroupConfig for the root directory and its descendants.
+func (c Config) RootGroupConfig() GroupConfig {
+	return GroupConfig{
+		Paths: []string{},
 		Note:  c.Note,
 		Extra: c.Extra,
 	}
@@ -48,8 +49,9 @@ type NoteConfig struct {
 	IDOptions IDOptions
 }
 
-// DirConfig holds the user configuration for a given directory.
-type DirConfig struct {
+// GroupConfig holds the user configuration for a given group of notes.
+type GroupConfig struct {
+	Paths []string
 	Note  NoteConfig
 	Extra map[string]string
 }
@@ -61,9 +63,13 @@ type ConfigOverrides struct {
 	Extra            map[string]string
 }
 
-// Clone creates a copy of the DirConfig receiver.
-func (c DirConfig) Clone() DirConfig {
+// Clone creates a copy of the GroupConfig receiver.
+func (c GroupConfig) Clone() GroupConfig {
 	clone := c
+
+	clone.Paths = make([]string, len(c.Paths))
+	copy(clone.Paths, c.Paths)
+
 	clone.Extra = make(map[string]string)
 	for k, v := range c.Extra {
 		clone.Extra[k] = v
@@ -71,9 +77,9 @@ func (c DirConfig) Clone() DirConfig {
 	return clone
 }
 
-// Override modifies the DirConfig receiver by updating the properties
+// Override modifies the GroupConfig receiver by updating the properties
 // overriden in ConfigOverrides.
-func (c *DirConfig) Override(overrides ConfigOverrides) {
+func (c *GroupConfig) Override(overrides ConfigOverrides) {
 	if !overrides.BodyTemplatePath.IsNull() {
 		c.Note.BodyTemplatePath = overrides.BodyTemplatePath
 	}
@@ -93,7 +99,8 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		return nil, errors.Wrap(err, "failed to read config")
 	}
 
-	root := DirConfig{
+	root := GroupConfig{
+		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -140,9 +147,9 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		}
 	}
 
-	dirs := make(map[string]DirConfig)
-	for name, dirTOML := range tomlConf.Dirs {
-		dirs[name] = root.merge(dirTOML, templatesDir)
+	groups := make(map[string]GroupConfig)
+	for name, dirTOML := range tomlConf.Groups {
+		groups[name] = root.merge(dirTOML, name, templatesDir)
 	}
 
 	aliases := make(map[string]string)
@@ -153,8 +160,8 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	}
 
 	return &Config{
-		Note: root.Note,
-		Dirs: dirs,
+		Note:   root.Note,
+		Groups: groups,
 		Tool: ToolConfig{
 			Editor:     opt.NewNotEmptyString(tomlConf.Tool.Editor),
 			Pager:      opt.NewStringWithPtr(tomlConf.Tool.Pager),
@@ -165,8 +172,18 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	}, nil
 }
 
-func (c DirConfig) merge(tomlConf tomlDirConfig, templatesDir string) DirConfig {
+func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string, templatesDir string) GroupConfig {
 	res := c.Clone()
+
+	if tomlConf.Paths != nil {
+		for _, p := range tomlConf.Paths {
+			res.Paths = append(res.Paths, p)
+		}
+	} else {
+		// If no `paths` config property was given for this group, we assume
+		// that its name will be used as the path.
+		res.Paths = append(res.Paths, name)
+	}
 
 	note := tomlConf.Note
 	if note.Filename != "" {
@@ -205,7 +222,7 @@ func (c DirConfig) merge(tomlConf tomlDirConfig, templatesDir string) DirConfig 
 // tomlConfig holds the TOML representation of Config
 type tomlConfig struct {
 	Note    tomlNoteConfig
-	Dirs    map[string]tomlDirConfig `toml:"dir"`
+	Groups  map[string]tomlGroupConfig `toml:"group"`
 	Tool    tomlToolConfig
 	Extra   map[string]string
 	Aliases map[string]string `toml:"alias"`
@@ -222,7 +239,8 @@ type tomlNoteConfig struct {
 	IDCase       string `toml:"id-case"`
 }
 
-type tomlDirConfig struct {
+type tomlGroupConfig struct {
+	Paths []string
 	Note  tomlNoteConfig
 	Extra map[string]string
 }

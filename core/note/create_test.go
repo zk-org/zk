@@ -19,7 +19,7 @@ func TestCreate(t *testing.T) {
 			Dir: zk.Dir{
 				Name: "log",
 				Path: "/test/log",
-				Config: zk.DirConfig{
+				Config: zk.GroupConfig{
 					Note: zk.NoteConfig{
 						Extension: "md",
 					},
@@ -83,7 +83,7 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 			Dir: zk.Dir{
 				Name: "log",
 				Path: "/test/log",
-				Config: zk.DirConfig{
+				Config: zk.GroupConfig{
 					Note: zk.NoteConfig{
 						Extension: "md",
 					},
@@ -137,7 +137,7 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 			Dir: zk.Dir{
 				Name: "log",
 				Path: "/test/log",
-				Config: zk.DirConfig{
+				Config: zk.GroupConfig{
 					Note: zk.NoteConfig{
 						Extension: "md",
 					},
