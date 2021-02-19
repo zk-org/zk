@@ -228,6 +228,15 @@ func TestDirAtWithOverrides(t *testing.T) {
 			Extra: map[string]string{
 				"hello": "world",
 			},
+			Groups: map[string]GroupConfig{
+				"group": {
+					Paths: []string{"group-path"},
+					Note: NoteConfig{
+						BodyTemplatePath: opt.NewString("group.note"),
+					},
+					Extra: map[string]string{},
+				},
+			},
 		},
 	}
 
@@ -265,6 +274,21 @@ func TestDirAtWithOverrides(t *testing.T) {
 			"additional2": "value3",
 		},
 	})
+
+	// Overriding the group will select a different group config.
+	dir, err = zk.DirAt(".", ConfigOverrides{Group: opt.NewString("group")})
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config, GroupConfig{
+		Paths: []string{"group-path"},
+		Note: NoteConfig{
+			BodyTemplatePath: opt.NewString("group.note"),
+		},
+		Extra: map[string]string{},
+	})
+
+	// An unknown group override returns an error.
+	_, err = zk.DirAt(".", ConfigOverrides{Group: opt.NewString("foobar")})
+	assert.Err(t, err, "foobar: group not find in the config file")
 
 	// Check that the original config was not modified.
 	assert.Equal(t, zk.Config.RootGroupConfig(), GroupConfig{

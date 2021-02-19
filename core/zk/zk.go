@@ -292,7 +292,12 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 		return nil, err
 	}
 
-	config := zk.findConfigForDirNamed(name).Clone()
+	config, err := zk.findConfigForDirNamed(name, overrides)
+	if err != nil {
+		return nil, err
+	}
+
+	config = config.Clone()
 	for _, v := range overrides {
 		config.Override(v)
 	}
@@ -304,16 +309,31 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 	}, nil
 }
 
-func (zk *Zk) findConfigForDirNamed(name string) GroupConfig {
+func (zk *Zk) findConfigForDirNamed(name string, overrides []ConfigOverrides) (GroupConfig, error) {
+	// If there's a Group overrides, attempt to find a matching group.
+	overridenGroup := ""
+	for _, o := range overrides {
+		if !o.Group.IsNull() {
+			overridenGroup = o.Group.Unwrap()
+			if group, ok := zk.Config.Groups[overridenGroup]; ok {
+				return group, nil
+			}
+		}
+	}
+
+	if overridenGroup != "" {
+		return GroupConfig{}, fmt.Errorf("%s: group not find in the config file", overridenGroup)
+	}
+
 	for _, group := range zk.Config.Groups {
 		for _, path := range group.Paths {
 			if path == name {
-				return group
+				return group, nil
 			}
 		}
 	}
 	// Fallback on root config.
-	return zk.Config.RootGroupConfig()
+	return zk.Config.RootGroupConfig(), nil
 }
 
 // RequiredDirAt is the same as DirAt, but checks that the directory exists

@@ -59,6 +59,7 @@ type GroupConfig struct {
 // ConfigOverrides holds user configuration overriden values, for example fed
 // from CLI flags.
 type ConfigOverrides struct {
+	Group            opt.String
 	BodyTemplatePath opt.String
 	Extra            map[string]string
 }

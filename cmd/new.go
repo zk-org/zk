@@ -14,6 +14,7 @@ type New struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory in which to create the note."`
 
 	Title     string            `short:t   placeholder:TITLE help:"Title of the new note."`
+	Group     string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
 	Extra     map[string]string `                            help:"Extra variables passed to the templates."`
 	Template  string            `type:path placeholder:PATH  help:"Custom template used to render the note."`
 	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
@@ -21,6 +22,7 @@ type New struct {
 
 func (cmd *New) ConfigOverrides() zk.ConfigOverrides {
 	return zk.ConfigOverrides{
+		Group:            opt.NewNotEmptyString(cmd.Group),
 		BodyTemplatePath: opt.NewNotEmptyString(cmd.Template),
 		Extra:            cmd.Extra,
 	}
