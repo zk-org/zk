@@ -142,17 +142,12 @@ func TestDirAtFindsGroup(t *testing.T) {
 			Groups: map[string]GroupConfig{
 				"ref": {
 					Paths: []string{"ref"},
-					Note: NoteConfig{
-						BodyTemplatePath: opt.NewString("citation.note"),
-					},
-					Extra: make(map[string]string),
 				},
 				"log": {
 					Paths: []string{"journal/daily", "journal/weekly"},
-					Note: NoteConfig{
-						BodyTemplatePath: opt.NewString("logging.note"),
-					},
-					Extra: make(map[string]string),
+				},
+				"glob": {
+					Paths: []string{"glob/*"},
 				},
 			},
 		},
@@ -160,23 +155,23 @@ func TestDirAtFindsGroup(t *testing.T) {
 
 	dir, err := zk.DirAt("ref")
 	assert.Nil(t, err)
-	assert.Equal(t, dir.Config, GroupConfig{
-		Paths: []string{"ref"},
-		Note: NoteConfig{
-			BodyTemplatePath: opt.NewString("citation.note"),
-		},
-		Extra: make(map[string]string),
-	})
+	assert.Equal(t, dir.Config.Paths, []string{"ref"})
 
 	dir, err = zk.DirAt("journal/weekly")
 	assert.Nil(t, err)
-	assert.Equal(t, dir.Config, GroupConfig{
-		Paths: []string{"journal/daily", "journal/weekly"},
-		Note: NoteConfig{
-			BodyTemplatePath: opt.NewString("logging.note"),
-		},
-		Extra: make(map[string]string),
-	})
+	assert.Equal(t, dir.Config.Paths, []string{"journal/daily", "journal/weekly"})
+
+	dir, err = zk.DirAt("glob/qwfpgj")
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config.Paths, []string{"glob/*"})
+
+	dir, err = zk.DirAt("glob/qwfpgj/no")
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config.Paths, []string{})
+
+	dir, err = zk.DirAt("glob")
+	assert.Nil(t, err)
+	assert.Equal(t, dir.Config.Paths, []string{})
 }
 
 // Modifying the GroupConfig of the returned Dir should not modify the global config.

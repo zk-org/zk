@@ -329,9 +329,12 @@ func (zk *Zk) findConfigForDirNamed(name string, overrides []ConfigOverrides) (G
 		return GroupConfig{}, fmt.Errorf("%s: group not find in the config file", overridenGroup)
 	}
 
-	for _, group := range zk.Config.Groups {
+	for groupName, group := range zk.Config.Groups {
 		for _, path := range group.Paths {
-			if path == name {
+			matches, err := filepath.Match(path, name)
+			if err != nil {
+				return GroupConfig{}, errors.Wrapf(err, "failed to match group %s to %s", groupName, name)
+			} else if matches {
 				return group, nil
 			}
 		}
