@@ -9,8 +9,23 @@ import (
 	"github.com/mickael-menu/zk/util/test/assert"
 )
 
-func TestEditorUsesUserConfigFirst(t *testing.T) {
-	os.Setenv("VISUAL", "editor")
+func TestEditorUsesZkEditorFirst(t *testing.T) {
+	os.Setenv("ZK_EDITOR", "zk-editor")
+	os.Setenv("VISUAL", "visual")
+	os.Setenv("EDITOR", "editor")
+	zk := zk.Zk{Config: zk.Config{
+		Tool: zk.ToolConfig{
+			Editor: opt.NewString("custom-editor"),
+		},
+	}}
+
+	assert.Equal(t, editor(&zk), opt.NewString("zk-editor"))
+}
+
+func TestEditorFallsbackOnUserConfig(t *testing.T) {
+	os.Unsetenv("ZK_EDITOR")
+	os.Setenv("VISUAL", "visual")
+	os.Setenv("EDITOR", "editor")
 	zk := zk.Zk{Config: zk.Config{
 		Tool: zk.ToolConfig{
 			Editor: opt.NewString("custom-editor"),
@@ -21,6 +36,7 @@ func TestEditorUsesUserConfigFirst(t *testing.T) {
 }
 
 func TestEditorFallsbackOnVisual(t *testing.T) {
+	os.Unsetenv("ZK_EDITOR")
 	os.Setenv("VISUAL", "visual")
 	os.Setenv("EDITOR", "editor")
 	zk := zk.Zk{}
@@ -29,6 +45,7 @@ func TestEditorFallsbackOnVisual(t *testing.T) {
 }
 
 func TestEditorFallsbackOnEditor(t *testing.T) {
+	os.Unsetenv("ZK_EDITOR")
 	os.Unsetenv("VISUAL")
 	os.Setenv("EDITOR", "editor")
 	zk := zk.Zk{}
@@ -37,6 +54,7 @@ func TestEditorFallsbackOnEditor(t *testing.T) {
 }
 
 func TestEditorWhenUnset(t *testing.T) {
+	os.Unsetenv("ZK_EDITOR")
 	os.Unsetenv("VISUAL")
 	os.Unsetenv("EDITOR")
 	zk := zk.Zk{}
