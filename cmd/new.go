@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/mickael-menu/zk/core/note"
@@ -49,9 +50,23 @@ func (cmd *New) Run(container *Container) error {
 		Title:   opt.NewNotEmptyString(cmd.Title),
 		Content: content,
 	}
+
 	file, err := note.Create(opts, container.TemplateLoader(dir.Config.Note.Lang), container.Date)
 	if err != nil {
-		return err
+		var noteExists note.ErrNoteExists
+		if !errors.As(err, &noteExists) {
+			return err
+		}
+
+		if confirmed, _ := container.Terminal.Confirm(
+			fmt.Sprintf("%s already exists, do you want to edit this note instead?", noteExists.Name),
+			true,
+		); !confirmed {
+			// abort...
+			return nil
+		}
+
+		file = noteExists.Path
 	}
 
 	if cmd.PrintPath {
