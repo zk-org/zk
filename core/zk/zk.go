@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/paths"
@@ -254,16 +255,19 @@ func (zk *Zk) DBPath() string {
 }
 
 // RelPath returns the path relative to the notebook root to the given path.
-func (zk *Zk) RelPath(path string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid notebook path", path)
+func (zk *Zk) RelPath(absPath string) (string, error) {
+	wrap := errors.Wrapperf("%v: not a valid notebook path", absPath)
 
-	path, err := filepath.Abs(path)
+	path, err := filepath.Abs(absPath)
 	if err != nil {
 		return path, wrap(err)
 	}
 	path, err = filepath.Rel(zk.Path, path)
 	if err != nil {
 		return path, wrap(err)
+	}
+	if strings.HasPrefix(path, "..") {
+		return path, fmt.Errorf("%s: path is outside the notebook", absPath)
 	}
 	if path == "." {
 		path = ""

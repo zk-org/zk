@@ -68,6 +68,20 @@ func TestDirAtGivenPath(t *testing.T) {
 	}
 }
 
+func TestDirAtOutsideNotebook(t *testing.T) {
+	wd, _ := os.Getwd()
+	zk := &Zk{Path: wd}
+
+	for _, path := range []string{
+		"..",
+		"../..",
+		"/tmp",
+	} {
+		_, err := zk.DirAt(path)
+		assert.Err(t, err, "path is outside the notebook")
+	}
+}
+
 // When requesting the root directory `.`, the config is the default one.
 func TestDirAtRoot(t *testing.T) {
 	wd, _ := os.Getwd()
@@ -167,8 +181,9 @@ func TestDirAtFindsGroup(t *testing.T) {
 
 // Modifying the GroupConfig of the returned Dir should not modify the global config.
 func TestDirAtReturnsClonedConfig(t *testing.T) {
+	wd, _ := os.Getwd()
 	zk := Zk{
-		Path: "/test",
+		Path: wd,
 		Config: Config{
 			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
@@ -213,8 +228,9 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 }
 
 func TestDirAtWithOverrides(t *testing.T) {
+	wd, _ := os.Getwd()
 	zk := Zk{
-		Path: "/test",
+		Path: wd,
 		Config: Config{
 			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
