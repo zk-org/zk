@@ -54,6 +54,7 @@ func TestStyleAllRules(t *testing.T) {
 	test("path", "4;36m")
 	test("term", "31m")
 	test("emphasis", "1;36m")
+	test("understate", "2m")
 
 	test("bold", "1m")
 	test("faint", "2m")

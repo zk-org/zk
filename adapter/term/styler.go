@@ -32,10 +32,11 @@ func (t *Terminal) MustStyle(text string, rules ...style.Rule) string {
 
 // FIXME: User config
 var themeAliases = map[style.Rule][]style.Rule{
-	"title":    {"bold", "yellow"},
-	"path":     {"underline", "cyan"},
-	"term":     {"red"},
-	"emphasis": {"bold", "cyan"},
+	"title":      {"bold", "yellow"},
+	"path":       {"underline", "cyan"},
+	"term":       {"red"},
+	"emphasis":   {"bold", "cyan"},
+	"understate": {"faint"},
 }
 
 func expandThemeAliases(rules []style.Rule) []style.Rule {

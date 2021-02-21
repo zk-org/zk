@@ -21,6 +21,8 @@ var (
 	RuleTerm = Rule("term")
 	// Element to emphasize, for example the short version of a prompt response: [y]es.
 	RuleEmphasis = Rule("emphasis")
+	// Element to understate, for example the content of the note in fzf.
+	RuleUnderstate = Rule("understate")
 
 	RuleBold          = Rule("bold")
 	RuleItalic        = Rule("italic")

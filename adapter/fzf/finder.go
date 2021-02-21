@@ -86,7 +86,7 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	fzf, err := New(Opts{
-		PreviewCmd: f.opts.PreviewCmd.OrString("cat {1}").NonEmpty(),
+		PreviewCmd: f.opts.PreviewCmd.OrString("cat {-1}").NonEmpty(),
 		Padding:    2,
 		Bindings:   bindings,
 	})
@@ -95,10 +95,14 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	for i, match := range matches {
+		title := match.Title
+		if title == "" {
+			title = relPaths[i]
+		}
 		fzf.Add([]string{
-			relPaths[i],
-			f.terminal.MustStyle(match.Title, style.RuleYellow),
-			f.terminal.MustStyle(stringsutil.JoinLines(match.Body), style.RuleBlack),
+			f.terminal.MustStyle(title, style.RuleYellow),
+			f.terminal.MustStyle(stringsutil.JoinLines(match.Body), style.RuleUnderstate),
+			f.terminal.MustStyle(relPaths[i], style.RuleUnderstate),
 		})
 	}
 
@@ -108,7 +112,7 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	for _, s := range selection {
-		path := s[0]
+		path := s[len(s)-1]
 		for i, m := range matches {
 			if relPaths[i] == path {
 				selectedMatches = append(selectedMatches, m)
