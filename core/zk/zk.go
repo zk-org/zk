@@ -99,7 +99,7 @@ const defaultConfig = `# zk configuration file
 
 # bat is a great tool to render Markdown document with syntax highlighting.
 #https://github.com/sharkdp/bat
-#fzf-preview = "bat -p --color always {1}"
+#fzf-preview = "bat -p --color always {-1}"
 
 
 # COMMAND ALIASES

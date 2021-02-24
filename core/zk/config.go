@@ -110,7 +110,7 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 			DefaultTitle:     "Untitled",
 			IDOptions: IDOptions{
 				Charset: CharsetAlphanum,
-				Length:  5,
+				Length:  4,
 				Case:    CaseLower,
 			},
 		},

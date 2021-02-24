@@ -80,17 +80,17 @@ func (cmd *List) Run(container *Container) error {
 		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
 			for i, note := range notes {
 				if i > 0 {
-					fmt.Fprintf(out, cmd.Delimiter)
+					fmt.Fprint(out, cmd.Delimiter)
 				}
 
 				ft, err := formatter.Format(note)
 				if err != nil {
 					return err
 				}
-				fmt.Fprintf(out, ft)
+				fmt.Fprint(out, ft)
 			}
 			if cmd.Delimiter0 {
-				fmt.Fprintf(out, "\x00")
+				fmt.Fprint(out, "\x00")
 			}
 
 			return nil
