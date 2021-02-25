@@ -2,6 +2,7 @@ package term
 
 import (
 	"os"
+	"strings"
 
 	"github.com/mattn/go-isatty"
 )
@@ -24,4 +25,11 @@ func (t *Terminal) IsInteractive() bool {
 // IsTTY returns whether the app is attached to an interactive terminal.
 func (t *Terminal) IsTTY() bool {
 	return isatty.IsTerminal(os.Stdin.Fd())
+}
+
+// SupportsUTF8 returns whether the computer is configured to support UTF-8.
+func (t *Terminal) SupportsUTF8() bool {
+	lang := strings.ToUpper(os.Getenv("LANG"))
+	lc := strings.ToUpper(os.Getenv("LC_ALL"))
+	return strings.Contains(lang, "UTF") || strings.Contains(lc, "UTF")
 }

@@ -8,10 +8,15 @@ import (
 
 // RegisterList registers a {{list}} template helper which formats a slice of
 // strings into a bulleted list.
-func RegisterList() {
+func RegisterList(supportsUTF8 bool) {
 	itemify := func(text string) string {
+		bullet := "-"
+		if supportsUTF8 {
+			bullet = "‣"
+		}
+
 		lines := strings.SplitAfter(strings.TrimRight(text, "\n"), "\n")
-		return "  ‣ " + strings.Join(lines, "    ")
+		return "  " + bullet + " " + strings.Join(lines, "    ")
 	}
 
 	raymond.RegisterHelper("list", func(items []string) string {

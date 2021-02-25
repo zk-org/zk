@@ -12,10 +12,10 @@ import (
 	"github.com/mickael-menu/zk/util/errors"
 )
 
-func Init(lang string, logger util.Logger, styler style.Styler) {
+func Init(lang string, supportsUTF8 bool, logger util.Logger, styler style.Styler) {
 	helpers.RegisterConcat()
 	helpers.RegisterDate(logger)
-	helpers.RegisterList()
+	helpers.RegisterList(supportsUTF8)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
 	helpers.RegisterSlug(lang, logger)

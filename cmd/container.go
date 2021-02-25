@@ -51,7 +51,7 @@ func (c *Container) OpenZk() (*zk.Zk, error) {
 
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Logger, c.Terminal)
+		handlebars.Init(lang, c.Terminal.SupportsUTF8(), c.Logger, c.Terminal)
 		c.templateLoader = handlebars.NewLoader()
 	}
 	return c.templateLoader
