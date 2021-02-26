@@ -1,0 +1,10 @@
+[note]
+template = "default.md"
+
+[tool]
+editor = "vim"
+
+[alias]
+neuron = 'neuron gen $@' 
+wc = "zk list --format '{{word-count}}\t{{title}}' --sort word-count -x log $@"
+

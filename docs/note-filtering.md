@@ -1,0 +1,198 @@
+# Searching and filtering notes
+
+A few commands are built upon `zk`'s powerful note filtering capabilities, such as `edit` and `list`. They accept any option described here.
+
+## Filter by path
+
+All filtering commands take for unique positional argument a list of paths. When set, only the notes matching the given paths will be returned.
+
+You can use it to find all the notes in a directory.
+
+```sh
+$ zk list journal/daily journal/weekly
+```
+
+Or specific notes.
+
+```sh
+$ zk edit 200911172034-an-interesting-concept.md
+```
+
+It works fine with only a path prefix as well. This is useful when you have a [note ID](note-id.md) prefix, but not the full file path.
+
+```sh
+$ zk edit 200911172034
+```
+
+These rules apply to all the following options, when they expect a `<path>` parameter.
+
+```sh
+$ zk list --linking-to 200911172034
+```
+
+You can also use a nested `zk` command to pre-filter paths to feed to an option with a `<path>` argument. [See the `inline` command alias example](config-alias.md) for more explanation.
+
+```sh
+# List the notes which have at least one link pointing to them (i.e. not orphans).
+$ zk list --exclude "`zk inline --orphan`"
+
+# List the notes which are linked by at least one note from the journal/ directory.
+$ zk list --linked-by "`zk inline journal`"
+```
+
+
+## Search the title or body
+
+Use `--match <query>` (or `-m`) to search through the title and body of notes.
+
+The search is powered by a [full-text search](https://en.wikipedia.org/wiki/Full-text_search) database enabling near-instant results. Queries are not case-sensitive and terms are tokenized, which means that searching for `create` will also match `created` and `creating`.
+
+A syntax similar to Google Search is available for advanced search queries.
+
+### Combining terms
+
+By default, the search engine will find the notes containing all the terms in the query, in any order.
+
+```
+"tesla edison"
+```
+
+If you want to find the notes containing any or both of the terms, put `OR` (all caps) or a pipe `|` between them.
+
+```
+"tesla OR edison"
+"tesla | edison"
+```
+
+Search for an exact phrase by surrounding it with double quotes. In this case, you will need to single quote the full query if you do not want to escape the double quotes.
+
+```
+'tesla "alternating current"'
+```
+
+To construct more complex queries, you can group sub-queries with parentheses.
+
+```
+"current (tesla OR edison)"
+```
+
+Finally, you can filter out results by excluding a term with `NOT` (all caps) or a `-` prefix.
+
+```
+"tesla NOT car"
+"tesla -car"
+```
+
+### Search in specific fields
+
+If you want to search only in the title or body of notes, prefix a query with `title:` or `body:`.
+
+```
+"title: tesla"
+"body: (tesla OR edison)"
+```
+
+### Prefix terms
+
+Match any term beginning with the given prefix with a wildcard `*`.
+
+```
+"edi*"
+```
+
+Prefixing a query with `^` will match notes whose title or body start with the following term.
+
+```
+"title: ^journal"
+```
+
+## Filter by creation or modification date
+
+To find notes created or modified on a specific day, use `--created <date>` and `--modified <date>`. They accept a human-friendly date for argument.
+
+```
+--created yesterday
+--created "last tuesday"
+--modified "Feb 3"
+```
+
+You can filter by range instead, using `--created-before`, `--created-after`, `--modified-before` and `--modified-after`.
+
+```
+--created-before 10am
+--modified-after 2021
+--created-after "last monday" --created-before yesterday
+```
+
+## Explore links
+
+You can use the following options to explore the web of links spanning your [notebook](notebook.md).
+
+`--linked-by <path>` (or `-l`) finds the notes linked by the given one, while `--linking-to <path>` (or `-L`) searches the notes having a link to it (also known as *backlinks*).
+
+```
+--linked-by 200911172034
+--linking-to 200911172034
+```
+
+These options stop at the first level by default. But you can explore the whole web by adding the `--recursive` (or `-r`) option to find all the notes leading to (or from) a given note. If you feel overwhelmed, limit the distance between two notes with `--max-distance <count>`.
+
+```
+--linked-by 200911172034 --recursive --max-distance 3
+```
+
+Finally, it can be useful to see which notes have no links pointing to them at all. You can use the `--orphan` option for this.
+
+## Find related notes
+
+Part of writing a great notebook is to establish links between related notes. The `--related <path>` option can help by listing results having a linked note in common, but not yet connected to the note.
+
+```
+--related 200911172034
+```
+
+## Exclude notes from the results
+
+To prevent certain notes from polluting the results, you can explicitly exclude them with `--exclude <path>` (or `-x`). This is particularly useful when you have a whole directory of notes to be ignored.
+
+```
+-x journal
+```
+
+## Limit the number of results
+
+If you are only interested into the first few notes, limit the number of results with `--limit <count>` (or `-n`).
+
+```
+--limit 20
+```
+
+Using `-n1` is particularly common when you are expecting only a single result.
+
+## Interactive filtering
+
+A common search flow is to reduce the search scope using `zk`'s filtering options, before selecting manually the notes to process among them. This is especially useful with `zk edit` to avoid opening many unwanted notes with your editor.
+
+Use `--interactive` (or `-i`) to select filtered notes manually. The interactive selection is handled by [`fzf`](tool-fzf.md) which brings a powerful fuzzy matching search into the mix.
+
+## Sort the results
+
+After finding matching notes, it might be useful to sort them before processing. The `--sort <criteria>` (or `-s`) option is made for that.
+
+You can add a `+` (ascending) or `-` (descending) suffix to a sort criterion to customize the order. Each criterion has a sensible intrinsic order by default.
+
+```
+--sort path
+--sort created+
+-st- (eq. --sort title-)
+```
+
+| Criterion    | Shortcut | Order | Description                        |
+|--------------|----------|-------|------------------------------------|
+| `created`    | `c`      | `-`   | Creation date                      |
+| `modified`   | `m`      | `-`   | Modification date                  |
+| `path`       | `p`      | `+`   | File path relative to the notebook |
+| `title`      | `t`      | `+`   | Note title                         |
+| `random`     | `r`      | `+`   | Order notes randomly               |
+| `word-count` | `wc`     | `+`   | Word count in the note             |
+
