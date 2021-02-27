@@ -483,15 +483,42 @@ func TestNoteDAOFindMatchWithSort(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindInPath(t *testing.T) {
+func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01-*"})},
+			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01-03.md"})},
+		},
+		[]string{"log/2021-01-03.md"},
+	)
+}
+
+// You can look for files with only their prefix.
+func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01"})},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
 	)
 }
 
+// For directory, only complete names work, no prefixes.
+func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.PathFilter([]string{"lo"})},
+		},
+		[]string{},
+	)
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.PathFilter([]string{"log"})},
+		},
+		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+	)
+}
+
+// You can look for multiple paths, in which case notes can be in any of them.
 func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
@@ -513,7 +540,7 @@ func TestNoteDAOFindExcludingPath(t *testing.T) {
 func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.ExcludePathFilter([]string{"ref", "log/2021-01-*"})},
+			Filters: []note.Filter{note.ExcludePathFilter([]string{"ref", "log/2021-01"})},
 		},
 		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
 	)

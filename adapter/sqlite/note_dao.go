@@ -10,6 +10,7 @@ import (
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/fts5"
+	"github.com/mickael-menu/zk/util/icu"
 	"github.com/mickael-menu/zk/util/paths"
 	strutil "github.com/mickael-menu/zk/util/strings"
 )
@@ -427,23 +428,23 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			if len(filter) == 0 {
 				break
 			}
-			globs := make([]string, 0)
+			regexes := make([]string, 0)
 			for _, path := range filter {
-				globs = append(globs, "n.path GLOB ?")
-				args = append(args, path+"*")
+				regexes = append(regexes, "n.path REGEXP ?")
+				args = append(args, pathRegex(path))
 			}
-			whereExprs = append(whereExprs, strings.Join(globs, " OR "))
+			whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
 
 		case note.ExcludePathFilter:
 			if len(filter) == 0 {
 				break
 			}
-			globs := make([]string, 0)
+			regexes := make([]string, 0)
 			for _, path := range filter {
-				globs = append(globs, "n.path NOT GLOB ?")
-				args = append(args, path+"*")
+				regexes = append(regexes, "n.path NOT REGEXP ?")
+				args = append(args, pathRegex(path))
 			}
-			whereExprs = append(whereExprs, strings.Join(globs, " AND "))
+			whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
 
 		case note.LinkedByFilter:
 			maxDistance = filter.MaxDistance
@@ -605,4 +606,11 @@ func orderTerm(sorter note.Sorter) string {
 	default:
 		panic(fmt.Sprintf("%v: unknown note.SortField", sorter.Field))
 	}
+}
+
+// pathRegex returns an ICU regex to match the files in the folder at given
+// `path`, or any file having `path` for prefix.
+func pathRegex(path string) string {
+	path = icu.EscapePattern(path)
+	return path + "[^/]*|" + path + "/.+"
 }
