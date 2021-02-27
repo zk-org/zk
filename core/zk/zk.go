@@ -3,7 +3,6 @@ package zk
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -35,7 +34,7 @@ const defaultConfig = `# zk configuration file
 
 # Template used to generate a note's content.
 # If not an absolute path, it is relative to .zk/templates/
-#template = "default.md"
+template = "default.md"
 
 # Configure random ID generation.
 
@@ -144,6 +143,11 @@ const defaultConfig = `# zk configuration file
 #conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
 `
 
+const defaultTemplate = `# {{title}}
+
+{{content}}
+`
+
 // Zk (Zettelkasten) represents an opened notebook.
 type Zk struct {
 	// Notebook root path.
@@ -205,18 +209,14 @@ func Create(path string) error {
 		return wrap(fmt.Errorf("a notebook already exists in %v", existingPath))
 	}
 
-	// Create .zk and .zk/templates directories.
-	err = os.MkdirAll(filepath.Join(path, ".zk/templates"), os.ModePerm)
+	// Write default config.toml.
+	err = paths.WriteString(filepath.Join(path, ".zk/config.toml"), defaultConfig)
 	if err != nil {
 		return wrap(err)
 	}
 
-	// Write default config.toml.
-	f, err := os.Create(filepath.Join(path, ".zk/config.toml"))
-	if err != nil {
-		return wrap(err)
-	}
-	_, err = f.WriteString(defaultConfig)
+	// Write default template.
+	err = paths.WriteString(filepath.Join(path, ".zk/templates/default.md"), defaultTemplate)
 	if err != nil {
 		return wrap(err)
 	}

@@ -1,7 +1,5 @@
 # Creating a new note
 
-<!--{% raw %}-->
-
 You can add a new note to a [notebook](notebook.md) using `zk new --title "An interesting concept" [<directory>]`.
 
 `zk` automatically generates a filename and initial content according to rules set in your [configuration file](config.md). These settings can be customized per [group of notes](config-group.md) in your notebook, as illustrated in [Maintaining a daily journal](daily-journal.md).
@@ -23,6 +21,4 @@ For example, to use the content of the macOS clipboard as the initial content yo
 ```sh
 $ pbpaste | zk new
 ```
-
-<!--{% endraw %}-->
 

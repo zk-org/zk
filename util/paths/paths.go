@@ -51,12 +51,22 @@ func FilenameStem(path string) string {
 	return strings.TrimSuffix(filename, ext)
 }
 
-// WriteString writes the given content into a new file at the given path.
+// WriteString writes the given content into a new file at the given path,
+// creating any intermediate directories if needed.
 func WriteString(path string, content string) error {
+	dir := filepath.Dir(path)
+	if dir != "." && dir != ".." {
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
+
 	defer f.Close()
 	_, err = f.WriteString(content)
 	return err

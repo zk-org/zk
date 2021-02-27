@@ -1,7 +1,5 @@
 # Maintaining a daily journal
 
-<!--{% raw %}-->
-
 Let's assume you want to write daily notes named like `2021-02-16.md` in a `journal/daily` sub-directory. This common use case is a good fit for creating a [note group](config-group.md) overriding the default [note creation](note-creation.md) settings.
 
 First, create a `group` entry in the [configuration file](config.md) to set the note settings for this directory. Refer to the [template syntax reference](template.md) to understand how to use the `{{date}}` helper.
@@ -45,4 +43,3 @@ Let's unpack this alias:
 * `$ZK_PATH` is set to the absolute path of the current [notebook](notebook.md) when running an alias. Using it allows you to run `zk daily` no matter where you are in the notebook folder hierarchy.
 * We need to use double quotes around `$ZK_PATH`, otherwise it will not be expanded.
 
-<!--{% endraw %}-->

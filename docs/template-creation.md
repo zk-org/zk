@@ -1,7 +1,5 @@
 # Template context when creating notes
 
-<!--{% raw %}-->
-
 The following variables are available in the templates used when [creating new notes](note-creation.md) – both for the filename and the note content.
 
 | Variable      | Type   | Description                                                                           |
@@ -20,4 +18,3 @@ These additional variables are available only to the note content template, once
 | `filename`      | string | Filename generated for this note, including the file extension |
 | `filename-stem` | string | Filename without the file extension                            |
 
-<!--{% endraw %}-->

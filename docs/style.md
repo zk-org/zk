@@ -1,7 +1,5 @@
 # Styling
 
-<!--{% raw %}-->
-
 <!-- TODO: semantic rules -->
 
 `zk` supports a `{{style}}` [template helper](template.md) to format its output with colors and font decorations.
@@ -29,4 +27,3 @@ or so, nothing continued to happen.
 * Background color: `black-bg`, `red-bg`, `green-bg`, `yellow-bg`, `blue-bg`, `magenta-bg`, `cyan-bg`, `white-bg`
 * Background color (bright): `bright-black-bg`, `bright-red-bg`, `bright-green-bg`, `bright-yellow-bg`, `bright-blue-bg`, `bright-magenta-bg`, `bright-cyan-bg`, `bright-white-bg`
 
-<!--{% endraw %}-->

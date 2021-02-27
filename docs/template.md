@@ -1,7 +1,5 @@
 # Template syntax
 
-<!--{% raw %}-->
-
 `zk` uses the [Handlebars template syntax](https://handlebarsjs.com/guide) for its templates. The list of variables available depends of the running command:
 
 * [Template context when creating notes](template-creation.md) (i.e. `zk new`)
@@ -86,4 +84,3 @@ The `{{style}}` helper is mostly useful when formatting content for the command-
 {{#style 'underline'}}Another text{{/style}}
 ```
 
-<!--{% endraw %}-->
