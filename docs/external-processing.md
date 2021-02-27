@@ -1,7 +1,5 @@
 # Send notes for processing by other programs
 
-<!-- TODO: --color=none -->
-
 A great way to expand `zk` feature set is to explore a wealth of command-line tools available. You can use `zk`'s powerful [searching and filtering](note-filtering.md) capabilities to select notes before delegating further processing to other programs.
 
 ## Process file paths

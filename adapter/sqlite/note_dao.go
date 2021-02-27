@@ -526,6 +526,9 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			query += fmt.Sprintf(" AND tc.distance < %d", maxDistance)
 		}
 
+		// Guard against infinite loops by limiting the number of recursions.
+		query += "\n     LIMIT 100000"
+
 		query += "\n)\n"
 	}
 

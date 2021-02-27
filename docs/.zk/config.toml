@@ -1,4 +1,5 @@
 [note]
+filename = "{{slug title}}"
 template = "default.md"
 
 [tool]

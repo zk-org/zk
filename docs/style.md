@@ -1,7 +1,5 @@
 # Styling
 
-<!-- TODO: semantic rules -->
-
 `zk` supports a `{{style}}` [template helper](template.md) to format its output with colors and font decorations.
 
 Usage: `{{style "<rules>" "<text>"}}`
