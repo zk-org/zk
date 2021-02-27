@@ -13,15 +13,16 @@ import (
 type Filtering struct {
 	Path []string `group:filter arg optional placeholder:PATH help:"Find notes matching the given path, including its descendants."`
 
-	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
-	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
-	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
-	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
-	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
-	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
-	LinkingTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
-	NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
-	NotLinkingTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	Interactive bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
+	Limit       int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
+	Match       string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
+	Exclude     []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
+	Orphan      bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
+	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
+	LinkingTo   []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
+	// FIXME: I'm not confident this is a useful option.
+	// NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
+	// NotLinkingTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
 	Recursive      bool     `group:filter short:r                     help:"Follow links recursively."`
@@ -148,21 +149,21 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 		})
 	}
 
-	notLinkedByPaths, ok := relPaths(zk, filtering.NotLinkedBy)
-	if ok {
-		filters = append(filters, note.LinkedByFilter{
-			Paths:  notLinkedByPaths,
-			Negate: true,
-		})
-	}
+	// notLinkedByPaths, ok := relPaths(zk, filtering.NotLinkedBy)
+	// if ok {
+	// 	filters = append(filters, note.LinkedByFilter{
+	// 		Paths:  notLinkedByPaths,
+	// 		Negate: true,
+	// 	})
+	// }
 
-	notLinkingToPaths, ok := relPaths(zk, filtering.NotLinkingTo)
-	if ok {
-		filters = append(filters, note.LinkingToFilter{
-			Paths:  notLinkingToPaths,
-			Negate: true,
-		})
-	}
+	// notLinkingToPaths, ok := relPaths(zk, filtering.NotLinkingTo)
+	// if ok {
+	// 	filters = append(filters, note.LinkingToFilter{
+	// 		Paths:  notLinkingToPaths,
+	// 		Negate: true,
+	// 	})
+	// }
 
 	relatedPaths, ok := relPaths(zk, filtering.Related)
 	if ok {

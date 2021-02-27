@@ -251,7 +251,7 @@ func locateRoot(path string) (string, error) {
 
 // DBPath returns the path to the notebook database.
 func (zk *Zk) DBPath() string {
-	return filepath.Join(zk.Path, ".zk/data.db")
+	return filepath.Join(zk.Path, ".zk/notebook.db")
 }
 
 // RelPath returns the path relative to the notebook root to the given path.

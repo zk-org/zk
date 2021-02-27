@@ -13,7 +13,7 @@ func TestDBPath(t *testing.T) {
 	wd, _ := os.Getwd()
 	zk := &Zk{Path: wd}
 
-	assert.Equal(t, zk.DBPath(), filepath.Join(wd, ".zk/data.db"))
+	assert.Equal(t, zk.DBPath(), filepath.Join(wd, ".zk/notebook.db"))
 }
 
 func TestRootDir(t *testing.T) {
