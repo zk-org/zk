@@ -166,8 +166,11 @@ func SorterFromString(str string) (Sorter, error) {
 // SortersFromStrings returns a list of Sorter from their string representation.
 func SortersFromStrings(strs []string) ([]Sorter, error) {
 	sorters := make([]Sorter, 0)
-	for _, str := range strs {
-		sorter, err := SorterFromString(str)
+
+	// Iterates in reverse order to be able to override sort criteria set in a
+	// config alias with a `--sort` flag.
+	for i := len(strs) - 1; i >= 0; i-- {
+		sorter, err := SorterFromString(strs[i])
 		if err != nil {
 			return sorters, err
 		}

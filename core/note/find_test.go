@@ -56,9 +56,12 @@ func TestSortersFromStrings(t *testing.T) {
 		{Field: SortCreated, Ascending: false},
 	})
 
-	test([]string{"c+", "title"}, []Sorter{
-		{Field: SortCreated, Ascending: true},
+	// It is parsed in reverse order to be able to override sort criteria set
+	// in aliases.
+	test([]string{"c+", "title", "random"}, []Sorter{
+		{Field: SortRandom, Ascending: true},
 		{Field: SortTitle, Ascending: true},
+		{Field: SortCreated, Ascending: true},
 	})
 
 	_, err := SortersFromStrings([]string{"c", "foobar"})
