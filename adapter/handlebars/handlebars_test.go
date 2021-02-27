@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	Init("en", &util.NullLogger, &styler{})
+	Init("en", true, &util.NullLogger, &styler{})
 }
 
 // styler is a test double for core.Styler

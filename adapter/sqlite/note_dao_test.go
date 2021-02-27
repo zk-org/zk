@@ -466,6 +466,23 @@ func TestNoteDAOFindMatch(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindMatchWithSort(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Filters: []note.Filter{note.MatchFilter("daily | index")},
+			Sorters: []note.Sorter{
+				{Field: note.SortPath, Ascending: false},
+			},
+		},
+		[]string{
+			"log/2021-02-04.md",
+			"log/2021-01-04.md",
+			"log/2021-01-03.md",
+			"index.md",
+		},
+	)
+}
+
 func TestNoteDAOFindInPath(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{

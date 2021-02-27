@@ -19,7 +19,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			Extension:        "md",
 			BodyTemplatePath: opt.NullString,
 			IDOptions: IDOptions{
-				Length:  5,
+				Length:  4,
 				Charset: CharsetAlphanum,
 				Case:    CaseLower,
 			},

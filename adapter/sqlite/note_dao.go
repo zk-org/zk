@@ -337,7 +337,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
 	joinClauses := make([]string, 0)
 	whereExprs := make([]string, 0)
-	orderTerms := make([]string, 0)
+	additionalOrderTerms := make([]string, 0)
 	args := make([]interface{}, 0)
 	groupBy := ""
 
@@ -419,7 +419,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		case note.MatchFilter:
 			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
 			joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
-			orderTerms = append(orderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
+			additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
 			whereExprs = append(whereExprs, "notes_fts MATCH ?")
 			args = append(args, fts5.ConvertQuery(string(filter)))
 
@@ -493,9 +493,11 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		}
 	}
 
+	orderTerms := []string{}
 	for _, sorter := range opts.Sorters {
 		orderTerms = append(orderTerms, orderTerm(sorter))
 	}
+	orderTerms = append(orderTerms, additionalOrderTerms...)
 	orderTerms = append(orderTerms, `n.title ASC`)
 
 	query := ""

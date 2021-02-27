@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 VERSION=`git describe --tags 2> /dev/null`
 BUILD=`git rev-parse --short HEAD`
