@@ -1,10 +1,9 @@
 <div align="center">
 <h1>zk</h1>
 <h4>A plain text note-taking assistant</h4>
-<img alt="Screenshot" width="80%" src="docs/assets/media/zk.png"/>
+<img alt="Screencast" width="85%" src="docs/assets/media/screencast.svg"/>
+<p>Looking for a quick usage example? <a href="docs/getting-started.md">Let's get started</a>.</p>
 </div>
-
-Looking for a quick usage example? [Let's get started](docs/getting-started.md).
 
 ## Description
 
