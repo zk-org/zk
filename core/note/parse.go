@@ -23,6 +23,16 @@ type Link struct {
 	Snippet  string
 }
 
+// LinkRelation defines the relationship between a link's source and target.
+type LinkRelation string
+
+const (
+	// LinkRelationDown defines the target note as a child of the source.
+	LinkRelationDown LinkRelation = "down"
+	// LinkRelationDown defines the target note as a parent of the source.
+	LinkRelationUp LinkRelation = "up"
+)
+
 type Parser interface {
 	Parse(source string) (*Content, error)
 }

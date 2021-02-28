@@ -170,13 +170,17 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 
 An https://inline-link.com and http://another-inline-link.com.
 
-A [[Wiki link]] is surrounded by two brackets.
+A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].
+
+It can contain [[esca]\]ped \[chara\\cters]].
 
 A [[[Folgezettel link]]] is surrounded by three brackets.
 
 Neuron also supports a [[trailing hash]]# for Folgezettel links.
 
 A #[[leading hash]] is used for #uplinks.
+
+Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]
 
 [External links](http://example.com) are marked [as such](ftp://domain).
 `, []note.Link{
@@ -234,32 +238,60 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
 		},
 		{
-			Title:    "",
+			Title:    "Wiki link",
 			Href:     "Wiki link",
 			External: false,
 			Rels:     []string{},
-			Snippet:  "A [[Wiki link]] is surrounded by two brackets.",
+			Snippet:  "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
 		},
 		{
-			Title:    "",
+			Title:    "two brackets",
+			Href:     "2-brackets",
+			External: false,
+			Rels:     []string{},
+			Snippet:  "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
+		},
+		{
+			Title:    `esca]]ped [chara\cters`,
+			Href:     `esca]]ped [chara\cters`,
+			External: false,
+			Rels:     []string{},
+			Snippet:  `It can contain [[esca]\]ped \[chara\\cters]].`,
+		},
+		{
+			Title:    "Folgezettel link",
 			Href:     "Folgezettel link",
 			External: false,
 			Rels:     []string{"down"},
 			Snippet:  "A [[[Folgezettel link]]] is surrounded by three brackets.",
 		},
 		{
-			Title:    "",
+			Title:    "trailing hash",
 			Href:     "trailing hash",
 			External: false,
 			Rels:     []string{"down"},
 			Snippet:  "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
 		},
 		{
-			Title:    "",
+			Title:    "leading hash",
 			Href:     "leading hash",
 			External: false,
 			Rels:     []string{"up"},
 			Snippet:  "A #[[leading hash]] is used for #uplinks.",
+		},
+		{
+			Title:    "Trailing link",
+			Href:     "trailing",
+			External: false,
+			Rels:     []string{"down"},
+			Snippet:  "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
+		},
+		{
+			Title:    "Leading link",
+			Href:     "leading",
+			External: false,
+			Rels:     []string{"up"},
+			Snippet:  "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
 		},
 		{
 			Title:    "External links",
