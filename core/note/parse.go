@@ -11,10 +11,13 @@ type Content struct {
 	Lead opt.String
 	// Body is the content of the note, including the Lead but without the Title.
 	Body opt.String
+	// Tags is the list of tags found in the note content.
+	Tags []string
 	// Links is the list of outbound links found in the note.
 	Links []Link
 }
 
+// Link links a note to another note or an external resource.
 type Link struct {
 	Title    string
 	Href     string

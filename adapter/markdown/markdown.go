@@ -38,7 +38,8 @@ func NewParser() *Parser {
 						xurls.Strict,
 					),
 				),
-				extensions.WikiLink,
+				extensions.WikiLinkExt,
+				extensions.TagExt,
 			),
 		),
 	}
@@ -70,11 +71,17 @@ func (p *Parser) Parse(source string) (*note.Content, error) {
 	}
 	body := parseBody(bodyStart, bytes)
 
+	tags, err := parseTags(frontmatter, root, bytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return &note.Content{
 		Title: title,
 		Body:  body,
 		Lead:  parseLead(body),
 		Links: links,
+		Tags:  tags,
 	}, nil
 }
 
@@ -133,6 +140,22 @@ func parseLead(body opt.String) opt.String {
 	}
 
 	return opt.NewNotEmptyString(strings.TrimSpace(lead))
+}
+
+// parseTags extracts tags as #hashtags, :colon:tags: or from the YAML frontmatter.
+func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string, error) {
+	tags := make([]string, 0)
+
+	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if tagsNode, ok := n.(*extensions.Tags); ok && entering {
+			for _, tag := range tagsNode.Tags {
+				tags = append(tags, tag)
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return tags, err
 }
 
 // parseLinks extracts outbound links from the note.

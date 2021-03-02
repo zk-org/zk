@@ -153,6 +153,32 @@ Paragraph`,
 	)
 }
 
+func TestParseTags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parse(t, source)
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test("# No tags around here", []string{})
+	test("#single-hashtag", []string{"single-hashtag"})
+	test("a #tag in the middle", []string{"tag"})
+	test("#multiple #hashtags", []string{"multiple", "hashtags"})
+	// Unicode hashtags
+	test("#libellé-français, #日本語ハッシュタグ", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation breaking tags
+	test(
+		"#a #b, #c; #d. #e! #f? #g* #h\", #i(, #j), #k[, #l], #m{, #n}",
+		[]string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"},
+	)
+	// Authorized special characters
+	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
+	// Escape punctuation and space
+	test(`#an\ espaced\ tag\!`, []string{"an espaced tag!"})
+	// Hashtag containing only numbers are invalid
+	test("#123, #1.2.3", []string{})
+}
+
 func TestParseLinks(t *testing.T) {
 	test := func(source string, links []note.Link) {
 		content := parse(t, source)

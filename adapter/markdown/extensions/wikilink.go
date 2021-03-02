@@ -11,10 +11,10 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-// WikiLink is an extension parsing wiki links and Neuron's Folgezettel.
+// WikiLinkExt is an extension parsing wiki links and Neuron's Folgezettel.
 //
 // For example, [[wiki link]], [[[legacy downlink]]], #[[uplink]], [[downlink]]#.
-var WikiLink = &wikiLink{}
+var WikiLinkExt = &wikiLink{}
 
 type wikiLink struct{}
 
