@@ -160,10 +160,13 @@ func TestParseTags(t *testing.T) {
 	}
 
 	test("", []string{})
+	test("#", []string{})
+	test("##", []string{})
 	test("# No tags around here", []string{})
 	test("#single-hashtag", []string{"single-hashtag"})
 	test("a #tag in the middle", []string{"tag"})
 	test("#multiple #hashtags", []string{"multiple", "hashtags"})
+	test("#multiple#hashtags", []string{})
 	// Unicode hashtags
 	test("#libellé-français, #日本語ハッシュタグ", []string{"libellé-français", "日本語ハッシュタグ"})
 	// Punctuation breaking tags
@@ -174,9 +177,21 @@ func TestParseTags(t *testing.T) {
 	// Authorized special characters
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
-	test(`#an\ espaced\ tag\!`, []string{"an espaced tag!"})
-	// Hashtag containing only numbers are invalid
+	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	// Hashtag containing only numbers and dots are invalid
 	test("#123, #1.2.3", []string{})
+	// Must not be preceded by a hash or any other valid hashtag character.
+	test("##invalid also#invalid", []string{})
+	// Bear's multi word tags
+	test("#multi word#", []string{"multi word"})
+	test("#surrounded# end", []string{})
+	test("#multi word#end", []string{"multi word"})
+	test("#multi word #other", []string{"multi", "other"})
+	test("#multi word# #other", []string{"multi word", "other"})
+	test("#multi word##other", []string{"multi word"})
+	test("a #multi word# in the middle", []string{"multi word"})
+	test("a #multi word#, and a #tag", []string{"multi word", "tag"})
+	test("#multi, word#", []string{"multi"})
 }
 
 func TestParseLinks(t *testing.T) {
