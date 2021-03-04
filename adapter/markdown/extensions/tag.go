@@ -157,6 +157,15 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 	}
 }
 
+func isValidHashTag(tag string) bool {
+	for _, char := range tag {
+		if !unicode.IsNumber(char) {
+			return true
+		}
+	}
+	return false
+}
+
 // colontagParser parses :colon:separated:tags:.
 type colontagParser struct{}
 
@@ -165,7 +174,66 @@ func (p *colontagParser) Trigger() []byte {
 }
 
 func (p *colontagParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
-	return nil
+	previousChar := block.PrecendingCharacter()
+	line, _ := block.PeekLine()
+
+	// A colontag can't be directly preceded by a : or any other valid character.
+	if isValidTagChar(previousChar, '\x00') {
+		return nil
+	}
+
+	var (
+		tag  string       // Accumulator for the current colontag
+		tags = []string{} // All colontags found
+	)
+
+	var (
+		escaping = false // Found a backslash, next character will be literal
+		endPos   = 0     // Last position of the colontags in the line
+	)
+
+	appendChar := func(c rune) {
+		tag += string(c)
+	}
+
+	for i, char := range string(line[1:]) {
+		endPos = i
+
+		if escaping {
+			// Currently escaping? The character will be appended literally.
+			appendChar(char)
+			escaping = false
+
+		} else if char == '\\' {
+			// Found a backslash, next character will be escaped.
+			escaping = true
+
+		} else if char == ':' {
+			if len(tag) == 0 {
+				break
+			}
+			tags = append(tags, tag)
+			tag = ""
+
+		} else if !isValidTagChar(char, ':') {
+			// Found an invalid character, the colontag is complete.
+			break
+
+		} else {
+			appendChar(char)
+		}
+	}
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	block.Advance(endPos)
+
+	return &Tags{
+		BaseInline: gast.BaseInline{},
+		Tags:       tags,
+	}
 }
 
 func isValidTagChar(r rune, excluded rune) bool {
@@ -174,13 +242,4 @@ func isValidTagChar(r rune, excluded rune) bool {
 		r == '-' || r == '_' || r == '$' || r == '%' ||
 		r == '&' || r == '+' || r == '=' || r == ':' ||
 		r == '#')
-}
-
-func isValidHashTag(tag string) bool {
-	for _, char := range tag {
-		if !unicode.IsNumber(char) {
-			return true
-		}
-	}
-	return false
 }

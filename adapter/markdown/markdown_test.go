@@ -180,9 +180,9 @@ func TestParseHashtags(t *testing.T) {
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
 	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
-	// Hashtag containing only numbers and dots are invalid
+	// Hashtags containing only numbers and dots are invalid
 	test("#123, #1.2.3", []string{})
-	// Must not be preceded by a hash or any other valid hashtag character.
+	// Must not be preceded by a hash or any other valid hashtag character
 	test("##invalid also#invalid", []string{})
 	// Bear's multi word tags are disabled
 	test("#multi word# end", []string{"multi"})
@@ -215,9 +215,9 @@ func TestParseWordtags(t *testing.T) {
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
 	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
-	// Hashtag containing only numbers and dots are invalid
+	// Hashtags containing only numbers and dots are invalid
 	test("#123, #1.2.3", []string{})
-	// Must not be preceded by a hash or any other valid hashtag character.
+	// Must not be preceded by a hash or any other valid hashtag character
 	test("##invalid also#invalid", []string{})
 	// Bear's multi word tags
 	test("#multi word#", []string{"multi word"})
@@ -229,6 +229,44 @@ func TestParseWordtags(t *testing.T) {
 	test("a #multi word# in the middle", []string{"multi word"})
 	test("a #multi word#, and a #tag", []string{"multi word", "tag"})
 	test("#multi, word#", []string{"multi"})
+}
+
+func TestParseColontags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test(":", []string{})
+	test("::", []string{})
+	test("not:valid:", []string{})
+	test(":no tags:", []string{})
+	test(": no-tags:", []string{})
+	test(":no-tags :", []string{})
+	test(":single-colontag:", []string{"single-colontag"})
+	test("a :tag: in the middle", []string{"tag"})
+	test(":multiple:colontags:", []string{"multiple", "colontags"})
+	test(":multiple::colontags:", []string{"multiple"})
+	test(":multiple: :colontags:", []string{"multiple", "colontags"})
+	test(":multiple:,:colontags:", []string{"multiple", "colontags"})
+	test(":more:than:two:colontags:", []string{"more", "than", "two", "colontags"})
+	test(":multiple :colontags", []string{})
+	test(":multiple :colontags:", []string{"colontags"})
+	// Unicode colontags
+	test(":libellé-français:日本語ハッシュタグ:", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation is not allowed
+	test(":a : :b,: :c;: :d.: :e!: :f?: :g*: :h\": :i(: :j): :k[: :l]: :m{: :n}:", []string{})
+	// Authorized special characters
+	test(":#a/@'~-_$%&+=: end", []string{"#a/@'~-_$%&+="})
+	// Escape punctuation and space
+	test(`:an\ \\espaced\ tag\!:`, []string{`an \espaced tag!`})
+	// A colontag containing only numbers is valid
+	test(":123:1.2.3:", []string{"123"})
+	// Must not be preceded by a hash or any other valid colontag character
+	test("##invalid also#invalid", []string{})
+	// Bear's multi word tags are disabled
+	test("#multi word# end", []string{"multi"})
 }
 
 func TestParseLinks(t *testing.T) {

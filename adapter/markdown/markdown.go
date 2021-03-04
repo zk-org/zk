@@ -24,7 +24,7 @@ type Parser struct {
 }
 
 type ParserOpts struct {
-	// Indicates whether Bear's word tags should be parsed.
+	// Indicates whether Bear's word tags are parsed.
 	WordTagEnabled bool
 }
 
