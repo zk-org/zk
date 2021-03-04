@@ -42,19 +42,30 @@ func (n *Tags) Kind() gast.NodeKind {
 // * / @ ' ~ - _ $ % & + = and when possible # :
 // * any character escaped with \, including whitespace
 type TagExt struct {
-	// Indicates whether Bear's word tags should be parsed.
+	// Indicates whether #hashtags are parsed.
+	HashtagEnabled bool
+	// Indicates whether Bear's word tags are parsed. Hashtags must be enabled as well.
 	WordTagEnabled bool
+	// Indicates whether :colon:tags: are parsed.
+	ColontagEnabled bool
 }
 
 func (t *TagExt) Extend(m goldmark.Markdown) {
-	m.Parser().AddOptions(
-		parser.WithInlineParsers(
-			util.Prioritized(&hashtagParser{
-				wordTagEnabled: t.WordTagEnabled,
-			}, 2000),
-			util.Prioritized(&colontagParser{}, 2000),
-		),
-	)
+	parsers := []util.PrioritizedValue{}
+
+	if t.HashtagEnabled {
+		parsers = append(parsers, util.Prioritized(&hashtagParser{
+			wordTagEnabled: t.WordTagEnabled,
+		}, 2000))
+	}
+
+	if t.ColontagEnabled {
+		parsers = append(parsers, util.Prioritized(&colontagParser{}, 2000))
+	}
+
+	if len(parsers) > 0 {
+		m.Parser().AddOptions(parser.WithInlineParsers(parsers...))
+	}
 }
 
 // hashtagParser parses #hashtags, including Bear's #multi words# tags

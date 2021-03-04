@@ -24,8 +24,12 @@ type Parser struct {
 }
 
 type ParserOpts struct {
-	// Indicates whether Bear's word tags are parsed.
+	// Indicates whether #hashtags are parsed.
+	HashtagEnabled bool
+	// Indicates whether Bear's word tags are parsed. Hashtags must be enabled as well.
 	WordTagEnabled bool
+	// Indicates whether :colon:tags: are parsed.
+	ColontagEnabled bool
 }
 
 // NewParser creates a new Markdown Parser.
@@ -45,7 +49,9 @@ func NewParser(options ParserOpts) *Parser {
 				),
 				extensions.WikiLinkExt,
 				&extensions.TagExt{
-					WordTagEnabled: options.WordTagEnabled,
+					HashtagEnabled:  options.HashtagEnabled,
+					WordTagEnabled:  options.WordTagEnabled,
+					ColontagEnabled: options.ColontagEnabled,
 				},
 			),
 		),

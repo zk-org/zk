@@ -156,6 +156,7 @@ Paragraph`,
 func TestParseHashtags(t *testing.T) {
 	test := func(source string, tags []string) {
 		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled: true,
 			WordTagEnabled: false,
 		})
 		assert.Equal(t, content.Tags, tags)
@@ -191,6 +192,7 @@ func TestParseHashtags(t *testing.T) {
 func TestParseWordtags(t *testing.T) {
 	test := func(source string, tags []string) {
 		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled: true,
 			WordTagEnabled: true,
 		})
 		assert.Equal(t, content.Tags, tags)
@@ -233,7 +235,9 @@ func TestParseWordtags(t *testing.T) {
 
 func TestParseColontags(t *testing.T) {
 	test := func(source string, tags []string) {
-		content := parseWithOptions(t, source, ParserOpts{})
+		content := parseWithOptions(t, source, ParserOpts{
+			ColontagEnabled: true,
+		})
 		assert.Equal(t, content.Tags, tags)
 	}
 
@@ -263,10 +267,8 @@ func TestParseColontags(t *testing.T) {
 	test(`:an\ \\espaced\ tag\!:`, []string{`an \espaced tag!`})
 	// A colontag containing only numbers is valid
 	test(":123:1.2.3:", []string{"123"})
-	// Must not be preceded by a hash or any other valid colontag character
-	test("##invalid also#invalid", []string{})
-	// Bear's multi word tags are disabled
-	test("#multi word# end", []string{"multi"})
+	// Must not be preceded by a : or any other valid colontag character
+	test("::invalid also:invalid:", []string{})
 }
 
 func TestParseLinks(t *testing.T) {
