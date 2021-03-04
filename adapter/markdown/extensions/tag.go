@@ -41,21 +41,26 @@ func (n *Tags) Kind() gast.NodeKind {
 // * unicode categories [L]etter and [N]umber
 // * / @ ' ~ - _ $ % & + = and when possible # :
 // * any character escaped with \, including whitespace
-var TagExt = &tagExt{}
+type TagExt struct {
+	// Indicates whether Bear's word tags should be parsed.
+	WordTagEnabled bool
+}
 
-type tagExt struct{}
-
-func (t *tagExt) Extend(m goldmark.Markdown) {
+func (t *TagExt) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithInlineParsers(
-			util.Prioritized(&hashtagParser{}, 2000),
+			util.Prioritized(&hashtagParser{
+				wordTagEnabled: t.WordTagEnabled,
+			}, 2000),
 			util.Prioritized(&colontagParser{}, 2000),
 		),
 	)
 }
 
 // hashtagParser parses #hashtags, including Bear's #multi words# tags
-type hashtagParser struct{}
+type hashtagParser struct {
+	wordTagEnabled bool
+}
 
 func (p *hashtagParser) Trigger() []byte {
 	return []byte{'#'}
@@ -97,14 +102,17 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 			endPos = i
 		}
 
-		if escaping { // Currently escaping? The character will be appended literally.
+		if escaping {
+			// Currently escaping? The character will be appended literally.
 			appendChar(char)
 			escaping = false
 
-		} else if char == '\\' { // Found a backslash, next character will be escaped.
+		} else if char == '\\' {
+			// Found a backslash, next character will be escaped.
 			escaping = true
 
-		} else if parsingWordTag { // Parsing a word tag candidate.
+		} else if parsingWordTag {
+			// Parsing a word tag candidate.
 			if isValidTagChar(char, '#') || unicode.IsSpace(char) {
 				appendChar(char)
 			} else if char == '#' {
@@ -117,16 +125,19 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 			}
 			previousChar = char
 
-		} else if char == '#' { // A tag terminated with a # is invalid when not in a word tag.
+		} else if !p.wordTagEnabled && char == '#' {
+			// A tag terminated with a # is invalid when not in a word tag.
 			return nil
 
-		} else if unicode.IsSpace(char) { // Found a space, let's try to parse a word tag.
+		} else if p.wordTagEnabled && unicode.IsSpace(char) {
+			// Found a space, let's try to parse a word tag.
 			previousChar = char
 			wordTagCandidate = tag
 			parsingWordTag = true
 			appendChar(char)
 
-		} else if !isValidTagChar(char, '#') { // Found an invalid character, the hashtag is complete.
+		} else if !isValidTagChar(char, '#') {
+			// Found an invalid character, the hashtag is complete.
 			break
 
 		} else {

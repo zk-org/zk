@@ -153,9 +153,11 @@ Paragraph`,
 	)
 }
 
-func TestParseTags(t *testing.T) {
+func TestParseHashtags(t *testing.T) {
 	test := func(source string, tags []string) {
-		content := parse(t, source)
+		content := parseWithOptions(t, source, ParserOpts{
+			WordTagEnabled: false,
+		})
 		assert.Equal(t, content.Tags, tags)
 	}
 
@@ -182,9 +184,44 @@ func TestParseTags(t *testing.T) {
 	test("#123, #1.2.3", []string{})
 	// Must not be preceded by a hash or any other valid hashtag character.
 	test("##invalid also#invalid", []string{})
+	// Bear's multi word tags are disabled
+	test("#multi word# end", []string{"multi"})
+}
+
+func TestParseWordtags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			WordTagEnabled: true,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test("#", []string{})
+	test("##", []string{})
+	test("# No tags around here", []string{})
+	test("#single-hashtag", []string{"single-hashtag"})
+	test("a #tag in the middle", []string{"tag"})
+	test("#multiple #hashtags", []string{"multiple", "hashtags"})
+	test("#multiple#hashtags", []string{"multiple"})
+	// Unicode hashtags
+	test("#libellé-français, #日本語ハッシュタグ", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation breaking tags
+	test(
+		"#a #b, #c; #d. #e! #f? #g* #h\", #i(, #j), #k[, #l], #m{, #n}",
+		[]string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"},
+	)
+	// Authorized special characters
+	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
+	// Escape punctuation and space
+	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	// Hashtag containing only numbers and dots are invalid
+	test("#123, #1.2.3", []string{})
+	// Must not be preceded by a hash or any other valid hashtag character.
+	test("##invalid also#invalid", []string{})
 	// Bear's multi word tags
 	test("#multi word#", []string{"multi word"})
-	test("#surrounded# end", []string{})
+	test("#surrounded# end", []string{"surrounded"})
 	test("#multi word#end", []string{"multi word"})
 	test("#multi word #other", []string{"multi", "other"})
 	test("#multi word# #other", []string{"multi word", "other"})
@@ -352,7 +389,11 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 }
 
 func parse(t *testing.T, source string) note.Content {
-	content, err := NewParser().Parse(source)
+	return parseWithOptions(t, source, ParserOpts{})
+}
+
+func parseWithOptions(t *testing.T, source string, options ParserOpts) note.Content {
+	content, err := NewParser(options).Parse(source)
 	assert.Nil(t, err)
 	return *content
 }

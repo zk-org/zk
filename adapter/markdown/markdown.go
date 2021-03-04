@@ -23,8 +23,13 @@ type Parser struct {
 	md goldmark.Markdown
 }
 
+type ParserOpts struct {
+	// Indicates whether Bear's word tags should be parsed.
+	WordTagEnabled bool
+}
+
 // NewParser creates a new Markdown Parser.
-func NewParser() *Parser {
+func NewParser(options ParserOpts) *Parser {
 	return &Parser{
 		md: goldmark.New(
 			goldmark.WithExtensions(
@@ -39,7 +44,9 @@ func NewParser() *Parser {
 					),
 				),
 				extensions.WikiLinkExt,
-				extensions.TagExt,
+				&extensions.TagExt{
+					WordTagEnabled: options.WordTagEnabled,
+				},
 			),
 		),
 	}

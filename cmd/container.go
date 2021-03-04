@@ -58,7 +58,9 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 }
 
 func (c *Container) Parser() *markdown.Parser {
-	return markdown.NewParser()
+	return markdown.NewParser(markdown.ParserOpts{
+		WordTagEnabled: false,
+	})
 }
 
 func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *fzf.NoteFinder {
