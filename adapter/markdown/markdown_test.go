@@ -271,6 +271,20 @@ func TestParseColontags(t *testing.T) {
 	test("::invalid also:invalid:", []string{})
 }
 
+func TestParseMixedTags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled:  true,
+			WordTagEnabled:  true,
+			ColontagEnabled: true,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(":colontag: #tag #word tag#", []string{"colontag", "tag", "word tag"})
+	test(":#colontag: #:tag: #:word:tag:#", []string{"#colontag", ":tag:", ":word:tag:"})
+}
+
 func TestParseLinks(t *testing.T) {
 	test := func(source string, links []note.Link) {
 		content := parse(t, source)
@@ -429,7 +443,11 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 }
 
 func parse(t *testing.T, source string) note.Content {
-	return parseWithOptions(t, source, ParserOpts{})
+	return parseWithOptions(t, source, ParserOpts{
+		HashtagEnabled:  true,
+		WordTagEnabled:  true,
+		ColontagEnabled: true,
+	})
 }
 
 func parseWithOptions(t *testing.T, source string, options ParserOpts) note.Content {
