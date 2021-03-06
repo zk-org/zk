@@ -55,7 +55,7 @@ func (db *DB) Migrate() error {
 			return err
 		}
 
-		if version == 0 {
+		if version <= 0 {
 			err = tx.ExecStmts([]string{
 				// Notes
 				`CREATE TABLE IF NOT EXISTS notes (
@@ -109,6 +109,35 @@ func (db *DB) Migrate() error {
 					INSERT INTO notes_fts(rowid, path, title, body) VALUES (new.id, new.path, new.title, new.body);
 				END`,
 				`PRAGMA user_version = 1`,
+			})
+
+			if err != nil {
+				return err
+			}
+		}
+
+		if version <= 1 {
+			err = tx.ExecStmts([]string{
+				// Collections
+				`CREATE TABLE IF NOT EXISTS collections (
+					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+					kind TEXT NO NULL,
+					name TEXT NOT NULL,
+					UNIQUE(kind, name)
+				)`,
+				`CREATE INDEX IF NOT EXISTS index_collections ON collections (kind, name)`,
+
+				// Note-Collection association
+				`CREATE TABLE IF NOT EXISTS notes_collections (
+					id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+					note_id INTEGER NOT NULL REFERENCES notes(id)
+						ON DELETE CASCADE,
+					collection_id INTEGER NOT NULL REFERENCES collections(id)
+						ON DELETE CASCADE
+				)`,
+				`CREATE INDEX IF NOT EXISTS index_notes_collections ON notes_collections (note_id, collection_id)`,
+
+				`PRAGMA user_version = 2`,
 			})
 
 			if err != nil {

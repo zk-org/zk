@@ -40,6 +40,15 @@ func Equal(t *testing.T, actual, expected interface{}) {
 	}
 }
 
+func NotEqual(t *testing.T, actual, other interface{}) {
+	if reflect.DeepEqual(actual, other) || cmp.Equal(actual, other) {
+		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
+		t.Errorf("\n---\n")
+		t.Errorf("Expected to be different from (type %v):\n% #v", reflect.TypeOf(other), pretty.Formatter(other))
+		t.Errorf("\n---\n")
+	}
+}
+
 func toJSON(t *testing.T, obj interface{}) string {
 	json, err := json.Marshal(obj)
 	// json, err := json.MarshalIndent(obj, "", "  ")
