@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
@@ -57,7 +58,7 @@ type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.
 	Indexed() (<-chan paths.Metadata, error)
 	// Add indexes a new note from its metadata.
-	Add(metadata Metadata) (int64, error)
+	Add(metadata Metadata) (core.NoteId, error)
 	// Update updates the metadata of an already indexed note.
 	Update(metadata Metadata) error
 	// Remove deletes a note from the index.

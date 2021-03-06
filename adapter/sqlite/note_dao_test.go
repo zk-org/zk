@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/paths"
@@ -170,14 +171,14 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 		assert.Equal(t, rows, []linkRow{
 			{
 				SourceId: id,
-				TargetId: intPointer(2),
+				TargetId: idPointer(2),
 				Title:    "Same dir",
 				Href:     "log/2021-01-04",
 				Rels:     "\x01rel-1\x01rel-2\x01",
 			},
 			{
 				SourceId: id,
-				TargetId: intPointer(4),
+				TargetId: idPointer(4),
 				Title:    "Relative",
 				Href:     "f39c8",
 				Rels:     "",
@@ -185,7 +186,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 			},
 			{
 				SourceId: id,
-				TargetId: intPointer(4),
+				TargetId: idPointer(4),
 				Title:    "Second is added",
 				Href:     "f39c8",
 				Rels:     "\x01second\x01",
@@ -284,7 +285,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 		assert.Equal(t, links, []linkRow{
 			{
 				SourceId: 1,
-				TargetId: intPointer(2),
+				TargetId: idPointer(2),
 				Title:    "An internal link",
 				Href:     "log/2021-01-04.md",
 				Snippet:  "[[An internal link]]",
@@ -323,7 +324,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 		assert.Equal(t, links, []linkRow{
 			{
 				SourceId: 1,
-				TargetId: intPointer(3),
+				TargetId: idPointer(3),
 				Title:    "A new link",
 				Href:     "index",
 				Rels:     "\x01rel\x01",
@@ -368,7 +369,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 		assert.Equal(t, len(links) > 0, true)
 
 		links = queryLinkRows(t, tx, `id = 4`)
-		assert.Equal(t, *links[0].TargetId, int64(1))
+		assert.Equal(t, *links[0].TargetId, core.NoteId(1))
 
 		err := dao.Remove("log/2021-01-03.md")
 		assert.Nil(t, err)
@@ -922,8 +923,8 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 }
 
 type linkRow struct {
-	SourceId                   int64
-	TargetId                   *int64
+	SourceId                   core.NoteId
+	TargetId                   *core.NoteId
 	Href, Title, Rels, Snippet string
 	External                   bool
 }
@@ -941,8 +942,14 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 
 	for rows.Next() {
 		var row linkRow
-		err = rows.Scan(&row.SourceId, &row.TargetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet)
+		var sourceId int64
+		var targetId *int64
+		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet)
 		assert.Nil(t, err)
+		row.SourceId = core.NoteId(sourceId)
+		if targetId != nil {
+			row.TargetId = idPointer(*targetId)
+		}
 		links = append(links, row)
 	}
 	rows.Close()
@@ -951,6 +958,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	return links
 }
 
-func intPointer(i int64) *int64 {
-	return &i
+func idPointer(i int64) *core.NoteId {
+	id := core.NoteId(i)
+	return &id
 }
