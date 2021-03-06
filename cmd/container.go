@@ -59,9 +59,9 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 
 func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser(markdown.ParserOpts{
-		HashtagEnabled:  true,
-		WordTagEnabled:  false,
-		ColontagEnabled: true,
+		HashtagEnabled:      true,
+		MultiWordTagEnabled: false,
+		ColontagEnabled:     true,
 	})
 }
 

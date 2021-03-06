@@ -44,8 +44,8 @@ func (n *Tags) Kind() gast.NodeKind {
 type TagExt struct {
 	// Indicates whether #hashtags are parsed.
 	HashtagEnabled bool
-	// Indicates whether Bear's word tags are parsed. Hashtags must be enabled as well.
-	WordTagEnabled bool
+	// Indicates whether Bear's multi-word tags are parsed. Hashtags must be enabled as well.
+	MultiWordTagEnabled bool
 	// Indicates whether :colon:tags: are parsed.
 	ColontagEnabled bool
 }
@@ -55,7 +55,7 @@ func (t *TagExt) Extend(m goldmark.Markdown) {
 
 	if t.HashtagEnabled {
 		parsers = append(parsers, util.Prioritized(&hashtagParser{
-			wordTagEnabled: t.WordTagEnabled,
+			multiWordTagEnabled: t.MultiWordTagEnabled,
 		}, 2000))
 	}
 
@@ -70,7 +70,7 @@ func (t *TagExt) Extend(m goldmark.Markdown) {
 
 // hashtagParser parses #hashtags, including Bear's #multi words# tags
 type hashtagParser struct {
-	wordTagEnabled bool
+	multiWordTagEnabled bool
 }
 
 func (p *hashtagParser) Trigger() []byte {
@@ -87,28 +87,28 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 	}
 
 	var (
-		tag              string // Accumulator for the hashtag
-		wordTagCandidate string // Accumulator for a potential Bear word tag
+		tag                   string // Accumulator for the hashtag
+		multiWordTagCandidate string // Accumulator for a potential Bear multi-word tag
 	)
 
 	var (
-		escaping       = false // Found a backslash, next character will be literal
-		parsingWordTag = false // Finished parsing a hashtag, now attempt parsing a Bear word tag
-		endPos         = 0     // Last position of the tag in the line
-		wordTagEndPos  = 0     // Last position of the word tag in the line
+		escaping            = false // Found a backslash, next character will be literal
+		parsingMultiWordTag = false // Finished parsing a hashtag, now attempt parsing a Bear multi-word tag
+		endPos              = 0     // Last position of the tag in the line
+		multiWordTagEndPos  = 0     // Last position of the multi-word tag in the line
 	)
 
 	appendChar := func(c rune) {
-		if parsingWordTag {
-			wordTagCandidate += string(c)
+		if parsingMultiWordTag {
+			multiWordTagCandidate += string(c)
 		} else {
 			tag += string(c)
 		}
 	}
 
 	for i, char := range string(line[1:]) {
-		if parsingWordTag {
-			wordTagEndPos = i
+		if parsingMultiWordTag {
+			multiWordTagEndPos = i
 		} else {
 			endPos = i
 		}
@@ -122,29 +122,29 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 			// Found a backslash, next character will be escaped.
 			escaping = true
 
-		} else if parsingWordTag {
-			// Parsing a word tag candidate.
+		} else if parsingMultiWordTag {
+			// Parsing a multi-word tag candidate.
 			if isValidTagChar(char, '#') || unicode.IsSpace(char) {
 				appendChar(char)
 			} else if char == '#' {
-				// A valid word tag must not have a space before the closing #.
+				// A valid multi-word tag must not have a space before the closing #.
 				if !unicode.IsSpace(previousChar) {
-					tag = wordTagCandidate
-					endPos = wordTagEndPos
+					tag = multiWordTagCandidate
+					endPos = multiWordTagEndPos
 				}
 				break
 			}
 			previousChar = char
 
-		} else if !p.wordTagEnabled && char == '#' {
-			// A tag terminated with a # is invalid when not in a word tag.
+		} else if !p.multiWordTagEnabled && char == '#' {
+			// A tag terminated with a # is invalid when not in a multi-word tag.
 			return nil
 
-		} else if p.wordTagEnabled && unicode.IsSpace(char) {
-			// Found a space, let's try to parse a word tag.
+		} else if p.multiWordTagEnabled && unicode.IsSpace(char) {
+			// Found a space, let's try to parse a multi-word tag.
 			previousChar = char
-			wordTagCandidate = tag
-			parsingWordTag = true
+			multiWordTagCandidate = tag
+			parsingMultiWordTag = true
 			appendChar(char)
 
 		} else if !isValidTagChar(char, '#') {

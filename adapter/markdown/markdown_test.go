@@ -156,8 +156,8 @@ Paragraph`,
 func TestParseHashtags(t *testing.T) {
 	test := func(source string, tags []string) {
 		content := parseWithOptions(t, source, ParserOpts{
-			HashtagEnabled: true,
-			WordTagEnabled: false,
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: false,
 		})
 		assert.Equal(t, content.Tags, tags)
 	}
@@ -185,15 +185,15 @@ func TestParseHashtags(t *testing.T) {
 	test("#123, #1.2.3", []string{})
 	// Must not be preceded by a hash or any other valid hashtag character
 	test("##invalid also#invalid", []string{})
-	// Bear's multi word tags are disabled
+	// Bear's multi multi-word tags are disabled
 	test("#multi word# end", []string{"multi"})
 }
 
 func TestParseWordtags(t *testing.T) {
 	test := func(source string, tags []string) {
 		content := parseWithOptions(t, source, ParserOpts{
-			HashtagEnabled: true,
-			WordTagEnabled: true,
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: true,
 		})
 		assert.Equal(t, content.Tags, tags)
 	}
@@ -221,7 +221,7 @@ func TestParseWordtags(t *testing.T) {
 	test("#123, #1.2.3", []string{})
 	// Must not be preceded by a hash or any other valid hashtag character
 	test("##invalid also#invalid", []string{})
-	// Bear's multi word tags
+	// Bear's multi multi-word tags
 	test("#multi word#", []string{"multi word"})
 	test("#surrounded# end", []string{"surrounded"})
 	test("#multi word#end", []string{"multi word"})
@@ -274,9 +274,9 @@ func TestParseColontags(t *testing.T) {
 func TestParseMixedTags(t *testing.T) {
 	test := func(source string, tags []string) {
 		content := parseWithOptions(t, source, ParserOpts{
-			HashtagEnabled:  true,
-			WordTagEnabled:  true,
-			ColontagEnabled: true,
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: true,
+			ColontagEnabled:     true,
 		})
 		assert.Equal(t, content.Tags, tags)
 	}
@@ -500,9 +500,9 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 
 func parse(t *testing.T, source string) note.Content {
 	return parseWithOptions(t, source, ParserOpts{
-		HashtagEnabled:  true,
-		WordTagEnabled:  true,
-		ColontagEnabled: true,
+		HashtagEnabled:      true,
+		MultiWordTagEnabled: true,
+		ColontagEnabled:     true,
 	})
 }
 

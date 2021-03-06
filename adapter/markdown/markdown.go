@@ -27,8 +27,8 @@ type Parser struct {
 type ParserOpts struct {
 	// Indicates whether #hashtags are parsed.
 	HashtagEnabled bool
-	// Indicates whether Bear's word tags are parsed. Hashtags must be enabled as well.
-	WordTagEnabled bool
+	// Indicates whether Bear's multi-word tags are parsed. Hashtags must be enabled as well.
+	MultiWordTagEnabled bool
 	// Indicates whether :colon:tags: are parsed.
 	ColontagEnabled bool
 }
@@ -50,9 +50,9 @@ func NewParser(options ParserOpts) *Parser {
 				),
 				extensions.WikiLinkExt,
 				&extensions.TagExt{
-					HashtagEnabled:  options.HashtagEnabled,
-					WordTagEnabled:  options.WordTagEnabled,
-					ColontagEnabled: options.ColontagEnabled,
+					HashtagEnabled:      options.HashtagEnabled,
+					MultiWordTagEnabled: options.MultiWordTagEnabled,
+					ColontagEnabled:     options.ColontagEnabled,
 				},
 			),
 		),
