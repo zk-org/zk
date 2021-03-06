@@ -293,7 +293,7 @@ func TestParseTagsFromFrontmatter(t *testing.T) {
 
 	test(`---
 Tags:
-    - tag1
+    - "#tag1"
     - tag 2
 ---
 
@@ -301,7 +301,7 @@ Body
 `, []string{"tag1", "tag 2"})
 
 	test(`---
-Keywords: [keyword1, keyword 2]
+Keywords: [keyword1, "#keyword 2"]
 ---
 
 Body
@@ -324,7 +324,7 @@ Keywords: kw1 kw2 kw3
 ---
 
 Body
-`, []string{"tag1", "#tag-2", "kw1", "kw2", "kw3"})
+`, []string{"tag1", "tag-2", "kw1", "kw2", "kw3"})
 }
 
 func TestParseTagsIgnoresDuplicates(t *testing.T) {
@@ -334,7 +334,7 @@ func TestParseTagsIgnoresDuplicates(t *testing.T) {
 	}
 
 	test(`---
-Tags: [tag1, tag1, tag2]
+Tags: [tag1, "#tag1", tag2]
 ---
 
 #tag1 #tag2 #tag3 #tag3 :tag2:

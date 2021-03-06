@@ -175,7 +175,10 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 
 	for _, key := range []string{"tag", "tags", "keyword", "keywords"} {
 		for _, t := range findFMTags(key) {
-			tags = append(tags, t)
+			// Trims any # prefix to support hashtags embedded in YAML
+			// frontmatter, as in Simple Markdown Zettelkasten:
+			// http://evantravers.com/articles/2020/11/23/zettelkasten-updates/
+			tags = append(tags, strings.TrimPrefix(t, "#"))
 		}
 	}
 
