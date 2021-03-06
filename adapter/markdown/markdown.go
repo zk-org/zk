@@ -2,6 +2,7 @@ package markdown
 
 import (
 	"bufio"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -159,6 +160,26 @@ func parseLead(body opt.String) opt.String {
 func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string, error) {
 	tags := make([]string, 0)
 
+	// Parse from YAML frontmatter, either:
+	// * a list of strings
+	// * a single space-separated string
+	findFMTags := func(key string) []string {
+		if tags, ok := frontmatter.getStrings(key); ok {
+			return tags
+		} else if tags := frontmatter.getString(key); !tags.IsNull() {
+			return strings.Fields(tags.Unwrap())
+		} else {
+			return []string{}
+		}
+	}
+
+	for _, key := range []string{"tag", "tags", "keyword", "keywords"} {
+		for _, t := range findFMTags(key) {
+			tags = append(tags, t)
+		}
+	}
+
+	// Parse #hashtags and :colon:tags:
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if tagsNode, ok := n.(*extensions.Tags); ok && entering {
 			for _, tag := range tagsNode.Tags {
@@ -229,14 +250,28 @@ type frontmatter struct {
 
 var frontmatterRegex = regexp.MustCompile(`(?ms)^\s*-+\s*$.*?^\s*-+\s*$`)
 
-func parseFrontmatter(context parser.Context, source []byte) (front frontmatter, err error) {
+func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error) {
+	var front frontmatter
+
 	index := frontmatterRegex.FindIndex(source)
-	if index != nil {
-		front.start = index[0]
-		front.end = index[1]
-		front.values, err = meta.TryGet(context)
+	if index == nil {
+		return front, nil
 	}
-	return
+
+	front.start = index[0]
+	front.end = index[1]
+	front.values = map[string]interface{}{}
+
+	values, err := meta.TryGet(context)
+	if err != nil {
+		return front, err
+	}
+	// Convert keys to lowercase, because we don't want to be case sensitive.
+	for k, v := range values {
+		front.values[strings.ToLower(k)] = v
+	}
+
+	return front, nil
 }
 
 // getString returns the first string value found for any of the given keys.
@@ -246,6 +281,7 @@ func (m frontmatter) getString(keys ...string) opt.String {
 	}
 
 	for _, key := range keys {
+		key = strings.ToLower(key)
 		if val, ok := m.values[key]; ok {
 			if val, ok := val.(string); ok {
 				return opt.NewNotEmptyString(val)
@@ -253,4 +289,25 @@ func (m frontmatter) getString(keys ...string) opt.String {
 		}
 	}
 	return opt.NullString
+}
+
+// getStrings returns the first string list found for any of the given keys.
+func (m frontmatter) getStrings(keys ...string) ([]string, bool) {
+	if m.values == nil {
+		return nil, false
+	}
+
+	for _, key := range keys {
+		key = strings.ToLower(key)
+		if val, ok := m.values[key]; ok {
+			if val, ok := val.([]interface{}); ok {
+				strings := []string{}
+				for _, v := range val {
+					strings = append(strings, fmt.Sprint(v))
+				}
+				return strings, true
+			}
+		}
+	}
+	return nil, false
 }

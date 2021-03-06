@@ -285,6 +285,48 @@ func TestParseMixedTags(t *testing.T) {
 	test(":#colontag: #:tag: #:word:tag:#", []string{"#colontag", ":tag:", ":word:tag:"})
 }
 
+func TestParseTagsFromFrontmatter(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parse(t, source)
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(`---
+Tags:
+    - tag1
+    - tag 2
+---
+
+Body
+`, []string{"tag1", "tag 2"})
+
+	test(`---
+Keywords: [keyword1, keyword 2]
+---
+
+Body
+`, []string{"keyword1", "keyword 2"})
+
+	test(`---
+tags: [tag1, tag 2]
+keywords:
+    - keyword1
+    - keyword 2
+---
+
+Body
+`, []string{"tag1", "tag 2", "keyword1", "keyword 2"})
+
+	// When a string, parse space-separated tags.
+	test(`---
+Tags: "tag1 #tag-2"
+Keywords: kw1 kw2 kw3
+---
+
+Body
+`, []string{"tag1", "#tag-2", "kw1", "kw2", "kw3"})
+}
+
 func TestParseLinks(t *testing.T) {
 	test := func(source string, links []note.Link) {
 		content := parse(t, source)
