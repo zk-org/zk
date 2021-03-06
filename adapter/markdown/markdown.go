@@ -189,7 +189,7 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 		return ast.WalkContinue, nil
 	})
 
-	return tags, err
+	return strutil.RemoveDuplicates(tags), err
 }
 
 // parseLinks extracts outbound links from the note.

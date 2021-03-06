@@ -327,6 +327,20 @@ Body
 `, []string{"tag1", "#tag-2", "kw1", "kw2", "kw3"})
 }
 
+func TestParseTagsIgnoresDuplicates(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parse(t, source)
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(`---
+Tags: [tag1, tag1, tag2]
+---
+
+#tag1 #tag2 #tag3 #tag3 :tag2:
+`, []string{"tag1", "tag2", "tag3"})
+}
+
 func TestParseLinks(t *testing.T) {
 	test := func(source string, links []note.Link) {
 		content := parse(t, source)
