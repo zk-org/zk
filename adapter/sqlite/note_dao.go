@@ -18,7 +18,7 @@ import (
 )
 
 // NoteDAO persists notes in the SQLite database.
-// It implements the core ports note.Indexer and note.Finder.
+// It implements the core port note.Finder.
 type NoteDAO struct {
 	tx     Transaction
 	logger util.Logger
@@ -103,11 +103,9 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 // Indexed returns file info of all indexed notes.
 func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
-	wrap := errors.Wrapper("failed to get indexed notes")
-
 	rows, err := d.indexedStmt.Query()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, err
 	}
 
 	c := make(chan paths.Metadata)
@@ -122,7 +120,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 		for rows.Next() {
 			err := rows.Scan(&path, &modified)
 			if err != nil {
-				d.logger.Err(wrap(err))
+				d.logger.Err(err)
 			}
 
 			c <- paths.Metadata{
@@ -133,7 +131,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 
 		err = rows.Err()
 		if err != nil {
-			d.logger.Err(wrap(err))
+			d.logger.Err(err)
 		}
 	}()
 
@@ -142,8 +140,6 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 
 // Add inserts a new note to the index.
 func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
-	wrap := errors.Wrapperf("%v: can't add note to the index", note.Path)
-
 	// For sortable_path, we replace in path / by the shortest non printable
 	// character available to make it sortable. Without this, sorting by the
 	// path would be a lexicographical sort instead of being the same order
@@ -157,12 +153,12 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 		note.Created, note.Modified,
 	)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, err
 	}
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return core.NoteId(0), wrap(err)
+		return core.NoteId(0), err
 	}
 
 	id := core.NoteId(lastId)
@@ -171,15 +167,13 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 }
 
 // Update modifies an existing note.
-func (d *NoteDAO) Update(note note.Metadata) error {
-	wrap := errors.Wrapperf("%v: failed to update note index", note.Path)
-
+func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 	id, err := d.findIdByPath(note.Path)
 	if err != nil {
-		return wrap(err)
+		return 0, err
 	}
 	if !id.IsValid() {
-		return wrap(errors.New("note not found in the index"))
+		return 0, errors.New("note not found in the index")
 	}
 
 	_, err = d.updateStmt.Exec(
@@ -187,16 +181,16 @@ func (d *NoteDAO) Update(note note.Metadata) error {
 		note.Path,
 	)
 	if err != nil {
-		return wrap(err)
+		return id, err
 	}
 
 	_, err = d.removeLinksStmt.Exec(d.idToSql(id))
 	if err != nil {
-		return wrap(err)
+		return id, err
 	}
 
 	err = d.addLinks(id, note)
-	return wrap(err)
+	return id, err
 }
 
 // addLinks inserts all the outbound links of the given note.
@@ -229,18 +223,16 @@ func joinLinkRels(rels []string) string {
 
 // Remove deletes the note with the given path from the index.
 func (d *NoteDAO) Remove(path string) error {
-	wrap := errors.Wrapperf("%v: failed to remove note index", path)
-
 	id, err := d.findIdByPath(path)
 	if err != nil {
-		return wrap(err)
+		return err
 	}
 	if !id.IsValid() {
-		return wrap(errors.New("note not found in the index"))
+		return errors.New("note not found in the index")
 	}
 
 	_, err = d.removeStmt.Exec(id)
-	return wrap(err)
+	return err
 }
 
 func (d *NoteDAO) findIdByPath(path string) (core.NoteId, error) {

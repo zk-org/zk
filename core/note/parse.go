@@ -39,3 +39,10 @@ const (
 type Parser interface {
 	Parse(source string) (*Content, error)
 }
+
+// CollectionKind defines a kind of note collection, such as tags.
+type CollectionKind string
+
+const (
+	CollectionKindTag CollectionKind = "tag"
+)

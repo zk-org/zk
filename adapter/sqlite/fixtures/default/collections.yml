@@ -7,3 +7,6 @@
 - id: 3
   kind: "genre"
   name: "fiction"
+- id: 4
+  kind: "tag"
+  name: "fantasy"

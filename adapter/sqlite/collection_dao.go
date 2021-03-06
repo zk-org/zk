@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
 )
@@ -63,7 +64,7 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 
 // FindOrCreate returns the ID of the collection with given kind and name.
 // Creates the collection if it does not already exist.
-func (d *CollectionDAO) FindOrCreate(kind string, name string) (core.CollectionId, error) {
+func (d *CollectionDAO) FindOrCreate(kind note.CollectionKind, name string) (core.CollectionId, error) {
 	id, err := d.findCollection(kind, name)
 
 	switch {
@@ -76,7 +77,7 @@ func (d *CollectionDAO) FindOrCreate(kind string, name string) (core.CollectionI
 	}
 }
 
-func (d *CollectionDAO) findCollection(kind string, name string) (core.CollectionId, error) {
+func (d *CollectionDAO) findCollection(kind note.CollectionKind, name string) (core.CollectionId, error) {
 	wrap := errors.Wrapperf("failed to get %s named %s", kind, name)
 
 	row, err := d.findCollectionStmt.QueryRow(kind, name)
@@ -97,7 +98,7 @@ func (d *CollectionDAO) findCollection(kind string, name string) (core.Collectio
 	}
 }
 
-func (d *CollectionDAO) create(kind string, name string) (core.CollectionId, error) {
+func (d *CollectionDAO) create(kind note.CollectionKind, name string) (core.CollectionId, error) {
 	wrap := errors.Wrapperf("failed to create new %s named %s", kind, name)
 
 	res, err := d.createCollectionStmt.Exec(kind, name)

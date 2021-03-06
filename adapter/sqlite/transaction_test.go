@@ -48,6 +48,14 @@ func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func
 	assert.Nil(t, err)
 }
 
+func assertExistOrNot(t *testing.T, tx Transaction, shouldExist bool, sql string, args ...interface{}) {
+	if shouldExist {
+		assertExist(t, tx, sql, args...)
+	} else {
+		assertNotExist(t, tx, sql, args...)
+	}
+}
+
 func assertExist(t *testing.T, tx Transaction, sql string, args ...interface{}) {
 	if !exists(t, tx, sql, args...) {
 		t.Errorf("SQL query did not return any result: %s, with arguments %v", sql, args)

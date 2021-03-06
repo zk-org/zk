@@ -235,13 +235,13 @@ func TestNoteDAOAddFillsLinksMissingTargetId(t *testing.T) {
 func TestNoteDAOAddExistingNote(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		_, err := dao.Add(note.Metadata{Path: "ref/test/a.md"})
-		assert.Err(t, err, "ref/test/a.md: can't add note to the index: UNIQUE constraint failed: notes.path")
+		assert.Err(t, err, "UNIQUE constraint failed: notes.path")
 	})
 }
 
 func TestNoteDAOUpdate(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		err := dao.Update(note.Metadata{
+		id, err := dao.Update(note.Metadata{
 			Path:       "ref/test/a.md",
 			Title:      "Updated note",
 			Lead:       "Updated lead",
@@ -253,6 +253,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 		assert.Nil(t, err)
+		assert.Equal(t, id, core.NoteId(6))
 
 		row, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
@@ -272,10 +273,10 @@ func TestNoteDAOUpdate(t *testing.T) {
 
 func TestNoteDAOUpdateUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		err := dao.Update(note.Metadata{
+		_, err := dao.Update(note.Metadata{
 			Path: "unknown/unknown.md",
 		})
-		assert.Err(t, err, "unknown/unknown.md: failed to update note index: note not found in the index")
+		assert.Err(t, err, "note not found in the index")
 	})
 }
 
@@ -300,7 +301,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 			},
 		})
 
-		err := dao.Update(note.Metadata{
+		_, err := dao.Update(note.Metadata{
 			Path: "log/2021-01-03.md",
 			Links: []note.Link{
 				{
@@ -358,7 +359,7 @@ func TestNoteDAORemove(t *testing.T) {
 func TestNoteDAORemoveUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		err := dao.Remove("unknown/unknown.md")
-		assert.Err(t, err, "unknown/unknown.md: failed to remove note index: note not found in the index")
+		assert.Err(t, err, "note not found in the index")
 	})
 }
 
