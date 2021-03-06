@@ -3,9 +3,11 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/errors"
@@ -16,7 +18,7 @@ import (
 )
 
 // NoteDAO persists notes in the SQLite database.
-// It implements the core ports note.Indexer and note.Finder.
+// It implements the core port note.Finder.
 type NoteDAO struct {
 	tx     Transaction
 	logger util.Logger
@@ -101,11 +103,9 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 // Indexed returns file info of all indexed notes.
 func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
-	wrap := errors.Wrapper("failed to get indexed notes")
-
 	rows, err := d.indexedStmt.Query()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, err
 	}
 
 	c := make(chan paths.Metadata)
@@ -120,7 +120,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 		for rows.Next() {
 			err := rows.Scan(&path, &modified)
 			if err != nil {
-				d.logger.Err(wrap(err))
+				d.logger.Err(err)
 			}
 
 			c <- paths.Metadata{
@@ -131,7 +131,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 
 		err = rows.Err()
 		if err != nil {
-			d.logger.Err(wrap(err))
+			d.logger.Err(err)
 		}
 	}()
 
@@ -139,9 +139,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 }
 
 // Add inserts a new note to the index.
-func (d *NoteDAO) Add(note note.Metadata) (int64, error) {
-	wrap := errors.Wrapperf("%v: can't add note to the index", note.Path)
-
+func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 	// For sortable_path, we replace in path / by the shortest non printable
 	// character available to make it sortable. Without this, sorting by the
 	// path would be a lexicographical sort instead of being the same order
@@ -155,28 +153,27 @@ func (d *NoteDAO) Add(note note.Metadata) (int64, error) {
 		note.Created, note.Modified,
 	)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, err
 	}
 
-	id, err := res.LastInsertId()
+	lastId, err := res.LastInsertId()
 	if err != nil {
-		return 0, wrap(err)
+		return core.NoteId(0), err
 	}
 
+	id := core.NoteId(lastId)
 	err = d.addLinks(id, note)
 	return id, err
 }
 
 // Update modifies an existing note.
-func (d *NoteDAO) Update(note note.Metadata) error {
-	wrap := errors.Wrapperf("%v: failed to update note index", note.Path)
-
+func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 	id, err := d.findIdByPath(note.Path)
 	if err != nil {
-		return wrap(err)
+		return 0, err
 	}
-	if !id.Valid {
-		return wrap(errors.New("note not found in the index"))
+	if !id.IsValid() {
+		return 0, errors.New("note not found in the index")
 	}
 
 	_, err = d.updateStmt.Exec(
@@ -184,33 +181,33 @@ func (d *NoteDAO) Update(note note.Metadata) error {
 		note.Path,
 	)
 	if err != nil {
-		return wrap(err)
+		return id, err
 	}
 
-	_, err = d.removeLinksStmt.Exec(id.Int64)
+	_, err = d.removeLinksStmt.Exec(d.idToSql(id))
 	if err != nil {
-		return wrap(err)
+		return id, err
 	}
 
-	err = d.addLinks(id.Int64, note)
-	return wrap(err)
+	err = d.addLinks(id, note)
+	return id, err
 }
 
 // addLinks inserts all the outbound links of the given note.
-func (d *NoteDAO) addLinks(id int64, note note.Metadata) error {
+func (d *NoteDAO) addLinks(id core.NoteId, note note.Metadata) error {
 	for _, link := range note.Links {
 		targetId, err := d.findIdByPathPrefix(link.Href)
 		if err != nil {
 			return err
 		}
 
-		_, err = d.addLinkStmt.Exec(id, targetId, link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet)
+		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err := d.setLinksTargetStmt.Exec(id, note.Path)
+	_, err := d.setLinksTargetStmt.Exec(int64(id), note.Path)
 	return err
 }
 
@@ -226,61 +223,59 @@ func joinLinkRels(rels []string) string {
 
 // Remove deletes the note with the given path from the index.
 func (d *NoteDAO) Remove(path string) error {
-	wrap := errors.Wrapperf("%v: failed to remove note index", path)
-
 	id, err := d.findIdByPath(path)
 	if err != nil {
-		return wrap(err)
+		return err
 	}
-	if !id.Valid {
-		return wrap(errors.New("note not found in the index"))
+	if !id.IsValid() {
+		return errors.New("note not found in the index")
 	}
 
 	_, err = d.removeStmt.Exec(id)
-	return wrap(err)
+	return err
 }
 
-func (d *NoteDAO) findIdByPath(path string) (sql.NullInt64, error) {
+func (d *NoteDAO) findIdByPath(path string) (core.NoteId, error) {
 	row, err := d.findIdByPathStmt.QueryRow(path)
 	if err != nil {
-		return sql.NullInt64{}, err
+		return core.NoteId(0), err
 	}
 	return idForRow(row)
 }
 
-func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]int64, error) {
-	ids := make([]int64, 0)
+func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteId, error) {
+	ids := make([]core.NoteId, 0)
 	for _, path := range paths {
 		id, err := d.findIdByPathPrefix(path)
 		if err != nil {
 			return ids, err
 		}
-		if id.Valid {
-			ids = append(ids, id.Int64)
+		if id.IsValid() {
+			ids = append(ids, id)
 		}
 	}
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdByPathPrefix(path string) (sql.NullInt64, error) {
+func (d *NoteDAO) findIdByPathPrefix(path string) (core.NoteId, error) {
 	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
 	if err != nil {
-		return sql.NullInt64{}, err
+		return core.NoteId(0), err
 	}
 	return idForRow(row)
 }
 
-func idForRow(row *sql.Row) (sql.NullInt64, error) {
+func idForRow(row *sql.Row) (core.NoteId, error) {
 	var id sql.NullInt64
 	err := row.Scan(&id)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return id, nil
+		return core.NoteId(0), nil
 	case err != nil:
-		return id, err
+		return core.NoteId(0), err
 	default:
-		return id, err
+		return core.NoteId(id.Int64), nil
 	}
 }
 
@@ -353,7 +348,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		if len(ids) == 0 {
 			return nil
 		}
-		idsList := "(" + strutil.JoinInt64(ids, ",") + ")"
+		idsList := "(" + d.joinIds(ids, ",") + ")"
 
 		linksSrc := "links"
 
@@ -613,4 +608,20 @@ func orderTerm(sorter note.Sorter) string {
 func pathRegex(path string) string {
 	path = icu.EscapePattern(path)
 	return path + "[^/]*|" + path + "/.+"
+}
+
+func (d *NoteDAO) idToSql(id core.NoteId) sql.NullInt64 {
+	if id.IsValid() {
+		return sql.NullInt64{Int64: int64(id), Valid: true}
+	} else {
+		return sql.NullInt64{}
+	}
+}
+
+func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
+	strs := make([]string, 0)
+	for _, i := range ids {
+		strs = append(strs, strconv.FormatInt(int64(i), 10))
+	}
+	return strings.Join(strs, delimiter)
 }

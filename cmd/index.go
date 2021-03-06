@@ -40,13 +40,11 @@ func (cmd *Index) Run(container *Container) error {
 
 	var stats note.IndexingStats
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
-		notes := sqlite.NewNoteDAO(tx, container.Logger)
-
 		stats, err = note.Index(
 			zk,
 			cmd.Force,
 			container.Parser(),
-			notes,
+			container.NoteIndexer(tx),
 			container.Logger,
 			func(change paths.DiffChange) {
 				bar.Add(1)

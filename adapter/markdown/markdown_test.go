@@ -153,6 +153,194 @@ Paragraph`,
 	)
 }
 
+func TestParseHashtags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: false,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test("#", []string{})
+	test("##", []string{})
+	test("# No tags around here", []string{})
+	test("#single-hashtag", []string{"single-hashtag"})
+	test("a #tag in the middle", []string{"tag"})
+	test("#multiple #hashtags", []string{"multiple", "hashtags"})
+	test("#multiple#hashtags", []string{})
+	// Unicode hashtags
+	test("#libellé-français, #日本語ハッシュタグ", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation breaking tags
+	test(
+		"#a #b, #c; #d. #e! #f? #g* #h\", #i(, #j), #k[, #l], #m{, #n}",
+		[]string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"},
+	)
+	// Authorized special characters
+	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
+	// Escape punctuation and space
+	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	// Hashtags containing only numbers and dots are invalid
+	test("#123, #1.2.3", []string{})
+	// Must not be preceded by a hash or any other valid hashtag character
+	test("##invalid also#invalid", []string{})
+	// Bear's multi multi-word tags are disabled
+	test("#multi word# end", []string{"multi"})
+}
+
+func TestParseWordtags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: true,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test("#", []string{})
+	test("##", []string{})
+	test("# No tags around here", []string{})
+	test("#single-hashtag", []string{"single-hashtag"})
+	test("a #tag in the middle", []string{"tag"})
+	test("#multiple #hashtags", []string{"multiple", "hashtags"})
+	test("#multiple#hashtags", []string{"multiple"})
+	// Unicode hashtags
+	test("#libellé-français, #日本語ハッシュタグ", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation breaking tags
+	test(
+		"#a #b, #c; #d. #e! #f? #g* #h\", #i(, #j), #k[, #l], #m{, #n}",
+		[]string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"},
+	)
+	// Authorized special characters
+	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
+	// Escape punctuation and space
+	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	// Hashtags containing only numbers and dots are invalid
+	test("#123, #1.2.3", []string{})
+	// Must not be preceded by a hash or any other valid hashtag character
+	test("##invalid also#invalid", []string{})
+	// Bear's multi multi-word tags
+	test("#multi word#", []string{"multi word"})
+	test("#surrounded# end", []string{"surrounded"})
+	test("#multi word#end", []string{"multi word"})
+	test("#multi word #other", []string{"multi", "other"})
+	test("#multi word# #other", []string{"multi word", "other"})
+	test("#multi word##other", []string{"multi word"})
+	test("a #multi word# in the middle", []string{"multi word"})
+	test("a #multi word#, and a #tag", []string{"multi word", "tag"})
+	test("#multi, word#", []string{"multi"})
+}
+
+func TestParseColontags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			ColontagEnabled: true,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test("", []string{})
+	test(":", []string{})
+	test("::", []string{})
+	test("not:valid:", []string{})
+	test(":no tags:", []string{})
+	test(": no-tags:", []string{})
+	test(":no-tags :", []string{})
+	test(":single-colontag:", []string{"single-colontag"})
+	test("a :tag: in the middle", []string{"tag"})
+	test(":multiple:colontags:", []string{"multiple", "colontags"})
+	test(":multiple::colontags:", []string{"multiple"})
+	test(":multiple: :colontags:", []string{"multiple", "colontags"})
+	test(":multiple:,:colontags:", []string{"multiple", "colontags"})
+	test(":more:than:two:colontags:", []string{"more", "than", "two", "colontags"})
+	test(":multiple :colontags", []string{})
+	test(":multiple :colontags:", []string{"colontags"})
+	// Unicode colontags
+	test(":libellé-français:日本語ハッシュタグ:", []string{"libellé-français", "日本語ハッシュタグ"})
+	// Punctuation is not allowed
+	test(":a : :b,: :c;: :d.: :e!: :f?: :g*: :h\": :i(: :j): :k[: :l]: :m{: :n}:", []string{})
+	// Authorized special characters
+	test(":#a/@'~-_$%&+=: end", []string{"#a/@'~-_$%&+="})
+	// Escape punctuation and space
+	test(`:an\ \\espaced\ tag\!:`, []string{`an \espaced tag!`})
+	// A colontag containing only numbers is valid
+	test(":123:1.2.3:", []string{"123"})
+	// Must not be preceded by a : or any other valid colontag character
+	test("::invalid also:invalid:", []string{})
+}
+
+func TestParseMixedTags(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parseWithOptions(t, source, ParserOpts{
+			HashtagEnabled:      true,
+			MultiWordTagEnabled: true,
+			ColontagEnabled:     true,
+		})
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(":colontag: #tag #word tag#", []string{"colontag", "tag", "word tag"})
+	test(":#colontag: #:tag: #:word:tag:#", []string{"#colontag", ":tag:", ":word:tag:"})
+}
+
+func TestParseTagsFromFrontmatter(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parse(t, source)
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(`---
+Tags:
+    - "#tag1"
+    - tag 2
+---
+
+Body
+`, []string{"tag1", "tag 2"})
+
+	test(`---
+Keywords: [keyword1, "#keyword 2"]
+---
+
+Body
+`, []string{"keyword1", "keyword 2"})
+
+	test(`---
+tags: [tag1, tag 2]
+keywords:
+    - keyword1
+    - keyword 2
+---
+
+Body
+`, []string{"tag1", "tag 2", "keyword1", "keyword 2"})
+
+	// When a string, parse space-separated tags.
+	test(`---
+Tags: "tag1 #tag-2"
+Keywords: kw1 kw2 kw3
+---
+
+Body
+`, []string{"tag1", "tag-2", "kw1", "kw2", "kw3"})
+}
+
+func TestParseTagsIgnoresDuplicates(t *testing.T) {
+	test := func(source string, tags []string) {
+		content := parse(t, source)
+		assert.Equal(t, content.Tags, tags)
+	}
+
+	test(`---
+Tags: [tag1, "#tag1", tag2]
+---
+
+#tag1 #tag2 #tag3 #tag3 :tag2:
+`, []string{"tag1", "tag2", "tag3"})
+}
+
 func TestParseLinks(t *testing.T) {
 	test := func(source string, links []note.Link) {
 		content := parse(t, source)
@@ -311,7 +499,15 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 }
 
 func parse(t *testing.T, source string) note.Content {
-	content, err := NewParser().Parse(source)
+	return parseWithOptions(t, source, ParserOpts{
+		HashtagEnabled:      true,
+		MultiWordTagEnabled: true,
+		ColontagEnabled:     true,
+	})
+}
+
+func parseWithOptions(t *testing.T, source string, options ParserOpts) note.Content {
+	content, err := NewParser(options).Parse(source)
 	assert.Nil(t, err)
 	return *content
 }

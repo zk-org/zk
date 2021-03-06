@@ -58,12 +58,22 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 }
 
 func (c *Container) Parser() *markdown.Parser {
-	return markdown.NewParser()
+	return markdown.NewParser(markdown.ParserOpts{
+		HashtagEnabled:      true,
+		MultiWordTagEnabled: false,
+		ColontagEnabled:     true,
+	})
 }
 
 func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *fzf.NoteFinder {
 	notes := sqlite.NewNoteDAO(tx, c.Logger)
 	return fzf.NewNoteFinder(opts, notes, c.Terminal)
+}
+
+func (c *Container) NoteIndexer(tx sqlite.Transaction) *sqlite.NoteIndexer {
+	notes := sqlite.NewNoteDAO(tx, c.Logger)
+	collections := sqlite.NewCollectionDAO(tx, c.Logger)
+	return sqlite.NewNoteIndexer(notes, collections, c.Logger)
 }
 
 // Database returns the DB instance for the given notebook, after executing any
