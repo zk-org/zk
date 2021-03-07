@@ -154,6 +154,19 @@ func (db *DB) Migrate() error {
 			}
 		}
 
+		if version <= 2 {
+			err = tx.ExecStmts([]string{
+				// Add a `metadata` column to `notes
+				`ALTER TABLE notes ADD COLUMN metadata TEXT DEFAULT('{}') NOT NULL`,
+
+				`PRAGMA user_version = 3`,
+			})
+
+			if err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 

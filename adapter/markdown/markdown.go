@@ -91,11 +91,12 @@ func (p *Parser) Parse(source string) (*note.Content, error) {
 	}
 
 	return &note.Content{
-		Title: title,
-		Body:  body,
-		Lead:  parseLead(body),
-		Links: links,
-		Tags:  tags,
+		Title:    title,
+		Body:     body,
+		Lead:     parseLead(body),
+		Links:    links,
+		Tags:     tags,
+		Metadata: frontmatter.values,
 	}, nil
 }
 
@@ -265,6 +266,7 @@ var frontmatterRegex = regexp.MustCompile(`(?ms)^\s*-+\s*$.*?^\s*-+\s*$`)
 
 func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error) {
 	var front frontmatter
+	front.values = map[string]interface{}{}
 
 	index := frontmatterRegex.FindIndex(source)
 	if index == nil {
@@ -273,7 +275,6 @@ func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error
 
 	front.start = index[0]
 	front.end = index[1]
-	front.values = map[string]interface{}{}
 
 	values, err := meta.TryGet(context)
 	if err != nil {

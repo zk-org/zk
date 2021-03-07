@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -51,14 +52,14 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 		// Add a new note to the index.
 		addStmt: tx.PrepareLazy(`
-			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, checksum, created, modified)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, metadata, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Update the content of a note.
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
-			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, checksum = ?, modified = ?
+			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, metadata = ?, checksum = ?, modified = ?
 			 WHERE path = ?
 		`),
 
@@ -149,9 +150,15 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 	// string.
 	sortablePath := strings.ReplaceAll(note.Path, "/", "\x01")
 
+	metadata, err := d.metadataToJson(note)
+	if err != nil {
+		return 0, err
+	}
+
 	res, err := d.addStmt.Exec(
-		note.Path, sortablePath, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
-		note.Created, note.Modified,
+		note.Path, sortablePath, note.Title, note.Lead, note.Body,
+		note.RawContent, note.WordCount, metadata, note.Checksum, note.Created,
+		note.Modified,
 	)
 	if err != nil {
 		return 0, err
@@ -177,9 +184,14 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 		return 0, errors.New("note not found in the index")
 	}
 
+	metadata, err := d.metadataToJson(note)
+	if err != nil {
+		return 0, err
+	}
+
 	_, err = d.updateStmt.Exec(
-		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum, note.Modified,
-		note.Path,
+		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount,
+		metadata, note.Checksum, note.Modified, note.Path,
 	)
 	if err != nil {
 		return id, err
@@ -192,6 +204,14 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 
 	err = d.addLinks(id, note)
 	return id, err
+}
+
+func (d *NoteDAO) metadataToJson(note note.Metadata) (string, error) {
+	json, err := json.Marshal(note.Metadata)
+	if err != nil {
+		return "", fmt.Errorf("cannot serialize note metadata to JSON: %s", note.Path)
+	}
+	return string(json), nil
 }
 
 // addLinks inserts all the outbound links of the given note.

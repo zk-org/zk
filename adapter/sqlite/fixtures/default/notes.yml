@@ -9,6 +9,7 @@
   checksum: "qwfpgj"
   created: "2020-11-22T16:27:45Z"
   modified: "2020-11-22T16:27:45Z"
+  metadata: "{'author':'Dom'}"
 
 - id: 2
   path: "log/2021-01-04.md"
@@ -21,6 +22,7 @@
   checksum: "arstde"
   created: "2020-11-29T08:20:18Z"
   modified: "2020-11-29T08:20:18Z"
+  metadata: "{}"
 
 - id: 3
   path: "index.md"
@@ -33,6 +35,7 @@
   checksum: "iaefhv"
   created: "2019-12-04T11:59:11Z"
   modified: "2019-12-04T12:17:21Z"
+  metadata: "{}"
 
 - id: 4
   path: "f39c8.md"
@@ -45,6 +48,7 @@
   checksum: "irkwyc"
   created: "2020-01-19T10:58:41Z"
   modified: "2020-01-20T08:52:42Z"
+  metadata: "{}"
 
 - id: 5
   path: "ref/test/b.md"
@@ -57,6 +61,7 @@
   checksum: "yvwbae"
   created: "2019-11-20T20:32:56Z"
   modified: "2019-11-20T20:34:06Z"
+  metadata: "{}"
 
 - id: 6
   path: "ref/test/a.md"
@@ -69,6 +74,7 @@
   checksum: "iecywst"
   created: "2019-11-20T20:32:56Z"
   modified: "2019-11-20T20:34:06Z"
+  metadata: "{'alias':'a.md'}"
 
 - id: 7
   path: "log/2021-02-04.md"
@@ -81,3 +87,4 @@
   checksum: "earkte"
   created: "2020-11-29T08:20:18Z"
   modified: "2020-11-10T08:20:18Z"
+  metadata: "{}"

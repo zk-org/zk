@@ -502,6 +502,29 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 	})
 }
 
+func TestParseMetadataFromFrontmatter(t *testing.T) {
+	test := func(source string, expectedMetadata map[string]interface{}) {
+		content := parse(t, source)
+		assert.Equal(t, content.Metadata, expectedMetadata)
+	}
+
+	test("", map[string]interface{}{})
+	test("# A title", map[string]interface{}{})
+	test("---\n---\n# A title", map[string]interface{}{})
+	test(`---
+title: A title
+tags:
+  - tag1
+  - "tag 2"
+---
+
+Paragraph
+`, map[string]interface{}{
+		"title": "A title",
+		"tags":  []interface{}{"tag1", "tag 2"},
+	})
+}
+
 func parse(t *testing.T, source string) note.Content {
 	return parseWithOptions(t, source, ParserOpts{
 		HashtagEnabled:      true,

@@ -111,6 +111,7 @@ func TestNoteDAOAdd(t *testing.T) {
 			Body:       "Note body",
 			RawContent: "# Added note\nNote body",
 			WordCount:  2,
+			Metadata:   map[string]interface{}{"key": "value"},
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 			Checksum:   "check",
@@ -129,6 +130,7 @@ func TestNoteDAOAdd(t *testing.T) {
 			Checksum:   "check",
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Metadata:   `{"key":"value"}`,
 		})
 	})
 }
@@ -248,6 +250,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Body:       "Updated body",
 			RawContent: "Updated raw content",
 			Checksum:   "updated checksum",
+			Metadata:   map[string]interface{}{"updated-key": "updated-value"},
 			WordCount:  42,
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
@@ -267,6 +270,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			WordCount:  42,
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Metadata:   `{"updated-key":"updated-value"}`,
 		})
 	})
 }
@@ -939,18 +943,18 @@ func testNoteDAOWithoutFixtures(t *testing.T, callback func(tx Transaction, dao 
 }
 
 type noteRow struct {
-	Path, Title, Lead, Body, RawContent, Checksum string
-	WordCount                                     int
-	Created, Modified                             time.Time
+	Path, Title, Lead, Body, RawContent, Checksum, Metadata string
+	WordCount                                               int
+	Created, Modified                                       time.Time
 }
 
 func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 	var row noteRow
 	err := tx.QueryRow(fmt.Sprintf(`
-		SELECT path, title, lead, body, raw_content, word_count, checksum, created, modified
+		SELECT path, title, lead, body, raw_content, word_count, checksum, created, modified, metadata
 		  FROM notes
 		 WHERE %v
-	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
+	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified, &row.Metadata)
 	return row, err
 }
 

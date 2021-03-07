@@ -27,6 +27,7 @@ type Metadata struct {
 	WordCount  int
 	Links      []Link
 	Tags       []string
+	Metadata   map[string]interface{}
 	Created    time.Time
 	Modified   time.Time
 	Checksum   string
@@ -139,6 +140,7 @@ func metadata(path string, zk *zk.Zk, parser Parser) (Metadata, error) {
 	metadata.WordCount = len(strings.Fields(contentStr))
 	metadata.Links = make([]Link, 0)
 	metadata.Tags = contentParts.Tags
+	metadata.Metadata = contentParts.Metadata
 	metadata.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
 
 	for _, link := range contentParts.Links {
