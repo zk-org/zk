@@ -482,7 +482,7 @@ SELECT note_id FROM notes_collections
 				return nil, err
 			}
 
-		case note.LinkingToFilter:
+		case note.LinkToFilter:
 			maxDistance = filter.MaxDistance
 			err := setupLinkFilter(filter.Paths, 1, filter.Negate, filter.Recursive)
 			if err != nil {

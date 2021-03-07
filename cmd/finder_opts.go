@@ -20,10 +20,10 @@ type Filtering struct {
 	Tag         []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
 	Orphan      bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
-	LinkingTo   []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
+	LinkTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
 	// FIXME: I'm not confident this is a useful option.
 	// NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
-	// NotLinkingTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	// NotLinkTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
 	Recursive      bool     `group:filter short:r                     help:"Follow links recursively."`
@@ -144,10 +144,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 		})
 	}
 
-	linkingToPaths, ok := relPaths(zk, filtering.LinkingTo)
+	linkToPaths, ok := relPaths(zk, filtering.LinkTo)
 	if ok {
-		filters = append(filters, note.LinkingToFilter{
-			Paths:       linkingToPaths,
+		filters = append(filters, note.LinkToFilter{
+			Paths:       linkToPaths,
 			Negate:      false,
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
@@ -162,10 +162,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 	// 	})
 	// }
 
-	// notLinkingToPaths, ok := relPaths(zk, filtering.NotLinkingTo)
+	// notLinkToPaths, ok := relPaths(zk, filtering.NotLinkTo)
 	// if ok {
-	// 	filters = append(filters, note.LinkingToFilter{
-	// 		Paths:  notLinkingToPaths,
+	// 	filters = append(filters, note.LinkToFilter{
+	// 		Paths:  notLinkToPaths,
 	// 		Negate: true,
 	// 	})
 	// }

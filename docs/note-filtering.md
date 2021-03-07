@@ -27,7 +27,7 @@ $ zk edit 200911172034
 These rules apply to all the following options, when they expect a `<path>` parameter.
 
 ```sh
-$ zk list --linking-to 200911172034
+$ zk list --link-to 200911172034
 ```
 
 You can also use a nested `zk` command to pre-filter paths to feed to an option with a `<path>` argument. [See the `inline` command alias example](config-alias.md) for more explanation.
@@ -128,11 +128,11 @@ You can filter by range instead, using `--created-before`, `--created-after`, `-
 
 You can use the following options to explore the web of links spanning your [notebook](notebook.md).
 
-`--linked-by <path>` (or `-l`) finds the notes linked by the given one, while `--linking-to <path>` (or `-L`) searches the notes having a link to it (also known as *backlinks*).
+`--linked-by <path>` (or `-l`) finds the notes linked by the given one, while `--link-to <path>` (or `-L`) searches the notes having a link to it (also known as *backlinks*).
 
 ```
 --linked-by 200911172034
---linking-to 200911172034
+--link-to 200911172034
 ```
 
 These options stop at the first level by default. But you can explore the whole web by adding the `--recursive` (or `-r`) option to find all the notes leading to (or from) a given note. If you feel overwhelmed, limit the distance between two notes with `--max-distance <count>`.

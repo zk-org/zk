@@ -55,8 +55,8 @@ type LinkedByFilter struct {
 	MaxDistance int
 }
 
-// LinkingToFilter is a note filter used to select notes being linked by another one.
-type LinkingToFilter struct {
+// LinkToFilter is a note filter used to select notes being linked by another one.
+type LinkToFilter struct {
 	Paths       []string
 	Negate      bool
 	Recursive   bool
@@ -85,7 +85,7 @@ func (f PathFilter) sealed()        {}
 func (f ExcludePathFilter) sealed() {}
 func (f TagFilter) sealed()         {}
 func (f LinkedByFilter) sealed()    {}
-func (f LinkingToFilter) sealed()   {}
+func (f LinkToFilter) sealed()      {}
 func (f RelatedFilter) sealed()     {}
 func (f OrphanFilter) sealed()      {}
 func (f DateFilter) sealed()        {}

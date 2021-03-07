@@ -674,10 +674,10 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindLinkingTo(t *testing.T) {
+func TestNoteDAOFindLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter{
+			Filters: []note.Filter{note.LinkToFilter{
 				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
 				Negate:    false,
 				Recursive: false,
@@ -687,10 +687,10 @@ func TestNoteDAOFindLinkingTo(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindLinkingToRecursive(t *testing.T) {
+func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter{
+			Filters: []note.Filter{note.LinkToFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
@@ -700,10 +700,10 @@ func TestNoteDAOFindLinkingToRecursive(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindLinkingToRecursiveWithMaxDistance(t *testing.T) {
+func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter{
+			Filters: []note.Filter{note.LinkToFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
@@ -714,10 +714,10 @@ func TestNoteDAOFindLinkingToRecursiveWithMaxDistance(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindNotLinkingTo(t *testing.T) {
+func TestNoteDAOFindNotLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkingToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true}},
+			Filters: []note.Filter{note.LinkToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true}},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)

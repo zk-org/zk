@@ -154,7 +154,7 @@ $ zk wc
 This is such a useful command, that an alias might be helpful.
 
 ```toml
-bl = "zk list --linking-to $@"
+bl = "zk list --link-to $@"
 ```
 
 ### Browse the Git history of selected notes

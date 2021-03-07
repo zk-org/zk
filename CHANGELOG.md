@@ -12,4 +12,5 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+* Renamed `--linking-to` filtering option to `--link-to`.
 * Multiple `--extra` variables are now separated by `,` instead of `;`.

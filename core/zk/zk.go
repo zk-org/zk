@@ -129,7 +129,7 @@ template = "default.md"
 # Print paths separated with colons for the notes found with the given
 # arguments. This can be useful to expand a complex search query into a flag
 # taking only paths. For example:
-#   zk list --linking-to "` + "`" + `zk path -m potatoe` + "`" + `"
+#   zk list --link-to "` + "`" + `zk path -m potatoe` + "`" + `"
 #path = "zk list --quiet --format {{path}} --delimiter , $@"
 
 # Show a random note.
