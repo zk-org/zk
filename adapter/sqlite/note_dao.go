@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -440,16 +441,27 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			if len(filter) == 0 {
 				break
 			}
-			for _, tag := range filter {
-				tag = strings.TrimSpace(tag)
-				if len(tag) == 0 {
-					continue
+			separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
+			for _, tags := range filter {
+				tags := separatorRegex.Split(tags, -1)
+
+				globs := make([]string, 0)
+				for _, tag := range tags {
+					tag = strings.TrimSpace(tag)
+					if len(tag) == 0 {
+						continue
+					}
+					globs = append(globs, "t.name GLOB ?")
+					args = append(args, tag)
 				}
+
 				whereExprs = append(whereExprs, fmt.Sprintf(`n.id IN (
 SELECT note_id FROM notes_collections
- WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND t.name GLOB ?)
- )`, note.CollectionKindTag))
-				args = append(args, tag)
+ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
+ )`,
+					note.CollectionKindTag,
+					strings.Join(globs, " OR "),
+				))
 			}
 
 		case note.ExcludePathFilter:

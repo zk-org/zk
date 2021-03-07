@@ -410,8 +410,13 @@ func TestNoteDAOFindTag(t *testing.T) {
 	}
 
 	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
-	test([]string{" adventure "}, []string{"log/2021-01-03.md"})
+	test([]string{" adventure "}, []string{"ref/test/b.md", "log/2021-01-03.md"})
 	test([]string{"fiction", "adventure"}, []string{"log/2021-01-03.md"})
+	test([]string{"fiction|fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction  |   fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction  OR  fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction | adventure | fantasy"}, []string{"ref/test/b.md", "f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction | history", "adventure"}, []string{"ref/test/b.md", "log/2021-01-03.md"})
 	test([]string{"fiction", "unknown"}, []string{})
 }
 
