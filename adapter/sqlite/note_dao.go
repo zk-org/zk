@@ -442,11 +442,22 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 				break
 			}
 			separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
-			for _, tags := range filter {
-				tags := separatorRegex.Split(tags, -1)
+			for _, tagsArg := range filter {
+				tags := separatorRegex.Split(tagsArg, -1)
 
+				negate := false
 				globs := make([]string, 0)
 				for _, tag := range tags {
+					tag = strings.TrimSpace(tag)
+
+					if strings.HasPrefix(tag, "-") {
+						negate = true
+						tag = strings.TrimPrefix(tag, "-")
+					} else if strings.HasPrefix(tag, "NOT") {
+						negate = true
+						tag = strings.TrimPrefix(tag, "NOT")
+					}
+
 					tag = strings.TrimSpace(tag)
 					if len(tag) == 0 {
 						continue
@@ -455,13 +466,25 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 					args = append(args, tag)
 				}
 
-				whereExprs = append(whereExprs, fmt.Sprintf(`n.id IN (
+				if len(globs) == 0 {
+					continue
+				}
+				if negate && len(globs) > 1 {
+					return nil, fmt.Errorf("cannot negate a tag in a OR group: %s", tagsArg)
+				}
+
+				expr := "n.id"
+				if negate {
+					expr += " NOT"
+				}
+				expr += fmt.Sprintf(` IN (
 SELECT note_id FROM notes_collections
  WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
  )`,
 					note.CollectionKindTag,
 					strings.Join(globs, " OR "),
-				))
+				)
+				whereExprs = append(whereExprs, expr)
 			}
 
 		case note.ExcludePathFilter:
