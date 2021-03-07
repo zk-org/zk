@@ -20,11 +20,11 @@ visibility = "private" # overrides
 
 ## Dynamic extra variables
 
-Maybe more useful, you can provide additional extra variables dynamically to `zk new` from the command-line with `--extra`. Multiple variables must be separated by a semicolon `;`, in which case quoting the argument is required.
+Maybe more useful, you can provide additional extra variables dynamically to `zk new` from the command-line with `--extra`. Multiple variables can be separated by a comma `,`.
 
 ```sh
 $ zk new --extra author=Thomas
-$ zk new --extra "show-header=1;author=Thomas"
+$ zk new --extra show-header=1,author=Thomas
 ```
 
 ## Using extra variables in templates
