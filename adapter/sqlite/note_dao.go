@@ -436,6 +436,22 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			}
 			whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
 
+		case note.TagFilter:
+			if len(filter) == 0 {
+				break
+			}
+			for _, tag := range filter {
+				tag = strings.TrimSpace(tag)
+				if len(tag) == 0 {
+					continue
+				}
+				whereExprs = append(whereExprs, fmt.Sprintf(`n.id IN (
+SELECT note_id FROM notes_collections
+ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND t.name GLOB ?)
+ )`, note.CollectionKindTag))
+				args = append(args, tag)
+			}
+
 		case note.ExcludePathFilter:
 			if len(filter) == 0 {
 				break

@@ -402,6 +402,19 @@ func TestNoteDAOFindLimit(t *testing.T) {
 	})
 }
 
+func TestNoteDAOFindTag(t *testing.T) {
+	test := func(tags []string, expectedPaths []string) {
+		testNoteDAOFindPaths(t, note.FinderOpts{
+			Filters: []note.Filter{note.TagFilter(tags)},
+		}, expectedPaths)
+	}
+
+	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
+	test([]string{" adventure "}, []string{"log/2021-01-03.md"})
+	test([]string{"fiction", "adventure"}, []string{"log/2021-01-03.md"})
+	test([]string{"fiction", "unknown"}, []string{})
+}
+
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{

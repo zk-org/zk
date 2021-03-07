@@ -17,6 +17,7 @@ type Filtering struct {
 	Limit       int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
 	Match       string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
 	Exclude     []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
+	Tag         []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
 	Orphan      bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
 	LinkingTo   []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
@@ -51,6 +52,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 	excludePaths, ok := relPaths(zk, filtering.Exclude)
 	if ok {
 		filters = append(filters, note.ExcludePathFilter(excludePaths))
+	}
+
+	if len(filtering.Tag) > 0 {
+		filters = append(filters, note.TagFilter(filtering.Tag))
 	}
 
 	if filtering.Match != "" {

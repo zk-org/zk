@@ -44,6 +44,9 @@ type PathFilter []string
 // ExcludePathFilter is a note filter using path globs to exclude notes from the list.
 type ExcludePathFilter []string
 
+// TagFilter is a note filter using tag globs found in the notes.
+type TagFilter []string
+
 // LinkedByFilter is a note filter used to select notes being linked by another one.
 type LinkedByFilter struct {
 	Paths       []string
@@ -80,6 +83,7 @@ type InteractiveFilter bool
 func (f MatchFilter) sealed()       {}
 func (f PathFilter) sealed()        {}
 func (f ExcludePathFilter) sealed() {}
+func (f TagFilter) sealed()         {}
 func (f LinkedByFilter) sealed()    {}
 func (f LinkingToFilter) sealed()   {}
 func (f RelatedFilter) sealed()     {}
