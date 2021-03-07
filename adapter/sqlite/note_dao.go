@@ -209,7 +209,7 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 func (d *NoteDAO) metadataToJson(note note.Metadata) (string, error) {
 	json, err := json.Marshal(note.Metadata)
 	if err != nil {
-		return "", fmt.Errorf("cannot serialize note metadata to JSON: %s", note.Path)
+		return "", errors.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path)
 	}
 	return string(json), nil
 }
@@ -315,14 +315,23 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			id, wordCount                 int
 			title, lead, body, rawContent string
 			snippets, tags                sql.NullString
-			path, checksum                string
+			path, metadataJSON, checksum  string
 			created, modified             time.Time
 		)
 
-		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &tags, &snippets)
+		err := rows.Scan(
+			&id, &path, &title, &lead, &body, &rawContent, &wordCount,
+			&created, &modified, &metadataJSON, &checksum, &tags, &snippets,
+		)
 		if err != nil {
 			d.logger.Err(err)
 			continue
+		}
+
+		var metadata map[string]interface{}
+		err = json.Unmarshal([]byte(metadataJSON), &metadata)
+		if err != nil {
+			d.logger.Err(errors.Wrapf(err, "cannot parse note metadata from JSON: %s", path))
 		}
 
 		matches = append(matches, note.Match{
@@ -336,6 +345,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 				WordCount:  wordCount,
 				Links:      []note.Link{},
 				Tags:       parseListFromNullString(tags),
+				Metadata:   metadata,
 				Created:    created,
 				Modified:   modified,
 				Checksum:   checksum,
@@ -605,7 +615,7 @@ SELECT note_id FROM notes_collections
 		query += "\n)\n"
 	}
 
-	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet\n", snippetCol)
+	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.metadata, n.checksum, n.tags, %s AS snippet\n", snippetCol)
 
 	query += "FROM notes_with_metadata n\n"
 

@@ -9,7 +9,7 @@
   checksum: "qwfpgj"
   created: "2020-11-22T16:27:45Z"
   modified: "2020-11-22T16:27:45Z"
-  metadata: "{'author':'Dom'}"
+  metadata: '{"author":"Dom"}'
 
 - id: 2
   path: "log/2021-01-04.md"
@@ -74,7 +74,7 @@
   checksum: "iecywst"
   created: "2019-11-20T20:32:56Z"
   modified: "2019-11-20T20:34:06Z"
-  metadata: "{'alias':'a.md'}"
+  metadata: '{"alias":"a.md"}'
 
 - id: 7
   path: "log/2021-02-04.md"

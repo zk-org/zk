@@ -108,6 +108,7 @@ func (f *Formatter) Format(match Match) (string, error) {
 		Tags:       match.Tags,
 		RawContent: match.RawContent,
 		WordCount:  match.WordCount,
+		Metadata:   match.Metadata.Metadata,
 		Created:    match.Created,
 		Modified:   match.Modified,
 		Checksum:   match.Checksum,
@@ -123,6 +124,7 @@ type formatRenderContext struct {
 	RawContent string `handlebars:"raw-content"`
 	WordCount  int    `handlebars:"word-count"`
 	Tags       []string
+	Metadata   map[string]interface{}
 	Created    time.Time
 	Modified   time.Time
 	Checksum   string
