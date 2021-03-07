@@ -156,8 +156,12 @@ func (db *DB) Migrate() error {
 
 		if version <= 2 {
 			err = tx.ExecStmts([]string{
-				// Add a `metadata` column to `notes
+				// Add a `metadata` column to `notes`
 				`ALTER TABLE notes ADD COLUMN metadata TEXT DEFAULT('{}') NOT NULL`,
+
+				// Add snippet's start and end offsets to `links`
+				`ALTER TABLE links ADD COLUMN snippet_start INTEGER DEFAULT(0) NOT NULL`,
+				`ALTER TABLE links ADD COLUMN snippet_end INTEGER DEFAULT(0) NOT NULL`,
 
 				`PRAGMA user_version = 3`,
 			})

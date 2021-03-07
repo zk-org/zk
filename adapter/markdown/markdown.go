@@ -216,23 +216,29 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 			case *ast.Link:
 				href := string(link.Destination)
 				if href != "" {
+					snippet, snStart, snEnd := extractLines(n.Parent(), source)
 					links = append(links, note.Link{
-						Title:    string(link.Text(source)),
-						Href:     href,
-						Rels:     strings.Fields(string(link.Title)),
-						External: strutil.IsURL(href),
-						Snippet:  extractLines(n.Parent(), source),
+						Title:        string(link.Text(source)),
+						Href:         href,
+						Rels:         strings.Fields(string(link.Title)),
+						External:     strutil.IsURL(href),
+						Snippet:      snippet,
+						SnippetStart: snStart,
+						SnippetEnd:   snEnd,
 					})
 				}
 
 			case *ast.AutoLink:
 				if href := string(link.URL(source)); href != "" && link.AutoLinkType == ast.AutoLinkURL {
+					snippet, snStart, snEnd := extractLines(n.Parent(), source)
 					links = append(links, note.Link{
-						Title:    string(link.Label(source)),
-						Href:     href,
-						Rels:     []string{},
-						External: true,
-						Snippet:  extractLines(n.Parent(), source),
+						Title:        string(link.Label(source)),
+						Href:         href,
+						Rels:         []string{},
+						External:     true,
+						Snippet:      snippet,
+						SnippetStart: snStart,
+						SnippetEnd:   snEnd,
 					})
 				}
 			}
@@ -242,17 +248,18 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 	return links, err
 }
 
-func extractLines(n ast.Node, source []byte) string {
+func extractLines(n ast.Node, source []byte) (content string, start, end int) {
 	if n == nil {
-		return ""
+		return
 	}
 	segs := n.Lines()
 	if segs.Len() == 0 {
-		return ""
+		return
 	}
-	start := segs.At(0).Start
-	end := segs.At(segs.Len() - 1).Stop
-	return string(source[start:end])
+	start = segs.At(0).Start
+	end = segs.At(segs.Len() - 1).Stop
+	content = string(source[start:end])
+	return
 }
 
 // frontmatter contains metadata parsed from a YAML frontmatter.
