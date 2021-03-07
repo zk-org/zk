@@ -26,7 +26,7 @@ func TestCollectionDAOFindOrCreate(t *testing.T) {
 		// Creates when not found
 		sql := "SELECT id FROM collections WHERE kind = ? AND name = ?"
 		assertNotExist(t, tx, sql, "unknown", "created")
-		id, err = dao.FindOrCreate("unknown", "created")
+		_, err = dao.FindOrCreate("unknown", "created")
 		assert.Nil(t, err)
 		assertExist(t, tx, sql, "unknown", "created")
 	})

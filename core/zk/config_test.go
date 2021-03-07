@@ -445,9 +445,9 @@ func TestGroupConfigOverride(t *testing.T) {
 
 	// Some overrides
 	sut.Override(ConfigOverrides{
-		BodyTemplatePath: opt.NewString("overriden-template"),
+		BodyTemplatePath: opt.NewString("overridden-template"),
 		Extra: map[string]string{
-			"hello":      "overriden",
+			"hello":      "overridden",
 			"additional": "value",
 		},
 	})
@@ -455,7 +455,7 @@ func TestGroupConfigOverride(t *testing.T) {
 		Paths: []string{"path"},
 		Note: NoteConfig{
 			FilenameTemplate: "filename",
-			BodyTemplatePath: opt.NewString("overriden-template"),
+			BodyTemplatePath: opt.NewString("overridden-template"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetLetters,
@@ -463,7 +463,7 @@ func TestGroupConfigOverride(t *testing.T) {
 			},
 		},
 		Extra: map[string]string{
-			"hello":      "overriden",
+			"hello":      "overridden",
 			"salut":      "le monde",
 			"additional": "value",
 		},

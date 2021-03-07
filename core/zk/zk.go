@@ -70,7 +70,7 @@ template = "default.md"
 # Specify the list of directories which will automatically belong to the group
 # with the optional ` + "`" + `paths` + "`" + ` property.
 #
-# Omiting ` + "`" + `paths` + "`" + ` is equivalent to providing a single path equal to the name of
+# Omitting ` + "`" + `paths` + "`" + ` is equivalent to providing a single path equal to the name of
 # the group. This can be useful to quickly declare a group by the name of the
 # directory it applies to.
 
@@ -315,18 +315,18 @@ func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
 
 func (zk *Zk) findConfigForDirNamed(name string, overrides []ConfigOverrides) (GroupConfig, error) {
 	// If there's a Group overrides, attempt to find a matching group.
-	overridenGroup := ""
+	overriddenGroup := ""
 	for _, o := range overrides {
 		if !o.Group.IsNull() {
-			overridenGroup = o.Group.Unwrap()
-			if group, ok := zk.Config.Groups[overridenGroup]; ok {
+			overriddenGroup = o.Group.Unwrap()
+			if group, ok := zk.Config.Groups[overriddenGroup]; ok {
 				return group, nil
 			}
 		}
 	}
 
-	if overridenGroup != "" {
-		return GroupConfig{}, fmt.Errorf("%s: group not find in the config file", overridenGroup)
+	if overriddenGroup != "" {
+		return GroupConfig{}, fmt.Errorf("%s: group not find in the config file", overriddenGroup)
 	}
 
 	for groupName, group := range zk.Config.Groups {

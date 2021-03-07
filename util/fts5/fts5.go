@@ -22,7 +22,7 @@ func ConvertQuery(query string) string {
 		')':  true,
 	}
 
-	// Indicates whether the current term was explicitely quoted in the query.
+	// Indicates whether the current term was explicitly quoted in the query.
 	inQuote := false
 	// Current term being read.
 	term := ""
