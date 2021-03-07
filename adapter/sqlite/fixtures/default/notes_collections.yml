@@ -1,9 +1,18 @@
 - id: 1
-  note_id: 1
-  collection_id: 1
+  note_id: 1        # log/2021-01-03.md
+  collection_id: 1  # tag:fiction
 - id: 2
-  note_id: 1
-  collection_id: 2
+  note_id: 1        # log/2021-01-03.md
+  collection_id: 2  # tag:adventure
 - id: 3
-  note_id: 2
-  collection_id: 3
+  note_id: 2        # log/2021-01-04.md
+  collection_id: 3  # genre:fiction
+- id: 4
+  note_id: 5        # ref/test/b.md
+  collection_id: 2  # tag:adventure
+- id: 5
+  note_id: 4        # f39c8.md
+  collection_id: 4  # tag:fantasy
+- id: 6
+  note_id: 5        # ref/test/b.md
+  collection_id: 5  # tag:adventure

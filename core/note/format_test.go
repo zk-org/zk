@@ -55,6 +55,7 @@ Modified: {{date created "short"}}
 	test("full", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
+Tags: {{join tags ", "}}
 
 {{prepend "  " body}}
 `)

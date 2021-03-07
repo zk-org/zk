@@ -253,9 +253,9 @@ func TestDirAtWithOverrides(t *testing.T) {
 
 	dir, err := zk.DirAt(".",
 		ConfigOverrides{
-			BodyTemplatePath: opt.NewString("overriden-template"),
+			BodyTemplatePath: opt.NewString("overridden-template"),
 			Extra: map[string]string{
-				"hello":      "overriden",
+				"hello":      "overridden",
 				"additional": "value",
 			},
 		},
@@ -272,7 +272,7 @@ func TestDirAtWithOverrides(t *testing.T) {
 		Paths: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
-			BodyTemplatePath: opt.NewString("overriden-template"),
+			BodyTemplatePath: opt.NewString("overridden-template"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetLetters,
@@ -280,7 +280,7 @@ func TestDirAtWithOverrides(t *testing.T) {
 			},
 		},
 		Extra: map[string]string{
-			"hello":       "overriden",
+			"hello":       "overridden",
 			"additional":  "value2",
 			"additional2": "value3",
 		},

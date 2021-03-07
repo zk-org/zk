@@ -217,6 +217,8 @@ func TestParseWordtags(t *testing.T) {
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
 	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	// Leading and trailing spaces are trimmed
+	test(`#\ \	tag\	\   end`, []string{`tag`})
 	// Hashtags containing only numbers and dots are invalid
 	test("#123, #1.2.3", []string{})
 	// Must not be preceded by a hash or any other valid hashtag character
@@ -265,6 +267,8 @@ func TestParseColontags(t *testing.T) {
 	test(":#a/@'~-_$%&+=: end", []string{"#a/@'~-_$%&+="})
 	// Escape punctuation and space
 	test(`:an\ \\espaced\ tag\!:`, []string{`an \espaced tag!`})
+	// Leading and trailing spaces are trimmed
+	test(`:\ \	tag\	\ :`, []string{`tag`})
 	// A colontag containing only numbers is valid
 	test(":123:1.2.3:", []string{"123"})
 	// Must not be preceded by a : or any other valid colontag character
@@ -308,9 +312,9 @@ Body
 `, []string{"keyword1", "keyword 2"})
 
 	test(`---
-tags: [tag1, tag 2]
+tags: [tag1, "   tag 2  "]
 keywords:
-    - keyword1
+    - keyword1  
     - keyword 2
 ---
 
@@ -319,7 +323,7 @@ Body
 
 	// When a string, parse space-separated tags.
 	test(`---
-Tags: "tag1 #tag-2"
+Tags: "tag1   #tag-2"
 Keywords: kw1 kw2 kw3
 ---
 

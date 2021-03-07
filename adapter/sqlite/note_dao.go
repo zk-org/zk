@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -293,25 +294,19 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 		var (
 			id, wordCount                 int
 			title, lead, body, rawContent string
-			nullableSnippets              sql.NullString
+			snippets, tags                sql.NullString
 			path, checksum                string
 			created, modified             time.Time
 		)
 
-		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &nullableSnippets)
+		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &tags, &snippets)
 		if err != nil {
 			d.logger.Err(err)
 			continue
 		}
 
-		snippets := make([]string, 0)
-		if nullableSnippets.Valid && nullableSnippets.String != "" {
-			snippets = strings.Split(nullableSnippets.String, "\x01")
-			snippets = strutil.RemoveDuplicates(snippets)
-		}
-
 		matches = append(matches, note.Match{
-			Snippets: snippets,
+			Snippets: parseListFromNullString(snippets),
 			Metadata: note.Metadata{
 				Path:       path,
 				Title:      title,
@@ -319,6 +314,8 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 				Body:       body,
 				RawContent: rawContent,
 				WordCount:  wordCount,
+				Links:      []note.Link{},
+				Tags:       parseListFromNullString(tags),
 				Created:    created,
 				Modified:   modified,
 				Checksum:   checksum,
@@ -329,12 +326,22 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	return matches, nil
 }
 
+// parseListFromNullString splits a 0-separated string.
+func parseListFromNullString(str sql.NullString) []string {
+	list := []string{}
+	if str.Valid && str.String != "" {
+		list = strings.Split(str.String, "\x01")
+		list = strutil.RemoveDuplicates(list)
+	}
+	return list
+}
+
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
-	joinClauses := make([]string, 0)
-	whereExprs := make([]string, 0)
-	additionalOrderTerms := make([]string, 0)
-	args := make([]interface{}, 0)
+	joinClauses := []string{}
+	whereExprs := []string{}
+	additionalOrderTerms := []string{}
+	args := []interface{}{}
 	groupBy := ""
 
 	transitiveClosure := false
@@ -359,7 +366,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 		if !negate {
 			if direction != 0 {
-				snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01') AS snippet"
+				snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01')"
 			}
 
 			joinOns := make([]string, 0)
@@ -413,7 +420,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		switch filter := filter.(type) {
 
 		case note.MatchFilter:
-			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20) as snippet`
+			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 			joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
 			additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
 			whereExprs = append(whereExprs, "notes_fts MATCH ?")
@@ -429,6 +436,33 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 				args = append(args, pathRegex(path))
 			}
 			whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
+
+		case note.TagFilter:
+			if len(filter) == 0 {
+				break
+			}
+			separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
+			for _, tags := range filter {
+				tags := separatorRegex.Split(tags, -1)
+
+				globs := make([]string, 0)
+				for _, tag := range tags {
+					tag = strings.TrimSpace(tag)
+					if len(tag) == 0 {
+						continue
+					}
+					globs = append(globs, "t.name GLOB ?")
+					args = append(args, tag)
+				}
+
+				whereExprs = append(whereExprs, fmt.Sprintf(`n.id IN (
+SELECT note_id FROM notes_collections
+ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
+ )`,
+					note.CollectionKindTag,
+					strings.Join(globs, " OR "),
+				))
+			}
 
 		case note.ExcludePathFilter:
 			if len(filter) == 0 {
@@ -504,14 +538,14 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 
 		query += `WITH RECURSIVE transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
     SELECT source_id, target_id, title, snippet,
-	       1 AS distance,
+           1 AS distance,
            '.' || source_id || '.' || target_id || '.' AS path
       FROM links
  
      UNION ALL
  
     SELECT tc.source_id, l.target_id, l.title, l.snippet,
-	       tc.distance + 1,
+           tc.distance + 1,
            tc.path || l.target_id || '.' AS path
       FROM links AS l
       JOIN transitive_closure AS tc
@@ -528,9 +562,9 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		query += "\n)\n"
 	}
 
-	query += "SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, " + snippetCol + "\n"
+	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet\n", snippetCol)
 
-	query += "FROM notes n\n"
+	query += "FROM notes_with_metadata n\n"
 
 	for _, clause := range joinClauses {
 		query += clause + "\n"

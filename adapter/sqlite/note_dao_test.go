@@ -402,6 +402,24 @@ func TestNoteDAOFindLimit(t *testing.T) {
 	})
 }
 
+func TestNoteDAOFindTag(t *testing.T) {
+	test := func(tags []string, expectedPaths []string) {
+		testNoteDAOFindPaths(t, note.FinderOpts{
+			Filters: []note.Filter{note.TagFilter(tags)},
+		}, expectedPaths)
+	}
+
+	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
+	test([]string{" adventure "}, []string{"ref/test/b.md", "log/2021-01-03.md"})
+	test([]string{"fiction", "adventure"}, []string{"log/2021-01-03.md"})
+	test([]string{"fiction|fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction  |   fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction  OR  fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction | adventure | fantasy"}, []string{"ref/test/b.md", "f39c8.md", "log/2021-01-03.md"})
+	test([]string{"fiction | history", "adventure"}, []string{"ref/test/b.md", "log/2021-01-03.md"})
+	test([]string{"fiction", "unknown"}, []string{})
+}
+
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{
@@ -416,6 +434,8 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Body:       "Index of the Zettelkasten",
 					RawContent: "# Index\nIndex of the Zettelkasten",
 					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
 					Created:    time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
 					Modified:   time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
 					Checksum:   "iaefhv",
@@ -430,6 +450,8 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Body:       "A third daily note",
 					RawContent: "# A third daily note",
 					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 					Checksum:   "earkte",
@@ -444,6 +466,8 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Body:       "A second daily note",
 					RawContent: "# A second daily note",
 					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Checksum:   "arstde",
@@ -458,6 +482,8 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 					WordCount:  3,
+					Links:      []note.Link{},
+					Tags:       []string{"fiction", "adventure"},
 					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 					Checksum:   "qwfpgj",
@@ -602,7 +628,8 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					Body:       "It shall appear before b.md",
 					RawContent: "#Another nested note\nIt shall appear before b.md",
 					WordCount:  5,
-					Links:      nil,
+					Links:      []note.Link{},
+					Tags:       []string{},
 					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 					Modified:   time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
 					Checksum:   "iecywst",
@@ -620,7 +647,8 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 					WordCount:  3,
-					Links:      nil,
+					Links:      []note.Link{},
+					Tags:       []string{"fiction", "adventure"},
 					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
 					Checksum:   "qwfpgj",

@@ -22,11 +22,7 @@ What `zk` is not:
 * a note editor
 * a tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
 
-## Roadmap
-
-* [ ] Tags
-* [ ] Link relations
-* [ ] Extended YAML front matter support
+[See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
 
 ## Install
 

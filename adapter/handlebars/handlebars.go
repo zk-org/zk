@@ -15,6 +15,7 @@ import (
 func Init(lang string, supportsUTF8 bool, logger util.Logger, styler style.Styler) {
 	helpers.RegisterConcat()
 	helpers.RegisterDate(logger)
+	helpers.RegisterJoin()
 	helpers.RegisterList(supportsUTF8)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)

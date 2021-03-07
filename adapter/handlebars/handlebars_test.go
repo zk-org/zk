@@ -94,6 +94,18 @@ func TestConcatHelper(t *testing.T) {
 	testString(t, "{{concat '> ' 'A quote'}}", nil, "> A quote")
 }
 
+func TestJoinHelper(t *testing.T) {
+	test := func(items []string, expected string) {
+		context := map[string]interface{}{"items": items}
+		testString(t, "{{join items '-'}}", context, expected)
+	}
+
+	test([]string{}, "")
+	test([]string{"Item 1"}, "Item 1")
+	test([]string{"Item 1", "Item 2"}, "Item 1-Item 2")
+	test([]string{"Item 1", "Item 2", "Item 3"}, "Item 1-Item 2-Item 3")
+}
+
 func TestPrependHelper(t *testing.T) {
 	// inline
 	testString(t, "{{prepend '> ' 'A quote'}}", nil, "> A quote")

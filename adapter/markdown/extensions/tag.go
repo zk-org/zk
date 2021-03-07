@@ -156,6 +156,7 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 		}
 	}
 
+	tag = strings.TrimSpace(tag)
 	if len(tag) == 0 || !isValidHashTag(tag) {
 		return nil
 	}
@@ -220,6 +221,7 @@ func (p *colontagParser) Parse(parent ast.Node, block text.Reader, pc parser.Con
 			escaping = true
 
 		} else if char == ':' {
+			tag = strings.TrimSpace(tag)
 			if len(tag) == 0 {
 				break
 			}

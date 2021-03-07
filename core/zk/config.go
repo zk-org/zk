@@ -56,7 +56,7 @@ type GroupConfig struct {
 	Extra map[string]string
 }
 
-// ConfigOverrides holds user configuration overriden values, for example fed
+// ConfigOverrides holds user configuration overridden values, for example fed
 // from CLI flags.
 type ConfigOverrides struct {
 	Group            opt.String
@@ -79,7 +79,7 @@ func (c GroupConfig) Clone() GroupConfig {
 }
 
 // Override modifies the GroupConfig receiver by updating the properties
-// overriden in ConfigOverrides.
+// overridden in ConfigOverrides.
 func (c *GroupConfig) Override(overrides ConfigOverrides) {
 	if !overrides.BodyTemplatePath.IsNull() {
 		c.Note.BodyTemplatePath = overrides.BodyTemplatePath

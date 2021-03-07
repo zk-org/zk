@@ -10,3 +10,6 @@
 - id: 4
   kind: "tag"
   name: "fantasy"
+- id: 5
+  kind: "tag"
+  name: "history"

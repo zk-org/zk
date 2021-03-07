@@ -41,11 +41,6 @@ func Walk(basePath string, extension string, logger util.Logger) <-chan Metadata
 					return nil
 				}
 
-				curDir := filepath.Dir(path)
-				if curDir == "." {
-					curDir = ""
-				}
-
 				c <- Metadata{
 					Path:     path,
 					Modified: info.ModTime().UTC(),

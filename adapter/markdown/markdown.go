@@ -166,8 +166,18 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 	findFMTags := func(key string) []string {
 		if tags, ok := frontmatter.getStrings(key); ok {
 			return tags
+
 		} else if tags := frontmatter.getString(key); !tags.IsNull() {
-			return strings.Fields(tags.Unwrap())
+			// Parse a space-separated string list
+			res := []string{}
+			for _, s := range strings.Fields(tags.Unwrap()) {
+				s = strings.TrimSpace(s)
+				if len(s) > 0 {
+					res = append(res, s)
+				}
+			}
+			return res
+
 		} else {
 			return []string{}
 		}
@@ -304,11 +314,14 @@ func (m frontmatter) getStrings(keys ...string) ([]string, bool) {
 		key = strings.ToLower(key)
 		if val, ok := m.values[key]; ok {
 			if val, ok := val.([]interface{}); ok {
-				strings := []string{}
+				strs := []string{}
 				for _, v := range val {
-					strings = append(strings, fmt.Sprint(v))
+					s := strings.TrimSpace(fmt.Sprint(v))
+					if len(s) > 0 {
+						strs = append(strs, s)
+					}
 				}
-				return strings, true
+				return strs, true
 			}
 		}
 	}

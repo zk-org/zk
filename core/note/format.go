@@ -79,6 +79,7 @@ Modified: {{date created "short"}}
 	"full": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
 Modified: {{date created "short"}}
+Tags: {{join tags ", "}}
 
 {{prepend "  " body}}
 `,
@@ -104,6 +105,7 @@ func (f *Formatter) Format(match Match) (string, error) {
 		Lead:       match.Lead,
 		Body:       match.Body,
 		Snippets:   snippets,
+		Tags:       match.Tags,
 		RawContent: match.RawContent,
 		WordCount:  match.WordCount,
 		Created:    match.Created,
@@ -120,6 +122,7 @@ type formatRenderContext struct {
 	Snippets   []string
 	RawContent string `handlebars:"raw-content"`
 	WordCount  int    `handlebars:"word-count"`
+	Tags       []string
 	Created    time.Time
 	Modified   time.Time
 	Checksum   string

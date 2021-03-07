@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/errors"
 )
 
@@ -136,6 +137,14 @@ func (db *DB) Migrate() error {
 						ON DELETE CASCADE
 				)`,
 				`CREATE INDEX IF NOT EXISTS index_notes_collections ON notes_collections (note_id, collection_id)`,
+
+				// View of notes with their associated metadata (e.g. tags), for simpler queries.
+				`CREATE VIEW notes_with_metadata AS
+				 SELECT n.*, GROUP_CONCAT(c.name, '` + "\x01" + `') AS tags
+				   FROM notes n
+				   LEFT JOIN notes_collections nc ON nc.note_id = n.id
+				   LEFT JOIN collections c ON nc.collection_id = c.id AND c.kind = '` + string(note.CollectionKindTag) + `'
+				  GROUP BY n.id`,
 
 				`PRAGMA user_version = 2`,
 			})
