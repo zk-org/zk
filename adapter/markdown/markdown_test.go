@@ -377,11 +377,13 @@ Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link
 [External links](http://example.com) are marked [as such](ftp://domain).
 `, []note.Link{
 		{
-			Title:    "link",
-			Href:     "heading",
-			Rels:     []string{},
-			External: false,
-			Snippet:  "Heading with a [link](heading)",
+			Title:        "link",
+			Href:         "heading",
+			Rels:         []string{},
+			External:     false,
+			Snippet:      "Heading with a [link](heading)",
+			SnippetStart: 3,
+			SnippetEnd:   33,
 		},
 		{
 			Title:    "multiple links",
@@ -390,6 +392,8 @@ Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link
 			External: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
+			SnippetStart: 35,
+			SnippetEnd:   222,
 		},
 		{
 			Title:    "relative",
@@ -398,6 +402,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			External: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
+			SnippetStart: 35,
+			SnippetEnd:   222,
 		},
 		{
 			Title:    "one relation",
@@ -406,6 +412,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			External: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
+			SnippetStart: 35,
+			SnippetEnd:   222,
 		},
 		{
 			Title:    "several relations",
@@ -414,91 +422,140 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			External: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
+			SnippetStart: 35,
+			SnippetEnd:   222,
 		},
 		{
-			Title:    "https://inline-link.com",
-			Href:     "https://inline-link.com",
-			External: true,
-			Rels:     []string{},
-			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
+			Title:        "https://inline-link.com",
+			Href:         "https://inline-link.com",
+			External:     true,
+			Rels:         []string{},
+			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
+			SnippetStart: 224,
+			SnippetEnd:   286,
 		},
 		{
-			Title:    "http://another-inline-link.com",
-			Href:     "http://another-inline-link.com",
-			External: true,
-			Rels:     []string{},
-			Snippet:  "An https://inline-link.com and http://another-inline-link.com.",
+			Title:        "http://another-inline-link.com",
+			Href:         "http://another-inline-link.com",
+			External:     true,
+			Rels:         []string{},
+			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
+			SnippetStart: 224,
+			SnippetEnd:   286,
 		},
 		{
-			Title:    "Wiki link",
-			Href:     "Wiki link",
-			External: false,
-			Rels:     []string{},
-			Snippet:  "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
+			Title:        "Wiki link",
+			Href:         "Wiki link",
+			External:     false,
+			Rels:         []string{},
+			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
+			SnippetStart: 288,
+			SnippetEnd:   351,
 		},
 		{
-			Title:    "two brackets",
-			Href:     "2-brackets",
-			External: false,
-			Rels:     []string{},
-			Snippet:  "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
+			Title:        "two brackets",
+			Href:         "2-brackets",
+			External:     false,
+			Rels:         []string{},
+			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
+			SnippetStart: 288,
+			SnippetEnd:   351,
 		},
 		{
-			Title:    `esca]]ped [chara\cters`,
-			Href:     `esca]]ped [chara\cters`,
-			External: false,
-			Rels:     []string{},
-			Snippet:  `It can contain [[esca]\]ped \[chara\\cters]].`,
+			Title:        `esca]]ped [chara\cters`,
+			Href:         `esca]]ped [chara\cters`,
+			External:     false,
+			Rels:         []string{},
+			Snippet:      `It can contain [[esca]\]ped \[chara\\cters]].`,
+			SnippetStart: 353,
+			SnippetEnd:   398,
 		},
 		{
-			Title:    "Folgezettel link",
-			Href:     "Folgezettel link",
-			External: false,
-			Rels:     []string{"down"},
-			Snippet:  "A [[[Folgezettel link]]] is surrounded by three brackets.",
+			Title:        "Folgezettel link",
+			Href:         "Folgezettel link",
+			External:     false,
+			Rels:         []string{"down"},
+			Snippet:      "A [[[Folgezettel link]]] is surrounded by three brackets.",
+			SnippetStart: 400,
+			SnippetEnd:   457,
 		},
 		{
-			Title:    "trailing hash",
-			Href:     "trailing hash",
-			External: false,
-			Rels:     []string{"down"},
-			Snippet:  "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
+			Title:        "trailing hash",
+			Href:         "trailing hash",
+			External:     false,
+			Rels:         []string{"down"},
+			Snippet:      "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
+			SnippetStart: 459,
+			SnippetEnd:   523,
 		},
 		{
-			Title:    "leading hash",
-			Href:     "leading hash",
-			External: false,
-			Rels:     []string{"up"},
-			Snippet:  "A #[[leading hash]] is used for #uplinks.",
+			Title:        "leading hash",
+			Href:         "leading hash",
+			External:     false,
+			Rels:         []string{"up"},
+			Snippet:      "A #[[leading hash]] is used for #uplinks.",
+			SnippetStart: 525,
+			SnippetEnd:   566,
 		},
 		{
-			Title:    "Trailing link",
-			Href:     "trailing",
-			External: false,
-			Rels:     []string{"down"},
-			Snippet:  "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
+			Title:        "Trailing link",
+			Href:         "trailing",
+			External:     false,
+			Rels:         []string{"down"},
+			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
+			SnippetStart: 568,
+			SnippetEnd:   650,
 		},
 		{
-			Title:    "Leading link",
-			Href:     "leading",
-			External: false,
-			Rels:     []string{"up"},
-			Snippet:  "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
+			Title:        "Leading link",
+			Href:         "leading",
+			External:     false,
+			Rels:         []string{"up"},
+			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
+			SnippetStart: 568,
+			SnippetEnd:   650,
 		},
 		{
-			Title:    "External links",
-			Href:     "http://example.com",
-			Rels:     []string{},
-			External: true,
-			Snippet:  `[External links](http://example.com) are marked [as such](ftp://domain).`,
+			Title:        "External links",
+			Href:         "http://example.com",
+			Rels:         []string{},
+			External:     true,
+			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
+			SnippetStart: 652,
+			SnippetEnd:   724,
 		},
 		{
-			Title:    "as such",
-			Href:     "ftp://domain",
-			Rels:     []string{},
-			External: true,
-			Snippet:  `[External links](http://example.com) are marked [as such](ftp://domain).`,
+			Title:        "as such",
+			Href:         "ftp://domain",
+			Rels:         []string{},
+			External:     true,
+			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
+			SnippetStart: 652,
+			SnippetEnd:   724,
 		},
+	})
+}
+
+func TestParseMetadataFromFrontmatter(t *testing.T) {
+	test := func(source string, expectedMetadata map[string]interface{}) {
+		content := parse(t, source)
+		assert.Equal(t, content.Metadata, expectedMetadata)
+	}
+
+	test("", map[string]interface{}{})
+	test("# A title", map[string]interface{}{})
+	test("---\n---\n# A title", map[string]interface{}{})
+	test(`---
+title: A title
+tags:
+  - tag1
+  - "tag 2"
+---
+
+Paragraph
+`, map[string]interface{}{
+		"title": "A title",
+		"tags":  []interface{}{"tag1", "tag 2"},
 	})
 }
 

@@ -111,6 +111,7 @@ func TestNoteDAOAdd(t *testing.T) {
 			Body:       "Note body",
 			RawContent: "# Added note\nNote body",
 			WordCount:  2,
+			Metadata:   map[string]interface{}{"key": "value"},
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 			Checksum:   "check",
@@ -129,6 +130,7 @@ func TestNoteDAOAdd(t *testing.T) {
 			Checksum:   "check",
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Metadata:   `{"key":"value"}`,
 		})
 	})
 }
@@ -144,9 +146,11 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 					Rels:  []string{"rel-1", "rel-2"},
 				},
 				{
-					Title:   "Relative",
-					Href:    "f39c8",
-					Snippet: "[Relative](f39c8) link",
+					Title:        "Relative",
+					Href:         "f39c8",
+					Snippet:      "[Relative](f39c8) link",
+					SnippetStart: 50,
+					SnippetEnd:   100,
 				},
 				{
 					Title: "Second is added",
@@ -177,12 +181,14 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				Rels:     "\x01rel-1\x01rel-2\x01",
 			},
 			{
-				SourceId: id,
-				TargetId: idPointer(4),
-				Title:    "Relative",
-				Href:     "f39c8",
-				Rels:     "",
-				Snippet:  "[Relative](f39c8) link",
+				SourceId:     id,
+				TargetId:     idPointer(4),
+				Title:        "Relative",
+				Href:         "f39c8",
+				Rels:         "",
+				Snippet:      "[Relative](f39c8) link",
+				SnippetStart: 50,
+				SnippetEnd:   100,
 			},
 			{
 				SourceId: id,
@@ -248,6 +254,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Body:       "Updated body",
 			RawContent: "Updated raw content",
 			Checksum:   "updated checksum",
+			Metadata:   map[string]interface{}{"updated-key": "updated-value"},
 			WordCount:  42,
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
@@ -267,6 +274,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			WordCount:  42,
 			Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
+			Metadata:   `{"updated-key":"updated-value"}`,
 		})
 	})
 }
@@ -439,6 +447,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					WordCount:  4,
 					Links:      []note.Link{},
 					Tags:       []string{},
+					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
 					Modified:   time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
 					Checksum:   "iaefhv",
@@ -455,6 +464,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					WordCount:  4,
 					Links:      []note.Link{},
 					Tags:       []string{},
+					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
 					Checksum:   "earkte",
@@ -471,6 +481,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					WordCount:  4,
 					Links:      []note.Link{},
 					Tags:       []string{},
+					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Modified:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
 					Checksum:   "arstde",
@@ -487,9 +498,12 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					WordCount:  3,
 					Links:      []note.Link{},
 					Tags:       []string{"fiction", "adventure"},
-					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Checksum:   "qwfpgj",
+					Metadata: map[string]interface{}{
+						"author": "Dom",
+					},
+					Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum: "qwfpgj",
 				},
 				Snippets: []string{"A <zk:match>daily</zk:match> note\n\nWith lot of content"},
 			},
@@ -633,9 +647,12 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					WordCount:  5,
 					Links:      []note.Link{},
 					Tags:       []string{},
-					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
-					Modified:   time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
-					Checksum:   "iecywst",
+					Metadata: map[string]interface{}{
+						"alias": "a.md",
+					},
+					Created:  time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+					Modified: time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
+					Checksum: "iecywst",
 				},
 				Snippets: []string{
 					"[[<zk:match>Link from 4 to 6</zk:match>]]",
@@ -652,9 +669,12 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					WordCount:  3,
 					Links:      []note.Link{},
 					Tags:       []string{"fiction", "adventure"},
-					Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Checksum:   "qwfpgj",
+					Metadata: map[string]interface{}{
+						"author": "Dom",
+					},
+					Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum: "qwfpgj",
 				},
 				Snippets: []string{
 					"[[<zk:match>Another link</zk:match>]]",
@@ -939,18 +959,18 @@ func testNoteDAOWithoutFixtures(t *testing.T, callback func(tx Transaction, dao 
 }
 
 type noteRow struct {
-	Path, Title, Lead, Body, RawContent, Checksum string
-	WordCount                                     int
-	Created, Modified                             time.Time
+	Path, Title, Lead, Body, RawContent, Checksum, Metadata string
+	WordCount                                               int
+	Created, Modified                                       time.Time
 }
 
 func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 	var row noteRow
 	err := tx.QueryRow(fmt.Sprintf(`
-		SELECT path, title, lead, body, raw_content, word_count, checksum, created, modified
+		SELECT path, title, lead, body, raw_content, word_count, checksum, created, modified, metadata
 		  FROM notes
 		 WHERE %v
-	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified)
+	`, where)).Scan(&row.Path, &row.Title, &row.Lead, &row.Body, &row.RawContent, &row.WordCount, &row.Checksum, &row.Created, &row.Modified, &row.Metadata)
 	return row, err
 }
 
@@ -958,6 +978,7 @@ type linkRow struct {
 	SourceId                   core.NoteId
 	TargetId                   *core.NoteId
 	Href, Title, Rels, Snippet string
+	SnippetStart, SnippetEnd   int
 	External                   bool
 }
 
@@ -965,7 +986,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	links := make([]linkRow, 0)
 
 	rows, err := tx.Query(fmt.Sprintf(`
-		SELECT source_id, target_id, title, href, external, rels, snippet
+		SELECT source_id, target_id, title, href, external, rels, snippet, snippet_start, snippet_end
 		  FROM links
 		 WHERE %v
 		 ORDER BY id
@@ -976,7 +997,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 		var row linkRow
 		var sourceId int64
 		var targetId *int64
-		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet)
+		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
 		row.SourceId = core.NoteId(sourceId)
 		if targetId != nil {

@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -51,14 +52,14 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 		// Add a new note to the index.
 		addStmt: tx.PrepareLazy(`
-			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, checksum, created, modified)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO notes (path, sortable_path, title, lead, body, raw_content, word_count, metadata, checksum, created, modified)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Update the content of a note.
 		updateStmt: tx.PrepareLazy(`
 			UPDATE notes
-			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, checksum = ?, modified = ?
+			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, metadata = ?, checksum = ?, modified = ?
 			 WHERE path = ?
 		`),
 
@@ -82,8 +83,8 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 		// Add a new link.
 		addLinkStmt: tx.PrepareLazy(`
-			INSERT INTO links (source_id, target_id, title, href, external, rels, snippet)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO links (source_id, target_id, title, href, external, rels, snippet, snippet_start, snippet_end)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Set links matching a given href and missing a target ID to the given
@@ -149,9 +150,15 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 	// string.
 	sortablePath := strings.ReplaceAll(note.Path, "/", "\x01")
 
+	metadata, err := d.metadataToJson(note)
+	if err != nil {
+		return 0, err
+	}
+
 	res, err := d.addStmt.Exec(
-		note.Path, sortablePath, note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum,
-		note.Created, note.Modified,
+		note.Path, sortablePath, note.Title, note.Lead, note.Body,
+		note.RawContent, note.WordCount, metadata, note.Checksum, note.Created,
+		note.Modified,
 	)
 	if err != nil {
 		return 0, err
@@ -177,9 +184,14 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 		return 0, errors.New("note not found in the index")
 	}
 
+	metadata, err := d.metadataToJson(note)
+	if err != nil {
+		return 0, err
+	}
+
 	_, err = d.updateStmt.Exec(
-		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount, note.Checksum, note.Modified,
-		note.Path,
+		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount,
+		metadata, note.Checksum, note.Modified, note.Path,
 	)
 	if err != nil {
 		return id, err
@@ -194,6 +206,14 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 	return id, err
 }
 
+func (d *NoteDAO) metadataToJson(note note.Metadata) (string, error) {
+	json, err := json.Marshal(note.Metadata)
+	if err != nil {
+		return "", errors.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path)
+	}
+	return string(json), nil
+}
+
 // addLinks inserts all the outbound links of the given note.
 func (d *NoteDAO) addLinks(id core.NoteId, note note.Metadata) error {
 	for _, link := range note.Links {
@@ -202,7 +222,7 @@ func (d *NoteDAO) addLinks(id core.NoteId, note note.Metadata) error {
 			return err
 		}
 
-		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet)
+		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
 		if err != nil {
 			return err
 		}
@@ -295,14 +315,23 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			id, wordCount                 int
 			title, lead, body, rawContent string
 			snippets, tags                sql.NullString
-			path, checksum                string
+			path, metadataJSON, checksum  string
 			created, modified             time.Time
 		)
 
-		err := rows.Scan(&id, &path, &title, &lead, &body, &rawContent, &wordCount, &created, &modified, &checksum, &tags, &snippets)
+		err := rows.Scan(
+			&id, &path, &title, &lead, &body, &rawContent, &wordCount,
+			&created, &modified, &metadataJSON, &checksum, &tags, &snippets,
+		)
 		if err != nil {
 			d.logger.Err(err)
 			continue
+		}
+
+		var metadata map[string]interface{}
+		err = json.Unmarshal([]byte(metadataJSON), &metadata)
+		if err != nil {
+			d.logger.Err(errors.Wrapf(err, "cannot parse note metadata from JSON: %s", path))
 		}
 
 		matches = append(matches, note.Match{
@@ -316,6 +345,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 				WordCount:  wordCount,
 				Links:      []note.Link{},
 				Tags:       parseListFromNullString(tags),
+				Metadata:   metadata,
 				Created:    created,
 				Modified:   modified,
 				Checksum:   checksum,
@@ -585,7 +615,7 @@ SELECT note_id FROM notes_collections
 		query += "\n)\n"
 	}
 
-	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet\n", snippetCol)
+	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.metadata, n.checksum, n.tags, %s AS snippet\n", snippetCol)
 
 	query += "FROM notes_with_metadata n\n"
 

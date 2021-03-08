@@ -15,15 +15,19 @@ type Content struct {
 	Tags []string
 	// Links is the list of outbound links found in the note.
 	Links []Link
+	// Additional metadata. For example, extracted from a YAML frontmatter.
+	Metadata map[string]interface{}
 }
 
 // Link links a note to another note or an external resource.
 type Link struct {
-	Title    string
-	Href     string
-	External bool
-	Rels     []string
-	Snippet  string
+	Title        string
+	Href         string
+	External     bool
+	Rels         []string
+	Snippet      string
+	SnippetStart int
+	SnippetEnd   int
 }
 
 // LinkRelation defines the relationship between a link's source and target.

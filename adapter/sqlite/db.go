@@ -48,8 +48,8 @@ func (db *DB) Close() error {
 }
 
 // Migrate upgrades the SQL schema of the database.
-func (db *DB) Migrate() error {
-	err := db.WithTransaction(func(tx Transaction) error {
+func (db *DB) Migrate() (needsReindexing bool, err error) {
+	err = db.WithTransaction(func(tx Transaction) error {
 		var version int
 		err := tx.QueryRow("PRAGMA user_version").Scan(&version)
 		if err != nil {
@@ -154,8 +154,28 @@ func (db *DB) Migrate() error {
 			}
 		}
 
+		if version <= 2 {
+			err = tx.ExecStmts([]string{
+				// Add a `metadata` column to `notes`
+				`ALTER TABLE notes ADD COLUMN metadata TEXT DEFAULT('{}') NOT NULL`,
+
+				// Add snippet's start and end offsets to `links`
+				`ALTER TABLE links ADD COLUMN snippet_start INTEGER DEFAULT(0) NOT NULL`,
+				`ALTER TABLE links ADD COLUMN snippet_end INTEGER DEFAULT(0) NOT NULL`,
+
+				`PRAGMA user_version = 3`,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			needsReindexing = true
+		}
+
 		return nil
 	})
 
-	return errors.Wrap(err, "database migration failed")
+	err = errors.Wrap(err, "database migration failed")
+	return
 }

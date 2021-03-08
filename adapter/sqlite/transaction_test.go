@@ -25,7 +25,7 @@ func testTransactionWithoutFixtures(t *testing.T, test func(tx Transaction)) {
 func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func(tx Transaction)) {
 	db, err := OpenInMemory()
 	assert.Nil(t, err)
-	err = db.Migrate()
+	_, err = db.Migrate()
 	assert.Nil(t, err)
 
 	if !fixturesDir.IsNull() {
