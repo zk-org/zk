@@ -55,8 +55,6 @@ func main() {
 	// Create the dependency graph.
 	container := cmd.NewContainer()
 
-	indexZk(container)
-
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
 		fatalIfError(err)
 
@@ -94,13 +92,6 @@ func fatalIfError(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "zk: error: %v\n", err)
 		os.Exit(1)
-	}
-}
-
-// indexZk will index any notebook in the working directory.
-func indexZk(container *cmd.Container) {
-	if len(os.Args) > 1 && os.Args[1] != "index" {
-		(&cmd.Index{Quiet: true}).Run(container)
 	}
 }
 

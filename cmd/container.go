@@ -4,16 +4,21 @@ import (
 	"io"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/handlebars"
 	"github.com/mickael-menu/zk/adapter/markdown"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/adapter/term"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/date"
+	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/pager"
+	"github.com/mickael-menu/zk/util/paths"
+	"github.com/schollz/progressbar/v3"
 )
 
 type Container struct {
@@ -77,14 +82,53 @@ func (c *Container) NoteIndexer(tx sqlite.Transaction) *sqlite.NoteIndexer {
 }
 
 // Database returns the DB instance for the given notebook, after executing any
-// pending migration.
-func (c *Container) Database(path string) (*sqlite.DB, error) {
-	db, err := sqlite.Open(path)
+// pending migration and indexing the notes if needed.
+func (c *Container) Database(zk *zk.Zk, forceIndexing bool) (*sqlite.DB, note.IndexingStats, error) {
+	var stats note.IndexingStats
+
+	db, err := sqlite.Open(zk.DBPath())
 	if err != nil {
-		return nil, err
+		return nil, stats, err
 	}
-	err = db.Migrate()
-	return db, err
+	needsReindexing, err := db.Migrate()
+	if err != nil {
+		return nil, stats, errors.Wrap(err, "failed to migrate the database")
+	}
+
+	stats, err = c.index(zk, db, forceIndexing || needsReindexing)
+	if err != nil {
+		return nil, stats, err
+	}
+
+	return db, stats, err
+}
+
+func (c *Container) index(zk *zk.Zk, db *sqlite.DB, force bool) (note.IndexingStats, error) {
+	var bar = progressbar.NewOptions(-1,
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionThrottle(100*time.Millisecond),
+		progressbar.OptionSpinnerType(14),
+	)
+
+	var err error
+	var stats note.IndexingStats
+	err = db.WithTransaction(func(tx sqlite.Transaction) error {
+		stats, err = note.Index(
+			zk,
+			force,
+			c.Parser(),
+			c.NoteIndexer(tx),
+			c.Logger,
+			func(change paths.DiffChange) {
+				bar.Add(1)
+				bar.Describe(change.String())
+			},
+		)
+		return err
+	})
+	bar.Clear()
+
+	return stats, err
 }
 
 // Paginate creates an auto-closing io.Writer which will be automatically

@@ -23,10 +23,10 @@ func TestMigrateFrom0(t *testing.T) {
 	db, err := OpenInMemory()
 	assert.Nil(t, err)
 
-	err = db.Migrate()
+	_, err = db.Migrate()
 	assert.Nil(t, err)
 	// Should be able to migrate twice in a row
-	err = db.Migrate()
+	_, err = db.Migrate()
 	assert.Nil(t, err)
 
 	err = db.WithTransaction(func(tx Transaction) error {

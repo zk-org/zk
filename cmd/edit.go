@@ -36,7 +36,7 @@ func (cmd *Edit) Run(container *Container) error {
 		return errors.Wrapf(err, "incorrect criteria")
 	}
 
-	db, err := container.Database(zk.DBPath())
+	db, _, err := container.Database(zk, false)
 	if err != nil {
 		return err
 	}

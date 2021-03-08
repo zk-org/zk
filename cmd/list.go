@@ -39,7 +39,7 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	db, err := container.Database(zk.DBPath())
+	db, _, err := container.Database(zk, false)
 	if err != nil {
 		return err
 	}
