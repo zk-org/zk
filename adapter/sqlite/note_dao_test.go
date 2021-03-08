@@ -146,9 +146,11 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 					Rels:  []string{"rel-1", "rel-2"},
 				},
 				{
-					Title:   "Relative",
-					Href:    "f39c8",
-					Snippet: "[Relative](f39c8) link",
+					Title:        "Relative",
+					Href:         "f39c8",
+					Snippet:      "[Relative](f39c8) link",
+					SnippetStart: 50,
+					SnippetEnd:   100,
 				},
 				{
 					Title: "Second is added",
@@ -179,12 +181,14 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				Rels:     "\x01rel-1\x01rel-2\x01",
 			},
 			{
-				SourceId: id,
-				TargetId: idPointer(4),
-				Title:    "Relative",
-				Href:     "f39c8",
-				Rels:     "",
-				Snippet:  "[Relative](f39c8) link",
+				SourceId:     id,
+				TargetId:     idPointer(4),
+				Title:        "Relative",
+				Href:         "f39c8",
+				Rels:         "",
+				Snippet:      "[Relative](f39c8) link",
+				SnippetStart: 50,
+				SnippetEnd:   100,
 			},
 			{
 				SourceId: id,
@@ -974,6 +978,7 @@ type linkRow struct {
 	SourceId                   core.NoteId
 	TargetId                   *core.NoteId
 	Href, Title, Rels, Snippet string
+	SnippetStart, SnippetEnd   int
 	External                   bool
 }
 
@@ -981,7 +986,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	links := make([]linkRow, 0)
 
 	rows, err := tx.Query(fmt.Sprintf(`
-		SELECT source_id, target_id, title, href, external, rels, snippet
+		SELECT source_id, target_id, title, href, external, rels, snippet, snippet_start, snippet_end
 		  FROM links
 		 WHERE %v
 		 ORDER BY id
@@ -992,7 +997,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 		var row linkRow
 		var sourceId int64
 		var targetId *int64
-		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet)
+		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
 		row.SourceId = core.NoteId(sourceId)
 		if targetId != nil {

@@ -155,8 +155,6 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 		}
 
 		if version <= 2 {
-			needsReindexing = true
-
 			err = tx.ExecStmts([]string{
 				// Add a `metadata` column to `notes`
 				`ALTER TABLE notes ADD COLUMN metadata TEXT DEFAULT('{}') NOT NULL`,
@@ -171,6 +169,8 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 			if err != nil {
 				return err
 			}
+
+			needsReindexing = true
 		}
 
 		return nil
