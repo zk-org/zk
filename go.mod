@@ -21,6 +21,7 @@ require (
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.8.1
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/relvacode/iso8601 v1.1.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rvflash/elapsed v0.2.0

@@ -14,6 +14,7 @@ import (
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/paths"
 	strutil "github.com/mickael-menu/zk/util/strings"
+	"github.com/relvacode/iso8601"
 	"gopkg.in/djherbis/times.v1"
 )
 
@@ -161,11 +162,31 @@ func metadata(path string, zk *zk.Zk, parser Parser) (Metadata, error) {
 	}
 
 	metadata.Modified = times.ModTime().UTC()
-	if times.HasBirthTime() {
-		metadata.Created = times.BirthTime().UTC()
-	} else {
-		metadata.Created = time.Now().UTC()
-	}
+	metadata.Created = creationDateFrom(metadata.Metadata, times)
 
 	return metadata, nil
+}
+
+func creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+	// Read the creation date from the YAML frontmatter `date` key.
+	if dateVal, ok := metadata["date"]; ok {
+		if dateStr, ok := dateVal.(string); ok {
+			if time, err := iso8601.ParseString(dateStr); err == nil {
+				return time
+			}
+			// Omitting the `T` is common
+			if time, err := time.Parse("2006-01-02 15:04:05", dateStr); err == nil {
+				return time
+			}
+			if time, err := time.Parse("2006-01-02 15:04", dateStr); err == nil {
+				return time
+			}
+		}
+	}
+
+	if times.HasBirthTime() {
+		return times.BirthTime().UTC()
+	}
+
+	return time.Now().UTC()
 }
