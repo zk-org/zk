@@ -5,6 +5,7 @@ Each [notebook](notebook.md) contains a configuration file used to customize you
 * `[note]` sets the [note creation rules](config-note.md)
 * `[extra]` contains free [user variables](config-extra.md) which can be expanded in templates
 * `[group]` defines [note groups](config-group.md) with custom rules
+* `[format]` configures the [note format settings](note-format.md), such as Markdown options.
 * `[tool]` customizes interaction with external programs such as:
     * [your default editor](tool-editor.md)
     * [your default pager](tool-pager.md)
@@ -59,6 +60,14 @@ paths = ["journal/weekly", "journal/daily"]
 
 [dir.journal.note]
 filename = "{{date now}}"
+
+
+# MARKDOWN SETTINGS
+[format.markdown]
+# Enable support for #hashtags
+hashtags = true
+# Enable support for :colon:separated:tags:
+colon-tags = true
 
 
 # EXTERNAL TOOLS

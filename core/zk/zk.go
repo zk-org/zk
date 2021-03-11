@@ -82,6 +82,17 @@ template = "default.md"
 #key = "value"
 
 
+# MARKDOWN SETTINGS
+[format.markdown]
+# Enable support for #hashtags
+hashtags = true
+# Enable support for :colon:separated:tags:
+#colon-tags = true
+# Enable support for Bear's #multi-word tags#
+# Hashtags must be enabled for multi-word tags to work.
+#multiword-tags = true
+
+
 # EXTERNAL TOOLS
 [tool]
 

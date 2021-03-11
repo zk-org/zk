@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Note    NoteConfig
 	Groups  map[string]GroupConfig
+	Format  FormatConfig
 	Tool    ToolConfig
 	Aliases map[string]string
 	Extra   map[string]string
@@ -24,6 +25,21 @@ func (c Config) RootGroupConfig() GroupConfig {
 		Note:  c.Note,
 		Extra: c.Extra,
 	}
+}
+
+// FormatConfig holds the configuration for document formats, such as Markdown.
+type FormatConfig struct {
+	Markdown MarkdownConfig
+}
+
+// MarkdownConfig holds the configuration for Markdown documents.
+type MarkdownConfig struct {
+	// Hashtags indicates whether #hashtags are supported.
+	Hashtags bool `toml:"hashtags" default:"true"`
+	// ColonTags indicates whether :colon:tags: are supported.
+	ColonTags bool `toml:"colon-tags" default:"false"`
+	// MultiwordTags indicates whether #multi-word tags# are supported.
+	MultiwordTags bool `toml:"multiword-tags" default:"false"`
 }
 
 // ToolConfig holds the external tooling configuration.
@@ -163,6 +179,7 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 	return &Config{
 		Note:   root.Note,
 		Groups: groups,
+		Format: tomlConf.Format,
 		Tool: ToolConfig{
 			Editor:     opt.NewNotEmptyString(tomlConf.Tool.Editor),
 			Pager:      opt.NewStringWithPtr(tomlConf.Tool.Pager),
@@ -224,6 +241,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string, templatesDir s
 type tomlConfig struct {
 	Note    tomlNoteConfig
 	Groups  map[string]tomlGroupConfig `toml:"group"`
+	Format  FormatConfig
 	Tool    tomlToolConfig
 	Extra   map[string]string
 	Aliases map[string]string `toml:"alias"`

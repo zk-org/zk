@@ -27,6 +27,13 @@ func TestParseDefaultConfig(t *testing.T) {
 			Lang:         "en",
 		},
 		Groups: make(map[string]GroupConfig),
+		Format: FormatConfig{
+			Markdown: MarkdownConfig{
+				Hashtags:      true,
+				ColonTags:     false,
+				MultiwordTags: false,
+			},
+		},
 		Tool: ToolConfig{
 			Editor:     opt.NullString,
 			Pager:      opt.NullString,
@@ -57,6 +64,11 @@ func TestParseComplete(t *testing.T) {
 		id-charset = "alphanum"
 		id-length = 4
 		id-case = "lower"
+
+		[format.markdown]
+		hashtags = false
+		colon-tags = true
+		multiword-tags = true
 
 		[tool]
 		editor = "vim"
@@ -168,6 +180,13 @@ func TestParseComplete(t *testing.T) {
 				},
 			},
 		},
+		Format: FormatConfig{
+			Markdown: MarkdownConfig{
+				Hashtags:      false,
+				ColonTags:     true,
+				MultiwordTags: true,
+			},
+		},
 		Tool: ToolConfig{
 			Editor:     opt.NewString("vim"),
 			Pager:      opt.NewString("less"),
@@ -267,6 +286,13 @@ func TestParseMergesGroupConfig(t *testing.T) {
 					"hello": "world",
 					"salut": "le monde",
 				},
+			},
+		},
+		Format: FormatConfig{
+			Markdown: MarkdownConfig{
+				Hashtags:      true,
+				ColonTags:     false,
+				MultiwordTags: false,
 			},
 		},
 		Aliases: make(map[string]string),

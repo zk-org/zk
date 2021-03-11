@@ -62,11 +62,11 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	return c.templateLoader
 }
 
-func (c *Container) Parser() *markdown.Parser {
+func (c *Container) Parser(zk *zk.Zk) *markdown.Parser {
 	return markdown.NewParser(markdown.ParserOpts{
-		HashtagEnabled:      true,
-		MultiWordTagEnabled: false,
-		ColontagEnabled:     true,
+		HashtagEnabled:      zk.Config.Format.Markdown.Hashtags,
+		MultiWordTagEnabled: zk.Config.Format.Markdown.MultiwordTags,
+		ColontagEnabled:     zk.Config.Format.Markdown.ColonTags,
 	})
 }
 
@@ -116,7 +116,7 @@ func (c *Container) index(zk *zk.Zk, db *sqlite.DB, force bool) (note.IndexingSt
 		stats, err = note.Index(
 			zk,
 			force,
-			c.Parser(),
+			c.Parser(zk),
 			c.NoteIndexer(tx),
 			c.Logger,
 			func(change paths.DiffChange) {
