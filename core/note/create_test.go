@@ -7,6 +7,7 @@ import (
 	"github.com/mickael-menu/zk/core/templ"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/os"
 	"github.com/mickael-menu/zk/util/test/assert"
 )
 
@@ -57,6 +58,7 @@ func TestCreate(t *testing.T) {
 			"hello": "world",
 		},
 		Now: Now,
+		Env: os.Env(),
 	}})
 	assert.Equal(t, bodyTemplate.Contexts, []interface{}{renderContext{
 		ID:           "abc",
@@ -69,6 +71,7 @@ func TestCreate(t *testing.T) {
 			"hello": "world",
 		},
 		Now: Now,
+		Env: os.Env(),
 	}})
 }
 
@@ -115,18 +118,21 @@ func TestCreateTriesUntilValidPath(t *testing.T) {
 			Title: "Note title",
 			Dir:   "log",
 			Now:   Now,
+			Env:   os.Env(),
 		},
 		renderContext{
 			ID:    "2",
 			Title: "Note title",
 			Dir:   "log",
 			Now:   Now,
+			Env:   os.Env(),
 		},
 		renderContext{
 			ID:    "3",
 			Title: "Note title",
 			Dir:   "log",
 			Now:   Now,
+			Env:   os.Env(),
 		},
 	})
 }

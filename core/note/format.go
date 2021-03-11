@@ -128,4 +128,5 @@ type formatRenderContext struct {
 	Created    time.Time
 	Modified   time.Time
 	Checksum   string
+	Env        map[string]string
 }

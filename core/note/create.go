@@ -10,6 +10,7 @@ import (
 	"github.com/mickael-menu/zk/util/date"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/os"
 	"github.com/mickael-menu/zk/util/paths"
 	"github.com/mickael-menu/zk/util/rand"
 )
@@ -96,6 +97,7 @@ type renderContext struct {
 	FilenameStem string `handlebars:"filename-stem"`
 	Extra        map[string]string
 	Now          time.Time
+	Env          map[string]string
 }
 
 type createDeps struct {
@@ -116,6 +118,7 @@ func create(
 		Dir:     opts.Dir.Name,
 		Extra:   opts.Dir.Config.Extra,
 		Now:     deps.now,
+		Env:     os.Env(),
 	}
 
 	path, context, err := genPath(context, opts.Dir, deps)
