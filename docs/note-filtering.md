@@ -106,6 +106,36 @@ Prefixing a query with `^` will match notes whose title or body start with the f
 "title: ^journal"
 ```
 
+## Filter by tags
+
+You can filter your notes by their [tags](tags.md) using `--tags` (or `-t`).
+
+Find the notes having several tags by separating them with a comma.
+
+```sh
+$ zk list --tag "history, europe"
+```
+
+To match notes having either or both tags, use a pipe `|` or `OR` (all caps).
+
+```sh
+$ zk list --tag "inbox OR todo"
+```
+
+If you want to exclude notes having a particular tag instead, prefix it with `-` or `NOT` (all caps).
+
+```sh
+$ zk list --tag "NOT done"
+```
+
+Your shell might give you some trouble using the `-` prefix. You can quote it and add an extra space as a workaround, e.g. `--tag " -done"`.
+
+Finally, you can use glob patterns to match multiple tags. This is particularly useful if you use a separator (e.g. `/`) to group multiple tags under a parent tag.
+
+```sh
+$ zk list --tag "year/201*"
+```
+
 ## Filter by creation or modification date
 
 To find notes created or modified on a specific day, use `--created <date>` and `--modified <date>`. They accept a human-friendly date for argument.

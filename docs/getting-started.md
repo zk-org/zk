@@ -36,7 +36,7 @@ From `zk`'s interactive edit screen, press `Ctrl-N` to create a new note using t
 After some time, hopefully you will have enough notes to be lost in it. Use `zk`'s powerful [filtering capabilities](note-filtering.md) to find the notes you need.
 
 ```sh
-$ zk list -m "recipe pizza -pineapple"
+$ zk list --tag "recipe" --match "pizza -pineapple"
 ```
 <div align="center"><img alt="Format the list output" width="85%" src="assets/media/list.svg"/></div>
 
