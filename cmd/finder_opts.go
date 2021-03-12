@@ -6,6 +6,7 @@ import (
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
+	"github.com/mickael-menu/zk/util/opt"
 	"github.com/tj/go-naturaldate"
 )
 
@@ -42,116 +43,38 @@ type Sorting struct {
 
 // NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.
 func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.FinderOpts, error) {
-	filters := make([]note.Filter, 0)
+	opts := note.FinderOpts{}
 
-	paths, ok := relPaths(zk, filtering.Path)
-	if ok {
-		filters = append(filters, note.PathFilter(paths))
+	opts.Match = opt.NewNotEmptyString(filtering.Match)
+
+	if paths, ok := relPaths(zk, filtering.Path); ok {
+		opts.IncludePaths = paths
 	}
 
-	excludePaths, ok := relPaths(zk, filtering.Exclude)
-	if ok {
-		filters = append(filters, note.ExcludePathFilter(excludePaths))
+	if paths, ok := relPaths(zk, filtering.Exclude); ok {
+		opts.ExcludePaths = paths
 	}
 
 	if len(filtering.Tag) > 0 {
-		filters = append(filters, note.TagFilter(filtering.Tag))
+		opts.Tags = filtering.Tag
 	}
 
-	if filtering.Match != "" {
-		filters = append(filters, note.MatchFilter(filtering.Match))
-	}
-
-	if filtering.Created != "" {
-		date, err := parseDate(filtering.Created)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateOn,
-		})
-	}
-
-	if filtering.CreatedBefore != "" {
-		date, err := parseDate(filtering.CreatedBefore)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateBefore,
-		})
-	}
-
-	if filtering.CreatedAfter != "" {
-		date, err := parseDate(filtering.CreatedAfter)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateAfter,
-		})
-	}
-
-	if filtering.Modified != "" {
-		date, err := parseDate(filtering.Modified)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateOn,
-		})
-	}
-
-	if filtering.ModifiedBefore != "" {
-		date, err := parseDate(filtering.ModifiedBefore)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateBefore,
-		})
-	}
-
-	if filtering.ModifiedAfter != "" {
-		date, err := parseDate(filtering.ModifiedAfter)
-		if err != nil {
-			return nil, err
-		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateAfter,
-		})
-	}
-
-	linkedByPaths, ok := relPaths(zk, filtering.LinkedBy)
-	if ok {
-		filters = append(filters, note.LinkedByFilter{
-			Paths:       linkedByPaths,
+	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {
+		opts.LinkedBy = &note.LinkedByFilter{
+			Paths:       paths,
 			Negate:      false,
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
-		})
+		}
 	}
 
-	linkToPaths, ok := relPaths(zk, filtering.LinkTo)
-	if ok {
-		filters = append(filters, note.LinkToFilter{
-			Paths:       linkToPaths,
+	if paths, ok := relPaths(zk, filtering.LinkTo); ok {
+		opts.LinkTo = &note.LinkToFilter{
+			Paths:       paths,
 			Negate:      false,
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
-		})
+		}
 	}
 
 	// notLinkedByPaths, ok := relPaths(zk, filtering.NotLinkedBy)
@@ -170,29 +93,71 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 	// 	})
 	// }
 
-	relatedPaths, ok := relPaths(zk, filtering.Related)
-	if ok {
-		filters = append(filters, note.RelatedFilter(relatedPaths))
+	if paths, ok := relPaths(zk, filtering.Related); ok {
+		opts.Related = paths
 	}
 
-	if filtering.Orphan {
-		filters = append(filters, note.OrphanFilter{})
+	opts.Orphan = filtering.Orphan
+
+	if filtering.Created != "" {
+		start, end, err := parseDayRange(filtering.Created)
+		if err != nil {
+			return nil, err
+		}
+		opts.CreatedStart = &start
+		opts.CreatedEnd = &end
+	} else {
+		if filtering.CreatedBefore != "" {
+			date, err := parseDate(filtering.CreatedBefore)
+			if err != nil {
+				return nil, err
+			}
+			opts.CreatedEnd = &date
+		}
+		if filtering.CreatedAfter != "" {
+			date, err := parseDate(filtering.CreatedAfter)
+			if err != nil {
+				return nil, err
+			}
+			opts.CreatedStart = &date
+		}
 	}
 
-	if filtering.Interactive {
-		filters = append(filters, note.InteractiveFilter(true))
+	if filtering.Modified != "" {
+		start, end, err := parseDayRange(filtering.Modified)
+		if err != nil {
+			return nil, err
+		}
+		opts.ModifiedStart = &start
+		opts.ModifiedEnd = &end
+	} else {
+		if filtering.ModifiedBefore != "" {
+			date, err := parseDate(filtering.ModifiedBefore)
+			if err != nil {
+				return nil, err
+			}
+			opts.ModifiedEnd = &date
+		}
+		if filtering.ModifiedAfter != "" {
+			date, err := parseDate(filtering.ModifiedAfter)
+			if err != nil {
+				return nil, err
+			}
+			opts.ModifiedStart = &date
+		}
 	}
+
+	opts.Interactive = filtering.Interactive
 
 	sorters, err := note.SortersFromStrings(sorting.Sort)
 	if err != nil {
 		return nil, err
 	}
+	opts.Sorters = sorters
 
-	return &note.FinderOpts{
-		Filters: filters,
-		Sorters: sorters,
-		Limit:   filtering.Limit,
-	}, nil
+	opts.Limit = filtering.Limit
+
+	return &opts, nil
 }
 
 func relPaths(zk *zk.Zk, paths []string) ([]string, bool) {
@@ -211,4 +176,20 @@ func parseDate(date string) (time.Time, error) {
 		return time.Date(int(i), time.January, 0, 0, 0, 0, 0, time.UTC), nil
 	}
 	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
+}
+
+func parseDayRange(date string) (start time.Time, end time.Time, err error) {
+	day, err := parseDate(date)
+	if err != nil {
+		return
+	}
+
+	start = startOfDay(day)
+	end = start.AddDate(0, 0, 1)
+	return start, end, nil
+}
+
+func startOfDay(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }

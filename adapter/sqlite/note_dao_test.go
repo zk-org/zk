@@ -9,6 +9,7 @@ import (
 	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
+	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/paths"
 	"github.com/mickael-menu/zk/util/test/assert"
 )
@@ -412,9 +413,7 @@ func TestNoteDAOFindLimit(t *testing.T) {
 
 func TestNoteDAOFindTag(t *testing.T) {
 	test := func(tags []string, expectedPaths []string) {
-		testNoteDAOFindPaths(t, note.FinderOpts{
-			Filters: []note.Filter{note.TagFilter(tags)},
-		}, expectedPaths)
+		testNoteDAOFindPaths(t, note.FinderOpts{Tags: tags}, expectedPaths)
 	}
 
 	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
@@ -433,9 +432,7 @@ func TestNoteDAOFindTag(t *testing.T) {
 
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
-		note.FinderOpts{
-			Filters: []note.Filter{note.MatchFilter("daily | index")},
-		},
+		note.FinderOpts{Match: opt.NewString("daily | index")},
 		[]note.Match{
 			{
 				Metadata: note.Metadata{
@@ -514,7 +511,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 func TestNoteDAOFindMatchWithSort(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.MatchFilter("daily | index")},
+			Match: opt.NewString("daily | index"),
 			Sorters: []note.Sorter{
 				{Field: note.SortPath, Ascending: false},
 			},
@@ -531,7 +528,7 @@ func TestNoteDAOFindMatchWithSort(t *testing.T) {
 func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01-03.md"})},
+			IncludePaths: []string{"log/2021-01-03.md"},
 		},
 		[]string{"log/2021-01-03.md"},
 	)
@@ -541,7 +538,7 @@ func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"log/2021-01"})},
+			IncludePaths: []string{"log/2021-01"},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
 	)
@@ -551,13 +548,13 @@ func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"lo"})},
+			IncludePaths: []string{"lo"},
 		},
 		[]string{},
 	)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"log"})},
+			IncludePaths: []string{"log"},
 		},
 		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
 	)
@@ -567,7 +564,7 @@ func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.PathFilter([]string{"ref", "index.md"})},
+			IncludePaths: []string{"ref", "index.md"},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
 	)
@@ -576,7 +573,7 @@ func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 func TestNoteDAOFindExcludingPath(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.ExcludePathFilter([]string{"log"})},
+			ExcludePaths: []string{"log"},
 		},
 		[]string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "index.md"},
 	)
@@ -585,7 +582,7 @@ func TestNoteDAOFindExcludingPath(t *testing.T) {
 func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.ExcludePathFilter([]string{"ref", "log/2021-01"})},
+			ExcludePaths: []string{"ref", "log/2021-01"},
 		},
 		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
@@ -594,11 +591,11 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{
+			LinkedBy: &note.LinkedByFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    false,
 				Recursive: false,
-			}},
+			},
 		},
 		[]string{"ref/test/a.md", "log/2021-01-03.md", "log/2021-01-04.md"},
 	)
@@ -607,11 +604,11 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{
+			LinkedBy: &note.LinkedByFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
-			}},
+			},
 		},
 		[]string{"index.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md"},
 	)
@@ -620,12 +617,12 @@ func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{
+			LinkedBy: &note.LinkedByFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
 				MaxDistance: 2,
-			}},
+			},
 		},
 		[]string{"index.md", "f39c8.md"},
 	)
@@ -634,7 +631,7 @@ func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{Paths: []string{"f39c8.md"}}},
+			LinkedBy: &note.LinkedByFilter{Paths: []string{"f39c8.md"}},
 		},
 		[]note.Match{
 			{
@@ -687,11 +684,11 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkedByFilter{
+			LinkedBy: &note.LinkedByFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    true,
 				Recursive: false,
-			}},
+			},
 		},
 		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
@@ -700,11 +697,11 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 func TestNoteDAOFindLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkToFilter{
+			LinkTo: &note.LinkToFilter{
 				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
 				Negate:    false,
 				Recursive: false,
-			}},
+			},
 		},
 		[]string{"f39c8.md", "log/2021-01-03.md"},
 	)
@@ -713,11 +710,11 @@ func TestNoteDAOFindLinkTo(t *testing.T) {
 func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkToFilter{
+			LinkTo: &note.LinkToFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
-			}},
+			},
 		},
 		[]string{"log/2021-01-03.md", "f39c8.md", "index.md"},
 	)
@@ -726,12 +723,12 @@ func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkToFilter{
+			LinkTo: &note.LinkToFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
 				MaxDistance: 2,
-			}},
+			},
 		},
 		[]string{"log/2021-01-03.md", "f39c8.md"},
 	)
@@ -740,7 +737,7 @@ func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindNotLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.LinkToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true}},
+			LinkTo: &note.LinkToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
@@ -749,14 +746,14 @@ func TestNoteDAOFindNotLinkTo(t *testing.T) {
 func TestNoteDAOFindRelated(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.RelatedFilter([]string{"log/2021-02-04"})},
+			Related: []string{"log/2021-02-04"},
 		},
 		[]string{},
 	)
 
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{note.RelatedFilter([]string{"log/2021-01-03.md"})},
+			Related: []string{"log/2021-01-03.md"},
 		},
 		[]string{"index.md"},
 	)
@@ -764,98 +761,70 @@ func TestNoteDAOFindRelated(t *testing.T) {
 
 func TestNoteDAOFindOrphan(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			Filters: []note.Filter{note.OrphanFilter{}},
-		},
+		note.FinderOpts{Orphan: true},
 		[]string{"ref/test/b.md", "log/2021-02-04.md"},
 	)
 }
 
 func TestNoteDAOFindCreatedOn(t *testing.T) {
+	start := time.Date(2020, 11, 22, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 11, 23, 0, 0, 0, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2020, 11, 22, 10, 12, 45, 0, time.UTC),
-					Field:     note.DateCreated,
-					Direction: note.DateOn,
-				},
-			},
+			CreatedStart: &start,
+			CreatedEnd:   &end,
 		},
 		[]string{"log/2021-01-03.md"},
 	)
 }
 
 func TestNoteDAOFindCreatedBefore(t *testing.T) {
+	end := time.Date(2019, 12, 04, 11, 59, 11, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2019, 12, 04, 11, 59, 11, 0, time.UTC),
-					Field:     note.DateCreated,
-					Direction: note.DateBefore,
-				},
-			},
+			CreatedEnd: &end,
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md"},
 	)
 }
 
 func TestNoteDAOFindCreatedAfter(t *testing.T) {
+	start := time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Field:     note.DateCreated,
-					Direction: note.DateAfter,
-				},
-			},
+			CreatedStart: &start,
 		},
 		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
 	)
 }
 
 func TestNoteDAOFindModifiedOn(t *testing.T) {
+	start := time.Date(2020, 01, 20, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2020, 01, 21, 0, 0, 0, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2020, 01, 20, 10, 12, 45, 0, time.UTC),
-					Field:     note.DateModified,
-					Direction: note.DateOn,
-				},
-			},
+			ModifiedStart: &start,
+			ModifiedEnd:   &end,
 		},
 		[]string{"f39c8.md"},
 	)
 }
 
 func TestNoteDAOFindModifiedBefore(t *testing.T) {
+	end := time.Date(2020, 01, 20, 8, 52, 42, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2020, 01, 20, 8, 52, 42, 0, time.UTC),
-					Field:     note.DateModified,
-					Direction: note.DateBefore,
-				},
-			},
+			ModifiedEnd: &end,
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
 	)
 }
 
 func TestNoteDAOFindModifiedAfter(t *testing.T) {
+	start := time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC)
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			Filters: []note.Filter{
-				note.DateFilter{
-					Date:      time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Field:     note.DateModified,
-					Direction: note.DateAfter,
-				},
-			},
+			ModifiedStart: &start,
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
 	)
