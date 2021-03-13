@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/util/opt"
 )
 
 // ErrCanceled is returned when the user cancelled an operation.
@@ -20,9 +23,40 @@ type Finder interface {
 
 // FinderOpts holds the option used to filter and order a list of notes.
 type FinderOpts struct {
-	Filters []Filter
+	// Filter used to match the notes with FTS predicates.
+	Match opt.String
+	// Filter by note paths.
+	IncludePaths []string
+	// Filter excluding notes at the given paths.
+	ExcludePaths []string
+	// Filter excluding notes with the given IDs.
+	ExcludeIds []core.NoteId
+	// Filter by tags found in the notes.
+	Tags []string
+	// Filter the notes mentioning the given notes.
+	Mention []string
+	// Filter to select notes being linked by another one.
+	LinkedBy *LinkedByFilter
+	// Filter to select notes linking to another one.
+	LinkTo *LinkToFilter
+	// Filter to select notes which could might be related to the given notes paths.
+	Related []string
+	// Filter to select notes having no other notes linking to them.
+	Orphan bool
+	// Filter notes created after the given date.
+	CreatedStart *time.Time
+	// Filter notes created before the given date.
+	CreatedEnd *time.Time
+	// Filter notes modified after the given date.
+	ModifiedStart *time.Time
+	// Filter notes modified before the given date.
+	ModifiedEnd *time.Time
+	// Indicates that the user should select manually the notes.
+	Interactive bool
+	// Limits the number of results
+	Limit int
+	// Sorting criteria
 	Sorters []Sorter
-	Limit   int
 }
 
 // Match holds information about a note matching the find options.
@@ -32,21 +66,6 @@ type Match struct {
 	Snippets []string
 }
 
-// Filter is a sealed interface implemented by Finder filter criteria.
-type Filter interface{ sealed() }
-
-// MatchFilter is a note filter used to match its content with FTS predicates.
-type MatchFilter string
-
-// PathFilter is a note filter using path globs to match notes.
-type PathFilter []string
-
-// ExcludePathFilter is a note filter using path globs to exclude notes from the list.
-type ExcludePathFilter []string
-
-// TagFilter is a note filter using tag globs found in the notes.
-type TagFilter []string
-
 // LinkedByFilter is a note filter used to select notes being linked by another one.
 type LinkedByFilter struct {
 	Paths       []string
@@ -55,56 +74,13 @@ type LinkedByFilter struct {
 	MaxDistance int
 }
 
-// LinkToFilter is a note filter used to select notes being linked by another one.
+// LinkToFilter is a note filter used to select notes linking to another one.
 type LinkToFilter struct {
 	Paths       []string
 	Negate      bool
 	Recursive   bool
 	MaxDistance int
 }
-
-// RelatedFilter is a note filter used to select notes which could might be
-// related to the given notes.
-type RelatedFilter []string
-
-// OrphanFilter is a note filter used to select notes having no other notes linking to them.
-type OrphanFilter struct{}
-
-// DateFilter can be used to filter notes created or modified before, after or on a given date.
-type DateFilter struct {
-	Date      time.Time
-	Direction DateDirection
-	Field     DateField
-}
-
-// InteractiveFilter lets the user select manually the notes.
-type InteractiveFilter bool
-
-func (f MatchFilter) sealed()       {}
-func (f PathFilter) sealed()        {}
-func (f ExcludePathFilter) sealed() {}
-func (f TagFilter) sealed()         {}
-func (f LinkedByFilter) sealed()    {}
-func (f LinkToFilter) sealed()      {}
-func (f RelatedFilter) sealed()     {}
-func (f OrphanFilter) sealed()      {}
-func (f DateFilter) sealed()        {}
-func (f InteractiveFilter) sealed() {}
-
-type DateDirection int
-
-const (
-	DateOn DateDirection = iota + 1
-	DateBefore
-	DateAfter
-)
-
-type DateField int
-
-const (
-	DateCreated DateField = iota + 1
-	DateModified
-)
 
 // Sorter represents an order term used to sort a list of notes.
 type Sorter struct {

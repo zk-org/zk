@@ -157,6 +157,16 @@ This is such a useful command, that an alias might be helpful.
 bl = "zk list --link-to $@"
 ```
 
+### Locate unlinked mentions of a note
+
+This alias can help you look for potential new links to establish, by listing every mention of a note in your notebook which is not already linked to it.
+
+Note that we are using a single argument `$1` which is repeated for both options.
+
+```toml
+unlinked-mentions = "zk list --mention $1 --no-link-to $1"
+```
+
 ### Browse the Git history of selected notes
 
 This example showcases the "`xargs` formula" with a concrete example.

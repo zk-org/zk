@@ -15,6 +15,7 @@ import (
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/fts5"
 	"github.com/mickael-menu/zk/util/icu"
+	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/paths"
 	strutil "github.com/mickael-menu/zk/util/strings"
 )
@@ -304,6 +305,11 @@ func idForRow(row *sql.Row) (core.NoteId, error) {
 func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	matches := make([]note.Match, 0)
 
+	opts, err := d.expandMentionsIntoMatch(opts)
+	if err != nil {
+		return matches, err
+	}
+
 	rows, err := d.findRows(opts)
 	if err != nil {
 		return matches, err
@@ -328,10 +334,9 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			continue
 		}
 
-		var metadata map[string]interface{}
-		err = json.Unmarshal([]byte(metadataJSON), &metadata)
+		metadata, err := d.unmarshalMetadata(metadataJSON)
 		if err != nil {
-			d.logger.Err(errors.Wrapf(err, "cannot parse note metadata from JSON: %s", path))
+			d.logger.Err(errors.Wrap(err, path))
 		}
 
 		matches = append(matches, note.Match{
@@ -364,6 +369,82 @@ func parseListFromNullString(str sql.NullString) []string {
 		list = strutil.RemoveDuplicates(list)
 	}
 	return list
+}
+
+// expandMentionsIntoMatch finds the titles associated with the notes in opts.Mention to
+// expand them into the opts.Match predicate.
+func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts, error) {
+	notFoundErr := fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ","))
+
+	if opts.Mention == nil {
+		return opts, nil
+	}
+
+	// Find the IDs for the mentioned paths.
+	ids, err := d.findIdsByPathPrefixes(opts.Mention)
+	if err != nil {
+		return opts, err
+	}
+	if len(ids) == 0 {
+		return opts, notFoundErr
+	}
+
+	// Exclude the mentioned notes from the results.
+	if opts.ExcludeIds == nil {
+		opts.ExcludeIds = ids
+	} else {
+		for _, id := range ids {
+			opts.ExcludeIds = append(opts.ExcludeIds, id)
+		}
+	}
+
+	// Find their titles.
+	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
+	rows, err := d.tx.Query(titlesQuery)
+	if err != nil {
+		return opts, err
+	}
+	defer rows.Close()
+
+	titles := []string{}
+	for rows.Next() {
+		var title, metadataJSON string
+		err := rows.Scan(&title, &metadataJSON)
+		if err != nil {
+			return opts, err
+		}
+
+		titles = append(titles, `"`+title+`"`)
+
+		// Support `aliases` key in the YAML frontmatter, like Obsidian:
+		// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
+		metadata, err := d.unmarshalMetadata(metadataJSON)
+		if err != nil {
+			d.logger.Err(err)
+		} else {
+			if aliases, ok := metadata["aliases"]; ok {
+				switch aliases := aliases.(type) {
+				case []interface{}:
+					for _, alias := range aliases {
+						titles = append(titles, `"`+fmt.Sprint(alias)+`"`)
+					}
+				case string:
+					titles = append(titles, `"`+aliases+`"`)
+				}
+			}
+		}
+	}
+
+	if len(titles) == 0 {
+		return opts, notFoundErr
+	}
+
+	// Expand the titles in the match predicate.
+	match := opts.Match.String()
+	match += " (" + strings.Join(titles, " OR ") + ")"
+	opts.Match = opt.NewString(match)
+
+	return opts, nil
 }
 
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
@@ -446,134 +527,135 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		return nil
 	}
 
-	for _, filter := range opts.Filters {
-		switch filter := filter.(type) {
+	if !opts.Match.IsNull() {
+		snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
+		joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
+		additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
+		whereExprs = append(whereExprs, "notes_fts MATCH ?")
+		args = append(args, fts5.ConvertQuery(opts.Match.String()))
+	}
 
-		case note.MatchFilter:
-			snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
-			joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
-			additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
-			whereExprs = append(whereExprs, "notes_fts MATCH ?")
-			args = append(args, fts5.ConvertQuery(string(filter)))
+	if opts.IncludePaths != nil {
+		regexes := make([]string, 0)
+		for _, path := range opts.IncludePaths {
+			regexes = append(regexes, "n.path REGEXP ?")
+			args = append(args, pathRegex(path))
+		}
+		whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
+	}
 
-		case note.PathFilter:
-			if len(filter) == 0 {
-				break
-			}
-			regexes := make([]string, 0)
-			for _, path := range filter {
-				regexes = append(regexes, "n.path REGEXP ?")
-				args = append(args, pathRegex(path))
-			}
-			whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
+	if opts.ExcludePaths != nil {
+		regexes := make([]string, 0)
+		for _, path := range opts.ExcludePaths {
+			regexes = append(regexes, "n.path NOT REGEXP ?")
+			args = append(args, pathRegex(path))
+		}
+		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
+	}
 
-		case note.TagFilter:
-			if len(filter) == 0 {
-				break
-			}
-			separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
-			for _, tagsArg := range filter {
-				tags := separatorRegex.Split(tagsArg, -1)
+	if opts.ExcludeIds != nil {
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
+	}
 
-				negate := false
-				globs := make([]string, 0)
-				for _, tag := range tags {
-					tag = strings.TrimSpace(tag)
+	if opts.Tags != nil {
+		separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
+		for _, tagsArg := range opts.Tags {
+			tags := separatorRegex.Split(tagsArg, -1)
 
-					if strings.HasPrefix(tag, "-") {
-						negate = true
-						tag = strings.TrimPrefix(tag, "-")
-					} else if strings.HasPrefix(tag, "NOT") {
-						negate = true
-						tag = strings.TrimPrefix(tag, "NOT")
-					}
+			negate := false
+			globs := make([]string, 0)
+			for _, tag := range tags {
+				tag = strings.TrimSpace(tag)
 
-					tag = strings.TrimSpace(tag)
-					if len(tag) == 0 {
-						continue
-					}
-					globs = append(globs, "t.name GLOB ?")
-					args = append(args, tag)
+				if strings.HasPrefix(tag, "-") {
+					negate = true
+					tag = strings.TrimPrefix(tag, "-")
+				} else if strings.HasPrefix(tag, "NOT") {
+					negate = true
+					tag = strings.TrimPrefix(tag, "NOT")
 				}
 
-				if len(globs) == 0 {
+				tag = strings.TrimSpace(tag)
+				if len(tag) == 0 {
 					continue
 				}
-				if negate && len(globs) > 1 {
-					return nil, fmt.Errorf("cannot negate a tag in a OR group: %s", tagsArg)
-				}
+				globs = append(globs, "t.name GLOB ?")
+				args = append(args, tag)
+			}
 
-				expr := "n.id"
-				if negate {
-					expr += " NOT"
-				}
-				expr += fmt.Sprintf(` IN (
+			if len(globs) == 0 {
+				continue
+			}
+			if negate && len(globs) > 1 {
+				return nil, fmt.Errorf("cannot negate a tag in a OR group: %s", tagsArg)
+			}
+
+			expr := "n.id"
+			if negate {
+				expr += " NOT"
+			}
+			expr += fmt.Sprintf(` IN (
 SELECT note_id FROM notes_collections
- WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
- )`,
-					note.CollectionKindTag,
-					strings.Join(globs, " OR "),
-				)
-				whereExprs = append(whereExprs, expr)
-			}
-
-		case note.ExcludePathFilter:
-			if len(filter) == 0 {
-				break
-			}
-			regexes := make([]string, 0)
-			for _, path := range filter {
-				regexes = append(regexes, "n.path NOT REGEXP ?")
-				args = append(args, pathRegex(path))
-			}
-			whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
-
-		case note.LinkedByFilter:
-			maxDistance = filter.MaxDistance
-			err := setupLinkFilter(filter.Paths, -1, filter.Negate, filter.Recursive)
-			if err != nil {
-				return nil, err
-			}
-
-		case note.LinkToFilter:
-			maxDistance = filter.MaxDistance
-			err := setupLinkFilter(filter.Paths, 1, filter.Negate, filter.Recursive)
-			if err != nil {
-				return nil, err
-			}
-
-		case note.RelatedFilter:
-			maxDistance = 2
-			err := setupLinkFilter(filter, 0, false, true)
-			if err != nil {
-				return nil, err
-			}
-			groupBy += " HAVING MIN(l.distance) = 2"
-
-		case note.OrphanFilter:
-			whereExprs = append(whereExprs, `n.id NOT IN (
-				SELECT target_id FROM links WHERE target_id IS NOT NULL
-			)`)
-
-		case note.DateFilter:
-			value := "?"
-			field := "n." + dateField(filter)
-			op, ignoreTime := dateDirection(filter)
-			if ignoreTime {
-				field = "date(" + field + ")"
-				value = "date(?)"
-			}
-
-			whereExprs = append(whereExprs, fmt.Sprintf("%s %s %s", field, op, value))
-			args = append(args, filter.Date)
-
-		case note.InteractiveFilter:
-			// No user interaction possible from here.
-			break
-
-		default:
-			panic(fmt.Sprintf("%v: unknown filter type", filter))
+WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
+)`,
+				note.CollectionKindTag,
+				strings.Join(globs, " OR "),
+			)
+			whereExprs = append(whereExprs, expr)
 		}
+	}
+
+	if opts.LinkedBy != nil {
+		filter := opts.LinkedBy
+		maxDistance = filter.MaxDistance
+		err := setupLinkFilter(filter.Paths, -1, filter.Negate, filter.Recursive)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.LinkTo != nil {
+		filter := opts.LinkTo
+		maxDistance = filter.MaxDistance
+		err := setupLinkFilter(filter.Paths, 1, filter.Negate, filter.Recursive)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if opts.Related != nil {
+		maxDistance = 2
+		err := setupLinkFilter(opts.Related, 0, false, true)
+		if err != nil {
+			return nil, err
+		}
+		groupBy += " HAVING MIN(l.distance) = 2"
+	}
+
+	if opts.Orphan {
+		whereExprs = append(whereExprs, `n.id NOT IN (
+			SELECT target_id FROM links WHERE target_id IS NOT NULL
+		)`)
+	}
+
+	if opts.CreatedStart != nil {
+		whereExprs = append(whereExprs, "created >= ?")
+		args = append(args, opts.CreatedStart)
+	}
+
+	if opts.CreatedEnd != nil {
+		whereExprs = append(whereExprs, "created < ?")
+		args = append(args, opts.CreatedEnd)
+	}
+
+	if opts.ModifiedStart != nil {
+		whereExprs = append(whereExprs, "modified >= ?")
+		args = append(args, opts.ModifiedStart)
+	}
+
+	if opts.ModifiedEnd != nil {
+		whereExprs = append(whereExprs, "modified < ?")
+		args = append(args, opts.ModifiedEnd)
 	}
 
 	orderTerms := []string{}
@@ -642,30 +724,6 @@ SELECT note_id FROM notes_collections
 	return d.tx.Query(query, args...)
 }
 
-func dateField(filter note.DateFilter) string {
-	switch filter.Field {
-	case note.DateCreated:
-		return "created"
-	case note.DateModified:
-		return "modified"
-	default:
-		panic(fmt.Sprintf("%v: unknown note.DateField", filter.Field))
-	}
-}
-
-func dateDirection(filter note.DateFilter) (op string, ignoreTime bool) {
-	switch filter.Direction {
-	case note.DateOn:
-		return "=", true
-	case note.DateBefore:
-		return "<", false
-	case note.DateAfter:
-		return ">=", false
-	default:
-		panic(fmt.Sprintf("%v: unknown note.DateDirection", filter.Direction))
-	}
-}
-
 func orderTerm(sorter note.Sorter) string {
 	order := " ASC"
 	if !sorter.Ascending {
@@ -711,4 +769,10 @@ func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
 		strs = append(strs, strconv.FormatInt(int64(i), 10))
 	}
 	return strings.Join(strs, delimiter)
+}
+
+func (d *NoteDAO) unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
+	err = json.Unmarshal([]byte(metadataJSON), &metadata)
+	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
+	return
 }

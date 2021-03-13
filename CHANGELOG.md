@@ -12,7 +12,11 @@ All notable changes to this project will be documented in this file.
         * If you want to exclude notes having a particular tag, prefix it with `-` or `NOT` (all caps), e.g. `--tag "NOT done"`.
         * Use glob patterns to match multiple tags, e.g. `--tag "book-*"`.
     * Many tag flavors are supported: `#hashtags`, `:colon:separated:tags:` ([opt-in](docs/note-format.md)) and even Bear's [`#multi-word tags#`](https://blog.bear.app/2017/11/bear-tips-how-to-create-multi-word-tags/) ([opt-in](docs/note-format.md)). If you prefer to use a YAML frontmatter, list your tags with the key `tags` or `keywords`.
-* Print metadata from the YAML frontmatter in `list` output using `{{metadata.<key>}}`, e.g. `{{metadata.description}}`. Keys are normalized to lower case.
+* Find every mention of a note in your notebook with `--mention file.md`.
+    * This will look for occurrences of the note's title in other notes.
+    * To refer to a note using several names, you can use the [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note). For example the note titled "Artificial Intelligence" might have: `aliases: [AI, robot]`
+    * To find only unlinked mentions, pair it with `--no-link-to`, e.g. `--mention file.md --no-link-to file.md`.
+* Print metadata from the [YAML frontmatter](docs/note-frontmatter.md) in `list` output using `{{metadata.<key>}}`, e.g. `{{metadata.description}}`. Keys are normalized to lower case.
 * Use the YAML frontmatter key `date` for the note creation date, when provided.
 * Access environment variables from note templates with the `env.<key>` template variable, e.g. `{{env.PATH}}`.
 

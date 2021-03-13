@@ -48,12 +48,11 @@ func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, terminal *term.Termi
 }
 
 func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
-	isInteractive, opts := popInteractiveFilter(opts)
 	selectedMatches := make([]note.Match, 0)
 	matches, err := f.finder.Find(opts)
 	relPaths := []string{}
 
-	if !isInteractive || !f.terminal.IsInteractive() || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
+	if !opts.Interactive || !f.terminal.IsInteractive() || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
 		return matches, err
 	}
 
@@ -121,20 +120,4 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	return selectedMatches, nil
-}
-
-func popInteractiveFilter(opts note.FinderOpts) (bool, note.FinderOpts) {
-	isInteractive := false
-	filters := make([]note.Filter, 0)
-
-	for _, filter := range opts.Filters {
-		if f, ok := filter.(note.InteractiveFilter); ok {
-			isInteractive = bool(f)
-		} else {
-			filters = append(filters, filter)
-		}
-	}
-
-	opts.Filters = filters
-	return isInteractive, opts
 }

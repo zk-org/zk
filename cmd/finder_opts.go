@@ -6,6 +6,7 @@ import (
 
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
+	"github.com/mickael-menu/zk/util/opt"
 	"github.com/tj/go-naturaldate"
 )
 
@@ -13,17 +14,17 @@ import (
 type Filtering struct {
 	Path []string `group:filter arg optional placeholder:PATH help:"Find notes matching the given path, including its descendants."`
 
-	Interactive bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
-	Limit       int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
-	Match       string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
-	Exclude     []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
-	Tag         []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
-	Orphan      bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
-	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
-	LinkTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
-	// FIXME: I'm not confident this is a useful option.
-	// NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
-	// NotLinkTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
+	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
+	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
+	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
+	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
+	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
+	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
+	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
+	LinkTo         []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
+	NoLinkTo       []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
 	Recursive      bool     `group:filter short:r                     help:"Follow links recursively."`
@@ -42,157 +43,119 @@ type Sorting struct {
 
 // NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.
 func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.FinderOpts, error) {
-	filters := make([]note.Filter, 0)
+	opts := note.FinderOpts{}
 
-	paths, ok := relPaths(zk, filtering.Path)
-	if ok {
-		filters = append(filters, note.PathFilter(paths))
+	opts.Match = opt.NewNotEmptyString(filtering.Match)
+
+	if paths, ok := relPaths(zk, filtering.Path); ok {
+		opts.IncludePaths = paths
 	}
 
-	excludePaths, ok := relPaths(zk, filtering.Exclude)
-	if ok {
-		filters = append(filters, note.ExcludePathFilter(excludePaths))
+	if paths, ok := relPaths(zk, filtering.Exclude); ok {
+		opts.ExcludePaths = paths
 	}
 
 	if len(filtering.Tag) > 0 {
-		filters = append(filters, note.TagFilter(filtering.Tag))
+		opts.Tags = filtering.Tag
 	}
 
-	if filtering.Match != "" {
-		filters = append(filters, note.MatchFilter(filtering.Match))
+	if len(filtering.Mention) > 0 {
+		opts.Mention = filtering.Mention
 	}
+
+	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {
+		opts.LinkedBy = &note.LinkedByFilter{
+			Paths:       paths,
+			Negate:      false,
+			Recursive:   filtering.Recursive,
+			MaxDistance: filtering.MaxDistance,
+		}
+	} else if paths, ok := relPaths(zk, filtering.NoLinkedBy); ok {
+		opts.LinkedBy = &note.LinkedByFilter{
+			Paths:  paths,
+			Negate: true,
+		}
+	}
+
+	if paths, ok := relPaths(zk, filtering.LinkTo); ok {
+		opts.LinkTo = &note.LinkToFilter{
+			Paths:       paths,
+			Negate:      false,
+			Recursive:   filtering.Recursive,
+			MaxDistance: filtering.MaxDistance,
+		}
+	} else if paths, ok := relPaths(zk, filtering.NoLinkTo); ok {
+		opts.LinkTo = &note.LinkToFilter{
+			Paths:  paths,
+			Negate: true,
+		}
+	}
+
+	if paths, ok := relPaths(zk, filtering.Related); ok {
+		opts.Related = paths
+	}
+
+	opts.Orphan = filtering.Orphan
 
 	if filtering.Created != "" {
-		date, err := parseDate(filtering.Created)
+		start, end, err := parseDayRange(filtering.Created)
 		if err != nil {
 			return nil, err
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateOn,
-		})
-	}
-
-	if filtering.CreatedBefore != "" {
-		date, err := parseDate(filtering.CreatedBefore)
-		if err != nil {
-			return nil, err
+		opts.CreatedStart = &start
+		opts.CreatedEnd = &end
+	} else {
+		if filtering.CreatedBefore != "" {
+			date, err := parseDate(filtering.CreatedBefore)
+			if err != nil {
+				return nil, err
+			}
+			opts.CreatedEnd = &date
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateBefore,
-		})
-	}
-
-	if filtering.CreatedAfter != "" {
-		date, err := parseDate(filtering.CreatedAfter)
-		if err != nil {
-			return nil, err
+		if filtering.CreatedAfter != "" {
+			date, err := parseDate(filtering.CreatedAfter)
+			if err != nil {
+				return nil, err
+			}
+			opts.CreatedStart = &date
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateCreated,
-			Direction: note.DateAfter,
-		})
 	}
 
 	if filtering.Modified != "" {
-		date, err := parseDate(filtering.Modified)
+		start, end, err := parseDayRange(filtering.Modified)
 		if err != nil {
 			return nil, err
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateOn,
-		})
-	}
-
-	if filtering.ModifiedBefore != "" {
-		date, err := parseDate(filtering.ModifiedBefore)
-		if err != nil {
-			return nil, err
+		opts.ModifiedStart = &start
+		opts.ModifiedEnd = &end
+	} else {
+		if filtering.ModifiedBefore != "" {
+			date, err := parseDate(filtering.ModifiedBefore)
+			if err != nil {
+				return nil, err
+			}
+			opts.ModifiedEnd = &date
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateBefore,
-		})
-	}
-
-	if filtering.ModifiedAfter != "" {
-		date, err := parseDate(filtering.ModifiedAfter)
-		if err != nil {
-			return nil, err
+		if filtering.ModifiedAfter != "" {
+			date, err := parseDate(filtering.ModifiedAfter)
+			if err != nil {
+				return nil, err
+			}
+			opts.ModifiedStart = &date
 		}
-		filters = append(filters, note.DateFilter{
-			Date:      date,
-			Field:     note.DateModified,
-			Direction: note.DateAfter,
-		})
 	}
 
-	linkedByPaths, ok := relPaths(zk, filtering.LinkedBy)
-	if ok {
-		filters = append(filters, note.LinkedByFilter{
-			Paths:       linkedByPaths,
-			Negate:      false,
-			Recursive:   filtering.Recursive,
-			MaxDistance: filtering.MaxDistance,
-		})
-	}
-
-	linkToPaths, ok := relPaths(zk, filtering.LinkTo)
-	if ok {
-		filters = append(filters, note.LinkToFilter{
-			Paths:       linkToPaths,
-			Negate:      false,
-			Recursive:   filtering.Recursive,
-			MaxDistance: filtering.MaxDistance,
-		})
-	}
-
-	// notLinkedByPaths, ok := relPaths(zk, filtering.NotLinkedBy)
-	// if ok {
-	// 	filters = append(filters, note.LinkedByFilter{
-	// 		Paths:  notLinkedByPaths,
-	// 		Negate: true,
-	// 	})
-	// }
-
-	// notLinkToPaths, ok := relPaths(zk, filtering.NotLinkTo)
-	// if ok {
-	// 	filters = append(filters, note.LinkToFilter{
-	// 		Paths:  notLinkToPaths,
-	// 		Negate: true,
-	// 	})
-	// }
-
-	relatedPaths, ok := relPaths(zk, filtering.Related)
-	if ok {
-		filters = append(filters, note.RelatedFilter(relatedPaths))
-	}
-
-	if filtering.Orphan {
-		filters = append(filters, note.OrphanFilter{})
-	}
-
-	if filtering.Interactive {
-		filters = append(filters, note.InteractiveFilter(true))
-	}
+	opts.Interactive = filtering.Interactive
 
 	sorters, err := note.SortersFromStrings(sorting.Sort)
 	if err != nil {
 		return nil, err
 	}
+	opts.Sorters = sorters
 
-	return &note.FinderOpts{
-		Filters: filters,
-		Sorters: sorters,
-		Limit:   filtering.Limit,
-	}, nil
+	opts.Limit = filtering.Limit
+
+	return &opts, nil
 }
 
 func relPaths(zk *zk.Zk, paths []string) ([]string, bool) {
@@ -211,4 +174,20 @@ func parseDate(date string) (time.Time, error) {
 		return time.Date(int(i), time.January, 0, 0, 0, 0, 0, time.UTC), nil
 	}
 	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
+}
+
+func parseDayRange(date string) (start time.Time, end time.Time, err error) {
+	day, err := parseDate(date)
+	if err != nil {
+		return
+	}
+
+	start = startOfDay(day)
+	end = start.AddDate(0, 0, 1)
+	return start, end, nil
+}
+
+func startOfDay(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }
