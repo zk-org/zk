@@ -334,10 +334,9 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			continue
 		}
 
-		var metadata map[string]interface{}
-		err = json.Unmarshal([]byte(metadataJSON), &metadata)
+		metadata, err := d.unmarshalMetadata(metadataJSON)
 		if err != nil {
-			d.logger.Err(errors.Wrapf(err, "cannot parse note metadata from JSON: %s", path))
+			d.logger.Err(errors.Wrap(err, path))
 		}
 
 		matches = append(matches, note.Match{
@@ -400,7 +399,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 
 	// Find their titles.
-	titlesQuery := "SELECT title FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
+	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
 	rows, err := d.tx.Query(titlesQuery)
 	if err != nil {
 		return opts, err
@@ -409,12 +408,31 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 
 	titles := []string{}
 	for rows.Next() {
-		var title string
-		err := rows.Scan(&title)
+		var title, metadataJSON string
+		err := rows.Scan(&title, &metadataJSON)
 		if err != nil {
 			return opts, err
 		}
+
 		titles = append(titles, `"`+title+`"`)
+
+		// Support `aliases` key in the YAML frontmatter, like Obsidian:
+		// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
+		metadata, err := d.unmarshalMetadata(metadataJSON)
+		if err != nil {
+			d.logger.Err(err)
+		} else {
+			if aliases, ok := metadata["aliases"]; ok {
+				switch aliases := aliases.(type) {
+				case []interface{}:
+					for _, alias := range aliases {
+						titles = append(titles, `"`+fmt.Sprint(alias)+`"`)
+					}
+				case string:
+					titles = append(titles, `"`+aliases+`"`)
+				}
+			}
+		}
 	}
 
 	if len(titles) == 0 {
@@ -751,4 +769,10 @@ func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
 		strs = append(strs, strconv.FormatInt(int64(i), 10))
 	}
 	return strings.Join(strs, delimiter)
+}
+
+func (d *NoteDAO) unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
+	err = json.Unmarshal([]byte(metadataJSON), &metadata)
+	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
+	return
 }

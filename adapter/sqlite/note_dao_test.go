@@ -439,10 +439,12 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					WordCount:  4,
 					Links:      []note.Link{},
 					Tags:       []string{},
-					Metadata:   map[string]interface{}{},
-					Created:    time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
-					Modified:   time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
-					Checksum:   "iaefhv",
+					Metadata: map[string]interface{}{
+						"aliases": []interface{}{"First page"},
+					},
+					Created:  time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
+					Modified: time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
+					Checksum: "iaefhv",
 				},
 				Snippets: []string{"<zk:match>Index</zk:match> of the Zettelkasten"},
 			},
@@ -587,6 +589,23 @@ func TestNoteDAOFindMention(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
 		[]note.Match{
+			{
+				Metadata: note.Metadata{
+					Path:       "ref/test/b.md",
+					Title:      "A nested note",
+					Lead:       "This one is in a sub sub directory",
+					Body:       "This one is in a sub sub directory, not the first page",
+					RawContent: "# A nested note\nThis one is in a sub sub directory",
+					WordCount:  8,
+					Links:      []note.Link{},
+					Tags:       []string{"adventure", "history"},
+					Metadata:   map[string]interface{}{},
+					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
+					Modified:   time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),
+					Checksum:   "yvwbae",
+				},
+				Snippets: []string{"This one is in a sub sub directory, not the <zk:match>first page</zk:match>"},
+			},
 			{
 				Metadata: note.Metadata{
 					Path:       "log/2021-02-04.md",

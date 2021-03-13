@@ -35,7 +35,7 @@
   checksum: "iaefhv"
   created: "2019-12-04T11:59:11Z"
   modified: "2019-12-04T12:17:21Z"
-  metadata: "{}"
+  metadata: '{"aliases": ["First page"]}'
 
 - id: 4
   path: "f39c8.md"
@@ -55,7 +55,7 @@
   sortable_path: "ref/test/b.md"
   title: "A nested note"
   lead: "This one is in a sub sub directory"
-  body: "This one is in a sub sub directory"
+  body: "This one is in a sub sub directory, not the first page"
   raw_content: "# A nested note\nThis one is in a sub sub directory"
   word_count: 8
   checksum: "yvwbae"
