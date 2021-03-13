@@ -181,6 +181,29 @@ Part of writing a great notebook is to establish links between related notes. Th
 --related 200911172034
 ```
 
+## Locate mentions in other notes
+
+Another great way to look for potential new links is to find every mention of a note in your notebook.
+
+```
+--mention 200911172034
+```
+
+This option will locate the notes containing the note's title. To refer to a note using several names, you can use the [YAML frontmatter](note-frontmatter.md) to declare additional aliases. For example, a note titled "Artificial Intelligence" might have for aliases "AI" and "robot". This method is compatible with [Obsidian](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
+
+```
+---
+title: Artificial Intelligence
+aliases: [AI, robot]
+---
+```
+
+To find only unlinked mentions, pair the `--mention` option with `--no-link-to` to remove notes which are already linked from the results.
+
+```
+--mention 200911172034 --no-link-to 200911172034
+```
+
 ## Exclude notes from the results
 
 To prevent certain notes from polluting the results, you can explicitly exclude them with `--exclude <path>` (or `-x`). This is particularly useful when you have a whole directory of notes to be ignored.
