@@ -7,6 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/mickael-menu/zk/core"
 	"github.com/mickael-menu/zk/util/opt"
 )
 
@@ -28,8 +29,12 @@ type FinderOpts struct {
 	IncludePaths []string
 	// Filter excluding notes at the given paths.
 	ExcludePaths []string
+	// Filter excluding notes with the given IDs.
+	ExcludeIds []core.NoteId
 	// Filter by tags found in the notes.
 	Tags []string
+	// Filter the notes mentioning the given notes.
+	Mention []string
 	// Filter to select notes being linked by another one.
 	LinkedBy *LinkedByFilter
 	// Filter to select notes linking to another one.

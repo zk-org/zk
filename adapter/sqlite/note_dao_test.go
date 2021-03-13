@@ -394,13 +394,8 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 
 func TestNoteDAOFindAll(t *testing.T) {
 	testNoteDAOFindPaths(t, note.FinderOpts{}, []string{
-		"ref/test/b.md",
-		"f39c8.md",
-		"ref/test/a.md",
-		"log/2021-02-04.md",
-		"index.md",
-		"log/2021-01-03.md",
-		"log/2021-01-04.md",
+		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
+		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
 }
 
@@ -453,6 +448,25 @@ func TestNoteDAOFindMatch(t *testing.T) {
 			},
 			{
 				Metadata: note.Metadata{
+					Path:       "log/2021-01-03.md",
+					Title:      "Daily note",
+					Lead:       "A daily note",
+					Body:       "A daily note\n\nWith lot of content",
+					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					WordCount:  3,
+					Links:      []note.Link{},
+					Tags:       []string{"fiction", "adventure"},
+					Metadata: map[string]interface{}{
+						"author": "Dom",
+					},
+					Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum: "qwfpgj",
+				},
+				Snippets: []string{"A <zk:match>daily</zk:match> note\n\nWith lot of content"},
+			},
+			{
+				Metadata: note.Metadata{
 					Path:       "log/2021-02-04.md",
 					Title:      "February 4, 2021",
 					Lead:       "A third daily note",
@@ -484,25 +498,6 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Checksum:   "arstde",
 				},
 				Snippets: []string{"A second <zk:match>daily</zk:match> note"},
-			},
-			{
-				Metadata: note.Metadata{
-					Path:       "log/2021-01-03.md",
-					Title:      "January 3, 2021",
-					Lead:       "A daily note",
-					Body:       "A daily note\n\nWith lot of content",
-					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
-					WordCount:  3,
-					Links:      []note.Link{},
-					Tags:       []string{"fiction", "adventure"},
-					Metadata: map[string]interface{}{
-						"author": "Dom",
-					},
-					Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-					Checksum: "qwfpgj",
-				},
-				Snippets: []string{"A <zk:match>daily</zk:match> note\n\nWith lot of content"},
 			},
 		},
 	)
@@ -556,7 +551,7 @@ func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 		note.FinderOpts{
 			IncludePaths: []string{"log"},
 		},
-		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+		[]string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"},
 	)
 }
 
@@ -585,6 +580,48 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 			ExcludePaths: []string{"ref", "log/2021-01"},
 		},
 		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
+	)
+}
+
+func TestNoteDAOFindMention(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
+		[]note.Match{
+			{
+				Metadata: note.Metadata{
+					Path:       "log/2021-02-04.md",
+					Title:      "February 4, 2021",
+					Lead:       "A third daily note",
+					Body:       "A third daily note",
+					RawContent: "# A third daily note",
+					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
+					Metadata:   map[string]interface{}{},
+					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 10, 8, 20, 18, 0, time.UTC),
+					Checksum:   "earkte",
+				},
+				Snippets: []string{"A third <zk:match>daily note</zk:match>"},
+			},
+			{
+				Metadata: note.Metadata{
+					Path:       "log/2021-01-04.md",
+					Title:      "January 4, 2021",
+					Lead:       "A second daily note",
+					Body:       "A second daily note",
+					RawContent: "# A second daily note",
+					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
+					Metadata:   map[string]interface{}{},
+					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Modified:   time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
+					Checksum:   "arstde",
+				},
+				Snippets: []string{"A second <zk:match>daily note</zk:match>"},
+			},
+		},
 	)
 }
 
@@ -659,7 +696,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 			{
 				Metadata: note.Metadata{
 					Path:       "log/2021-01-03.md",
-					Title:      "January 3, 2021",
+					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
@@ -794,7 +831,7 @@ func TestNoteDAOFindCreatedAfter(t *testing.T) {
 		note.FinderOpts{
 			CreatedStart: &start,
 		},
-		[]string{"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md"},
+		[]string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"},
 	)
 }
 
@@ -865,12 +902,12 @@ func TestNoteDAOFindSortPath(t *testing.T) {
 
 func TestNoteDAOFindSortTitle(t *testing.T) {
 	testNoteDAOFindSort(t, note.SortTitle, true, []string{
-		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
-		"index.md", "log/2021-01-03.md", "log/2021-01-04.md",
+		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
+		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
 	testNoteDAOFindSort(t, note.SortTitle, false, []string{
-		"log/2021-01-04.md", "log/2021-01-03.md", "index.md",
-		"log/2021-02-04.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md",
+		"log/2021-01-04.md", "index.md", "log/2021-02-04.md",
+		"log/2021-01-03.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md",
 	})
 }
 

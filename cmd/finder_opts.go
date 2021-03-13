@@ -19,12 +19,13 @@ type Filtering struct {
 	Match       string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
 	Exclude     []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
 	Tag         []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
-	Orphan      bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
+	Mention     []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
 	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
 	LinkTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
 	// FIXME: I'm not confident this is a useful option.
 	// NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
 	// NotLinkTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
 	Recursive      bool     `group:filter short:r                     help:"Follow links recursively."`
@@ -57,6 +58,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 
 	if len(filtering.Tag) > 0 {
 		opts.Tags = filtering.Tag
+	}
+
+	if len(filtering.Mention) > 0 {
+		opts.Mention = filtering.Mention
 	}
 
 	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {

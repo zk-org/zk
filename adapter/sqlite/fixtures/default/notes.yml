@@ -1,7 +1,7 @@
 - id: 1
   path: "log/2021-01-03.md"
   sortable_path: "log/2021-01-03.md"
-  title: "January 3, 2021"
+  title: "Daily note"
   lead: "A daily note"
   body: "A daily note\n\nWith lot of content"
   raw_content: "# A daily note\nA daily note\n\nWith lot of content"

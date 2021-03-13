@@ -15,6 +15,7 @@ import (
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/fts5"
 	"github.com/mickael-menu/zk/util/icu"
+	"github.com/mickael-menu/zk/util/opt"
 	"github.com/mickael-menu/zk/util/paths"
 	strutil "github.com/mickael-menu/zk/util/strings"
 )
@@ -304,6 +305,11 @@ func idForRow(row *sql.Row) (core.NoteId, error) {
 func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	matches := make([]note.Match, 0)
 
+	opts, err := d.expandMentionsIntoMatch(opts)
+	if err != nil {
+		return matches, err
+	}
+
 	rows, err := d.findRows(opts)
 	if err != nil {
 		return matches, err
@@ -364,6 +370,63 @@ func parseListFromNullString(str sql.NullString) []string {
 		list = strutil.RemoveDuplicates(list)
 	}
 	return list
+}
+
+// expandMentionsIntoMatch finds the titles associated with the notes in opts.Mention to
+// expand them into the opts.Match predicate.
+func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts, error) {
+	notFoundErr := fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ","))
+
+	if opts.Mention == nil {
+		return opts, nil
+	}
+
+	// Find the IDs for the mentioned paths.
+	ids, err := d.findIdsByPathPrefixes(opts.Mention)
+	if err != nil {
+		return opts, err
+	}
+	if len(ids) == 0 {
+		return opts, notFoundErr
+	}
+
+	// Exclude the mentioned notes from the results.
+	if opts.ExcludeIds == nil {
+		opts.ExcludeIds = ids
+	} else {
+		for _, id := range ids {
+			opts.ExcludeIds = append(opts.ExcludeIds, id)
+		}
+	}
+
+	// Find their titles.
+	titlesQuery := "SELECT title FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
+	rows, err := d.tx.Query(titlesQuery)
+	if err != nil {
+		return opts, err
+	}
+	defer rows.Close()
+
+	titles := []string{}
+	for rows.Next() {
+		var title string
+		err := rows.Scan(&title)
+		if err != nil {
+			return opts, err
+		}
+		titles = append(titles, `"`+title+`"`)
+	}
+
+	if len(titles) == 0 {
+		return opts, notFoundErr
+	}
+
+	// Expand the titles in the match predicate.
+	match := opts.Match.String()
+	match += " (" + strings.Join(titles, " OR ") + ")"
+	opts.Match = opt.NewString(match)
+
+	return opts, nil
 }
 
 func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
@@ -470,6 +533,10 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			args = append(args, pathRegex(path))
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
+	}
+
+	if opts.ExcludeIds != nil {
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
 	}
 
 	if opts.Tags != nil {
