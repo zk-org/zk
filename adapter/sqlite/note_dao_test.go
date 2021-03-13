@@ -585,7 +585,7 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	)
 }
 
-func TestNoteDAOFindMention(t *testing.T) {
+func TestNoteDAOFindMentions(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
 		[]note.Match{
@@ -641,6 +641,20 @@ func TestNoteDAOFindMention(t *testing.T) {
 				Snippets: []string{"A second <zk:match>daily note</zk:match>"},
 			},
 		},
+	)
+}
+
+// Common use case: `--mention x --no-link-to x`
+func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			Mention: []string{"log/2021-01-03.md", "index.md"},
+			LinkTo: &note.LinkToFilter{
+				Paths:  []string{"log/2021-01-03.md", "index.md"},
+				Negate: true,
+			},
+		},
+		[]string{"ref/test/b.md", "log/2021-02-04.md"},
 	)
 }
 

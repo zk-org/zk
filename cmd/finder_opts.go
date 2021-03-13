@@ -14,17 +14,16 @@ import (
 type Filtering struct {
 	Path []string `group:filter arg optional placeholder:PATH help:"Find notes matching the given path, including its descendants."`
 
-	Interactive bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
-	Limit       int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
-	Match       string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
-	Exclude     []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
-	Tag         []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
-	Mention     []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
-	LinkedBy    []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
-	LinkTo      []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
-	// FIXME: I'm not confident this is a useful option.
-	// NotLinkedBy    []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
-	// NotLinkTo   []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
+	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
+	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
+	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
+	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
+	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
+	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
+	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
+	LinkTo         []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
+	NoLinkTo       []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
 	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
@@ -71,6 +70,11 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
 		}
+	} else if paths, ok := relPaths(zk, filtering.NoLinkedBy); ok {
+		opts.LinkedBy = &note.LinkedByFilter{
+			Paths:  paths,
+			Negate: true,
+		}
 	}
 
 	if paths, ok := relPaths(zk, filtering.LinkTo); ok {
@@ -80,23 +84,12 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
 		}
+	} else if paths, ok := relPaths(zk, filtering.NoLinkTo); ok {
+		opts.LinkTo = &note.LinkToFilter{
+			Paths:  paths,
+			Negate: true,
+		}
 	}
-
-	// notLinkedByPaths, ok := relPaths(zk, filtering.NotLinkedBy)
-	// if ok {
-	// 	filters = append(filters, note.LinkedByFilter{
-	// 		Paths:  notLinkedByPaths,
-	// 		Negate: true,
-	// 	})
-	// }
-
-	// notLinkToPaths, ok := relPaths(zk, filtering.NotLinkTo)
-	// if ok {
-	// 	filters = append(filters, note.LinkToFilter{
-	// 		Paths:  notLinkToPaths,
-	// 		Negate: true,
-	// 	})
-	// }
 
 	if paths, ok := relPaths(zk, filtering.Related); ok {
 		opts.Related = paths
