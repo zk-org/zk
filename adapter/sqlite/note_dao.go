@@ -271,6 +271,10 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteId, error) {
 			ids = append(ids, id)
 		}
 	}
+
+	if len(ids) == 0 {
+		return ids, fmt.Errorf("could not find notes at: " + strings.Join(paths, ", "))
+	}
 	return ids, nil
 }
 
@@ -369,8 +373,6 @@ func parseListFromNullString(str sql.NullString) []string {
 // expandMentionsIntoMatch finds the titles associated with the notes in opts.Mention to
 // expand them into the opts.Match predicate.
 func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts, error) {
-	notFoundErr := fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ","))
-
 	if opts.Mention == nil {
 		return opts, nil
 	}
@@ -379,9 +381,6 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	ids, err := d.findIdsByPathPrefixes(opts.Mention)
 	if err != nil {
 		return opts, err
-	}
-	if len(ids) == 0 {
-		return opts, notFoundErr
 	}
 
 	// Exclude the mentioned notes from the results.
@@ -436,7 +435,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 
 	if len(titles) == 0 {
-		return opts, notFoundErr
+		return opts, nil
 	}
 
 	// Expand the titles in the match predicate.
