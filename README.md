@@ -9,20 +9,22 @@
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
 
-It is primarily focused on:
+### Highlights
 
-* [keeping your notebook future-proof](docs/future-proof.md), by relying on plain text
-* [creating notes from templates](docs/note-creation.md)
-* performing [advanced search queries](docs/note-filtering.md)
-* being a hub for everything related to your notes, thanks to [command aliases](docs/config-alias.md) and [automation](docs/automation.md).
-* [notebook housekeeping](docs/notebook-housekeeping.md)
-
-What `zk` is not:
-
-* a note editor
-* a tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
+* [Creating notes from templates](docs/note-creation.md)
+* [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
+* [Interactive browser](docs/tool-fzf), powered by `fzf`
+* [Git-style command aliases](docs/config-alias.md)
+* [Made with automation in mind](docs/automation.md)
+* [Notebook housekeeping](docs/notebook-housekeeping.md)
+* [Future-proof, thanks to Markdown](docs/future-proof.md)
 
 [See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
+
+### What `zk` is not
+
+* A note editor.
+* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
 
 ## Install
 
@@ -40,3 +42,7 @@ $ ./go install
 $ zk -h
 ```
 
+## Related projects
+
+* [Neuron](https://github.com/srid/neuron) – a great tool to publish a Zettelkasten on the web
+* [sirupsen's zk](https://github.com/sirupsen/zk) – a collection of scripts with a similar purpose

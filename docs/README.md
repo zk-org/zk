@@ -4,15 +4,17 @@ Looking for a quick usage example? [Let's get started](getting-started.md).
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
 
-It is primarily focused on:
+## Highlights
 
-* [keeping your notebook future-proof](future-proof.md), by relying on plain text
-* [creating notes from templates](note-creation.md)
-* performing [advanced search queries](note-filtering.md)
-* being a hub for everything related to your notes, thanks to [command aliases](config-alias.md) and [automation](automation.md).
-* [notebook housekeeping](notebook-housekeeping.md)
+* [Creating notes from templates](note-creation.md)
+* [Advanced search and filtering capabilities](note-filtering.md) including [tags](tags.md), links and mentions
+* [Interactive browser](tool-fzf), powered by `fzf`
+* [Git-style command aliases](config-alias.md)
+* [Made with automation in mind](automation.md)
+* [Notebook housekeeping](notebook-housekeeping.md)
+* [Future-proof, thanks to Markdown](future-proof.md)
 
-What `zk` is not:
+## What `zk` is not
 
-* a note editor
-* a tool to serve your notes on the web – for this, you may be interested in [Neuron](neuron.md) or [Gollum](https://github.com/gollum/gollum).
+* A note editor.
+* A tool to serve your notes on the web – for this, you may be interested in [Neuron](neuron.md) or [Gollum](https://github.com/gollum/gollum).
