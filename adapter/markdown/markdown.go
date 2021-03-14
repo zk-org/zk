@@ -216,7 +216,7 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 			case *ast.Link:
 				href := string(link.Destination)
 				if href != "" {
-					snippet, snStart, snEnd := extractLines(n.Parent(), source)
+					snippet, snStart, snEnd := extractLines(n, source)
 					links = append(links, note.Link{
 						Title:        string(link.Text(source)),
 						Href:         href,
@@ -230,7 +230,7 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 
 			case *ast.AutoLink:
 				if href := string(link.URL(source)); href != "" && link.AutoLinkType == ast.AutoLinkURL {
-					snippet, snStart, snEnd := extractLines(n.Parent(), source)
+					snippet, snStart, snEnd := extractLines(n, source)
 					links = append(links, note.Link{
 						Title:        string(link.Label(source)),
 						Href:         href,
@@ -252,13 +252,20 @@ func extractLines(n ast.Node, source []byte) (content string, start, end int) {
 	if n == nil {
 		return
 	}
-	segs := n.Lines()
-	if segs.Len() == 0 {
-		return
+	switch n.Type() {
+	case ast.TypeInline:
+		return extractLines(n.Parent(), source)
+
+	case ast.TypeBlock:
+		segs := n.Lines()
+		if segs.Len() == 0 {
+			return
+		}
+		start = segs.At(0).Start
+		end = segs.At(segs.Len() - 1).Stop
+		content = string(source[start:end])
 	}
-	start = segs.At(0).Start
-	end = segs.At(segs.Len() - 1).Stop
-	content = string(source[start:end])
+
 	return
 }
 

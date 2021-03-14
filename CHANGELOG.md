@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Fixed
+
+* Looking for mentions of a note with a title containing double quotes.
+* Crash when parsing certain link snippets.
+
 
 ## 0.2.0
 
