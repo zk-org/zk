@@ -18,5 +18,6 @@ keywords: [writing, essay, practice]
 | `date`     | Creation date – takes precedence over the file date         |
 | `tags`     | List of tags attached to this note                          |
 | `keywords` | Alias for `tags`                                            |
+| `aliases`  | Alternative titles for this note, used by `--mention`       |
 
 All metadata are indexed and can be printed in `zk list` output, using the template variable `{{metadata.<key>}}`, e.g. `{{metadata.description}}`. The keys are normalized to lower case.

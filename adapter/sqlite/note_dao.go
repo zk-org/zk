@@ -407,6 +407,11 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	defer rows.Close()
 
 	titles := []string{}
+
+	appendTitle := func(t string) {
+		titles = append(titles, `"`+strings.ReplaceAll(t, `"`, "")+`"`)
+	}
+
 	for rows.Next() {
 		var title, metadataJSON string
 		err := rows.Scan(&title, &metadataJSON)
@@ -414,7 +419,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 			return opts, err
 		}
 
-		titles = append(titles, `"`+title+`"`)
+		appendTitle(title)
 
 		// Support `aliases` key in the YAML frontmatter, like Obsidian:
 		// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
@@ -426,10 +431,10 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 				switch aliases := aliases.(type) {
 				case []interface{}:
 					for _, alias := range aliases {
-						titles = append(titles, `"`+fmt.Sprint(alias)+`"`)
+						appendTitle(fmt.Sprint(alias))
 					}
 				case string:
-					titles = append(titles, `"`+aliases+`"`)
+					appendTitle(aliases)
 				}
 			}
 		}
