@@ -19,7 +19,8 @@ type Filtering struct {
 	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
 	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
 	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
-	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
+	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones." xor:mention`
+	MentionedBy    []string `group:filter           placeholder:PATH  help:"Find notes whose title is mentioned in the given ones." xor:mention`
 	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
 	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
 	LinkTo         []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
@@ -61,6 +62,10 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 
 	if len(filtering.Mention) > 0 {
 		opts.Mention = filtering.Mention
+	}
+
+	if len(filtering.MentionedBy) > 0 {
+		opts.MentionedBy = filtering.MentionedBy
 	}
 
 	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {

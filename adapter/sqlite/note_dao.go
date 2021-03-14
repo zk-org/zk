@@ -527,10 +527,10 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	}
 
 	if !opts.Match.IsNull() {
-		snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
-		joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
-		additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
-		whereExprs = append(whereExprs, "notes_fts MATCH ?")
+		snippetCol = `snippet(fts_match.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
+		joinClauses = append(joinClauses, "JOIN notes_fts fts_match ON n.id = fts_match.rowid")
+		additionalOrderTerms = append(additionalOrderTerms, `bm25(fts_match.notes_fts, 1000.0, 500.0, 1.0)`)
+		whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
 		args = append(args, fts5.ConvertQuery(opts.Match.String()))
 	}
 
@@ -602,6 +602,16 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 			)
 			whereExprs = append(whereExprs, expr)
 		}
+	}
+
+	if opts.MentionedBy != nil {
+		ids, err := d.findIdsByPathPrefixes(opts.MentionedBy)
+		if err != nil {
+			return nil, err
+		}
+
+		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
+		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+`) AND nsrc.notes_fts MATCH '"' || n.title || '"'`)
 	}
 
 	if opts.LinkedBy != nil {

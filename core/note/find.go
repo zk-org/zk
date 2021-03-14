@@ -33,8 +33,10 @@ type FinderOpts struct {
 	ExcludeIds []core.NoteId
 	// Filter by tags found in the notes.
 	Tags []string
-	// Filter the notes mentioning the given notes.
+	// Filter the notes mentioning the given ones.
 	Mention []string
+	// Filter the notes mentioned by the given ones.
+	MentionedBy []string
 	// Filter to select notes being linked by another one.
 	LinkedBy *LinkedByFilter
 	// Filter to select notes linking to another one.
