@@ -23,6 +23,35 @@ type Config struct {
 	TemplatesDirs []string
 }
 
+// NewDefaultConfig creates a new Config with the default settings.
+func NewDefaultConfig() Config {
+	return Config{
+		Note: NoteConfig{
+			FilenameTemplate: "{{id}}",
+			Extension:        "md",
+			BodyTemplatePath: opt.NullString,
+			Lang:             "en",
+			DefaultTitle:     "Untitled",
+			IDOptions: IDOptions{
+				Charset: CharsetAlphanum,
+				Length:  4,
+				Case:    CaseLower,
+			},
+		},
+		Groups: map[string]GroupConfig{},
+		Format: FormatConfig{
+			Markdown: MarkdownConfig{
+				Hashtags:      true,
+				ColonTags:     false,
+				MultiwordTags: false,
+			},
+		},
+		Aliases:       map[string]string{},
+		Extra:         map[string]string{},
+		TemplatesDirs: []string{},
+	}
+}
+
 // RootGroupConfig returns the default GroupConfig for the root directory and its descendants.
 func (c Config) RootGroupConfig() GroupConfig {
 	return GroupConfig{
@@ -66,11 +95,11 @@ type FormatConfig struct {
 // MarkdownConfig holds the configuration for Markdown documents.
 type MarkdownConfig struct {
 	// Hashtags indicates whether #hashtags are supported.
-	Hashtags bool `toml:"hashtags" default:"true"`
+	Hashtags bool
 	// ColonTags indicates whether :colon:tags: are supported.
-	ColonTags bool `toml:"colon-tags" default:"false"`
+	ColonTags bool
 	// MultiwordTags indicates whether #multi-word tags# are supported.
-	MultiwordTags bool `toml:"multiword-tags" default:"false"`
+	MultiwordTags bool
 }
 
 // ToolConfig holds the external tooling configuration.
@@ -140,98 +169,105 @@ func (c *GroupConfig) Override(overrides ConfigOverrides) {
 
 // OpenConfig creates a new Config instance from its TOML representation stored
 // in the given file.
-func OpenConfig(path string) (*Config, error) {
+func OpenConfig(path string, parentConfig Config) (Config, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open config file at %s", path)
+		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)
 	}
 
-	return ParseConfig(content, path)
+	return ParseConfig(content, path, parentConfig)
 }
 
 // ParseConfig creates a new Config instance from its TOML representation.
 // path is the config absolute path, from which will be derived the base path
 // for templates.
-func ParseConfig(content []byte, path string) (*Config, error) {
+//
+// The parentConfig will be used to inherit default config settings.
+func ParseConfig(content []byte, path string, parentConfig Config) (Config, error) {
+	config := parentConfig
+
 	var tomlConf tomlConfig
 	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read config")
+		return config, errors.Wrap(err, "failed to read config")
 	}
 
-	root := GroupConfig{
-		Paths: []string{},
-		Note: NoteConfig{
-			FilenameTemplate: "{{id}}",
-			Extension:        "md",
-			BodyTemplatePath: opt.NullString,
-			Lang:             "en",
-			DefaultTitle:     "Untitled",
-			IDOptions: IDOptions{
-				Charset: CharsetAlphanum,
-				Length:  4,
-				Case:    CaseLower,
-			},
-		},
-		Extra: make(map[string]string),
-	}
-
+	// Note
 	note := tomlConf.Note
 	if note.Filename != "" {
-		root.Note.FilenameTemplate = note.Filename
+		config.Note.FilenameTemplate = note.Filename
 	}
 	if note.Extension != "" {
-		root.Note.Extension = note.Extension
+		config.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		root.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
+		config.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
 	}
 	if note.IDLength != 0 {
-		root.Note.IDOptions.Length = note.IDLength
+		config.Note.IDOptions.Length = note.IDLength
 	}
 	if note.IDCharset != "" {
-		root.Note.IDOptions.Charset = charsetFromString(note.IDCharset)
+		config.Note.IDOptions.Charset = charsetFromString(note.IDCharset)
 	}
 	if note.IDCase != "" {
-		root.Note.IDOptions.Case = caseFromString(note.IDCase)
+		config.Note.IDOptions.Case = caseFromString(note.IDCase)
 	}
 	if note.Lang != "" {
-		root.Note.Lang = note.Lang
+		config.Note.Lang = note.Lang
 	}
 	if note.DefaultTitle != "" {
-		root.Note.DefaultTitle = note.DefaultTitle
+		config.Note.DefaultTitle = note.DefaultTitle
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
-			root.Extra[k] = v
+			config.Extra[k] = v
 		}
 	}
 
-	groups := make(map[string]GroupConfig)
+	// Groups
 	for name, dirTOML := range tomlConf.Groups {
-		groups[name] = root.merge(dirTOML, name)
+		parent, ok := config.Groups[name]
+		if !ok {
+			parent = config.RootGroupConfig()
+		}
+
+		config.Groups[name] = parent.merge(dirTOML, name)
 	}
 
-	aliases := make(map[string]string)
+	// Format
+	markdown := tomlConf.Format.Markdown
+	if markdown.Hashtags != nil {
+		config.Format.Markdown.Hashtags = *markdown.Hashtags
+	}
+	if markdown.ColonTags != nil {
+		config.Format.Markdown.ColonTags = *markdown.ColonTags
+	}
+	if markdown.MultiwordTags != nil {
+		config.Format.Markdown.MultiwordTags = *markdown.MultiwordTags
+	}
+
+	// Tool
+	tool := tomlConf.Tool
+	if tool.Editor != nil {
+		config.Tool.Editor = opt.NewNotEmptyString(*tool.Editor)
+	}
+	if tool.Pager != nil {
+		config.Tool.Pager = opt.NewStringWithPtr(tool.Pager)
+	}
+	if tool.FzfPreview != nil {
+		config.Tool.FzfPreview = opt.NewStringWithPtr(tool.FzfPreview)
+	}
+
+	// Aliases
 	if tomlConf.Aliases != nil {
 		for k, v := range tomlConf.Aliases {
-			aliases[k] = v
+			config.Aliases[k] = v
 		}
 	}
 
-	return &Config{
-		Note:   root.Note,
-		Groups: groups,
-		Format: tomlConf.Format,
-		Tool: ToolConfig{
-			Editor:     opt.NewNotEmptyString(tomlConf.Tool.Editor),
-			Pager:      opt.NewStringWithPtr(tomlConf.Tool.Pager),
-			FzfPreview: opt.NewStringWithPtr(tomlConf.Tool.FzfPreview),
-		},
-		Aliases:       aliases,
-		Extra:         root.Extra,
-		TemplatesDirs: []string{filepath.Join(filepath.Dir(path), "templates")},
-	}, nil
+	config.TemplatesDirs = append(config.TemplatesDirs, filepath.Join(filepath.Dir(path), "templates"))
+
+	return config, nil
 }
 
 func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
@@ -285,7 +321,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 type tomlConfig struct {
 	Note    tomlNoteConfig
 	Groups  map[string]tomlGroupConfig `toml:"group"`
-	Format  FormatConfig
+	Format  tomlFormatConfig
 	Tool    tomlToolConfig
 	Extra   map[string]string
 	Aliases map[string]string `toml:"alias"`
@@ -308,8 +344,18 @@ type tomlGroupConfig struct {
 	Extra map[string]string
 }
 
+type tomlFormatConfig struct {
+	Markdown tomlMarkdownConfig
+}
+
+type tomlMarkdownConfig struct {
+	Hashtags      *bool `toml:"hashtags"`
+	ColonTags     *bool `toml:"colon-tags"`
+	MultiwordTags *bool `toml:"multiword-tags"`
+}
+
 type tomlToolConfig struct {
-	Editor     string
+	Editor     *string
 	Pager      *string
 	FzfPreview *string `toml:"fzf-preview"`
 }

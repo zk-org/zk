@@ -189,14 +189,14 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"))
+	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"), NewDefaultConfig())
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	return &Zk{
 		Path:   path,
-		Config: *config,
+		Config: config,
 	}, nil
 }
 

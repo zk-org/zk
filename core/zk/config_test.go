@@ -13,10 +13,10 @@ import (
 )
 
 func TestParseDefaultConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte(""), ".zk/config.toml")
+	conf, err := ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig())
 
 	assert.Nil(t, err)
-	assert.Equal(t, conf, &Config{
+	assert.Equal(t, conf, Config{
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -49,10 +49,8 @@ func TestParseDefaultConfig(t *testing.T) {
 }
 
 func TestParseInvalidConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte(`;`), ".zk/config.toml")
-
+	_, err := ParseConfig([]byte(`;`), ".zk/config.toml", NewDefaultConfig())
 	assert.NotNil(t, err)
-	assert.Nil(t, conf)
 }
 
 func TestParseComplete(t *testing.T) {
@@ -108,10 +106,10 @@ func TestParseComplete(t *testing.T) {
 
 		[group."without path"]
 		paths = []
-	`), ".zk/config.toml")
+	`), ".zk/config.toml", NewDefaultConfig())
 
 	assert.Nil(t, err)
-	assert.Equal(t, conf, &Config{
+	assert.Equal(t, conf, Config{
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "txt",
@@ -236,10 +234,10 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		log-ext = "value"
 
 		[group.inherited]
-	`), ".zk/config.toml")
+	`), ".zk/config.toml", NewDefaultConfig())
 
 	assert.Nil(t, err)
-	assert.Equal(t, conf, &Config{
+	assert.Equal(t, conf, Config{
 		Note: NoteConfig{
 			FilenameTemplate: "root-filename",
 			Extension:        "txt",
@@ -316,7 +314,7 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 		[tool]
 		pager = ""
 		fzf-preview = ""
-	`), ".zk/config.toml")
+	`), ".zk/config.toml", NewDefaultConfig())
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf.Tool.Pager.IsNull(), false)
@@ -331,7 +329,7 @@ func TestParseIDCharset(t *testing.T) {
 			[note]
 			id-charset = "%v"
 		`, charset)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml")
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Charset, expected) {
 			t.Errorf("Didn't parse ID charset `%v` as expected", charset)
@@ -352,7 +350,7 @@ func TestParseIDCase(t *testing.T) {
 			[note]
 			id-case = "%v"
 		`, letterCase)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml")
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Case, expected) {
 			t.Errorf("Didn't parse ID case `%v` as expected", letterCase)
@@ -371,7 +369,7 @@ func TestLocateTemplate(t *testing.T) {
 	os.MkdirAll(filepath.Join(root, "templates"), os.ModePerm)
 
 	test := func(template string, expected string, exists bool) {
-		conf, err := ParseConfig([]byte(""), filepath.Join(root, "config.toml"))
+		conf, err := ParseConfig([]byte(""), filepath.Join(root, "config.toml"), NewDefaultConfig())
 		assert.Nil(t, err)
 
 		path, ok := conf.LocateTemplate(template)
