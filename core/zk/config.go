@@ -1,7 +1,6 @@
 package zk
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -69,7 +68,6 @@ func (c Config) LocateTemplate(path string) (string, bool) {
 	}
 
 	exists := func(path string) bool {
-		fmt.Println("Check exists", path)
 		exists, err := paths.Exists(path)
 		return exists && err == nil
 	}
@@ -265,7 +263,7 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 		}
 	}
 
-	config.TemplatesDirs = append(config.TemplatesDirs, filepath.Join(filepath.Dir(path), "templates"))
+	config.TemplatesDirs = append([]string{filepath.Join(filepath.Dir(path), "templates")}, config.TemplatesDirs...)
 
 	return config, nil
 }

@@ -30,7 +30,7 @@ func (cmd *New) ConfigOverrides() zk.ConfigOverrides {
 }
 
 func (cmd *New) Run(container *Container) error {
-	zk, err := container.OpenZk()
+	zk, err := container.Zk()
 	if err != nil {
 		return err
 	}

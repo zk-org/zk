@@ -3,7 +3,7 @@ package cmd
 import (
 	"io"
 	"os"
-	"sync"
+	"path/filepath"
 	"time"
 
 	"github.com/mickael-menu/zk/adapter/fzf"
@@ -22,35 +22,79 @@ import (
 )
 
 type Container struct {
+	Config         zk.Config
 	Date           date.Provider
 	Logger         util.Logger
 	Terminal       *term.Terminal
 	templateLoader *handlebars.Loader
-
-	zkOnce sync.Once
-	zk     *zk.Zk
-	zkErr  error
+	zk             *zk.Zk
+	zkErr          error
 }
 
-func NewContainer() *Container {
+func NewContainer() (*Container, error) {
+	wrap := errors.Wrapper("initialization")
+
+	config := zk.NewDefaultConfig()
+
+	// Load global user config
+	configPath, err := locateGlobalConfig()
+	if err != nil {
+		return nil, wrap(err)
+	}
+	if configPath != "" {
+		config, err = zk.OpenConfig(configPath, config)
+		if err != nil {
+			return nil, wrap(err)
+		}
+	}
+
+	// Open current notebook
+	zk, zkErr := zk.Open(".", config)
+	if zkErr == nil {
+		config = zk.Config
+		os.Setenv("ZK_PATH", zk.Path)
+	}
+
 	date := date.NewFrozenNow()
 
 	return &Container{
+		Config: config,
 		Logger: util.NewStdLogger("zk: ", 0),
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any rendering during the execution.
 		Date:     &date,
 		Terminal: term.New(),
+		zk:       zk,
+		zkErr:    zkErr,
+	}, nil
+}
+
+// locateGlobalConfig looks for the global zk config file following the
+// XDG Base Directory specification
+// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+func locateGlobalConfig() (string, error) {
+	configHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
+	if !ok {
+		home, ok := os.LookupEnv("HOME")
+		if !ok {
+			home = "~/"
+		}
+		configHome = filepath.Join(home, ".config")
+	}
+
+	configPath := filepath.Join(configHome, "zk/config.toml")
+	exists, err := paths.Exists(configPath)
+	switch {
+	case err != nil:
+		return "", err
+	case exists:
+		return configPath, nil
+	default:
+		return "", nil
 	}
 }
 
-func (c *Container) OpenZk() (*zk.Zk, error) {
-	c.zkOnce.Do(func() {
-		c.zk, c.zkErr = zk.Open(".")
-		if c.zkErr == nil {
-			os.Setenv("ZK_PATH", c.zk.Path)
-		}
-	})
+func (c *Container) Zk() (*zk.Zk, error) {
 	return c.zk, c.zkErr
 }
 

@@ -177,7 +177,7 @@ type Dir struct {
 }
 
 // Open locates a notebook at the given path and parses its configuration.
-func Open(path string) (*Zk, error) {
+func Open(path string, parentConfig Config) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
 	path, err := filepath.Abs(path)
@@ -189,7 +189,7 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"), NewDefaultConfig())
+	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"), parentConfig)
 	if err != nil {
 		return nil, wrap(err)
 	}
