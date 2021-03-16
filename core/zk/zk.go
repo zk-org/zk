@@ -2,7 +2,6 @@ package zk
 
 import (
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -190,13 +189,7 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	configContent, err := ioutil.ReadFile(filepath.Join(path, ".zk/config.toml"))
-	if err != nil {
-		return nil, wrap(err)
-	}
-
-	templatesDir := filepath.Join(path, ".zk/templates")
-	config, err := ParseConfig(configContent, templatesDir)
+	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"))
 	if err != nil {
 		return nil, wrap(err)
 	}

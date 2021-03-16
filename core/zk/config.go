@@ -1,10 +1,13 @@
 package zk
 
 import (
+	"fmt"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/paths"
 	toml "github.com/pelletier/go-toml"
 )
 
@@ -16,6 +19,8 @@ type Config struct {
 	Tool    ToolConfig
 	Aliases map[string]string
 	Extra   map[string]string
+	// Base directories for the relative template paths used in NoteConfig.
+	TemplatesDirs []string
 }
 
 // RootGroupConfig returns the default GroupConfig for the root directory and its descendants.
@@ -25,6 +30,32 @@ func (c Config) RootGroupConfig() GroupConfig {
 		Note:  c.Note,
 		Extra: c.Extra,
 	}
+}
+
+// LocateTemplate returns the absolute path for the given template path, by
+// looking for it in the templates directories registered in this Config.
+func (c Config) LocateTemplate(path string) (string, bool) {
+	if path == "" {
+		return "", false
+	}
+
+	exists := func(path string) bool {
+		fmt.Println("Check exists", path)
+		exists, err := paths.Exists(path)
+		return exists && err == nil
+	}
+
+	if filepath.IsAbs(path) {
+		return path, exists(path)
+	}
+
+	for _, dir := range c.TemplatesDirs {
+		if candidate := filepath.Join(dir, path); exists(candidate) {
+			return candidate, true
+		}
+	}
+
+	return path, false
 }
 
 // FormatConfig holds the configuration for document formats, such as Markdown.
@@ -107,9 +138,21 @@ func (c *GroupConfig) Override(overrides ConfigOverrides) {
 	}
 }
 
+// OpenConfig creates a new Config instance from its TOML representation stored
+// in the given file.
+func OpenConfig(path string) (*Config, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open config file at %s", path)
+	}
+
+	return ParseConfig(content, path)
+}
+
 // ParseConfig creates a new Config instance from its TOML representation.
-// templatesDir is the base path for the relative templates.
-func ParseConfig(content []byte, templatesDir string) (*Config, error) {
+// path is the config absolute path, from which will be derived the base path
+// for templates.
+func ParseConfig(content []byte, path string) (*Config, error) {
 	var tomlConf tomlConfig
 	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
@@ -141,7 +184,7 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 		root.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		root.Note.BodyTemplatePath = templatePathFromString(note.Template, templatesDir)
+		root.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
 	}
 	if note.IDLength != 0 {
 		root.Note.IDOptions.Length = note.IDLength
@@ -166,7 +209,7 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 
 	groups := make(map[string]GroupConfig)
 	for name, dirTOML := range tomlConf.Groups {
-		groups[name] = root.merge(dirTOML, name, templatesDir)
+		groups[name] = root.merge(dirTOML, name)
 	}
 
 	aliases := make(map[string]string)
@@ -185,12 +228,13 @@ func ParseConfig(content []byte, templatesDir string) (*Config, error) {
 			Pager:      opt.NewStringWithPtr(tomlConf.Tool.Pager),
 			FzfPreview: opt.NewStringWithPtr(tomlConf.Tool.FzfPreview),
 		},
-		Aliases: aliases,
-		Extra:   root.Extra,
+		Aliases:       aliases,
+		Extra:         root.Extra,
+		TemplatesDirs: []string{filepath.Join(filepath.Dir(path), "templates")},
 	}, nil
 }
 
-func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string, templatesDir string) GroupConfig {
+func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	res := c.Clone()
 
 	if tomlConf.Paths != nil {
@@ -211,7 +255,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string, templatesDir s
 		res.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		res.Note.BodyTemplatePath = templatePathFromString(note.Template, templatesDir)
+		res.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
 	}
 	if note.IDLength != 0 {
 		res.Note.IDOptions.Length = note.IDLength
@@ -296,14 +340,4 @@ func caseFromString(c string) Case {
 	default:
 		return CaseLower
 	}
-}
-
-func templatePathFromString(template string, templatesDir string) opt.String {
-	if template == "" {
-		return opt.NullString
-	}
-	if !filepath.IsAbs(template) {
-		template = filepath.Join(templatesDir, template)
-	}
-	return opt.NewString(template)
 }

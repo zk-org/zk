@@ -2,7 +2,10 @@ package zk
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mickael-menu/zk/util/opt"
@@ -10,7 +13,7 @@ import (
 )
 
 func TestParseDefaultConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte(""), "")
+	conf, err := ParseConfig([]byte(""), ".zk/config.toml")
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &Config{
@@ -39,13 +42,14 @@ func TestParseDefaultConfig(t *testing.T) {
 			Pager:      opt.NullString,
 			FzfPreview: opt.NullString,
 		},
-		Aliases: make(map[string]string),
-		Extra:   make(map[string]string),
+		Aliases:       make(map[string]string),
+		Extra:         make(map[string]string),
+		TemplatesDirs: []string{".zk/templates"},
 	})
 }
 
 func TestParseInvalidConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte(`;`), "")
+	conf, err := ParseConfig([]byte(`;`), ".zk/config.toml")
 
 	assert.NotNil(t, err)
 	assert.Nil(t, conf)
@@ -104,7 +108,7 @@ func TestParseComplete(t *testing.T) {
 
 		[group."without path"]
 		paths = []
-	`), "")
+	`), ".zk/config.toml")
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &Config{
@@ -200,6 +204,7 @@ func TestParseComplete(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
+		TemplatesDirs: []string{".zk/templates"},
 	})
 }
 
@@ -231,7 +236,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		log-ext = "value"
 
 		[group.inherited]
-	`), "")
+	`), ".zk/config.toml")
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, &Config{
@@ -300,6 +305,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
+		TemplatesDirs: []string{".zk/templates"},
 	})
 }
 
@@ -310,7 +316,7 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 		[tool]
 		pager = ""
 		fzf-preview = ""
-	`), "")
+	`), ".zk/config.toml")
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf.Tool.Pager.IsNull(), false)
@@ -325,7 +331,7 @@ func TestParseIDCharset(t *testing.T) {
 			[note]
 			id-charset = "%v"
 		`, charset)
-		conf, err := ParseConfig([]byte(toml), "")
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml")
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Charset, expected) {
 			t.Errorf("Didn't parse ID charset `%v` as expected", charset)
@@ -346,7 +352,7 @@ func TestParseIDCase(t *testing.T) {
 			[note]
 			id-case = "%v"
 		`, letterCase)
-		conf, err := ParseConfig([]byte(toml), "")
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml")
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Case, expected) {
 			t.Errorf("Didn't parse ID case `%v` as expected", letterCase)
@@ -359,21 +365,35 @@ func TestParseIDCase(t *testing.T) {
 	test("unknown", CaseLower)
 }
 
-func TestParseResolvesTemplatePaths(t *testing.T) {
-	test := func(template string, expected string) {
-		toml := fmt.Sprintf(`
-			[note]
-			template = "%v"
-		`, template)
-		conf, err := ParseConfig([]byte(toml), "/test/.zk/templates")
+func TestLocateTemplate(t *testing.T) {
+	root := fmt.Sprintf("/tmp/zk-test-%d", time.Now().Unix())
+	os.Remove(root)
+	os.MkdirAll(filepath.Join(root, "templates"), os.ModePerm)
+
+	test := func(template string, expected string, exists bool) {
+		conf, err := ParseConfig([]byte(""), filepath.Join(root, "config.toml"))
 		assert.Nil(t, err)
-		if !cmp.Equal(conf.Note.BodyTemplatePath, opt.NewString(expected)) {
-			t.Errorf("Didn't resolve template `%v` as expected: %v", template, conf.Note.BodyTemplatePath)
+
+		path, ok := conf.LocateTemplate(template)
+		if exists {
+			assert.True(t, ok)
+			if path != expected {
+				t.Errorf("Didn't resolve template `%v` as expected: %v", template, expected)
+			}
+		} else {
+			assert.False(t, ok)
 		}
 	}
 
-	test("template.tpl", "/test/.zk/templates/template.tpl")
-	test("/abs/template.tpl", "/abs/template.tpl")
+	tpl1 := filepath.Join(root, "templates/template.tpl")
+	test("template.tpl", tpl1, false)
+	os.Create(tpl1)
+	test("template.tpl", tpl1, true)
+
+	tpl2 := filepath.Join(root, "abs.tpl")
+	test(tpl2, tpl2, false)
+	os.Create(tpl2)
+	test(tpl2, tpl2, true)
 }
 
 func TestGroupConfigClone(t *testing.T) {

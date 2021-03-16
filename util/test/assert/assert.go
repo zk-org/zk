@@ -10,6 +10,18 @@ import (
 	"github.com/mickael-menu/pretty"
 )
 
+func True(t *testing.T, value bool) {
+	if !value {
+		t.Errorf("Expected to be true")
+	}
+}
+
+func False(t *testing.T, value bool) {
+	if value {
+		t.Errorf("Expected to be false")
+	}
+}
+
 func Nil(t *testing.T, value interface{}) {
 	if !isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to be nil", value, reflect.TypeOf(value))

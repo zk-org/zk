@@ -46,6 +46,7 @@ func (cmd *New) Run(container *Container) error {
 	}
 
 	opts := note.CreateOpts{
+		Config:  zk.Config,
 		Dir:     *dir,
 		Title:   opt.NewNotEmptyString(cmd.Title),
 		Content: content,
