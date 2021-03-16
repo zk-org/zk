@@ -12,6 +12,12 @@ Each [notebook](notebook.md) contains a configuration file used to customize you
     * [`fzf`](tool-fzf.md)
 * `[alias]` holds your [command aliases](config-alias.md)
 
+## Global configuration file
+
+You can also create a global configuration file to share aliases and settings across several notebooks. The global configuration is by default located at `~/.config/zk/config.toml`, but you can customize its location with the [`XDG_CONFIG_HOME`](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) environment variable.
+
+Notebook configuration files will inherit the settings defined in the global configuration file. You can also share templates by storing them under `~/.config/zk/templates/`.
+
 ## Complete example
 
 Here's an example of a complete configuration file:
