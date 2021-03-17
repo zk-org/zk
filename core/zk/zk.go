@@ -9,6 +9,13 @@ import (
 	"github.com/mickael-menu/zk/util/paths"
 )
 
+// ErrNotebookNotFound is an error returned when a notebook cannot be found at the given path or its parents.
+type ErrNotebookNotFound string
+
+func (e ErrNotebookNotFound) Error() string {
+	return fmt.Sprintf("no notebook found in %s or a parent directory", string(e))
+}
+
 const defaultConfig = `# zk configuration file
 #
 # Uncomment the properties you want to customize.
@@ -150,7 +157,7 @@ hashtags = true
 #hist = "zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"
 
 # Edit this configuration file.
-#conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
+#conf = '$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
 `
 
 const defaultTemplate = `# {{title}}
@@ -237,7 +244,7 @@ func locateRoot(path string) (string, error) {
 	var locate func(string) (string, error)
 	locate = func(currentPath string) (string, error) {
 		if currentPath == "/" || currentPath == "." {
-			return "", fmt.Errorf("no notebook found in %v or a parent directory", path)
+			return "", ErrNotebookNotFound(path)
 		}
 		exists, err := paths.DirExists(filepath.Join(currentPath, ".zk"))
 		switch {

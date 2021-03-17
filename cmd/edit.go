@@ -36,7 +36,7 @@ func (cmd *Edit) Run(container *Container) error {
 		return errors.Wrapf(err, "incorrect criteria")
 	}
 
-	db, _, err := container.Database(zk, false)
+	db, _, err := container.Database(false)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (cmd *Edit) Run(container *Container) error {
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
 			AlwaysFilter: true,
-			PreviewCmd:   zk.Config.Tool.FzfPreview,
+			PreviewCmd:   container.Config.Tool.FzfPreview,
 			NewNoteDir:   cmd.newNoteDir(zk),
 			BasePath:     zk.Path,
 			CurrentPath:  wd,

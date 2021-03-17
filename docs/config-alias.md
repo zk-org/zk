@@ -20,10 +20,10 @@ An alias can call other aliases but cannot call itself. This enables you to over
 edit = "zk edit --interactive $@"
 ```
 
-When running an alias, the `ZK_PATH` environment variable is set to the absolute path of the current notebook. You can use it to run commands working no matter the location of the working directory.
+When running an alias, the `ZK_NOTEBOOK_DIR` environment variable is set to the absolute path of the current notebook. You can use it to run commands working no matter the location of the working directory.
 
 ```toml
-journal = 'zk new "$ZK_PATH/journal"'
+journal = 'zk new "$ZK_NOTEBOOK_DIR/journal"'
 ```
 
 If you need to surround the path with quotes, make sure you use double quotes, otherwise environment variables will not be expanded.
@@ -70,10 +70,10 @@ recent = "zk edit --sort created- --created-after 'last two weeks' --interactive
 
 ### Edit the configuration file
 
-Here's a concrete example using environment variables, in particular `ZK_PATH`. Note the double quotes around the path.
+Here's a concrete example using environment variables, in particular `ZK_NOTEBOOK_DIR`. Note the double quotes around the path.
 
 ```toml
-conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
+conf = '$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
 ```
 
 ### List paths in a command-line friendly fashion

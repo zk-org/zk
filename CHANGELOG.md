@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
     * This is the same format as a notebook [configuration file](docs/config.md).
     * Shared templates can be stored in `~/.config/zk/templates/`.
     * `XDG_CONFIG_HOME` is taken into account.
+* Use `--notebook-dir` or set `ZK_NOTEBOOK_DIR` to run `zk` as if it was started from this path instead of the current working directory.
+    * This allows running `zk` without being in a notebook.
+    * By setting `ZK_NOTEBOOK_DIR` in your shell configuration file (e.g. `~/.profile`), you are declaring a default global notebook which will be used when `zk` is not in a notebook.
 
 
 ## 0.2.1
