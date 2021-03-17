@@ -17,6 +17,8 @@ import (
 
 // CreateOpts holds the options to create a new note.
 type CreateOpts struct {
+	// Current configuration.
+	Config zk.Config
 	// Parent directory for the new note.
 	Dir zk.Dir
 	// Title of the note.
@@ -52,7 +54,11 @@ func Create(
 
 	var bodyTemplate templ.Renderer = templ.NullRenderer
 	if templatePath := opts.Dir.Config.Note.BodyTemplatePath.Unwrap(); templatePath != "" {
-		bodyTemplate, err = templateLoader.LoadFile(templatePath)
+		absPath, ok := opts.Config.LocateTemplate(templatePath)
+		if !ok {
+			return "", wrap(fmt.Errorf("%s: cannot find template", templatePath))
+		}
+		bodyTemplate, err = templateLoader.LoadFile(absPath)
 		if err != nil {
 			return "", wrap(err)
 		}

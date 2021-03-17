@@ -29,7 +29,7 @@ func (cmd *List) Run(container *Container) error {
 		cmd.Delimiter = "\x00"
 	}
 
-	zk, err := container.OpenZk()
+	zk, err := container.Zk()
 	if err != nil {
 		return err
 	}

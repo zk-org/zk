@@ -2,7 +2,6 @@ package zk
 
 import (
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -178,7 +177,7 @@ type Dir struct {
 }
 
 // Open locates a notebook at the given path and parses its configuration.
-func Open(path string) (*Zk, error) {
+func Open(path string, parentConfig Config) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
 	path, err := filepath.Abs(path)
@@ -190,20 +189,14 @@ func Open(path string) (*Zk, error) {
 		return nil, wrap(err)
 	}
 
-	configContent, err := ioutil.ReadFile(filepath.Join(path, ".zk/config.toml"))
-	if err != nil {
-		return nil, wrap(err)
-	}
-
-	templatesDir := filepath.Join(path, ".zk/templates")
-	config, err := ParseConfig(configContent, templatesDir)
+	config, err := OpenConfig(filepath.Join(path, ".zk/config.toml"), parentConfig)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	return &Zk{
 		Path:   path,
-		Config: *config,
+		Config: config,
 	}, nil
 }
 

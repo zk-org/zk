@@ -30,7 +30,7 @@ func (cmd *New) ConfigOverrides() zk.ConfigOverrides {
 }
 
 func (cmd *New) Run(container *Container) error {
-	zk, err := container.OpenZk()
+	zk, err := container.Zk()
 	if err != nil {
 		return err
 	}
@@ -46,6 +46,7 @@ func (cmd *New) Run(container *Container) error {
 	}
 
 	opts := note.CreateOpts{
+		Config:  zk.Config,
 		Dir:     *dir,
 		Title:   opt.NewNotEmptyString(cmd.Title),
 		Content: content,

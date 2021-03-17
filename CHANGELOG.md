@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Added
+
+* Global `zk` configuration at `~/.config/zk/config.toml`.
+    * Useful to share aliases or default settings across several [notebooks](docs/notebook.md).
+    * This is the same format as a notebook [configuration file](docs/config.md).
+    * Shared templates can be stored in `~/.config/zk/templates/`.
+    * `XDG_CONFIG_HOME` is taken into account.
+
 
 ## 0.2.1
 

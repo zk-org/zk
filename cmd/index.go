@@ -15,7 +15,7 @@ func (cmd *Index) Help() string {
 }
 
 func (cmd *Index) Run(container *Container) error {
-	zk, err := container.OpenZk()
+	zk, err := container.Zk()
 	if err != nil {
 		return err
 	}

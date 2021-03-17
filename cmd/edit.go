@@ -21,7 +21,7 @@ type Edit struct {
 }
 
 func (cmd *Edit) Run(container *Container) error {
-	zk, err := container.OpenZk()
+	zk, err := container.Zk()
 	if err != nil {
 		return err
 	}

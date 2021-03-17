@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/mickael-menu/zk/cmd"
@@ -53,7 +54,8 @@ func (cmd *ShowHelp) Run(container *cmd.Container) error {
 
 func main() {
 	// Create the dependency graph.
-	container := cmd.NewContainer()
+	container, err := cmd.NewContainer()
+	fatalIfError(err)
 
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
 		fatalIfError(err)
@@ -97,31 +99,33 @@ func fatalIfError(err error) {
 
 // runAlias will execute a user alias if the command is one of them.
 func runAlias(container *cmd.Container, args []string) (bool, error) {
+	if len(args) < 1 {
+		return false, nil
+	}
+
 	runningAlias := os.Getenv("ZK_RUNNING_ALIAS")
-	if zk, err := container.OpenZk(); err == nil && len(args) >= 1 {
-		for alias, cmdStr := range zk.Config.Aliases {
-			if alias == runningAlias || alias != args[0] {
-				continue
-			}
-
-			// Prevent infinite loop if an alias calls itself.
-			os.Setenv("ZK_RUNNING_ALIAS", alias)
-
-			cmd := executil.CommandFromString(cmdStr, args[1:]...)
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err := cmd.Run()
-			if err != nil {
-				if err, ok := err.(*exec.ExitError); ok {
-					os.Exit(err.ExitCode())
-					return true, nil
-				} else {
-					return true, err
-				}
-			}
-			return true, nil
+	for alias, cmdStr := range container.Config.Aliases {
+		if alias == runningAlias || alias != args[0] {
+			continue
 		}
+
+		// Prevent infinite loop if an alias calls itself.
+		os.Setenv("ZK_RUNNING_ALIAS", alias)
+
+		cmd := executil.CommandFromString(cmdStr, args[1:]...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			if err, ok := err.(*exec.ExitError); ok {
+				os.Exit(err.ExitCode())
+				return true, nil
+			} else {
+				return true, err
+			}
+		}
+		return true, nil
 	}
 
 	return false, nil
