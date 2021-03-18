@@ -18,6 +18,10 @@
 * [Made with automation in mind](docs/automation.md)
 * [Notebook housekeeping](docs/notebook-housekeeping.md)
 * [Future-proof, thanks to Markdown](docs/future-proof.md)
+* Supports most Markdown syntax flavors
+    * Links: regular Markdown links, `[[Wikilinks]]` and Neuron's `[[Folgezettel links]]#`.
+    * Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
+    * [YAML frontmatter](docs/note-frontmatter.md)
 
 [See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
 

@@ -78,7 +78,7 @@ func options(container *cmd.Container) []kong.Option {
 			FlagsLast: true,
 		},
 		kong.Vars{
-			"version": Version,
+			"version": "zk " + strings.TrimPrefix(Version, "v"),
 		},
 		kong.Groups(map[string]string{
 			"filter": "Filtering",
