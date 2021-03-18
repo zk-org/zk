@@ -12,7 +12,7 @@ import (
 
 // New adds a new note to the notebook.
 type New struct {
-	Directory string `arg optional type:"path" default:"." help:"Directory in which to create the note."`
+	Directory string `arg optional default:"." help:"Directory in which to create the note."`
 
 	Title     string            `short:t   placeholder:TITLE help:"Title of the new note."`
 	Group     string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
@@ -46,7 +46,7 @@ func (cmd *New) Run(container *Container) error {
 	}
 
 	opts := note.CreateOpts{
-		Config:  zk.Config,
+		Config:  container.Config,
 		Dir:     *dir,
 		Title:   opt.NewNotEmptyString(cmd.Title),
 		Content: content,

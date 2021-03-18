@@ -9,6 +9,13 @@ import (
 	"github.com/mickael-menu/zk/util/paths"
 )
 
+// ErrNotebookNotFound is an error returned when a notebook cannot be found at the given path or its parents.
+type ErrNotebookNotFound string
+
+func (e ErrNotebookNotFound) Error() string {
+	return fmt.Sprintf("no notebook found in %s or a parent directory", string(e))
+}
+
 const defaultConfig = `# zk configuration file
 #
 # Uncomment the properties you want to customize.
@@ -150,7 +157,7 @@ hashtags = true
 #hist = "zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"
 
 # Edit this configuration file.
-#conf = '$EDITOR "$ZK_PATH/.zk/config.toml"'
+#conf = '$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
 `
 
 const defaultTemplate = `# {{title}}
@@ -164,6 +171,8 @@ type Zk struct {
 	Path string
 	// Global user configuration.
 	Config Config
+	// Working directory from which paths are relative.
+	workingDir string
 }
 
 // Dir represents a directory inside a notebook.
@@ -177,10 +186,10 @@ type Dir struct {
 }
 
 // Open locates a notebook at the given path and parses its configuration.
-func Open(path string, parentConfig Config) (*Zk, error) {
+func Open(originalPath string, parentConfig Config) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
-	path, err := filepath.Abs(path)
+	path, err := filepath.Abs(originalPath)
 	if err != nil {
 		return nil, wrap(err)
 	}
@@ -195,8 +204,9 @@ func Open(path string, parentConfig Config) (*Zk, error) {
 	}
 
 	return &Zk{
-		Path:   path,
-		Config: config,
+		Path:       path,
+		Config:     config,
+		workingDir: originalPath,
 	}, nil
 }
 
@@ -237,7 +247,7 @@ func locateRoot(path string) (string, error) {
 	var locate func(string) (string, error)
 	locate = func(currentPath string) (string, error) {
 		if currentPath == "/" || currentPath == "." {
-			return "", fmt.Errorf("no notebook found in %v or a parent directory", path)
+			return "", ErrNotebookNotFound(path)
 		}
 		exists, err := paths.DirExists(filepath.Join(currentPath, ".zk"))
 		switch {
@@ -259,23 +269,41 @@ func (zk *Zk) DBPath() string {
 }
 
 // RelPath returns the path relative to the notebook root to the given path.
-func (zk *Zk) RelPath(absPath string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid notebook path", absPath)
+func (zk *Zk) RelPath(originalPath string) (string, error) {
+	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)
 
-	path, err := filepath.Abs(absPath)
+	path, err := zk.absPath(originalPath)
 	if err != nil {
 		return path, wrap(err)
 	}
+
 	path, err = filepath.Rel(zk.Path, path)
 	if err != nil {
 		return path, wrap(err)
 	}
 	if strings.HasPrefix(path, "..") {
-		return path, fmt.Errorf("%s: path is outside the notebook", absPath)
+		return path, fmt.Errorf("%s: path is outside the notebook", originalPath)
 	}
 	if path == "." {
 		path = ""
 	}
+	return path, nil
+}
+
+// AbsPath makes the given path absolute, using the current working directory
+// as reference.
+func (zk *Zk) absPath(originalPath string) (string, error) {
+	var err error
+
+	path := originalPath
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(zk.workingDir, path)
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return path, err
+		}
+	}
+
 	return path, nil
 }
 
@@ -290,7 +318,7 @@ func (zk *Zk) RootDir() Dir {
 
 // DirAt returns a Dir representation of the notebook directory at the given path.
 func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
-	path, err := filepath.Abs(path)
+	path, err := zk.absPath(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%v: not a valid notebook directory", path)
 	}

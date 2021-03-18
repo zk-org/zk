@@ -39,20 +39,15 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	db, _, err := container.Database(zk, false)
+	db, _, err := container.Database(false)
 	if err != nil {
 		return err
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	templates := container.TemplateLoader(zk.Config.Note.Lang)
+	templates := container.TemplateLoader(container.Config.Note.Lang)
 	styler := container.Terminal
 	format := opt.NewNotEmptyString(cmd.Format)
-	formatter, err := note.NewFormatter(zk.Path, wd, format, templates, styler)
+	formatter, err := note.NewFormatter(zk.Path, container.WorkingDir, format, templates, styler)
 	if err != nil {
 		return err
 	}
@@ -61,9 +56,9 @@ func (cmd *List) Run(container *Container) error {
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
 			AlwaysFilter: false,
-			PreviewCmd:   zk.Config.Tool.FzfPreview,
+			PreviewCmd:   container.Config.Tool.FzfPreview,
 			BasePath:     zk.Path,
-			CurrentPath:  wd,
+			CurrentPath:  container.WorkingDir,
 		})
 		notes, err = finder.Find(*opts)
 		return err
@@ -77,7 +72,7 @@ func (cmd *List) Run(container *Container) error {
 
 	count := len(notes)
 	if count > 0 {
-		err = container.Paginate(cmd.NoPager, zk.Config, func(out io.Writer) error {
+		err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
 			for i, note := range notes {
 				if i > 0 {
 					fmt.Fprint(out, cmd.Delimiter)

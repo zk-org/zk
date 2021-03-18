@@ -1,10 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/mickael-menu/zk/cmd"
@@ -23,7 +23,8 @@ var cli struct {
 	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
 	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
 
-	NoInput NoInput `help:"Never prompt or ask for confirmation."`
+	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
+	NotebookDir string  `placeholder:"PATH" help:"Run as if zk was started in <PATH> instead of the current working directory."`
 
 	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
 	Version  kong.VersionFlag `help:"Print zk version." hidden:true`
@@ -57,9 +58,14 @@ func main() {
 	container, err := cmd.NewContainer()
 	fatalIfError(err)
 
+	// Open the notebook if there's any.
+	searchPaths, err := notebookSearchPaths()
+	fatalIfError(err)
+	container.OpenNotebook(searchPaths)
+
+	// Run the alias or command.
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
 		fatalIfError(err)
-
 	} else {
 		ctx := kong.Parse(&cli, options(container)...)
 		err := ctx.Run(container)
@@ -112,6 +118,10 @@ func runAlias(container *cmd.Container, args []string) (bool, error) {
 		// Prevent infinite loop if an alias calls itself.
 		os.Setenv("ZK_RUNNING_ALIAS", alias)
 
+		// Move to the provided working directory if it is not the current one,
+		// before running the alias.
+		cmdStr = `cd "` + container.WorkingDir + `" && ` + cmdStr
+
 		cmd := executil.CommandFromString(cmdStr, args[1:]...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
@@ -129,4 +139,60 @@ func runAlias(container *cmd.Container, args []string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// notebookSearchPaths returns the places where zk will look for a notebook.
+// The first successful candidate will be used as the working directory from
+// which path arguments are relative from.
+//
+// By order of precedence:
+//   1. --notebook-dir flag
+//   2. current working directory
+//   3. ZK_NOTEBOOK_DIR environment variable
+func notebookSearchPaths() ([]string, error) {
+	// 1. --notebook-dir flag
+	notebookDir, err := parseNotebookDirFlag()
+	if err != nil {
+		return []string{}, err
+	}
+	if notebookDir != "" {
+		// If --notebook-dir is used, we want to only check there to report errors.
+		return []string{notebookDir}, nil
+	}
+
+	candidates := []string{}
+
+	// 2. current working directory
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	candidates = append(candidates, wd)
+
+	// 3. ZK_NOTEBOOK_DIR environment variable
+	if notebookDir, ok := os.LookupEnv("ZK_NOTEBOOK_DIR"); ok {
+		candidates = append(candidates, notebookDir)
+	}
+
+	return candidates, nil
+}
+
+// parseNotebookDir returns the path to the notebook specified with the
+// --notebook-dir flag.
+//
+// We need to parse the --notebook-dir flag before Kong, because we might need
+// it to resolve zk command aliases before parsing the CLI.
+func parseNotebookDirFlag() (string, error) {
+	foundFlag := false
+	for _, arg := range os.Args {
+		if arg == "--notebook-dir" {
+			foundFlag = true
+		} else if foundFlag {
+			return arg, nil
+		}
+	}
+	if foundFlag {
+		return "", errors.New("--notebook-dir requires an argument")
+	}
+	return "", nil
 }

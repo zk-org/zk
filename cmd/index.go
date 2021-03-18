@@ -15,12 +15,7 @@ func (cmd *Index) Help() string {
 }
 
 func (cmd *Index) Run(container *Container) error {
-	zk, err := container.Zk()
-	if err != nil {
-		return err
-	}
-
-	_, stats, err := container.Database(zk, cmd.Force)
+	_, stats, err := container.Database(cmd.Force)
 	if err != nil {
 		return err
 	}

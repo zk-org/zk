@@ -26,6 +26,7 @@ type Container struct {
 	Date           date.Provider
 	Logger         util.Logger
 	Terminal       *term.Terminal
+	WorkingDir     string
 	templateLoader *handlebars.Loader
 	zk             *zk.Zk
 	zkErr          error
@@ -48,24 +49,15 @@ func NewContainer() (*Container, error) {
 		}
 	}
 
-	// Open current notebook
-	zk, zkErr := zk.Open(".", config)
-	if zkErr == nil {
-		config = zk.Config
-		os.Setenv("ZK_PATH", zk.Path)
-	}
-
 	date := date.NewFrozenNow()
 
 	return &Container{
 		Config: config,
-		Logger: util.NewStdLogger("zk: ", 0),
 		// zk is short-lived, so we freeze the current date to use the same
-		// date for any rendering during the execution.
+		// date for any template rendering during the execution.
 		Date:     &date,
+		Logger:   util.NewStdLogger("zk: ", 0),
 		Terminal: term.New(),
-		zk:       zk,
-		zkErr:    zkErr,
 	}, nil
 }
 
@@ -94,6 +86,24 @@ func locateGlobalConfig() (string, error) {
 	}
 }
 
+// OpenNotebook resolves and loads the first notebook found in the given
+// searchPaths.
+func (c *Container) OpenNotebook(searchPaths []string) {
+	if len(searchPaths) == 0 {
+		panic("no notebook search paths provided")
+	}
+
+	for _, path := range searchPaths {
+		c.zk, c.zkErr = zk.Open(path, c.Config)
+		if c.zkErr == nil {
+			c.WorkingDir = path
+			c.Config = c.zk.Config
+			os.Setenv("ZK_NOTEBOOK_DIR", c.zk.Path)
+			return
+		}
+	}
+}
+
 func (c *Container) Zk() (*zk.Zk, error) {
 	return c.zk, c.zkErr
 }
@@ -106,11 +116,11 @@ func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	return c.templateLoader
 }
 
-func (c *Container) Parser(zk *zk.Zk) *markdown.Parser {
+func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser(markdown.ParserOpts{
-		HashtagEnabled:      zk.Config.Format.Markdown.Hashtags,
-		MultiWordTagEnabled: zk.Config.Format.Markdown.MultiwordTags,
-		ColontagEnabled:     zk.Config.Format.Markdown.ColonTags,
+		HashtagEnabled:      c.Config.Format.Markdown.Hashtags,
+		MultiWordTagEnabled: c.Config.Format.Markdown.MultiwordTags,
+		ColontagEnabled:     c.Config.Format.Markdown.ColonTags,
 	})
 }
 
@@ -127,10 +137,14 @@ func (c *Container) NoteIndexer(tx sqlite.Transaction) *sqlite.NoteIndexer {
 
 // Database returns the DB instance for the given notebook, after executing any
 // pending migration and indexing the notes if needed.
-func (c *Container) Database(zk *zk.Zk, forceIndexing bool) (*sqlite.DB, note.IndexingStats, error) {
+func (c *Container) Database(forceIndexing bool) (*sqlite.DB, note.IndexingStats, error) {
 	var stats note.IndexingStats
 
-	db, err := sqlite.Open(zk.DBPath())
+	if c.zkErr != nil {
+		return nil, stats, c.zkErr
+	}
+
+	db, err := sqlite.Open(c.zk.DBPath())
 	if err != nil {
 		return nil, stats, err
 	}
@@ -139,7 +153,7 @@ func (c *Container) Database(zk *zk.Zk, forceIndexing bool) (*sqlite.DB, note.In
 		return nil, stats, errors.Wrap(err, "failed to migrate the database")
 	}
 
-	stats, err = c.index(zk, db, forceIndexing || needsReindexing)
+	stats, err = c.index(db, forceIndexing || needsReindexing)
 	if err != nil {
 		return nil, stats, err
 	}
@@ -147,7 +161,7 @@ func (c *Container) Database(zk *zk.Zk, forceIndexing bool) (*sqlite.DB, note.In
 	return db, stats, err
 }
 
-func (c *Container) index(zk *zk.Zk, db *sqlite.DB, force bool) (note.IndexingStats, error) {
+func (c *Container) index(db *sqlite.DB, force bool) (note.IndexingStats, error) {
 	var bar = progressbar.NewOptions(-1,
 		progressbar.OptionSetWriter(os.Stderr),
 		progressbar.OptionThrottle(100*time.Millisecond),
@@ -156,11 +170,16 @@ func (c *Container) index(zk *zk.Zk, db *sqlite.DB, force bool) (note.IndexingSt
 
 	var err error
 	var stats note.IndexingStats
+
+	if c.zkErr != nil {
+		return stats, c.zkErr
+	}
+
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
 		stats, err = note.Index(
-			zk,
+			c.zk,
 			force,
-			c.Parser(zk),
+			c.Parser(),
 			c.NoteIndexer(tx),
 			c.Logger,
 			func(change paths.DiffChange) {
@@ -179,8 +198,8 @@ func (c *Container) index(zk *zk.Zk, db *sqlite.DB, force bool) (note.IndexingSt
 // paginated if noPager is false, using the user's pager.
 //
 // You can write to the pager only in the run callback.
-func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Writer) error) error {
-	pager, err := c.pager(noPager || config.Tool.Pager.IsEmpty(), config)
+func (c *Container) Paginate(noPager bool, run func(out io.Writer) error) error {
+	pager, err := c.pager(noPager || c.Config.Tool.Pager.IsEmpty())
 	if err != nil {
 		return err
 	}
@@ -189,10 +208,10 @@ func (c *Container) Paginate(noPager bool, config zk.Config, run func(out io.Wri
 	return err
 }
 
-func (c *Container) pager(noPager bool, config zk.Config) (*pager.Pager, error) {
+func (c *Container) pager(noPager bool) (*pager.Pager, error) {
 	if noPager || !c.Terminal.IsInteractive() {
 		return pager.PassthroughPager, nil
 	} else {
-		return pager.New(config.Tool.Pager, c.Logger)
+		return pager.New(c.Config.Tool.Pager, c.Logger)
 	}
 }
