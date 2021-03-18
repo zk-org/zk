@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/mickael-menu/zk/cmd"
