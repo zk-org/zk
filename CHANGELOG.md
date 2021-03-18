@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * Use `--notebook-dir` or set `ZK_NOTEBOOK_DIR` to run `zk` as if it was started from this path instead of the current working directory.
     * This allows running `zk` without being in a notebook.
     * By setting `ZK_NOTEBOOK_DIR` in your shell configuration file (e.g. `~/.profile`), you are declaring a default global notebook which will be used when `zk` is not in a notebook.
+    * When the notebook directory is set explicitly, any path given as argument will be relative to it instead of the actual working directory.
 
 
 ## 0.2.1

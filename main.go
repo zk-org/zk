@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/mickael-menu/zk/cmd"
@@ -118,6 +117,10 @@ func runAlias(container *cmd.Container, args []string) (bool, error) {
 
 		// Prevent infinite loop if an alias calls itself.
 		os.Setenv("ZK_RUNNING_ALIAS", alias)
+
+		// Move to the provided working directory if it is not the current one,
+		// before running the alias.
+		cmdStr = `cd "` + container.WorkingDir + `" && ` + cmdStr
 
 		cmd := executil.CommandFromString(cmdStr, args[1:]...)
 		cmd.Stdin = os.Stdin

@@ -44,15 +44,10 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
 	templates := container.TemplateLoader(container.Config.Note.Lang)
 	styler := container.Terminal
 	format := opt.NewNotEmptyString(cmd.Format)
-	formatter, err := note.NewFormatter(zk.Path, wd, format, templates, styler)
+	formatter, err := note.NewFormatter(zk.Path, container.WorkingDir, format, templates, styler)
 	if err != nil {
 		return err
 	}
@@ -63,7 +58,7 @@ func (cmd *List) Run(container *Container) error {
 			AlwaysFilter: false,
 			PreviewCmd:   container.Config.Tool.FzfPreview,
 			BasePath:     zk.Path,
-			CurrentPath:  wd,
+			CurrentPath:  container.WorkingDir,
 		})
 		notes, err = finder.Find(*opts)
 		return err

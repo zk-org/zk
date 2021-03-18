@@ -171,6 +171,8 @@ type Zk struct {
 	Path string
 	// Global user configuration.
 	Config Config
+	// Working directory from which paths are relative.
+	workingDir string
 }
 
 // Dir represents a directory inside a notebook.
@@ -184,10 +186,10 @@ type Dir struct {
 }
 
 // Open locates a notebook at the given path and parses its configuration.
-func Open(path string, parentConfig Config) (*Zk, error) {
+func Open(originalPath string, parentConfig Config) (*Zk, error) {
 	wrap := errors.Wrapper("open failed")
 
-	path, err := filepath.Abs(path)
+	path, err := filepath.Abs(originalPath)
 	if err != nil {
 		return nil, wrap(err)
 	}
@@ -202,8 +204,9 @@ func Open(path string, parentConfig Config) (*Zk, error) {
 	}
 
 	return &Zk{
-		Path:   path,
-		Config: config,
+		Path:       path,
+		Config:     config,
+		workingDir: originalPath,
 	}, nil
 }
 
@@ -266,23 +269,41 @@ func (zk *Zk) DBPath() string {
 }
 
 // RelPath returns the path relative to the notebook root to the given path.
-func (zk *Zk) RelPath(absPath string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid notebook path", absPath)
+func (zk *Zk) RelPath(originalPath string) (string, error) {
+	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)
 
-	path, err := filepath.Abs(absPath)
+	path, err := zk.absPath(originalPath)
 	if err != nil {
 		return path, wrap(err)
 	}
+
 	path, err = filepath.Rel(zk.Path, path)
 	if err != nil {
 		return path, wrap(err)
 	}
 	if strings.HasPrefix(path, "..") {
-		return path, fmt.Errorf("%s: path is outside the notebook", absPath)
+		return path, fmt.Errorf("%s: path is outside the notebook", originalPath)
 	}
 	if path == "." {
 		path = ""
 	}
+	return path, nil
+}
+
+// AbsPath makes the given path absolute, using the current working directory
+// as reference.
+func (zk *Zk) absPath(originalPath string) (string, error) {
+	var err error
+
+	path := originalPath
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(zk.workingDir, path)
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return path, err
+		}
+	}
+
 	return path, nil
 }
 
@@ -297,7 +318,7 @@ func (zk *Zk) RootDir() Dir {
 
 // DirAt returns a Dir representation of the notebook directory at the given path.
 func (zk *Zk) DirAt(path string, overrides ...ConfigOverrides) (*Dir, error) {
-	path, err := filepath.Abs(path)
+	path, err := zk.absPath(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "%v: not a valid notebook directory", path)
 	}

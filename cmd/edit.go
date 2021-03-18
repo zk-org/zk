@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/adapter/fzf"
@@ -26,11 +25,6 @@ func (cmd *Edit) Run(container *Container) error {
 		return err
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
 	opts, err := NewFinderOpts(zk, cmd.Filtering, cmd.Sorting)
 	if err != nil {
 		return errors.Wrapf(err, "incorrect criteria")
@@ -48,7 +42,7 @@ func (cmd *Edit) Run(container *Container) error {
 			PreviewCmd:   container.Config.Tool.FzfPreview,
 			NewNoteDir:   cmd.newNoteDir(zk),
 			BasePath:     zk.Path,
-			CurrentPath:  wd,
+			CurrentPath:  container.WorkingDir,
 		})
 		notes, err = finder.Find(*opts)
 		return err
