@@ -10,6 +10,7 @@ import (
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/opt"
 	strutil "github.com/mickael-menu/zk/util/strings"
+	"github.com/mickael-menu/zk/util/yaml"
 	"github.com/mvdan/xurls"
 	"github.com/yuin/goldmark"
 	meta "github.com/yuin/goldmark-meta"
@@ -294,6 +295,12 @@ func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error
 	if err != nil {
 		return front, err
 	}
+
+	// The YAML parser parses nested maps as map[interface{}]interface{}
+	// instead of map[string]interface{}, which doesn't work with the JSON
+	// marshaller.
+	values = yaml.ConvertMapToJSONCompatible(values)
+
 	// Convert keys to lowercase, because we don't want to be case sensitive.
 	for k, v := range values {
 		front.values[strings.ToLower(k)] = v

@@ -550,12 +550,17 @@ title: A title
 tags:
   - tag1
   - "tag 2"
+nested:
+  key: value
 ---
 
 Paragraph
 `, map[string]interface{}{
 		"title": "A title",
 		"tags":  []interface{}{"tag1", "tag 2"},
+		"nested": map[string]interface{}{
+			"key": "value",
+		},
 	})
 }
 

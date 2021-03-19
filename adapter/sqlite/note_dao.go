@@ -151,11 +151,7 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 	// string.
 	sortablePath := strings.ReplaceAll(note.Path, "/", "\x01")
 
-	metadata, err := d.metadataToJson(note)
-	if err != nil {
-		return 0, err
-	}
-
+	metadata := d.metadataToJSON(note)
 	res, err := d.addStmt.Exec(
 		note.Path, sortablePath, note.Title, note.Lead, note.Body,
 		note.RawContent, note.WordCount, metadata, note.Checksum, note.Created,
@@ -185,11 +181,7 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 		return 0, errors.New("note not found in the index")
 	}
 
-	metadata, err := d.metadataToJson(note)
-	if err != nil {
-		return 0, err
-	}
-
+	metadata := d.metadataToJSON(note)
 	_, err = d.updateStmt.Exec(
 		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount,
 		metadata, note.Checksum, note.Modified, note.Path,
@@ -207,12 +199,15 @@ func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
 	return id, err
 }
 
-func (d *NoteDAO) metadataToJson(note note.Metadata) (string, error) {
+func (d *NoteDAO) metadataToJSON(note note.Metadata) string {
 	json, err := json.Marshal(note.Metadata)
 	if err != nil {
-		return "", errors.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path)
+		// Failure to serialize the metadata to JSON should not prevent the
+		// note from being saved.
+		d.logger.Err(errors.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path))
+		return "{}"
 	}
-	return string(json), nil
+	return string(json)
 }
 
 // addLinks inserts all the outbound links of the given note.
