@@ -21,10 +21,10 @@ type Filtering struct {
 	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
 	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones." xor:mention`
 	MentionedBy    []string `group:filter           placeholder:PATH  help:"Find notes whose title is mentioned in the given ones." xor:mention`
-	LinkedBy       []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
-	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
-	LinkTo         []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
+	LinkTo         []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linking to the given ones."      xor:link`
 	NoLinkTo       []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes." xor:link`
+	LinkedBy       []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linked by the given ones."       xor:link`
+	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."   xor:link`
 	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."   xor:link`
 	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones." xor:link`
 	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`

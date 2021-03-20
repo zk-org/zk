@@ -15,6 +15,9 @@ All notable changes to this project will be documented in this file.
     * This allows running `zk` without being in a notebook.
     * By setting `ZK_NOTEBOOK_DIR` in your shell configuration file (e.g. `~/.profile`), you are declaring a default global notebook which will be used when `zk` is not in a notebook.
     * When the notebook directory is set explicitly, any path given as argument will be relative to it instead of the actual working directory.
+* Find every note whose title is mentioned in the note you are working on with `--mentioned-by file.md`.
+    * To refer to a note using several names, you can use the [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note). For example the note titled "Artificial Intelligence" might have: `aliases: [AI, robot]`
+    * To find only unlinked mentions, pair it with `--no-linked-by`, e.g. `--mentioned-by file.md --no-linked-by file.md`.
 
 ### Fixed
 
