@@ -384,13 +384,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 
 	// Exclude the mentioned notes from the results.
-	if opts.ExcludeIds == nil {
-		opts.ExcludeIds = ids
-	} else {
-		for _, id := range ids {
-			opts.ExcludeIds = append(opts.ExcludeIds, id)
-		}
-	}
+	opts = opts.ExcludingIds(ids...)
 
 	// Find their titles.
 	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
@@ -530,10 +524,6 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
 	}
 
-	if opts.ExcludeIds != nil {
-		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
-	}
-
 	if opts.Tags != nil {
 		separatorRegex := regexp.MustCompile(`(\ OR\ )|\|`)
 		for _, tagsArg := range opts.Tags {
@@ -587,6 +577,9 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		if err != nil {
 			return nil, err
 		}
+
+		// Exclude the mentioning notes from the results.
+		opts = opts.ExcludingIds(ids...)
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
@@ -643,6 +636,10 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.ModifiedEnd != nil {
 		whereExprs = append(whereExprs, "modified < ?")
 		args = append(args, opts.ModifiedEnd)
+	}
+
+	if opts.ExcludeIds != nil {
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
 	}
 
 	orderTerms := []string{}

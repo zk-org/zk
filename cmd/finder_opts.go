@@ -69,28 +69,28 @@ func NewFinderOpts(zk *zk.Zk, filtering Filtering, sorting Sorting) (*note.Finde
 	}
 
 	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {
-		opts.LinkedBy = &note.LinkedByFilter{
+		opts.LinkedBy = &note.LinkFilter{
 			Paths:       paths,
 			Negate:      false,
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
 		}
 	} else if paths, ok := relPaths(zk, filtering.NoLinkedBy); ok {
-		opts.LinkedBy = &note.LinkedByFilter{
+		opts.LinkedBy = &note.LinkFilter{
 			Paths:  paths,
 			Negate: true,
 		}
 	}
 
 	if paths, ok := relPaths(zk, filtering.LinkTo); ok {
-		opts.LinkTo = &note.LinkToFilter{
+		opts.LinkTo = &note.LinkFilter{
 			Paths:       paths,
 			Negate:      false,
 			Recursive:   filtering.Recursive,
 			MaxDistance: filtering.MaxDistance,
 		}
 	} else if paths, ok := relPaths(zk, filtering.NoLinkTo); ok {
-		opts.LinkTo = &note.LinkToFilter{
+		opts.LinkTo = &note.LinkFilter{
 			Paths:  paths,
 			Negate: true,
 		}

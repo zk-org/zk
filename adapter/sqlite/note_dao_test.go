@@ -649,7 +649,7 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
 			Mention: []string{"log/2021-01-03.md", "index.md"},
-			LinkTo: &note.LinkToFilter{
+			LinkTo: &note.LinkFilter{
 				Paths:  []string{"log/2021-01-03.md", "index.md"},
 				Negate: true,
 			},
@@ -658,10 +658,72 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindMentionedBy(t *testing.T) {
+	testNoteDAOFind(t,
+		note.FinderOpts{MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"}},
+		[]note.Match{
+			{
+				Metadata: note.Metadata{
+					Path:       "log/2021-01-03.md",
+					Title:      "Daily note",
+					Lead:       "A daily note",
+					Body:       "A daily note\n\nWith lot of content",
+					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					WordCount:  3,
+					Links:      []note.Link{},
+					Tags:       []string{"fiction", "adventure"},
+					Metadata: map[string]interface{}{
+						"author": "Dom",
+					},
+					Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+					Checksum: "qwfpgj",
+				},
+				Snippets: []string{"A second <zk:match>daily note</zk:match>"},
+			},
+			{
+				Metadata: note.Metadata{
+					Path:       "index.md",
+					Title:      "Index",
+					Lead:       "Index of the Zettelkasten",
+					Body:       "Index of the Zettelkasten",
+					RawContent: "# Index\nIndex of the Zettelkasten",
+					WordCount:  4,
+					Links:      []note.Link{},
+					Tags:       []string{},
+					Metadata: map[string]interface{}{
+						"aliases": []interface{}{
+							"First page",
+						},
+					},
+					Created:  time.Date(2019, 12, 4, 11, 59, 11, 0, time.UTC),
+					Modified: time.Date(2019, 12, 4, 12, 17, 21, 0, time.UTC),
+					Checksum: "iaefhv",
+				},
+				Snippets: []string{"This one is in a sub sub directory, not the <zk:match>first page</zk:match>"},
+			},
+		},
+	)
+}
+
+// Common use case: `--mentioned-by x --no-linked-by x`
+func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		note.FinderOpts{
+			MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"},
+			LinkedBy: &note.LinkFilter{
+				Paths:  []string{"ref/test/b.md", "log/2021-01-04.md"},
+				Negate: true,
+			},
+		},
+		[]string{"log/2021-01-03.md"},
+	)
+}
+
 func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkedBy: &note.LinkedByFilter{
+			LinkedBy: &note.LinkFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    false,
 				Recursive: false,
@@ -674,7 +736,7 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkedBy: &note.LinkedByFilter{
+			LinkedBy: &note.LinkFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
@@ -687,7 +749,7 @@ func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkedBy: &note.LinkedByFilter{
+			LinkedBy: &note.LinkFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
@@ -701,7 +763,7 @@ func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	testNoteDAOFind(t,
 		note.FinderOpts{
-			LinkedBy: &note.LinkedByFilter{Paths: []string{"f39c8.md"}},
+			LinkedBy: &note.LinkFilter{Paths: []string{"f39c8.md"}},
 		},
 		[]note.Match{
 			{
@@ -754,7 +816,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkedBy: &note.LinkedByFilter{
+			LinkedBy: &note.LinkFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    true,
 				Recursive: false,
@@ -767,7 +829,7 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 func TestNoteDAOFindLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkTo: &note.LinkToFilter{
+			LinkTo: &note.LinkFilter{
 				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
 				Negate:    false,
 				Recursive: false,
@@ -780,7 +842,7 @@ func TestNoteDAOFindLinkTo(t *testing.T) {
 func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkTo: &note.LinkToFilter{
+			LinkTo: &note.LinkFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
@@ -793,7 +855,7 @@ func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkTo: &note.LinkToFilter{
+			LinkTo: &note.LinkFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
@@ -807,7 +869,7 @@ func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindNotLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		note.FinderOpts{
-			LinkTo: &note.LinkToFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
+			LinkTo: &note.LinkFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
