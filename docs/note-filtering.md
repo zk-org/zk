@@ -158,7 +158,7 @@ You can filter by range instead, using `--created-before`, `--created-after`, `-
 
 You can use the following options to explore the web of links spanning your [notebook](notebook.md).
 
-`--linked-by <path>` (or `-l`) finds the notes linked by the given one, while `--link-to <path>` (or `-L`) searches the notes having a link to it (also known as *backlinks*).
+`--linked-by <path>` (or `-L`) finds the notes linked by the given one, while `--link-to <path>` (or `-l`) searches the notes having a link to it (also known as *backlinks*).
 
 ```
 --linked-by 200911172034
@@ -181,15 +181,15 @@ Part of writing a great notebook is to establish links between related notes. Th
 --related 200911172034
 ```
 
-## Locate mentions in other notes
+## Locate mentions of other notes
 
-Another great way to look for potential new links is to find every mention of a note in your notebook.
+Another great way to look for potential new links is to find every mention of other notes in the note you are currently working on.
 
 ```
---mention 200911172034
+--mentioned-by 200911172034
 ```
 
-This option will locate the notes containing the note's title. To refer to a note using several names, you can use the [YAML frontmatter](note-frontmatter.md) to declare additional aliases. For example, a note titled "Artificial Intelligence" might have for aliases "AI" and "robot". This method is compatible with [Obsidian](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
+This option will find every note whose title is mentioned in the given note. To refer to a note using several names, you can use the [YAML frontmatter](note-frontmatter.md) to declare additional aliases. For example, a note titled "Artificial Intelligence" might have for aliases "AI" and "robot". This method is compatible with [Obsidian](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
 
 ```
 ---
@@ -198,9 +198,16 @@ aliases: [AI, robot]
 ---
 ```
 
-To find only unlinked mentions, pair the `--mention` option with `--no-link-to` to remove notes which are already linked from the results.
+Alternatively, find every note mentioning the given note with `--mention`.
 
 ```
+--mention 200911172034
+```
+
+To find only unlinked mentions, pair the `--mentioned-by` and `--mentions` options with `--no-linked-by` (resp. `--no-link-to`) to remove notes which are already linked from the results.
+
+```
+--mentioned-by 200911172034 --no-linked-by 200911172034
 --mention 200911172034 --no-link-to 200911172034
 ```
 

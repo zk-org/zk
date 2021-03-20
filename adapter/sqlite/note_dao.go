@@ -271,6 +271,10 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteId, error) {
 			ids = append(ids, id)
 		}
 	}
+
+	if len(ids) == 0 {
+		return ids, fmt.Errorf("could not find notes at: " + strings.Join(paths, ", "))
+	}
 	return ids, nil
 }
 
@@ -329,7 +333,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			continue
 		}
 
-		metadata, err := d.unmarshalMetadata(metadataJSON)
+		metadata, err := unmarshalMetadata(metadataJSON)
 		if err != nil {
 			d.logger.Err(errors.Wrap(err, path))
 		}
@@ -369,8 +373,6 @@ func parseListFromNullString(str sql.NullString) []string {
 // expandMentionsIntoMatch finds the titles associated with the notes in opts.Mention to
 // expand them into the opts.Match predicate.
 func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts, error) {
-	notFoundErr := fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ","))
-
 	if opts.Mention == nil {
 		return opts, nil
 	}
@@ -380,18 +382,9 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	if err != nil {
 		return opts, err
 	}
-	if len(ids) == 0 {
-		return opts, notFoundErr
-	}
 
 	// Exclude the mentioned notes from the results.
-	if opts.ExcludeIds == nil {
-		opts.ExcludeIds = ids
-	} else {
-		for _, id := range ids {
-			opts.ExcludeIds = append(opts.ExcludeIds, id)
-		}
-	}
+	opts = opts.ExcludingIds(ids...)
 
 	// Find their titles.
 	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
@@ -401,11 +394,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 	defer rows.Close()
 
-	titles := []string{}
-
-	appendTitle := func(t string) {
-		titles = append(titles, `"`+strings.ReplaceAll(t, `"`, "")+`"`)
-	}
+	mentionQueries := []string{}
 
 	for rows.Next() {
 		var title, metadataJSON string
@@ -414,34 +403,16 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 			return opts, err
 		}
 
-		appendTitle(title)
-
-		// Support `aliases` key in the YAML frontmatter, like Obsidian:
-		// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
-		metadata, err := d.unmarshalMetadata(metadataJSON)
-		if err != nil {
-			d.logger.Err(err)
-		} else {
-			if aliases, ok := metadata["aliases"]; ok {
-				switch aliases := aliases.(type) {
-				case []interface{}:
-					for _, alias := range aliases {
-						appendTitle(fmt.Sprint(alias))
-					}
-				case string:
-					appendTitle(aliases)
-				}
-			}
-		}
+		mentionQueries = append(mentionQueries, buildMentionQuery(title, metadataJSON))
 	}
 
-	if len(titles) == 0 {
-		return opts, notFoundErr
+	if len(mentionQueries) == 0 {
+		return opts, nil
 	}
 
-	// Expand the titles in the match predicate.
+	// Expand the mention queries in the match predicate.
 	match := opts.Match.String()
-	match += " (" + strings.Join(titles, " OR ") + ")"
+	match += " " + strings.Join(mentionQueries, " OR ")
 	opts.Match = opt.NewString(match)
 
 	return opts, nil
@@ -528,10 +499,10 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 	}
 
 	if !opts.Match.IsNull() {
-		snippetCol = `snippet(notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
-		joinClauses = append(joinClauses, "JOIN notes_fts ON n.id = notes_fts.rowid")
-		additionalOrderTerms = append(additionalOrderTerms, `bm25(notes_fts, 1000.0, 500.0, 1.0)`)
-		whereExprs = append(whereExprs, "notes_fts MATCH ?")
+		snippetCol = `snippet(fts_match.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
+		joinClauses = append(joinClauses, "JOIN notes_fts fts_match ON n.id = fts_match.rowid")
+		additionalOrderTerms = append(additionalOrderTerms, `bm25(fts_match.notes_fts, 1000.0, 500.0, 1.0)`)
+		whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
 		args = append(args, fts5.ConvertQuery(opts.Match.String()))
 	}
 
@@ -551,10 +522,6 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 			args = append(args, pathRegex(path))
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
-	}
-
-	if opts.ExcludeIds != nil {
-		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
 	}
 
 	if opts.Tags != nil {
@@ -603,6 +570,19 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 			)
 			whereExprs = append(whereExprs, expr)
 		}
+	}
+
+	if opts.MentionedBy != nil {
+		ids, err := d.findIdsByPathPrefixes(opts.MentionedBy)
+		if err != nil {
+			return nil, err
+		}
+
+		// Exclude the mentioning notes from the results.
+		opts = opts.ExcludingIds(ids...)
+
+		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
+		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
 	}
 
 	if opts.LinkedBy != nil {
@@ -656,6 +636,10 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.ModifiedEnd != nil {
 		whereExprs = append(whereExprs, "modified < ?")
 		args = append(args, opts.ModifiedEnd)
+	}
+
+	if opts.ExcludeIds != nil {
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
 	}
 
 	orderTerms := []string{}
@@ -771,8 +755,50 @@ func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
 	return strings.Join(strs, delimiter)
 }
 
-func (d *NoteDAO) unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
+func unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
 	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
 	return
+}
+
+// buildMentionQuery creates an FTS5 predicate to match the given note's title
+// (or aliases from the metadata) in the content of another note.
+//
+// It is exposed as a custom SQLite function as `mention_query()`.
+func buildMentionQuery(title, metadataJSON string) string {
+	titles := []string{}
+
+	appendTitle := func(t string) {
+		t = strings.TrimSpace(t)
+		if t != "" {
+			// Remove double quotes in the title to avoid tripping the FTS5 parser.
+			titles = append(titles, `"`+strings.ReplaceAll(t, `"`, "")+`"`)
+		}
+	}
+
+	appendTitle(title)
+
+	// Support `aliases` key in the YAML frontmatter, like Obsidian:
+	// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
+	metadata, err := unmarshalMetadata(metadataJSON)
+	if err == nil {
+		if aliases, ok := metadata["aliases"]; ok {
+			switch aliases := aliases.(type) {
+			case []interface{}:
+				for _, alias := range aliases {
+					appendTitle(fmt.Sprint(alias))
+				}
+			case string:
+				appendTitle(aliases)
+			}
+		}
+	}
+
+	if len(titles) == 0 {
+		// Return an arbitrary search term otherwise MATCH will find every note.
+		// Not proud of this hack but it does the job.
+		return "8b80252291ee418289cfc9968eb2961c"
+	}
+
+	return "(" + strings.Join(titles, " OR ") + ")"
 }

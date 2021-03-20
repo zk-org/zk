@@ -33,12 +33,14 @@ type FinderOpts struct {
 	ExcludeIds []core.NoteId
 	// Filter by tags found in the notes.
 	Tags []string
-	// Filter the notes mentioning the given notes.
+	// Filter the notes mentioning the given ones.
 	Mention []string
+	// Filter the notes mentioned by the given ones.
+	MentionedBy []string
 	// Filter to select notes being linked by another one.
-	LinkedBy *LinkedByFilter
+	LinkedBy *LinkFilter
 	// Filter to select notes linking to another one.
-	LinkTo *LinkToFilter
+	LinkTo *LinkFilter
 	// Filter to select notes which could might be related to the given notes paths.
 	Related []string
 	// Filter to select notes having no other notes linking to them.
@@ -59,6 +61,17 @@ type FinderOpts struct {
 	Sorters []Sorter
 }
 
+// ExcludingIds creates a new FinderOpts after adding the given ids to the list
+// of excluded note ids.
+func (o FinderOpts) ExcludingIds(ids ...core.NoteId) FinderOpts {
+	if o.ExcludeIds == nil {
+		o.ExcludeIds = []core.NoteId{}
+	}
+
+	o.ExcludeIds = append(o.ExcludeIds, ids...)
+	return o
+}
+
 // Match holds information about a note matching the find options.
 type Match struct {
 	Metadata
@@ -66,16 +79,8 @@ type Match struct {
 	Snippets []string
 }
 
-// LinkedByFilter is a note filter used to select notes being linked by another one.
-type LinkedByFilter struct {
-	Paths       []string
-	Negate      bool
-	Recursive   bool
-	MaxDistance int
-}
-
-// LinkToFilter is a note filter used to select notes linking to another one.
-type LinkToFilter struct {
+// LinkFilter is a note filter used to select notes linking to other ones.
+type LinkFilter struct {
 	Paths       []string
 	Negate      bool
 	Recursive   bool
