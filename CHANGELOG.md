@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
     * By setting `ZK_NOTEBOOK_DIR` in your shell configuration file (e.g. `~/.profile`), you are declaring a default global notebook which will be used when `zk` is not in a notebook.
     * When the notebook directory is set explicitly, any path given as argument will be relative to it instead of the actual working directory.
 
+### Fixed
+
+* [#4](https://github.com/mickael-menu/zk/issues/4) Terminal borked when piping content with Vim
+
 
 ## 0.2.1
 

@@ -20,7 +20,11 @@ func Edit(zk *zk.Zk, paths ...string) error {
 		return fmt.Errorf("no editor set in config")
 	}
 
-	cmd := executil.CommandFromString(editor.String() + " " + shellquote.Join(paths...))
+	// /dev/tty is restored as stdin, in case the user used a pipe to feed
+	// initial note content to `zk new`. Without this, Vim doesn't work
+	// properly in this case.
+	// See https://github.com/mickael-menu/zk/issues/4
+	cmd := executil.CommandFromString(editor.String() + " " + shellquote.Join(paths...) + " </dev/tty")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
