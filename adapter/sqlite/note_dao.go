@@ -333,7 +333,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 			continue
 		}
 
-		metadata, err := d.unmarshalMetadata(metadataJSON)
+		metadata, err := unmarshalMetadata(metadataJSON)
 		if err != nil {
 			d.logger.Err(errors.Wrap(err, path))
 		}
@@ -400,11 +400,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 	defer rows.Close()
 
-	titles := []string{}
-
-	appendTitle := func(t string) {
-		titles = append(titles, `"`+strings.ReplaceAll(t, `"`, "")+`"`)
-	}
+	mentionQueries := []string{}
 
 	for rows.Next() {
 		var title, metadataJSON string
@@ -413,34 +409,16 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 			return opts, err
 		}
 
-		appendTitle(title)
-
-		// Support `aliases` key in the YAML frontmatter, like Obsidian:
-		// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
-		metadata, err := d.unmarshalMetadata(metadataJSON)
-		if err != nil {
-			d.logger.Err(err)
-		} else {
-			if aliases, ok := metadata["aliases"]; ok {
-				switch aliases := aliases.(type) {
-				case []interface{}:
-					for _, alias := range aliases {
-						appendTitle(fmt.Sprint(alias))
-					}
-				case string:
-					appendTitle(aliases)
-				}
-			}
-		}
+		mentionQueries = append(mentionQueries, buildMentionQuery(title, metadataJSON))
 	}
 
-	if len(titles) == 0 {
+	if len(mentionQueries) == 0 {
 		return opts, nil
 	}
 
-	// Expand the titles in the match predicate.
+	// Expand the mention queries in the match predicate.
 	match := opts.Match.String()
-	match += " (" + strings.Join(titles, " OR ") + ")"
+	match += " " + strings.Join(mentionQueries, " OR ")
 	opts.Match = opt.NewString(match)
 
 	return opts, nil
@@ -611,7 +589,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		}
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
-		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+`) AND nsrc.notes_fts MATCH '"' || n.title || '"'`)
+		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
 	}
 
 	if opts.LinkedBy != nil {
@@ -780,8 +758,50 @@ func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
 	return strings.Join(strs, delimiter)
 }
 
-func (d *NoteDAO) unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
+func unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
 	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
 	return
+}
+
+// buildMentionQuery creates an FTS5 predicate to match the given note's title
+// (or aliases from the metadata) in the content of another note.
+//
+// It is exposed as a custom SQLite function as `mention_query()`.
+func buildMentionQuery(title, metadataJSON string) string {
+	titles := []string{}
+
+	appendTitle := func(t string) {
+		t = strings.TrimSpace(t)
+		if t != "" {
+			// Remove double quotes in the title to avoid tripping the FTS5 parser.
+			titles = append(titles, `"`+strings.ReplaceAll(t, `"`, "")+`"`)
+		}
+	}
+
+	appendTitle(title)
+
+	// Support `aliases` key in the YAML frontmatter, like Obsidian:
+	// https://publish.obsidian.md/help/How+to/Add+aliases+to+note
+	metadata, err := unmarshalMetadata(metadataJSON)
+	if err == nil {
+		if aliases, ok := metadata["aliases"]; ok {
+			switch aliases := aliases.(type) {
+			case []interface{}:
+				for _, alias := range aliases {
+					appendTitle(fmt.Sprint(alias))
+				}
+			case string:
+				appendTitle(aliases)
+			}
+		}
+	}
+
+	if len(titles) == 0 {
+		// Return an arbitrary search term otherwise MATCH will find every note.
+		// Not proud of this hack but it does the job.
+		return "8b80252291ee418289cfc9968eb2961c"
+	}
+
+	return "(" + strings.Join(titles, " OR ") + ")"
 }

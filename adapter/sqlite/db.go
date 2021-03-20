@@ -3,10 +3,22 @@ package sqlite
 import (
 	"database/sql"
 
-	_ "github.com/mattn/go-sqlite3"
+	sqlite "github.com/mattn/go-sqlite3"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util/errors"
 )
+
+func init() {
+	// Register custom SQLite functions.
+	sql.Register("sqlite3_custom", &sqlite.SQLiteDriver{
+		ConnectHook: func(conn *sqlite.SQLiteConn) error {
+			if err := conn.RegisterFunc("mention_query", buildMentionQuery, true); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+}
 
 // DB holds the connections to a SQLite database.
 type DB struct {
@@ -26,7 +38,7 @@ func OpenInMemory() (*DB, error) {
 func open(uri string) (*DB, error) {
 	wrap := errors.Wrapper("failed to open the database")
 
-	db, err := sql.Open("sqlite3", uri)
+	db, err := sql.Open("sqlite3_custom", uri)
 	if err != nil {
 		return nil, wrap(err)
 	}
