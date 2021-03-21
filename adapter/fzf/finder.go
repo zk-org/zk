@@ -57,11 +57,12 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 	}
 
 	for _, match := range matches {
-		path, err := filepath.Rel(f.opts.CurrentPath, filepath.Join(f.opts.BasePath, match.Path))
+		absPath := filepath.Join(f.opts.BasePath, match.Path)
+		relPath, err := filepath.Rel(f.opts.CurrentPath, absPath)
 		if err != nil {
 			return selectedMatches, err
 		}
-		relPaths = append(relPaths, path)
+		relPaths = append(relPaths, relPath)
 	}
 
 	zkBin, err := os.Executable()
@@ -84,8 +85,15 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 		})
 	}
 
+	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
+	if previewCmd != "" {
+		// The note paths will be relative to the current path, so we need to
+		// move there otherwise the preview command will fail.
+		previewCmd = `cd "` + f.opts.CurrentPath + `" && ` + previewCmd
+	}
+
 	fzf, err := New(Opts{
-		PreviewCmd: f.opts.PreviewCmd.OrString("cat {-1}").NonEmpty(),
+		PreviewCmd: opt.NewNotEmptyString(previewCmd),
 		Padding:    2,
 		Bindings:   bindings,
 	})
