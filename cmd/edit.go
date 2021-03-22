@@ -14,9 +14,7 @@ import (
 // Edit opens notes matching a set of criteria with the user editor.
 type Edit struct {
 	Force bool `short:f help:"Do not confirm before editing many notes at the same time."`
-
 	Filtering
-	Sorting
 }
 
 func (cmd *Edit) Run(container *Container) error {
@@ -25,7 +23,7 @@ func (cmd *Edit) Run(container *Container) error {
 		return err
 	}
 
-	opts, err := NewFinderOpts(zk, cmd.Filtering, cmd.Sorting)
+	opts, err := NewFinderOpts(zk, cmd.Filtering)
 	if err != nil {
 		return errors.Wrapf(err, "incorrect criteria")
 	}

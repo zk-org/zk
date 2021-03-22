@@ -19,9 +19,7 @@ type List struct {
 	Delimiter0 bool   "group:format short:0 name:delimiter0        help:\"Print notes delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
 	NoPager    bool   `group:format short:P help:"Do not pipe output into a pager."`
 	Quiet      bool   `group:format short:q help:"Do not print the total number of notes found."`
-
 	Filtering
-	Sorting
 }
 
 func (cmd *List) Run(container *Container) error {
@@ -34,7 +32,7 @@ func (cmd *List) Run(container *Container) error {
 		return err
 	}
 
-	opts, err := NewFinderOpts(zk, cmd.Filtering, cmd.Sorting)
+	opts, err := NewFinderOpts(zk, cmd.Filtering)
 	if err != nil {
 		return err
 	}
