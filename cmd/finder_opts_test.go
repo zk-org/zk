@@ -170,6 +170,26 @@ func TestExpandNamedFiltersJoinMatch(t *testing.T) {
 	assert.Equal(t, res.Match, "(((chocolate OR caramel)) AND (banana)) AND (apple)")
 }
 
+func TestExpandNamedFiltersExpandsRecursively(t *testing.T) {
+	f := Filtering{
+		Path: []string{"path1", "journal", "recents"},
+	}
+
+	res, err := f.ExpandNamedFilters(
+		map[string]string{
+			"recents":      "--created-after '2 weeks ago'",
+			"journal":      "journal sort-created",
+			"sort-created": "--sort created",
+		},
+		[]string{},
+	)
+
+	assert.Nil(t, err)
+	assert.Equal(t, res.Path, []string{"path1", "journal"})
+	assert.Equal(t, res.CreatedAfter, "2 weeks ago")
+	assert.Equal(t, res.Sort, []string{"created"})
+}
+
 func TestExpandNamedFiltersReportsParsingError(t *testing.T) {
 	f := Filtering{Path: []string{"f1"}}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/errors"
 	"github.com/mickael-menu/zk/util/opt"
+	"github.com/mickael-menu/zk/util/strings"
 	"github.com/tj/go-naturaldate"
 )
 
@@ -48,7 +49,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 	actualPaths := []string{}
 
 	for _, path := range f.Path {
-		if filter, ok := filters[path]; ok {
+		if filter, ok := filters[path]; ok && !strings.InList(expandedFilters, path) {
 			wrap := errors.Wrapperf("failed to expand named filter `%v`", path)
 
 			var parsedFilter Filtering
@@ -63,6 +64,13 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			_, err = parser.Parse(args)
 			if err != nil {
 				return f, wrap(err)
+			}
+
+			// Expand recursively, but prevent infinite loops by registering
+			// the current filter in the list of expanded filters.
+			parsedFilter, err = parsedFilter.ExpandNamedFilters(filters, append(expandedFilters, path))
+			if err != nil {
+				return f, err
 			}
 
 			actualPaths = append(actualPaths, parsedFilter.Path...)
@@ -123,6 +131,11 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 
 // NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.
 func NewFinderOpts(zk *zk.Zk, filtering Filtering) (*note.FinderOpts, error) {
+	filtering, err := filtering.ExpandNamedFilters(zk.Config.Filters, []string{})
+	if err != nil {
+		return nil, err
+	}
+
 	opts := note.FinderOpts{}
 
 	opts.Match = opt.NewNotEmptyString(filtering.Match)
