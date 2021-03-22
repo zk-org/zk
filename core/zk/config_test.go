@@ -42,6 +42,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			Pager:      opt.NullString,
 			FzfPreview: opt.NullString,
 		},
+		Filters:       make(map[string]string),
 		Aliases:       make(map[string]string),
 		Extra:         make(map[string]string),
 		TemplatesDirs: []string{".zk/templates"},
@@ -80,6 +81,10 @@ func TestParseComplete(t *testing.T) {
 		[extra]
 		hello = "world"
 		salut = "le monde"
+
+		[filter]
+		recents = "--created-after '2 weeks ago'"
+		journal = "journal --sort created"
 
 		[alias]
 		ls = "zk list $@"
@@ -194,6 +199,10 @@ func TestParseComplete(t *testing.T) {
 			Pager:      opt.NewString("less"),
 			FzfPreview: opt.NewString("bat {1}"),
 		},
+		Filters: map[string]string{
+			"recents": "--created-after '2 weeks ago'",
+			"journal": "journal --sort created",
+		},
 		Aliases: map[string]string{
 			"ls": "zk list $@",
 			"ed": "zk edit $@",
@@ -298,6 +307,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				MultiwordTags: false,
 			},
 		},
+		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
 		Extra: map[string]string{
 			"hello": "world",
