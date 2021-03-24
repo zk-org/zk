@@ -1,6 +1,6 @@
 # Searching and filtering notes
 
-A few commands are built upon `zk`'s powerful note filtering capabilities, such as `edit` and `list`. They accept any option described here.
+A few commands are built upon `zk`'s powerful note filtering capabilities, such as `edit` and `list`. They accept any option described here. You may also declare [named filters](config-filter.md) in the [configuration file](config.md) for the same set of options you use frequently.
 
 ## Filter by path
 

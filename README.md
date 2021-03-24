@@ -14,7 +14,7 @@
 * [Creating notes from templates](docs/note-creation.md)
 * [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
 * [Interactive browser](docs/tool-fzf), powered by `fzf`
-* [Git-style command aliases](docs/config-alias.md)
+* [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
 * [Made with automation in mind](docs/automation.md)
 * [Notebook housekeeping](docs/notebook-housekeeping.md)
 * [Future-proof, thanks to Markdown](docs/future-proof.md)
