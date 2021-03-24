@@ -16,6 +16,7 @@ type Config struct {
 	Groups  map[string]GroupConfig
 	Format  FormatConfig
 	Tool    ToolConfig
+	Filters map[string]string
 	Aliases map[string]string
 	Extra   map[string]string
 	// Base directories for the relative template paths used in NoteConfig.
@@ -45,6 +46,7 @@ func NewDefaultConfig() Config {
 				MultiwordTags: false,
 			},
 		},
+		Filters:       map[string]string{},
 		Aliases:       map[string]string{},
 		Extra:         map[string]string{},
 		TemplatesDirs: []string{},
@@ -256,6 +258,13 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 		config.Tool.FzfPreview = opt.NewStringWithPtr(tool.FzfPreview)
 	}
 
+	// Filters
+	if tomlConf.Filters != nil {
+		for k, v := range tomlConf.Filters {
+			config.Filters[k] = v
+		}
+	}
+
 	// Aliases
 	if tomlConf.Aliases != nil {
 		for k, v := range tomlConf.Aliases {
@@ -322,6 +331,7 @@ type tomlConfig struct {
 	Format  tomlFormatConfig
 	Tool    tomlToolConfig
 	Extra   map[string]string
+	Filters map[string]string `toml:"filter"`
 	Aliases map[string]string `toml:"alias"`
 }
 

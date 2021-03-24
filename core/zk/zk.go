@@ -118,6 +118,18 @@ hashtags = true
 #fzf-preview = "bat -p --color always {-1}"
 
 
+# NAMED FILTERS
+#
+#    A named filter is a set of note filtering options used frequently together.
+#
+[filter]
+
+# Matches the notes created the last two weeks. For example:
+#    $ zk list recents --limit 15
+#    $ zk edit recents --interactive
+#recents = "--sort created- --created-after 'last two weeks'"
+
+
 # COMMAND ALIASES
 #
 #   Aliases are user commands called with ` + "`" + `zk <alias> [<flags>] [<args>]` + "`" + `.

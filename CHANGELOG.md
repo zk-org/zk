@@ -18,6 +18,15 @@ All notable changes to this project will be documented in this file.
 * Find every note whose title is mentioned in the note you are working on with `--mentioned-by file.md`.
     * To refer to a note using several names, you can use the [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note). For example the note titled "Artificial Intelligence" might have: `aliases: [AI, robot]`
     * To find only unlinked mentions, pair it with `--no-linked-by`, e.g. `--mentioned-by file.md --no-linked-by file.md`.
+* Declare [named filters](docs/config-filter.md) in the configuration file to reuse [note filtering options](docs/note-filtering.md) used frequently together, for example:
+    ```toml
+    [filter]
+    recents = "--sort created- --created-after 'last two weeks'"
+    ```
+    ```sh
+    $ zk list recents --limit 10
+    $ zk edit recents --interactive
+    ```
 
 ### Fixed
 

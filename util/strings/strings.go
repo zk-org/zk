@@ -91,3 +91,13 @@ func RemoveDuplicates(strings []string) []string {
 
 	return res
 }
+
+// InList returns whether the string is part of the given list of strings.
+func InList(strings []string, s string) bool {
+	for _, c := range strings {
+		if c == s {
+			return true
+		}
+	}
+	return false
+}

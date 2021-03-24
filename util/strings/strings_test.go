@@ -93,3 +93,16 @@ func TestRemoveDuplicates(t *testing.T) {
 	test([]string{"Two", "One", "Two", "One"}, []string{"Two", "One"})
 	test([]string{"One", "Two", "OneTwo"}, []string{"One", "Two", "OneTwo"})
 }
+
+func TestInList(t *testing.T) {
+	test := func(items []string, s string, expected bool) {
+		assert.Equal(t, InList(items, s), expected)
+	}
+
+	test([]string{}, "", false)
+	test([]string{}, "none", false)
+	test([]string{"one"}, "none", false)
+	test([]string{"one"}, "one", true)
+	test([]string{"one", "two"}, "one", true)
+	test([]string{"one", "two"}, "three", false)
+}

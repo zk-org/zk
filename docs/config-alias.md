@@ -68,6 +68,8 @@ In this case, additional arguments do not necessarily make sense, so we omit the
 recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
 ```
 
+This kind of alias might be more useful as a [named filter](config-filter.md).
+
 ### Edit the configuration file
 
 Here's a concrete example using environment variables, in particular `ZK_NOTEBOOK_DIR`. Note the double quotes around the path.

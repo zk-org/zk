@@ -10,6 +10,7 @@ Each [notebook](notebook.md) contains a configuration file used to customize you
     * [your default editor](tool-editor.md)
     * [your default pager](tool-pager.md)
     * [`fzf`](tool-fzf.md)
+* `[filter]` declares your [named filters](config-filter.md)
 * `[alias]` holds your [command aliases](config-alias.md)
 
 ## Global configuration file
@@ -88,6 +89,9 @@ pager = "less -FIRX"
 # Command used to preview a note during interactive fzf mode.
 fzf-preview = "bat -p --color always {-1}"
 
+# NAMED FILTERS
+[filter]
+recents = "--sort created- --created-after 'last two weeks'"
 
 # COMMAND ALIASES
 [alias]
