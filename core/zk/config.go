@@ -170,6 +170,12 @@ func (c *GroupConfig) Override(overrides ConfigOverrides) {
 // OpenConfig creates a new Config instance from its TOML representation stored
 // in the given file.
 func OpenConfig(path string, parentConfig Config) (Config, error) {
+	// The local config is optional.
+	exists, err := paths.Exists(path)
+	if err == nil && !exists {
+		return parentConfig, nil
+	}
+
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)

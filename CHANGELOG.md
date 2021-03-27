@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Changed
+
+* The local configuration is not required anymore in a notebook's `.zk` directory.
+
 
 ## 0.3.0
 
