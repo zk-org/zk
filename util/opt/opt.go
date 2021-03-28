@@ -4,7 +4,7 @@ import "fmt"
 
 // String holds an optional string value.
 type String struct {
-	value *string
+	Value *string
 }
 
 // NullString represents an empty optional String.
@@ -33,12 +33,12 @@ func NewNotEmptyString(value string) String {
 
 // IsNull returns whether the optional String has no value.
 func (s String) IsNull() bool {
-	return s.value == nil
+	return s.Value == nil
 }
 
 // IsEmpty returns whether the optional String has an empty string for value.
 func (s String) IsEmpty() bool {
-	return !s.IsNull() && *s.value == ""
+	return !s.IsNull() && *s.Value == ""
 }
 
 // NonEmpty returns a null String if the String is empty.
@@ -75,13 +75,13 @@ func (s String) Unwrap() string {
 	if s.IsNull() {
 		return ""
 	} else {
-		return *s.value
+		return *s.Value
 	}
 }
 
 func (s String) Equal(other String) bool {
-	return s.value == other.value ||
-		(s.value != nil && other.value != nil && *s.value == *other.value)
+	return s.Value == other.Value ||
+		(s.Value != nil && other.Value != nil && *s.Value == *other.Value)
 }
 
 func (s String) String() string {

@@ -8,7 +8,7 @@ require (
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/fatih/color v1.10.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
-	github.com/google/go-cmp v0.3.1
+	github.com/google/go-cmp v0.5.2
 	github.com/gosimple/slug v1.9.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.4
@@ -17,14 +17,14 @@ require (
 	github.com/mickael-menu/pretty v0.2.3
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.8.1
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/relvacode/iso8601 v1.1.0
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rvflash/elapsed v0.2.0
 	github.com/schollz/progressbar/v3 v3.7.4
 	github.com/tj/go-naturaldate v1.3.0
+	github.com/tliron/glsp v0.0.0-20210308190902-c7ec7df19257
+	github.com/tliron/kutil v0.1.22
 	github.com/yuin/goldmark v1.3.2
 	github.com/yuin/goldmark-meta v1.0.0
 	gopkg.in/djherbis/times.v1 v1.2.0
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

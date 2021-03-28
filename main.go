@@ -27,8 +27,9 @@ var cli struct {
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
 	NotebookDir string  `placeholder:"PATH" help:"Run as if zk was started in <PATH> instead of the current working directory."`
 
-	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
-	Version  kong.VersionFlag `help:"Print zk version." hidden:true`
+	ShowHelp ShowHelp         `cmd hidden default:"1"`
+	LSP      cmd.LSP          `cmd hidden`
+	Version  kong.VersionFlag `hidden help:"Print zk version."`
 }
 
 // NoInput is a flag preventing any user prompt when enabled.
@@ -56,7 +57,7 @@ func (cmd *ShowHelp) Run(container *cmd.Container) error {
 
 func main() {
 	// Create the dependency graph.
-	container, err := cmd.NewContainer()
+	container, err := cmd.NewContainer(Version)
 	fatalIfError(err)
 
 	// Open the notebook if there's any.

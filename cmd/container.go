@@ -22,6 +22,7 @@ import (
 )
 
 type Container struct {
+	Version        string
 	Config         zk.Config
 	Date           date.Provider
 	Logger         util.Logger
@@ -32,7 +33,7 @@ type Container struct {
 	zkErr          error
 }
 
-func NewContainer() (*Container, error) {
+func NewContainer(version string) (*Container, error) {
 	wrap := errors.Wrapper("initialization")
 
 	config := zk.NewDefaultConfig()
@@ -52,7 +53,8 @@ func NewContainer() (*Container, error) {
 	date := date.NewFrozenNow()
 
 	return &Container{
-		Config: config,
+		Version: version,
+		Config:  config,
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any template rendering during the execution.
 		Date:     &date,
