@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mickael-menu/zk/core"
+	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/util"
 	"github.com/mickael-menu/zk/util/test/assert"
 )
@@ -29,6 +30,25 @@ func TestCollectionDAOFindOrCreate(t *testing.T) {
 		_, err = dao.FindOrCreate("unknown", "created")
 		assert.Nil(t, err)
 		assertExist(t, tx, sql, "unknown", "created")
+	})
+}
+
+func TestCollectionDaoFindAll(t *testing.T) {
+	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
+		// Finds none
+		cs, err := dao.FindAll("missing")
+		assert.Nil(t, err)
+		assert.Equal(t, len(cs), 0)
+
+		// Finds existing
+		cs, err = dao.FindAll("tag")
+		assert.Nil(t, err)
+		assert.Equal(t, cs, []note.Collection{
+			{Kind: "tag", Name: "adventure", NoteCount: 2},
+			{Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{Kind: "tag", Name: "fiction", NoteCount: 1},
+			{Kind: "tag", Name: "history", NoteCount: 1},
+		})
 	})
 }
 

@@ -18,6 +18,7 @@ type CollectionDAO struct {
 	// Prepared SQL statements
 	createCollectionStmt   *LazyStmt
 	findCollectionStmt     *LazyStmt
+	findAllCollectionsStmt *LazyStmt
 	findAssociationStmt    *LazyStmt
 	createAssociationStmt  *LazyStmt
 	removeAssociationsStmt *LazyStmt
@@ -40,6 +41,16 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 		findCollectionStmt: tx.PrepareLazy(`
 			SELECT id FROM collections
 			 WHERE kind = ? AND name = ?
+		`),
+
+		// Find all collections.
+		findAllCollectionsStmt: tx.PrepareLazy(`
+			SELECT c.name, COUNT(nc.id) as count
+			  FROM collections c
+			  LEFT JOIN notes_collections nc ON nc.collection_id = c.id
+			 WHERE kind = ?
+			 GROUP BY c.id
+			 ORDER BY c.name
 		`),
 
 		// Returns whether a note and a collection are associated.
@@ -75,6 +86,33 @@ func (d *CollectionDAO) FindOrCreate(kind note.CollectionKind, name string) (cor
 	default:
 		return d.create(kind, name)
 	}
+}
+
+func (d *CollectionDAO) FindAll(kind note.CollectionKind) ([]note.Collection, error) {
+	rows, err := d.findAllCollectionsStmt.Query(kind)
+	if err != nil {
+		return []note.Collection{}, err
+	}
+	defer rows.Close()
+
+	collections := []note.Collection{}
+
+	for rows.Next() {
+		var name string
+		var count int
+		err := rows.Scan(&name, &count)
+		if err != nil {
+			return collections, err
+		}
+
+		collections = append(collections, note.Collection{
+			Kind:      kind,
+			Name:      name,
+			NoteCount: count,
+		})
+	}
+
+	return collections, nil
 }
 
 func (d *CollectionDAO) findCollection(kind note.CollectionKind, name string) (core.CollectionId, error) {

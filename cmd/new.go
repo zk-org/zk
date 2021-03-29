@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/mickael-menu/zk/adapter"
 	"github.com/mickael-menu/zk/core/note"
 	"github.com/mickael-menu/zk/core/zk"
 	"github.com/mickael-menu/zk/util/opt"
@@ -29,7 +30,7 @@ func (cmd *New) ConfigOverrides() zk.ConfigOverrides {
 	}
 }
 
-func (cmd *New) Run(container *Container) error {
+func (cmd *New) Run(container *adapter.Container) error {
 	zk, err := container.Zk()
 	if err != nil {
 		return err

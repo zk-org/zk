@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/mickael-menu/zk/adapter"
 	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
@@ -22,7 +23,7 @@ type List struct {
 	Filtering
 }
 
-func (cmd *List) Run(container *Container) error {
+func (cmd *List) Run(container *adapter.Container) error {
 	if cmd.Delimiter0 {
 		cmd.Delimiter = "\x00"
 	}
