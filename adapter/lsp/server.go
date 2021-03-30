@@ -22,6 +22,7 @@ import (
 type Server struct {
 	server    *glspserv.Server
 	container *adapter.Container
+	documents map[protocol.DocumentUri]document
 }
 
 // ServerOpts holds the options to create a new Server.
@@ -44,6 +45,7 @@ func NewServer(opts ServerOpts) *Server {
 	server := &Server{
 		server:    glspserv.NewServer(&handler, opts.Name, debug),
 		container: opts.Container,
+		documents: map[string]document{},
 	}
 
 	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
@@ -68,15 +70,16 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		capabilities := handler.CreateServerCapabilities()
+		capabilities.HoverProvider = true
 
 		zk, err := server.container.Zk()
 		if err == nil {
-			capabilities.TextDocumentSync = protocol.TextDocumentSyncKindFull
+			capabilities.TextDocumentSync = protocol.TextDocumentSyncKindIncremental
 			capabilities.DocumentLinkProvider = &protocol.DocumentLinkOptions{
 				ResolveProvider: boolPtr(true),
 			}
 
-			triggerChars := []string{}
+			triggerChars := []string{"["}
 
 			// Setup tag completion trigger characters
 			if zk.Config.Format.Markdown.Hashtags {
@@ -124,8 +127,43 @@ func NewServer(opts ServerOpts) *Server {
 		return nil
 	}
 
+	handler.TextDocumentDidOpen = func(context *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
+		langID := params.TextDocument.LanguageID
+		if langID != "markdown" && langID != "vimwiki" {
+			return nil
+		}
+
+		server.documents[params.TextDocument.URI] = document{
+			URI:     params.TextDocument.URI,
+			Content: params.TextDocument.Text,
+			Log:     server.server.Log,
+		}
+
+		return nil
+	}
+
+	handler.TextDocumentDidChange = func(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
+		doc, ok := server.documents[params.TextDocument.URI]
+		if !ok {
+			return nil
+		}
+
+		server.documents[params.TextDocument.URI] = doc.ApplyChanges(params.ContentChanges)
+		return nil
+	}
+
+	handler.TextDocumentDidClose = func(context *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {
+		delete(server.documents, params.TextDocument.URI)
+		return nil
+	}
+
+	handler.TextDocumentDidSave = func(context *glsp.Context, params *protocol.DidSaveTextDocumentParams) error {
+		return nil
+	}
+
 	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
 		triggerChar := params.Context.TriggerCharacter
+
 		if params.Context.TriggerKind != protocol.CompletionTriggerKindTriggerCharacter || triggerChar == nil {
 			return nil, nil
 		}
@@ -133,8 +171,20 @@ func NewServer(opts ServerOpts) *Server {
 		switch *triggerChar {
 		case "#", ":":
 			return server.buildTagCompletionList(*triggerChar)
+
+		case "[":
+			doc, ok := server.documents[params.TextDocument.URI]
+			if !ok {
+				return nil, nil
+			}
+			server.server.Log.Info("word at " + doc.WordAt(int(params.Position.Line), int(params.Position.Character)))
+			return server.buildLinkCompletionList(params)
 		}
 
+		return nil, nil
+	}
+
+	handler.TextDocumentHover = func(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
 		return nil, nil
 	}
 
@@ -191,6 +241,36 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config zk.Co
 		}
 	}
 	return &name
+}
+
+func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
+	db, _, err := s.container.Database(false)
+	if err != nil {
+		return nil, err
+	}
+
+	var notes []note.Match
+	err = db.WithTransaction(func(tx sqlite.Transaction) error {
+		finder := sqlite.NewNoteDAO(tx, s.container.Logger)
+		notes, err = finder.Find(note.FinderOpts{})
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var items []protocol.CompletionItem
+	for _, note := range notes {
+		items = append(items, protocol.CompletionItem{
+			Label: note.Title,
+			Documentation: protocol.MarkupContent{
+				Kind:  protocol.MarkupKindMarkdown,
+				Value: note.RawContent,
+			},
+		})
+	}
+
+	return items, nil
 }
 
 func boolPtr(v bool) *bool {
