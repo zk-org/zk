@@ -2,6 +2,8 @@ package lsp
 
 import (
 	"fmt"
+	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/mickael-menu/zk/adapter"
@@ -22,7 +24,7 @@ import (
 type Server struct {
 	server    *glspserv.Server
 	container *adapter.Container
-	documents map[protocol.DocumentUri]document
+	documents map[protocol.DocumentUri]*document
 }
 
 // ServerOpts holds the options to create a new Server.
@@ -45,7 +47,7 @@ func NewServer(opts ServerOpts) *Server {
 	server := &Server{
 		server:    glspserv.NewServer(&handler, opts.Name, debug),
 		container: opts.Container,
-		documents: map[string]document{},
+		documents: map[string]*document{},
 	}
 
 	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
@@ -133,7 +135,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		server.documents[params.TextDocument.URI] = document{
+		server.documents[params.TextDocument.URI] = &document{
 			URI:     params.TextDocument.URI,
 			Content: params.TextDocument.Text,
 			Log:     server.server.Log,
@@ -148,7 +150,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		server.documents[params.TextDocument.URI] = doc.ApplyChanges(params.ContentChanges)
+		doc.ApplyChanges(params.ContentChanges)
 		return nil
 	}
 
@@ -173,11 +175,6 @@ func NewServer(opts ServerOpts) *Server {
 			return server.buildTagCompletionList(*triggerChar)
 
 		case "[":
-			doc, ok := server.documents[params.TextDocument.URI]
-			if !ok {
-				return nil, nil
-			}
-			server.server.Log.Info("word at " + doc.WordAt(int(params.Position.Line), int(params.Position.Character)))
 			return server.buildLinkCompletionList(params)
 		}
 
@@ -244,6 +241,15 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config zk.Co
 }
 
 func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
+	zk, err := s.container.Zk()
+	if err != nil {
+		return nil, err
+	}
+	doc, ok := s.documents[params.TextDocument.URI]
+	if !ok {
+		return nil, nil
+	}
+
 	db, _, err := s.container.Database(false)
 	if err != nil {
 		return nil, err
@@ -262,7 +268,8 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 	var items []protocol.CompletionItem
 	for _, note := range notes {
 		items = append(items, protocol.CompletionItem{
-			Label: note.Title,
+			Label:    note.Title,
+			TextEdit: s.buildTextEditForLink(zk, note, doc, params.Position),
 			Documentation: protocol.MarkupContent{
 				Kind:  protocol.MarkupKindMarkdown,
 				Value: note.RawContent,
@@ -271,6 +278,34 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 	}
 
 	return items, nil
+}
+
+func (s *Server) buildTextEditForLink(zk *zk.Zk, note note.Match, document *document, pos protocol.Position) interface{} {
+	isWikiLink := (document.LookBehind(pos, 2) == "[[")
+	var text string
+
+	path := filepath.Join(zk.Path, note.Path)
+	documentPath := strings.TrimPrefix(document.URI, "file://")
+	path, err := filepath.Rel(filepath.Dir(documentPath), path)
+	if err != nil {
+		path = note.Path
+	}
+	ext := filepath.Ext(path)
+	path = strings.TrimSuffix(path, ext)
+	if isWikiLink {
+		text = path + "]]"
+	} else {
+		path = strings.ReplaceAll(url.PathEscape(path), "%2F", "/")
+		text = note.Title + "](" + path + ")"
+	}
+
+	return protocol.TextEdit{
+		Range: protocol.Range{
+			Start: pos,
+			End:   pos,
+		},
+		NewText: text,
+	}
 }
 
 func boolPtr(v bool) *bool {
