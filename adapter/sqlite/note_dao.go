@@ -33,6 +33,7 @@ type NoteDAO struct {
 	removeStmt             *LazyStmt
 	findIdByPathStmt       *LazyStmt
 	findIdByPathPrefixStmt *LazyStmt
+	findByIdStmt           *LazyStmt
 	addLinkStmt            *LazyStmt
 	setLinksTargetStmt     *LazyStmt
 	removeLinksStmt        *LazyStmt
@@ -80,6 +81,13 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		findIdByPathPrefixStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE path LIKE ? || '%'
+		`),
+
+		// Find a note from its ID.
+		findByIdStmt: tx.PrepareLazy(`
+			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
+			  FROM notes_with_metadata
+			 WHERE id = ?
 		`),
 
 		// Add a new link.
@@ -300,6 +308,19 @@ func idForRow(row *sql.Row) (core.NoteId, error) {
 	}
 }
 
+// FindByHref returns the first note matching the given link href.
+func (d *NoteDAO) FindByHref(href string) (*note.Match, error) {
+	id, err := d.findIdByPathPrefix(href)
+	if err != nil {
+		return nil, err
+	}
+	row, err := d.findByIdStmt.QueryRow(id)
+	if err != nil {
+		return nil, err
+	}
+	return d.scanNoteMatch(row)
+}
+
 // Find returns all the notes matching the given criteria.
 func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	matches := make([]note.Match, 0)
@@ -316,29 +337,44 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var (
-			id, wordCount                 int
-			title, lead, body, rawContent string
-			snippets, tags                sql.NullString
-			path, metadataJSON, checksum  string
-			created, modified             time.Time
-		)
-
-		err := rows.Scan(
-			&id, &path, &title, &lead, &body, &rawContent, &wordCount,
-			&created, &modified, &metadataJSON, &checksum, &tags, &snippets,
-		)
+		match, err := d.scanNoteMatch(rows)
 		if err != nil {
 			d.logger.Err(err)
 			continue
 		}
+		if match != nil {
+			matches = append(matches, *match)
+		}
+	}
 
+	return matches, nil
+}
+
+func (d *NoteDAO) scanNoteMatch(row RowScanner) (*note.Match, error) {
+	var (
+		id, wordCount                 int
+		title, lead, body, rawContent string
+		snippets, tags                sql.NullString
+		path, metadataJSON, checksum  string
+		created, modified             time.Time
+	)
+
+	err := row.Scan(
+		&id, &path, &title, &lead, &body, &rawContent, &wordCount,
+		&created, &modified, &metadataJSON, &checksum, &tags, &snippets,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
+		return nil, err
+	default:
 		metadata, err := unmarshalMetadata(metadataJSON)
 		if err != nil {
 			d.logger.Err(errors.Wrap(err, path))
 		}
 
-		matches = append(matches, note.Match{
+		return &note.Match{
 			Snippets: parseListFromNullString(snippets),
 			Metadata: note.Metadata{
 				Path:       path,
@@ -354,10 +390,8 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 				Modified:   modified,
 				Checksum:   checksum,
 			},
-		})
+		}, nil
 	}
-
-	return matches, nil
 }
 
 // parseListFromNullString splits a 0-separated string.
@@ -801,4 +835,8 @@ func buildMentionQuery(title, metadataJSON string) string {
 	}
 
 	return "(" + strings.Join(titles, " OR ") + ")"
+}
+
+type RowScanner interface {
+	Scan(dest ...interface{}) error
 }

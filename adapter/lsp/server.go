@@ -185,6 +185,31 @@ func NewServer(opts ServerOpts) *Server {
 		return nil, nil
 	}
 
+	handler.TextDocumentDocumentLink = func(context *glsp.Context, params *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {
+		doc, ok := server.documents[params.TextDocument.URI]
+		if !ok {
+			return []protocol.DocumentLink{}, nil
+		}
+
+		zk, err := server.container.Zk()
+		if err != nil {
+			return nil, err
+		}
+
+		db, _, err := server.container.Database(false)
+		if err != nil {
+			return nil, err
+		}
+
+		var links []protocol.DocumentLink
+		err = db.WithTransaction(func(tx sqlite.Transaction) error {
+			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
+			links, err = doc.DocumentLinks(zk.Path, finder)
+			return err
+		})
+		return links, err
+	}
+
 	return server
 }
 
