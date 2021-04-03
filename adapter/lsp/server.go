@@ -2,6 +2,7 @@ package lsp
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -186,7 +187,46 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentHover = func(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
-		return nil, nil
+		doc, ok := server.documents[params.TextDocument.URI]
+		if !ok {
+			return nil, nil
+		}
+
+		zk, err := server.container.Zk()
+		if err != nil {
+			return nil, err
+		}
+
+		db, _, err := server.container.Database(false)
+		if err != nil {
+			return nil, err
+		}
+
+		var target string
+		err = db.WithTransaction(func(tx sqlite.Transaction) error {
+			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
+			link, err := doc.DocumentLinkAt(params.Position)
+			if link == nil || err != nil {
+				return err
+			}
+			target, err = server.targetForHref(link.Href, zk.Path, finder)
+			return err
+		})
+		if err != nil || target == "" || strutil.IsURL(target) {
+			return nil, err
+		}
+		target = strings.TrimPrefix(target, "file://")
+		contents, err := ioutil.ReadFile(target)
+		if err != nil {
+			return nil, err
+		}
+
+		return &protocol.Hover{
+			Contents: protocol.MarkupContent{
+				Kind:  protocol.MarkupKindMarkdown,
+				Value: string(contents),
+			},
+		}, nil
 	}
 
 	handler.TextDocumentDocumentLink = func(context *glsp.Context, params *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {

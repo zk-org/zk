@@ -510,6 +510,8 @@ github.com/tj/assert v0.0.0-20190920132354-ee03d75cd160 h1:NSWpaDaurcAJY7PkL8Xt0
 github.com/tj/assert v0.0.0-20190920132354-ee03d75cd160/go.mod h1:mZ9/Rh9oLWpLLDRpvE+3b7gP/C2YyLFYxNmcLnPTMe0=
 github.com/tj/go-naturaldate v1.3.0 h1:OgJIPkR/Jk4bFMBLbxZ8w+QUxwjqSvzd9x+yXocY4RI=
 github.com/tj/go-naturaldate v1.3.0/go.mod h1:rpUbjivDKiS1BlfMGc2qUKNZ/yxgthOfmytQs8d8hKk=
+github.com/tliron/glsp v0.0.0-20210308190902-c7ec7df19257 h1:EIMeclnZjLgYIUs06pWOo+wIuOji9Q4Qz0MaU3va198=
+github.com/tliron/glsp v0.0.0-20210308190902-c7ec7df19257/go.mod h1:ouzTGvQteTU4hdsG+32vIx0if7E9CzMa64d7tYJJ91g=
 github.com/tliron/kutil v0.1.22 h1:VnwZ6YlTao2ISmm9wdv8CnVy5BjROBPpG65qIRc1LtE=
 github.com/tliron/kutil v0.1.22/go.mod h1:HkG4xQS2/BHI8EO9WfdOwnlUil7NhY/wmiV7U1uwEYw=
 github.com/tliron/yamlkeys v1.3.5/go.mod h1:8kJ1A/1s3p/I3MQUAbtv72dPEyQGoh0ZkQp0UAkABBo=
