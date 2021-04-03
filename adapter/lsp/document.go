@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mickael-menu/zk/core/note"
+	strutil "github.com/mickael-menu/zk/util/strings"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/kutil/logging"
 )
@@ -87,43 +88,72 @@ func (d *document) LookBehind(pos protocol.Position, length int) string {
 }
 
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?:\|(.+?))?\]\]`)
-var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?)[^\\]\]\((.+?)[^\\]\)`)
+var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
 
 func (d *document) DocumentLinks(basePath string, finder note.Finder) ([]protocol.DocumentLink, error) {
 	links := []protocol.DocumentLink{}
 
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
-		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-			href := line[match[4]:match[5]]
+
+		matches := []linkMatch{}
+		appendMatch := func(href string, start, end int) {
 			if href == "" {
-				continue
+				return
 			}
 
-			note, err := finder.FindByHref(href)
-			if err != nil {
-				d.Log.Errorf("findByHref: %s", err.Error())
-			}
-			if note == nil {
-				continue
-			}
-
-			links = append(links, protocol.DocumentLink{
+			matches = append(matches, linkMatch{
+				Href: href,
 				Range: protocol.Range{
 					Start: protocol.Position{
 						Line:      protocol.UInteger(lineIndex),
-						Character: protocol.UInteger(match[0]),
+						Character: protocol.UInteger(start),
 					},
 					End: protocol.Position{
 						Line:      protocol.UInteger(lineIndex),
-						Character: protocol.UInteger(match[1]),
+						Character: protocol.UInteger(end),
 					},
 				},
-				Target:  stringPtr("file://" + filepath.Join(basePath, note.Path)),
-				Tooltip: &note.Title,
 			})
+		}
+
+		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+			href := line[match[4]:match[5]]
+			appendMatch(href, match[0], match[1])
+		}
+
+		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+			href := line[match[2]:match[3]]
+			appendMatch(href, match[0], match[1])
+		}
+
+		for _, match := range matches {
+			link := protocol.DocumentLink{
+				Range: match.Range,
+			}
+
+			if strutil.IsURL(match.Href) {
+				link.Target = &match.Href
+			} else {
+				note, err := finder.FindByHref(match.Href)
+				if err != nil {
+					d.Log.Errorf("findByHref(%s): %s", match.Href, err.Error())
+				}
+				if note == nil {
+					continue
+				}
+				link.Target = stringPtr("file://" + filepath.Join(basePath, note.Path))
+				link.Tooltip = &note.Title
+			}
+
+			links = append(links, link)
 		}
 	}
 
 	return links, nil
+}
+
+type linkMatch struct {
+	Href  string
+	Range protocol.Range
 }
