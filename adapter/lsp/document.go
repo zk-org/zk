@@ -90,6 +90,25 @@ func (d *document) LookBehind(pos protocol.Position, length int) string {
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?:\|(.+?))?\]\]`)
 var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
 
+// DocumentLinkAt returns the internal or external link found in the document
+// at the given position.
+func (d *document) DocumentLinkAt(pos protocol.Position, basePath string, finder note.Finder) (*protocol.DocumentLink, error) {
+	links, err := d.DocumentLinks(basePath, finder)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, link := range links {
+		if positionInRange(d.Content, link.Range, pos) {
+			return &link, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// DocumentLinks returns all the internal and external links found in the
+// document.
 func (d *document) DocumentLinks(basePath string, finder note.Finder) ([]protocol.DocumentLink, error) {
 	links := []protocol.DocumentLink{}
 

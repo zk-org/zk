@@ -50,8 +50,10 @@ func NewServer(opts ServerOpts) *Server {
 		documents: map[string]*document{},
 	}
 
+	var clientCapabilities protocol.ClientCapabilities
+
 	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
-		// clientCapabilities = &params.Capabilities
+		clientCapabilities = params.Capabilities
 
 		if len(params.WorkspaceFolders) > 0 {
 			for _, f := range params.WorkspaceFolders {
@@ -94,6 +96,8 @@ func NewServer(opts ServerOpts) *Server {
 			capabilities.CompletionProvider = &protocol.CompletionOptions{
 				TriggerCharacters: triggerChars,
 			}
+
+			capabilities.DefinitionProvider = boolPtr(true)
 		}
 
 		return protocol.InitializeResult{
@@ -208,6 +212,44 @@ func NewServer(opts ServerOpts) *Server {
 			return err
 		})
 		return links, err
+	}
+
+	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
+		doc, ok := server.documents[params.TextDocument.URI]
+		if !ok {
+			return []protocol.DocumentLink{}, nil
+		}
+
+		zk, err := server.container.Zk()
+		if err != nil {
+			return nil, err
+		}
+
+		db, _, err := server.container.Database(false)
+		if err != nil {
+			return nil, err
+		}
+
+		var link *protocol.DocumentLink
+		err = db.WithTransaction(func(tx sqlite.Transaction) error {
+			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
+			link, err = doc.DocumentLinkAt(params.Position, zk.Path, finder)
+			return err
+		})
+		if link == nil || err != nil {
+			return nil, err
+		}
+
+		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+			return protocol.LocationLink{
+				OriginSelectionRange: &link.Range,
+				TargetURI:            *link.Target,
+			}, nil
+		} else {
+			return protocol.Location{
+				URI: *link.Target,
+			}, nil
+		}
 	}
 
 	return server
@@ -333,9 +375,23 @@ func (s *Server) buildTextEditForLink(zk *zk.Zk, note note.Match, document *docu
 	}
 }
 
+func positionInRange(content string, rng protocol.Range, pos protocol.Position) bool {
+	start, end := rng.IndexesIn(content)
+	i := pos.IndexIn(content)
+	return i >= start && i <= end
+}
+
 func boolPtr(v bool) *bool {
 	b := v
 	return &b
+}
+
+func isTrue(v *bool) bool {
+	return v != nil && *v == true
+}
+
+func isFalse(v *bool) bool {
+	return v == nil || *v == false
 }
 
 func stringPtr(v string) *string {
