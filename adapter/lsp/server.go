@@ -205,13 +205,30 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		var links []protocol.DocumentLink
+		var documentLinks []protocol.DocumentLink
 		err = db.WithTransaction(func(tx sqlite.Transaction) error {
 			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
-			links, err = doc.DocumentLinks(zk.Path, finder)
-			return err
+			links, err := doc.DocumentLinks()
+			if err != nil {
+				return err
+			}
+
+			for _, link := range links {
+				target, err := server.targetForHref(link.Href, zk.Path, finder)
+				if target == "" || err != nil {
+					continue
+				}
+
+				documentLinks = append(documentLinks, protocol.DocumentLink{
+					Range:  link.Range,
+					Target: &target,
+				})
+			}
+
+			return nil
 		})
-		return links, err
+
+		return documentLinks, err
 	}
 
 	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
@@ -230,29 +247,51 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		var link *protocol.DocumentLink
+		var link *documentLink
+		var target string
 		err = db.WithTransaction(func(tx sqlite.Transaction) error {
 			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
-			link, err = doc.DocumentLinkAt(params.Position, zk.Path, finder)
+			link, err = doc.DocumentLinkAt(params.Position)
+			if link == nil || err != nil {
+				return err
+			}
+			target, err = server.targetForHref(link.Href, zk.Path, finder)
 			return err
 		})
-		if link == nil || err != nil {
+		if link == nil || target == "" || err != nil {
 			return nil, err
 		}
 
 		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
-				TargetURI:            *link.Target,
+				TargetURI:            target,
 			}, nil
 		} else {
 			return protocol.Location{
-				URI: *link.Target,
+				URI: target,
 			}, nil
 		}
 	}
 
 	return server
+}
+
+// targetForHref returns the LSP documentUri for the note at the given HREF.
+func (s *Server) targetForHref(href string, basePath string, finder note.Finder) (string, error) {
+	if strutil.IsURL(href) {
+		return href, nil
+	} else {
+		note, err := finder.FindByHref(href)
+		if err != nil {
+			s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
+			return "", err
+		}
+		if note == nil {
+			return "", nil
+		}
+		return "file://" + filepath.Join(basePath, note.Path), nil
+	}
 }
 
 // Run starts the Language Server in stdio mode.
