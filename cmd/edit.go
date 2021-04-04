@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/mickael-menu/zk/adapter"
 	"github.com/mickael-menu/zk/adapter/fzf"
 	"github.com/mickael-menu/zk/adapter/sqlite"
 	"github.com/mickael-menu/zk/core/note"
@@ -17,7 +18,7 @@ type Edit struct {
 	Filtering
 }
 
-func (cmd *Edit) Run(container *Container) error {
+func (cmd *Edit) Run(container *adapter.Container) error {
 	zk, err := container.Zk()
 	if err != nil {
 		return err

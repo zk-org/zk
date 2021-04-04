@@ -44,6 +44,13 @@ type Parser interface {
 	Parse(source string) (*Content, error)
 }
 
+// Collection holds metadata about a note collection.
+type Collection struct {
+	Kind      CollectionKind
+	Name      string
+	NoteCount int
+}
+
 // CollectionKind defines a kind of note collection, such as tags.
 type CollectionKind string
 

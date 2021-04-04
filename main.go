@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
+	"github.com/mickael-menu/zk/adapter"
 	"github.com/mickael-menu/zk/cmd"
 	"github.com/mickael-menu/zk/core/style"
 	executil "github.com/mickael-menu/zk/util/exec"
@@ -27,14 +28,15 @@ var cli struct {
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
 	NotebookDir string  `placeholder:"PATH" help:"Run as if zk was started in <PATH> instead of the current working directory."`
 
-	ShowHelp ShowHelp         `cmd default:"1" hidden:true`
-	Version  kong.VersionFlag `help:"Print zk version." hidden:true`
+	ShowHelp ShowHelp         `cmd hidden default:"1"`
+	LSP      cmd.LSP          `cmd hidden`
+	Version  kong.VersionFlag `hidden help:"Print zk version."`
 }
 
 // NoInput is a flag preventing any user prompt when enabled.
 type NoInput bool
 
-func (f NoInput) BeforeApply(container *cmd.Container) error {
+func (f NoInput) BeforeApply(container *adapter.Container) error {
 	container.Terminal.NoInput = true
 	return nil
 }
@@ -42,7 +44,7 @@ func (f NoInput) BeforeApply(container *cmd.Container) error {
 // ShowHelp is the default command run. It's equivalent to `zk --help`.
 type ShowHelp struct{}
 
-func (cmd *ShowHelp) Run(container *cmd.Container) error {
+func (cmd *ShowHelp) Run(container *adapter.Container) error {
 	parser, err := kong.New(&cli, options(container)...)
 	if err != nil {
 		return err
@@ -56,7 +58,7 @@ func (cmd *ShowHelp) Run(container *cmd.Container) error {
 
 func main() {
 	// Create the dependency graph.
-	container, err := cmd.NewContainer()
+	container, err := adapter.NewContainer(Version)
 	fatalIfError(err)
 
 	// Open the notebook if there's any.
@@ -74,7 +76,7 @@ func main() {
 	}
 }
 
-func options(container *cmd.Container) []kong.Option {
+func options(container *adapter.Container) []kong.Option {
 	term := container.Terminal
 	return []kong.Option{
 		kong.Bind(container),
@@ -105,7 +107,7 @@ func fatalIfError(err error) {
 }
 
 // runAlias will execute a user alias if the command is one of them.
-func runAlias(container *cmd.Container, args []string) (bool, error) {
+func runAlias(container *adapter.Container, args []string) (bool, error) {
 	if len(args) < 1 {
 		return false, nil
 	}

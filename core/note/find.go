@@ -19,6 +19,7 @@ var ErrCanceled = errors.New("canceled")
 // Returns the number of matches found.
 type Finder interface {
 	Find(opts FinderOpts) ([]Match, error)
+	FindByHref(href string) (*Match, error)
 }
 
 // FinderOpts holds the option used to filter and order a list of notes.

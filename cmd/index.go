@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/mickael-menu/zk/adapter"
 )
 
 // Index indexes the content of all the notes in the notebook.
@@ -14,7 +16,7 @@ func (cmd *Index) Help() string {
 	return "You usually do not need to run `zk index` manually, as notes are indexed automatically when needed."
 }
 
-func (cmd *Index) Run(container *Container) error {
+func (cmd *Index) Run(container *adapter.Container) error {
 	_, stats, err := container.Database(cmd.Force)
 	if err != nil {
 		return err
