@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/mickael-menu/zk/adapter"
-	"github.com/mickael-menu/zk/cmd"
-	"github.com/mickael-menu/zk/core/style"
-	executil "github.com/mickael-menu/zk/util/exec"
+	"github.com/mickael-menu/zk/internal/adapter"
+	"github.com/mickael-menu/zk/internal/cmd"
+	"github.com/mickael-menu/zk/internal/core/style"
+	executil "github.com/mickael-menu/zk/internal/util/exec"
 )
 
 var Version = "dev"
