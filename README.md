@@ -32,18 +32,44 @@
 
 ## Install
 
-`zk` was only tested on macOS and Linux.
+[Check out the latest release](https://github.com/mickael-menu/zk/releases) for pre-built binaries for macOS and Linux (`zk` was not tested on Windows).
 
 ### Build from scratch
 
-Make sure you have a working [Go installation](https://golang.org/), with Go's `bin` directory in your `PATH`.
+Make sure you have a working [Go installation](https://golang.org/), then clone the repository:
 
 ```sh
 $ git clone https://github.com/mickael-menu/zk.git
 $ cd zk
 $ chmod a+x go
-$ ./go install
-$ zk -h
+```
+
+#### On macOS
+
+`icu4c` is required to build `zk`, which you can install with [Homebrew](https://brew.sh/).
+
+```
+$ brew install icu4c
+$ ./go build
+$ ./zk -h
+```
+
+##### Apple Silicon
+
+The build command needs additional environment variables on Apple Silicon:
+
+```
+$ GOARCH=arm64 CGO_CFLAGS="-I/opt/homebrew/opt/icu4c/include" CGO_LDFLAGS="-L/opt/homebrew/opt/icu4c/lib" ./go build
+```
+
+#### On Linux
+
+`libicu-dev` is required to build `zk`, use your favorite package manager to install it.
+
+```
+$ apt-install libicu-dev
+$ ./go build
+$ ./zk -h
 ```
 
 ## Related projects
