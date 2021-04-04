@@ -26,7 +26,7 @@ func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func
 		fixtures, err := testfixtures.New(
 			testfixtures.Database(db.db),
 			testfixtures.Dialect("sqlite"),
-			testfixtures.Directory("fixtures/"+fixturesDir.String()),
+			testfixtures.Directory("testdata/"+fixturesDir.String()),
 			// Necessary to work with an in-memory database.
 			testfixtures.DangerousSkipTestDatabaseCheck(),
 		)

@@ -11,5 +11,5 @@ func Path(name string) string {
 	if !ok {
 		panic("failed to get the caller's path")
 	}
-	return filepath.Join(filepath.Dir(callerPath), "fixtures", name)
+	return filepath.Join(filepath.Dir(callerPath), "testdata", name)
 }
