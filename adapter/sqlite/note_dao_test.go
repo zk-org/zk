@@ -15,7 +15,7 @@ import (
 )
 
 func TestNoteDAOIndexed(t *testing.T) {
-	testNoteDAOWithoutFixtures(t, func(tx Transaction, dao *NoteDAO) {
+	testNoteDAOWithFixtures(t, "", func(tx Transaction, dao *NoteDAO) {
 		for _, note := range []note.Metadata{
 			{
 				Path:     "a.md",
@@ -389,6 +389,67 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 
 		links = queryLinkRows(t, tx, `id = 4`)
 		assert.Nil(t, links[0].TargetId)
+	})
+}
+
+func TestNoteDAOFindByHref(t *testing.T) {
+	test := func(href string, expected *note.Match) {
+		testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+			actual, err := dao.FindByHref(href)
+			assert.Nil(t, err)
+			assert.Equal(t, actual, expected)
+		})
+	}
+
+	test("not-found", nil)
+
+	// Full path
+	test("log/2021-01-03.md", &note.Match{
+		Metadata: note.Metadata{
+			Path:       "log/2021-01-03.md",
+			Title:      "Daily note",
+			Lead:       "A daily note",
+			Body:       "A daily note\n\nWith lot of content",
+			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+			WordCount:  3,
+			Links:      []note.Link{},
+			Tags:       []string{"fiction", "adventure"},
+			Metadata: map[string]interface{}{
+				"author": "Dom",
+			},
+			Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			Checksum: "qwfpgj",
+		},
+		Snippets: []string{"A daily note"},
+	})
+
+	// Prefix
+	test("log/2021-01", &note.Match{
+		Metadata: note.Metadata{
+			Path:       "log/2021-01-03.md",
+			Title:      "Daily note",
+			Lead:       "A daily note",
+			Body:       "A daily note\n\nWith lot of content",
+			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+			WordCount:  3,
+			Links:      []note.Link{},
+			Tags:       []string{"fiction", "adventure"},
+			Metadata: map[string]interface{}{
+				"author": "Dom",
+			},
+			Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			Checksum: "qwfpgj",
+		},
+		Snippets: []string{"A daily note"},
+	})
+
+	// Prefix matches the shortest path (fixes https://github.com/mickael-menu/zk/issues/23)
+	testNoteDAOWithFixtures(t, "issue23", func(tx Transaction, dao *NoteDAO) {
+		actual, err := dao.FindByHref("prefix")
+		assert.Nil(t, err)
+		assert.Equal(t, actual.Path, "prefix-short.md")
 	})
 }
 
@@ -1053,8 +1114,8 @@ func testNoteDAO(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
 	})
 }
 
-func testNoteDAOWithoutFixtures(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
-	testTransactionWithoutFixtures(t, func(tx Transaction) {
+func testNoteDAOWithFixtures(t *testing.T, fixtures string, callback func(tx Transaction, dao *NoteDAO)) {
+	testTransactionWithFixtures(t, opt.NewNotEmptyString(fixtures), func(tx Transaction) {
 		callback(tx, NewNoteDAO(tx, &util.NullLogger))
 	})
 }

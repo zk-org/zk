@@ -1,0 +1,9 @@
+# See https://github.com/mickael-menu/zk/issues/23
+- id: 1
+  path: "prefix-longest.md"
+  sortable_path: "prefix-longest.md"
+  checksum: ""
+- id: 2
+  path: "prefix-short.md"
+  sortable_path: "prefix-short.md"
+  checksum: ""

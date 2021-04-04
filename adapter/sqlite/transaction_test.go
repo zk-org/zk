@@ -14,12 +14,6 @@ func testTransaction(t *testing.T, test func(tx Transaction)) {
 	testTransactionWithFixtures(t, opt.NewString("default"), test)
 }
 
-// testTransaction is an utility function used to test a SQLite transaction to
-// an empty DB.
-func testTransactionWithoutFixtures(t *testing.T, test func(tx Transaction)) {
-	testTransactionWithFixtures(t, opt.NullString, test)
-}
-
 // testTransactionWithFixtures is an utility function used to test a SQLite transaction to
 // the DB, which loads the given set of DB fixtures.
 func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func(tx Transaction)) {

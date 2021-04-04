@@ -81,6 +81,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		findIdByPathPrefixStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE path LIKE ? || '%'
+			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find a note from its ID.
