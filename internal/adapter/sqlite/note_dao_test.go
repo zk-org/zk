@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/opt"
@@ -261,7 +260,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 		assert.Nil(t, err)
-		assert.Equal(t, id, core.NoteId(6))
+		assert.Equal(t, id, SQLNoteID(6))
 
 		row, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
@@ -379,7 +378,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 		assert.Equal(t, len(links) > 0, true)
 
 		links = queryLinkRows(t, tx, `id = 4`)
-		assert.Equal(t, *links[0].TargetId, core.NoteId(1))
+		assert.Equal(t, *links[0].TargetId, SQLNoteID(1))
 
 		err := dao.Remove("log/2021-01-03.md")
 		assert.Nil(t, err)
@@ -1137,8 +1136,8 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 }
 
 type linkRow struct {
-	SourceId                   core.NoteId
-	TargetId                   *core.NoteId
+	SourceId                   SQLNoteID
+	TargetId                   *SQLNoteID
 	Href, Title, Rels, Snippet string
 	SnippetStart, SnippetEnd   int
 	External                   bool
@@ -1161,7 +1160,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 		var targetId *int64
 		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
-		row.SourceId = core.NoteId(sourceId)
+		row.SourceId = SQLNoteID(sourceId)
 		if targetId != nil {
 			row.TargetId = idPointer(*targetId)
 		}
@@ -1173,7 +1172,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	return links
 }
 
-func idPointer(i int64) *core.NoteId {
-	id := core.NoteId(i)
+func idPointer(i int64) *SQLNoteID {
+	id := SQLNoteID(i)
 	return &id
 }

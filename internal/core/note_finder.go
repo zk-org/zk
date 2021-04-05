@@ -1,27 +1,21 @@
-package note
+package core
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
-// ErrCanceled is returned when the user cancelled an operation.
-var ErrCanceled = errors.New("canceled")
-
-// Finder retrieves notes matching the given options.
-type Finder interface {
-	Find(opts FinderOpts) ([]Match, error)
-	FindByHref(href string) (*Match, error)
+type NoteFinder interface {
+	// FindNotes retrieves the notes matching the given filtering criteria.
+	FindNotes(opts NoteFilteringOpts) ([]ContextualNote, error)
 }
 
-// FinderOpts holds the option used to filter and order a list of notes.
-type FinderOpts struct {
+// NoteFilteringOpts holds a set of filtering options used to find notes.
+type NoteFilteringOpts struct {
 	// Filter used to match the notes with FTS predicates.
 	Match opt.String
 	// Filter by note paths.
@@ -29,7 +23,7 @@ type FinderOpts struct {
 	// Filter excluding notes at the given paths.
 	ExcludePaths []string
 	// Filter excluding notes with the given IDs.
-	ExcludeIds []core.NoteID
+	ExcludeIds []NoteID
 	// Filter by tags found in the notes.
 	Tags []string
 	// Filter the notes mentioning the given ones.
@@ -57,25 +51,18 @@ type FinderOpts struct {
 	// Limits the number of results
 	Limit int
 	// Sorting criteria
-	Sorters []Sorter
+	Sorters []NoteSorter
 }
 
-// ExcludingId creates a new FinderOpts after adding the given id to the list
+// ExcludingIds creates a new FinderOpts after adding the given ids to the list
 // of excluded note ids.
-func (o FinderOpts) ExcludingId(id core.NoteID) FinderOpts {
+func (o NoteFilteringOpts) ExcludingIds(ids ...NoteID) NoteFilteringOpts {
 	if o.ExcludeIds == nil {
-		o.ExcludeIds = []core.NoteID{}
+		o.ExcludeIds = []NoteID{}
 	}
 
-	o.ExcludeIds = append(o.ExcludeIds, id)
+	o.ExcludeIds = append(o.ExcludeIds, ids...)
 	return o
-}
-
-// Match holds information about a note matching the find options.
-type Match struct {
-	Metadata
-	// Snippets are relevant excerpts in the note.
-	Snippets []string
 }
 
 // LinkFilter is a note filter used to select notes linking to other ones.
@@ -86,53 +73,70 @@ type LinkFilter struct {
 	MaxDistance int
 }
 
-// Sorter represents an order term used to sort a list of notes.
-type Sorter struct {
-	Field     SortField
+// NoteSorter represents an order term used to sort a list of notes.
+type NoteSorter struct {
+	Field     NoteSortField
 	Ascending bool
 }
 
 // SortField represents a note field used to sort a list of notes.
-type SortField int
+type NoteSortField int
 
 const (
 	// Sort by creation date.
-	SortCreated SortField = iota + 1
+	NoteSortCreated NoteSortField = iota + 1
 	// Sort by modification date.
-	SortModified
+	NoteSortModified
 	// Sort by the file paths.
-	SortPath
+	NoteSortPath
 	// Sort randomly.
-	SortRandom
+	NoteSortRandom
 	// Sort by the note titles.
-	SortTitle
+	NoteSortTitle
 	// Sort by the number of words in the note bodies.
-	SortWordCount
+	NoteSortWordCount
 )
+
+// NoteSortersFromStrings returns a list of NoteSorter from their string
+// representation.
+func NoteSortersFromStrings(strs []string) ([]NoteSorter, error) {
+	sorters := make([]NoteSorter, 0)
+
+	// Iterates in reverse order to be able to override sort criteria set in a
+	// config alias with a `--sort` flag.
+	for i := len(strs) - 1; i >= 0; i-- {
+		sorter, err := NoteSorterFromString(strs[i])
+		if err != nil {
+			return sorters, err
+		}
+		sorters = append(sorters, sorter)
+	}
+	return sorters, nil
+}
 
 // SorterFromString returns a Sorter from its string representation.
 //
 // If the input str has for suffix `+`, then the order will be ascending, while
 // descending for `-`. If no suffix is given, then the default order for the
 // sorting field will be used.
-func SorterFromString(str string) (Sorter, error) {
+func NoteSorterFromString(str string) (NoteSorter, error) {
 	orderSymbol, _ := utf8.DecodeLastRuneInString(str)
 	str = strings.TrimRight(str, "+-")
 
-	var sorter Sorter
+	var sorter NoteSorter
 	switch str {
 	case "created", "c":
-		sorter = Sorter{Field: SortCreated, Ascending: false}
+		sorter = NoteSorter{Field: NoteSortCreated, Ascending: false}
 	case "modified", "m":
-		sorter = Sorter{Field: SortModified, Ascending: false}
+		sorter = NoteSorter{Field: NoteSortModified, Ascending: false}
 	case "path", "p":
-		sorter = Sorter{Field: SortPath, Ascending: true}
+		sorter = NoteSorter{Field: NoteSortPath, Ascending: true}
 	case "title", "t":
-		sorter = Sorter{Field: SortTitle, Ascending: true}
+		sorter = NoteSorter{Field: NoteSortTitle, Ascending: true}
 	case "random", "r":
-		sorter = Sorter{Field: SortRandom, Ascending: true}
+		sorter = NoteSorter{Field: NoteSortRandom, Ascending: true}
 	case "word-count", "wc":
-		sorter = Sorter{Field: SortWordCount, Ascending: true}
+		sorter = NoteSorter{Field: NoteSortWordCount, Ascending: true}
 	default:
 		return sorter, fmt.Errorf("%s: unknown sorting term\ntry created, modified, path, title, random or word-count", str)
 	}
@@ -145,20 +149,4 @@ func SorterFromString(str string) (Sorter, error) {
 	}
 
 	return sorter, nil
-}
-
-// SortersFromStrings returns a list of Sorter from their string representation.
-func SortersFromStrings(strs []string) ([]Sorter, error) {
-	sorters := make([]Sorter, 0)
-
-	// Iterates in reverse order to be able to override sort criteria set in a
-	// config alias with a `--sort` flag.
-	for i := len(strs) - 1; i >= 0; i-- {
-		sorter, err := SorterFromString(strs[i])
-		if err != nil {
-			return sorters, err
-		}
-		sorters = append(sorters, sorter)
-	}
-	return sorters, nil
 }

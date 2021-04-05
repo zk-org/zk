@@ -32,16 +32,16 @@ func (i *NoteIndexer) Indexed() (<-chan paths.Metadata, error) {
 }
 
 // Add indexes a new note from its metadata.
-func (i *NoteIndexer) Add(metadata note.Metadata) (core.NoteId, error) {
+func (i *NoteIndexer) Add(metadata note.Metadata) (core.NoteID, error) {
 	wrap := errors.Wrapperf("%v: failed to index the note", metadata.Path)
 	noteId, err := i.notes.Add(metadata)
 	if err != nil {
-		return 0, wrap(err)
+		return SQLNoteID(0), wrap(err)
 	}
 
 	err = i.associateTags(noteId, metadata.Tags)
 	if err != nil {
-		return 0, wrap(err)
+		return SQLNoteID(0), wrap(err)
 	}
 
 	return noteId, nil
@@ -69,7 +69,7 @@ func (i *NoteIndexer) Update(metadata note.Metadata) error {
 	return err
 }
 
-func (i *NoteIndexer) associateTags(noteId core.NoteId, tags []string) error {
+func (i *NoteIndexer) associateTags(noteId SQLNoteID, tags []string) error {
 	for _, tag := range tags {
 		tagId, err := i.collections.FindOrCreate(note.CollectionKindTag, tag)
 		if err != nil {

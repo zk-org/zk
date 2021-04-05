@@ -30,7 +30,7 @@ func TestNoteIndexerAddWithTags(t *testing.T) {
 
 func TestNoteIndexerUpdateWithTags(t *testing.T) {
 	testNoteIndexer(t, func(tx Transaction, indexer *NoteIndexer) {
-		id := core.NoteId(1)
+		id := SQLNoteID(1)
 
 		assertSQL := func(after bool) {
 			assertTaggedOrNot(t, tx, true, id, "fiction")
@@ -59,6 +59,6 @@ func assertTagExistsOrNot(t *testing.T, tx Transaction, shouldExist bool, tag st
 	assertExistOrNot(t, tx, shouldExist, "SELECT id FROM collections WHERE kind = 'tag' AND name = ?", tag)
 }
 
-func assertTaggedOrNot(t *testing.T, tx Transaction, shouldBeTagged bool, noteId core.NoteId, tag string) {
-	assertExistOrNot(t, tx, shouldBeTagged, "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id IS (SELECT id FROM collections WHERE kind = 'tag' AND name = ?)", noteId, tag)
+func assertTaggedOrNot(t *testing.T, tx Transaction, shouldBeTagged bool, noteId core.NoteID, tag string) {
+	assertExistOrNot(t, tx, shouldBeTagged, "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id IS (SELECT id FROM collections WHERE kind = 'tag' AND name = ?)", noteId.(SQLNoteID), tag)
 }

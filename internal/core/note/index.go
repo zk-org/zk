@@ -61,7 +61,7 @@ type Indexer interface {
 	// Indexed returns the list of indexed note file metadata.
 	Indexed() (<-chan paths.Metadata, error)
 	// Add indexes a new note from its metadata.
-	Add(metadata Metadata) (core.NoteId, error)
+	Add(metadata Metadata) (core.NoteID, error)
 	// Update updates the metadata of an already indexed note.
 	Update(metadata Metadata) error
 	// Remove deletes a note from the index.

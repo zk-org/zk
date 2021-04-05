@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
@@ -151,7 +150,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 }
 
 // Add inserts a new note to the index.
-func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
+func (d *NoteDAO) Add(note note.Metadata) (SQLNoteID, error) {
 	// For sortable_path, we replace in path / by the shortest non printable
 	// character available to make it sortable. Without this, sorting by the
 	// path would be a lexicographical sort instead of being the same order
@@ -172,16 +171,16 @@ func (d *NoteDAO) Add(note note.Metadata) (core.NoteId, error) {
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return core.NoteId(0), err
+		return SQLNoteID(0), err
 	}
 
-	id := core.NoteId(lastId)
+	id := SQLNoteID(lastId)
 	err = d.addLinks(id, note)
 	return id, err
 }
 
 // Update modifies an existing note.
-func (d *NoteDAO) Update(note note.Metadata) (core.NoteId, error) {
+func (d *NoteDAO) Update(note note.Metadata) (SQLNoteID, error) {
 	id, err := d.findIdByPath(note.Path)
 	if err != nil {
 		return 0, err
@@ -220,7 +219,7 @@ func (d *NoteDAO) metadataToJSON(note note.Metadata) string {
 }
 
 // addLinks inserts all the outbound links of the given note.
-func (d *NoteDAO) addLinks(id core.NoteId, note note.Metadata) error {
+func (d *NoteDAO) addLinks(id SQLNoteID, note note.Metadata) error {
 	for _, link := range note.Links {
 		targetId, err := d.findIdByPathPrefix(link.Href)
 		if err != nil {
@@ -261,16 +260,16 @@ func (d *NoteDAO) Remove(path string) error {
 	return err
 }
 
-func (d *NoteDAO) findIdByPath(path string) (core.NoteId, error) {
+func (d *NoteDAO) findIdByPath(path string) (SQLNoteID, error) {
 	row, err := d.findIdByPathStmt.QueryRow(path)
 	if err != nil {
-		return core.NoteId(0), err
+		return SQLNoteID(0), err
 	}
 	return idForRow(row)
 }
 
-func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteId, error) {
-	ids := make([]core.NoteId, 0)
+func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]SQLNoteID, error) {
+	ids := make([]SQLNoteID, 0)
 	for _, path := range paths {
 		id, err := d.findIdByPathPrefix(path)
 		if err != nil {
@@ -287,25 +286,25 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteId, error) {
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdByPathPrefix(path string) (core.NoteId, error) {
+func (d *NoteDAO) findIdByPathPrefix(path string) (SQLNoteID, error) {
 	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
 	if err != nil {
-		return core.NoteId(0), err
+		return SQLNoteID(0), err
 	}
 	return idForRow(row)
 }
 
-func idForRow(row *sql.Row) (core.NoteId, error) {
+func idForRow(row *sql.Row) (SQLNoteID, error) {
 	var id sql.NullInt64
 	err := row.Scan(&id)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return core.NoteId(0), nil
+		return SQLNoteID(0), nil
 	case err != nil:
-		return core.NoteId(0), err
+		return SQLNoteID(0), err
 	default:
-		return core.NoteId(id.Int64), nil
+		return SQLNoteID(id.Int64), nil
 	}
 }
 
@@ -419,7 +418,9 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	}
 
 	// Exclude the mentioned notes from the results.
-	opts = opts.ExcludingIds(ids...)
+	for _, id := range ids {
+		opts = opts.ExcludingId(id)
+	}
 
 	// Find their titles.
 	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
@@ -614,7 +615,9 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		}
 
 		// Exclude the mentioning notes from the results.
-		opts = opts.ExcludingIds(ids...)
+		for _, id := range ids {
+			opts = opts.ExcludingId(id)
+		}
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
@@ -674,7 +677,8 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.ExcludeIds != nil {
-		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIds, ",")+")")
+		ids := SQLNoteIDsFromCoreIDs(opts.ExcludeIds)
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(ids, ",")+")")
 	}
 
 	orderTerms := []string{}
@@ -774,7 +778,7 @@ func pathRegex(path string) string {
 	return path + "[^/]*|" + path + "/.+"
 }
 
-func (d *NoteDAO) idToSql(id core.NoteId) sql.NullInt64 {
+func (d *NoteDAO) idToSql(id SQLNoteID) sql.NullInt64 {
 	if id.IsValid() {
 		return sql.NullInt64{Int64: int64(id), Valid: true}
 	} else {
@@ -782,7 +786,7 @@ func (d *NoteDAO) idToSql(id core.NoteId) sql.NullInt64 {
 	}
 }
 
-func (d *NoteDAO) joinIds(ids []core.NoteId, delimiter string) string {
+func (d *NoteDAO) joinIds(ids []SQLNoteID, delimiter string) string {
 	strs := make([]string, 0)
 	for _, i := range ids {
 		strs = append(strs, strconv.FormatInt(int64(i), 10))

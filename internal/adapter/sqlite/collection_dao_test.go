@@ -3,7 +3,6 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
@@ -14,15 +13,15 @@ func TestCollectionDAOFindOrCreate(t *testing.T) {
 		// Finds existing ones
 		id, err := dao.FindOrCreate("tag", "adventure")
 		assert.Nil(t, err)
-		assert.Equal(t, id, core.CollectionId(2))
+		assert.Equal(t, id, SQLCollectionID(2))
 		id, err = dao.FindOrCreate("genre", "fiction")
 		assert.Nil(t, err)
-		assert.Equal(t, id, core.CollectionId(3))
+		assert.Equal(t, id, SQLCollectionID(3))
 
 		// The name is case sensitive
 		id, err = dao.FindOrCreate("tag", "Adventure")
 		assert.Nil(t, err)
-		assert.NotEqual(t, id, core.CollectionId(2))
+		assert.NotEqual(t, id, SQLCollectionID(2))
 
 		// Creates when not found
 		sql := "SELECT id FROM collections WHERE kind = ? AND name = ?"
@@ -55,13 +54,13 @@ func TestCollectionDaoFindAll(t *testing.T) {
 func TestCollectionDAOAssociate(t *testing.T) {
 	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
 		// Returns existing association
-		id, err := dao.Associate(1, 2)
+		id, err := dao.Associate(SQLNoteID(1), SQLCollectionID(2))
 		assert.Nil(t, err)
-		assert.Equal(t, id, core.NoteCollectionId(2))
+		assert.Equal(t, id, SQLNoteCollectionID(2))
 
 		// Creates a new association if missing
-		noteId := core.NoteId(5)
-		collectionId := core.CollectionId(3)
+		noteId := SQLNoteID(5)
+		collectionId := SQLCollectionID(3)
 		sql := "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id = ?"
 		assertNotExist(t, tx, sql, noteId, collectionId)
 		_, err = dao.Associate(noteId, collectionId)
@@ -72,7 +71,7 @@ func TestCollectionDAOAssociate(t *testing.T) {
 
 func TestCollectionDAORemoveAssociations(t *testing.T) {
 	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
-		noteId := core.NoteId(1)
+		noteId := SQLNoteID(1)
 		sql := "SELECT id FROM notes_collections WHERE note_id = ?"
 		assertExist(t, tx, sql, noteId)
 		err := dao.RemoveAssociations(noteId)
@@ -80,7 +79,7 @@ func TestCollectionDAORemoveAssociations(t *testing.T) {
 		assertNotExist(t, tx, sql, noteId)
 
 		// Removes associations of note without any.
-		err = dao.RemoveAssociations(999)
+		err = dao.RemoveAssociations(SQLNoteID(999))
 		assert.Nil(t, err)
 	})
 }
