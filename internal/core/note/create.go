@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core/templ"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
@@ -42,23 +42,23 @@ func (e ErrNoteExists) Error() string {
 // Returns the path of the newly created note.
 func Create(
 	opts CreateOpts,
-	templateLoader templ.Loader,
+	templateLoader core.TemplateLoader,
 	date date.Provider,
 ) (string, error) {
 	wrap := errors.Wrapperf("new note")
 
-	filenameTemplate, err := templateLoader.Load(opts.Dir.Config.Note.FilenameTemplate)
+	filenameTemplate, err := templateLoader.LoadTemplate(opts.Dir.Config.Note.FilenameTemplate)
 	if err != nil {
 		return "", err
 	}
 
-	var bodyTemplate templ.Renderer = templ.NullRenderer
+	var bodyTemplate core.Template = core.NullTemplate
 	if templatePath := opts.Dir.Config.Note.BodyTemplatePath.Unwrap(); templatePath != "" {
 		absPath, ok := opts.Config.LocateTemplate(templatePath)
 		if !ok {
 			return "", wrap(fmt.Errorf("%s: cannot find template", templatePath))
 		}
-		bodyTemplate, err = templateLoader.LoadFile(absPath)
+		bodyTemplate, err = templateLoader.LoadTemplateAt(absPath)
 		if err != nil {
 			return "", wrap(err)
 		}
@@ -107,8 +107,8 @@ type renderContext struct {
 }
 
 type createDeps struct {
-	filenameTemplate templ.Renderer
-	bodyTemplate     templ.Renderer
+	filenameTemplate core.Template
+	bodyTemplate     core.Template
 	genId            func() string
 	validatePath     func(path string) (bool, error)
 	now              time.Time

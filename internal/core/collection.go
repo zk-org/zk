@@ -2,7 +2,7 @@ package core
 
 // Collection represents a collection, such as a tag.
 type Collection struct {
-	// Unique ID of this collection in the CollectionRepository.
+	// Unique ID of this collection in the Notebook.
 	ID CollectionID
 	// Kind of this note collection, such as a tag.
 	Kind CollectionKind
@@ -13,13 +13,13 @@ type Collection struct {
 }
 
 // CollectionID represents the unique ID of a collection relative to a given
-// CollectionRepository implementation.
+// Notebook implementation.
 type CollectionID interface {
 	IsValid() bool
 }
 
 // NoteCollectionID represents the unique ID of an association between a note
-// and a collection in a CollectionRepository implementation.
+// and a collection in a Notebook implementation.
 type NoteCollectionID interface {
 	IsValid() bool
 }

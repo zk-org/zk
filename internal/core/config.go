@@ -1,17 +1,16 @@
-package zk
+package core
 
 import (
-	"io/ioutil"
+	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	toml "github.com/pelletier/go-toml"
 )
 
-// Config holds the global user configuration.
+// Config holds the user configuration.
 type Config struct {
 	Note    NoteConfig
 	Groups  map[string]GroupConfig
@@ -33,10 +32,10 @@ func NewDefaultConfig() Config {
 			BodyTemplatePath: opt.NullString,
 			Lang:             "en",
 			DefaultTitle:     "Untitled",
-			IDOptions: core.IDOptions{
-				Charset: core.CharsetAlphanum,
+			IDOptions: IDOptions{
+				Charset: CharsetAlphanum,
 				Length:  4,
-				Case:    core.CaseLower,
+				Case:    CaseLower,
 			},
 		},
 		Groups: map[string]GroupConfig{},
@@ -63,6 +62,38 @@ func (c Config) RootGroupConfig() GroupConfig {
 	}
 }
 
+// GroupConfigNamed returns the GroupConfig for the group with the given name.
+// An empty name matches the root GroupConfig.
+func (c Config) GroupConfigNamed(name string) (GroupConfig, error) {
+	if name == "" {
+		return c.RootGroupConfig(), nil
+	} else {
+		group, ok := c.Groups[name]
+		if !ok {
+			return GroupConfig{}, fmt.Errorf("no group named `%s` found in the config", name)
+		}
+		return group, nil
+	}
+}
+
+// GroupNameForPath returns the name of the GroupConfig matching the given
+// path, relative to the notebook.
+func (c Config) GroupNameForPath(path string) (string, error) {
+	for name, config := range c.Groups {
+		for _, groupPath := range config.Paths {
+			matches, err := filepath.Match(groupPath, path)
+			if err != nil {
+				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
+			} else if matches {
+				return name, nil
+			}
+		}
+	}
+
+	return "", nil
+}
+
+// FIXME
 // LocateTemplate returns the absolute path for the given template path, by
 // looking for it in the templates directories registered in this Config.
 func (c Config) LocateTemplate(path string) (string, bool) {
@@ -123,7 +154,7 @@ type NoteConfig struct {
 	// Default title to use when none is provided.
 	DefaultTitle string
 	// Settings used when generating a random ID.
-	IDOptions core.IDOptions
+	IDOptions IDOptions
 }
 
 // GroupConfig holds the user configuration for a given group of notes.
@@ -131,14 +162,6 @@ type GroupConfig struct {
 	Paths []string
 	Note  NoteConfig
 	Extra map[string]string
-}
-
-// ConfigOverrides holds user configuration overridden values, for example fed
-// from CLI flags.
-type ConfigOverrides struct {
-	Group            opt.String
-	BodyTemplatePath opt.String
-	Extra            map[string]string
 }
 
 // Clone creates a copy of the GroupConfig receiver.
@@ -155,29 +178,16 @@ func (c GroupConfig) Clone() GroupConfig {
 	return clone
 }
 
-// Override modifies the GroupConfig receiver by updating the properties
-// overridden in ConfigOverrides.
-func (c *GroupConfig) Override(overrides ConfigOverrides) {
-	if !overrides.BodyTemplatePath.IsNull() {
-		c.Note.BodyTemplatePath = overrides.BodyTemplatePath
-	}
-	if overrides.Extra != nil {
-		for k, v := range overrides.Extra {
-			c.Extra[k] = v
-		}
-	}
-}
-
 // OpenConfig creates a new Config instance from its TOML representation stored
 // in the given file.
-func OpenConfig(path string, parentConfig Config) (Config, error) {
+func OpenConfig(path string, parentConfig Config, fs FileStorage) (Config, error) {
 	// The local config is optional.
-	exists, err := paths.Exists(path)
+	exists, err := fs.FileExists(path)
 	if err == nil && !exists {
 		return parentConfig, nil
 	}
 
-	content, err := ioutil.ReadFile(path)
+	content, err := fs.Read(path)
 	if err != nil {
 		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)
 	}
@@ -375,30 +385,30 @@ type tomlToolConfig struct {
 	FzfPreview *string `toml:"fzf-preview"`
 }
 
-func charsetFromString(charset string) core.Charset {
+func charsetFromString(charset string) Charset {
 	switch charset {
 	case "alphanum":
-		return core.CharsetAlphanum
+		return CharsetAlphanum
 	case "hex":
-		return core.CharsetHex
+		return CharsetHex
 	case "letters":
-		return core.CharsetLetters
+		return CharsetLetters
 	case "numbers":
-		return core.CharsetNumbers
+		return CharsetNumbers
 	default:
-		return core.Charset(charset)
+		return Charset(charset)
 	}
 }
 
-func caseFromString(c string) core.Case {
+func caseFromString(c string) Case {
 	switch c {
 	case "lower":
-		return core.CaseLower
+		return CaseLower
 	case "upper":
-		return core.CaseUpper
+		return CaseUpper
 	case "mixed":
-		return core.CaseMixed
+		return CaseMixed
 	default:
-		return core.CaseLower
+		return CaseLower
 	}
 }

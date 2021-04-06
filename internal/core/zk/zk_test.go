@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
@@ -92,10 +93,10 @@ func TestDirAtRoot(t *testing.T) {
 			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
-				IDOptions: IDOptions{
+				IDOptions: core.IDOptions{
 					Length:  4,
-					Charset: CharsetAlphanum,
-					Case:    CaseLower,
+					Charset: core.CharsetAlphanum,
+					Case:    core.CaseLower,
 				},
 			},
 			Groups: map[string]GroupConfig{
@@ -120,10 +121,10 @@ func TestDirAtRoot(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),
-			IDOptions: IDOptions{
+			IDOptions: core.IDOptions{
 				Length:  4,
-				Charset: CharsetAlphanum,
-				Case:    CaseLower,
+				Charset: core.CharsetAlphanum,
+				Case:    core.CaseLower,
 			},
 		},
 		Extra: map[string]string{
@@ -183,10 +184,10 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
-				IDOptions: IDOptions{
+				IDOptions: core.IDOptions{
 					Length:  4,
-					Charset: CharsetAlphanum,
-					Case:    CaseLower,
+					Charset: core.CharsetAlphanum,
+					Case:    core.CaseLower,
 				},
 			},
 			Extra: map[string]string{
@@ -201,8 +202,8 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 	dir.Config.Note.FilenameTemplate = "modified"
 	dir.Config.Note.BodyTemplatePath = opt.NewString("modified")
 	dir.Config.Note.IDOptions.Length = 41
-	dir.Config.Note.IDOptions.Charset = CharsetNumbers
-	dir.Config.Note.IDOptions.Case = CaseUpper
+	dir.Config.Note.IDOptions.Charset = core.CharsetNumbers
+	dir.Config.Note.IDOptions.Case = core.CaseUpper
 	dir.Config.Extra["test"] = "modified"
 
 	assert.Equal(t, zk.Config.RootGroupConfig(), GroupConfig{
@@ -210,10 +211,10 @@ func TestDirAtReturnsClonedConfig(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),
-			IDOptions: IDOptions{
+			IDOptions: core.IDOptions{
 				Length:  4,
-				Charset: CharsetAlphanum,
-				Case:    CaseLower,
+				Charset: core.CharsetAlphanum,
+				Case:    core.CaseLower,
 			},
 		},
 		Extra: map[string]string{
@@ -230,10 +231,10 @@ func TestDirAtWithOverrides(t *testing.T) {
 			Note: NoteConfig{
 				FilenameTemplate: "{{id}}.note",
 				BodyTemplatePath: opt.NewString("default.note"),
-				IDOptions: IDOptions{
+				IDOptions: core.IDOptions{
 					Length:  4,
-					Charset: CharsetLetters,
-					Case:    CaseUpper,
+					Charset: core.CharsetLetters,
+					Case:    core.CaseUpper,
 				},
 			},
 			Extra: map[string]string{
@@ -273,10 +274,10 @@ func TestDirAtWithOverrides(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("overridden-template"),
-			IDOptions: IDOptions{
+			IDOptions: core.IDOptions{
 				Length:  4,
-				Charset: CharsetLetters,
-				Case:    CaseUpper,
+				Charset: core.CharsetLetters,
+				Case:    core.CaseUpper,
 			},
 		},
 		Extra: map[string]string{
@@ -307,10 +308,10 @@ func TestDirAtWithOverrides(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			BodyTemplatePath: opt.NewString("default.note"),
-			IDOptions: IDOptions{
+			IDOptions: core.IDOptions{
 				Length:  4,
-				Charset: CharsetLetters,
-				Case:    CaseUpper,
+				Charset: core.CharsetLetters,
+				Case:    core.CaseUpper,
 			},
 		},
 		Extra: map[string]string{

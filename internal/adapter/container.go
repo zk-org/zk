@@ -6,22 +6,27 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/adapter/fs"
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
 	"github.com/mickael-menu/zk/internal/adapter/markdown"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/adapter/term"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	osutil "github.com/mickael-menu/zk/internal/util/os"
 	"github.com/mickael-menu/zk/internal/util/pager"
 	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/mickael-menu/zk/internal/util/rand"
 	"github.com/schollz/progressbar/v3"
 )
 
 type Container struct {
+	ZK             *core.ZK
 	Version        string
 	Config         zk.Config
 	Date           date.Provider
@@ -29,14 +34,22 @@ type Container struct {
 	Terminal       *term.Terminal
 	WorkingDir     string
 	templateLoader *handlebars.Loader
+	newConfig      core.Config
+	notebook       *core.Notebook
+	notebookErr    error
 	zk             *zk.Zk
 	zkErr          error
+	fs             core.FileStorage
 }
 
 func NewContainer(version string) (*Container, error) {
 	wrap := errors.Wrapper("initialization")
 
+	term := term.New()
+	logger := util.NewStdLogger("zk: ", 0)
+	fs, err := fs.NewFileStorage("")
 	config := zk.NewDefaultConfig()
+	newConfig := core.NewDefaultConfig()
 
 	// Load global user config
 	configPath, err := locateGlobalConfig()
@@ -48,18 +61,37 @@ func NewContainer(version string) (*Container, error) {
 		if err != nil {
 			return nil, wrap(err)
 		}
+		newConfig, err = core.OpenConfig(configPath, newConfig, fs)
+		if err != nil {
+			return nil, wrap(err)
+		}
 	}
 
 	date := date.NewFrozenNow()
 
 	return &Container{
+		ZK: core.NewZK(newConfig, core.Ports{
+			FS: fs,
+			TemplateLoaderFactory: func(language string, lookupPaths []string) (core.TemplateLoader, error) {
+				handlebars.Init(language, term.SupportsUTF8(), logger, term)
+				return handlebars.NewLoader(lookupPaths), nil
+			},
+			IDGeneratorFactory: func(opts core.IDOptions) func() string {
+				return rand.NewIDGenerator(opts)
+			},
+			OSEnv: func() map[string]string {
+				return osutil.Env()
+			},
+		}),
 		Version: version,
 		Config:  config,
 		// zk is short-lived, so we freeze the current date to use the same
 		// date for any template rendering during the execution.
-		Date:     &date,
-		Logger:   util.NewStdLogger("zk: ", 0),
-		Terminal: term.New(),
+		Date:      &date,
+		Logger:    logger,
+		Terminal:  term,
+		newConfig: newConfig,
+		fs:        fs,
 	}, nil
 }
 
@@ -96,14 +128,19 @@ func (c *Container) OpenNotebook(searchPaths []string) {
 	}
 
 	for _, path := range searchPaths {
+		c.notebook, c.notebookErr = c.ZK.OpenNotebook(path)
 		c.zk, c.zkErr = zk.Open(path, c.Config)
-		if c.zkErr == nil {
+		if c.notebookErr == nil && c.zkErr == nil {
 			c.WorkingDir = path
 			c.Config = c.zk.Config
 			os.Setenv("ZK_NOTEBOOK_DIR", c.zk.Path)
 			return
 		}
 	}
+}
+
+func (c *Container) Notebook() (*core.Notebook, error) {
+	return c.notebook, c.notebookErr
 }
 
 func (c *Container) Zk() (*zk.Zk, error) {
@@ -113,7 +150,7 @@ func (c *Container) Zk() (*zk.Zk, error) {
 func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
 	if c.templateLoader == nil {
 		handlebars.Init(lang, c.Terminal.SupportsUTF8(), c.Logger, c.Terminal)
-		c.templateLoader = handlebars.NewLoader()
+		c.templateLoader = handlebars.NewLoader([]string{})
 	}
 	return c.templateLoader
 }

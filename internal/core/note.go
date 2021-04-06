@@ -5,7 +5,7 @@ import (
 )
 
 // NoteID represents the unique ID of a note collection relative to a given
-// NoteRepository implementation.
+// Notebook implementation.
 type NoteID interface {
 	IsValid() bool
 }
@@ -49,4 +49,14 @@ type ContextualNote struct {
 	Note
 	// List of context-sensitive excerpts from the note.
 	Snippets []string
+}
+
+// MinimalNote holds a Note's title and path information, for display purposes.
+type MinimalNote struct {
+	// Unique ID of this note in a notebook.
+	ID NoteID
+	// Path relative to the root of the notebook.
+	Path string
+	// Title of the note.
+	Title string
 }

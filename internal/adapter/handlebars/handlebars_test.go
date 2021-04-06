@@ -31,9 +31,9 @@ func (s *styler) MustStyle(text string, rules ...style.Rule) string {
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
-	sut := NewLoader()
+	sut := NewLoader([]string{})
 
-	templ, err := sut.Load(template)
+	templ, err := sut.LoadTemplate(template)
 	assert.Nil(t, err)
 
 	actual, err := templ.Render(context)
@@ -41,10 +41,12 @@ func testString(t *testing.T, template string, context interface{}, expected str
 	assert.Equal(t, actual, expected)
 }
 
-func testFile(t *testing.T, name string, context interface{}, expected string) {
-	sut := NewLoader()
+// FIXME test lookup paths
 
-	templ, err := sut.LoadFile(fixtures.Path(name))
+func testFile(t *testing.T, name string, context interface{}, expected string) {
+	sut := NewLoader([]string{})
+
+	templ, err := sut.LoadTemplateAt(fixtures.Path(name))
 	assert.Nil(t, err)
 
 	actual, err := templ.Render(context)

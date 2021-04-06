@@ -1,15 +1,17 @@
 package handlebars
 
 import (
+	"fmt"
 	"html"
 	"path/filepath"
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/style"
-	"github.com/mickael-menu/zk/internal/core/templ"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/mickael-menu/zk/internal/util/paths"
 )
 
 func Init(lang string, supportsUTF8 bool, logger util.Logger, styler style.Styler) {
@@ -39,20 +41,24 @@ func (t *Template) Render(context interface{}) (string, error) {
 
 // Loader loads and holds parsed handlebars templates.
 type Loader struct {
-	strings map[string]*Template
-	files   map[string]*Template
+	strings     map[string]*Template
+	files       map[string]*Template
+	lookupPaths []string
 }
 
 // NewLoader creates a new instance of Loader.
-func NewLoader() *Loader {
+//
+// lookupPaths is used to resolve relative template paths.
+func NewLoader(lookupPaths []string) *Loader {
 	return &Loader{
-		strings: make(map[string]*Template),
-		files:   make(map[string]*Template),
+		strings:     make(map[string]*Template),
+		files:       make(map[string]*Template),
+		lookupPaths: lookupPaths,
 	}
 }
 
-// Load retrieves or parses a handlebars string template.
-func (l *Loader) Load(content string) (templ.Renderer, error) {
+// LoadTemplate implements core.TemplateLoader.
+func (l *Loader) LoadTemplate(content string) (core.Template, error) {
 	wrap := errors.Wrapperf("load template failed")
 
 	// Already loaded?
@@ -71,13 +77,13 @@ func (l *Loader) Load(content string) (templ.Renderer, error) {
 	return template, nil
 }
 
-// LoadFile retrieves or parses a handlebars file template.
-func (l *Loader) LoadFile(path string) (templ.Renderer, error) {
+// LoadTemplateAt implements core.TemplateLoader.
+func (l *Loader) LoadTemplateAt(path string) (core.Template, error) {
 	wrap := errors.Wrapper("load template file failed")
 
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return nil, wrap(err)
+	path, ok := l.locateTemplate(path)
+	if !ok {
+		return nil, wrap(fmt.Errorf("cannot find template at %s", path))
 	}
 
 	// Already loaded?
@@ -94,4 +100,29 @@ func (l *Loader) LoadFile(path string) (templ.Renderer, error) {
 	template = &Template{vendorTempl}
 	l.files[path] = template
 	return template, nil
+}
+
+// locateTemplate returns the absolute path for the given template path, by
+// looking for it in the templates directories registered in this Config.
+func (l *Loader) locateTemplate(path string) (string, bool) {
+	if path == "" {
+		return "", false
+	}
+
+	exists := func(path string) bool {
+		exists, err := paths.Exists(path)
+		return exists && err == nil
+	}
+
+	if filepath.IsAbs(path) {
+		return path, exists(path)
+	}
+
+	for _, dir := range l.lookupPaths {
+		if candidate := filepath.Join(dir, path); exists(candidate) {
+			return candidate, true
+		}
+	}
+
+	return path, false
 }

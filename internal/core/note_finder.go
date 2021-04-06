@@ -46,8 +46,6 @@ type NoteFilteringOpts struct {
 	ModifiedStart *time.Time
 	// Filter notes modified before the given date.
 	ModifiedEnd *time.Time
-	// Indicates that the user should select manually the notes.
-	Interactive bool
 	// Limits the number of results
 	Limit int
 	// Sorting criteria

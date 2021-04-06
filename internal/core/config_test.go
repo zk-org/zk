@@ -1,4 +1,4 @@
-package zk
+package core
 
 import (
 	"fmt"
@@ -456,70 +456,6 @@ func TestGroupConfigClone(t *testing.T) {
 		},
 		Extra: map[string]string{
 			"hello": "world",
-		},
-	})
-}
-
-func TestGroupConfigOverride(t *testing.T) {
-	sut := GroupConfig{
-		Paths: []string{"path"},
-		Note: NoteConfig{
-			FilenameTemplate: "filename",
-			BodyTemplatePath: opt.NewString("body.tpl"),
-			IDOptions: IDOptions{
-				Length:  4,
-				Charset: CharsetLetters,
-				Case:    CaseUpper,
-			},
-		},
-		Extra: map[string]string{
-			"hello": "world",
-			"salut": "le monde",
-		},
-	}
-
-	// Empty overrides
-	sut.Override(ConfigOverrides{})
-	assert.Equal(t, sut, GroupConfig{
-		Paths: []string{"path"},
-		Note: NoteConfig{
-			FilenameTemplate: "filename",
-			BodyTemplatePath: opt.NewString("body.tpl"),
-			IDOptions: IDOptions{
-				Length:  4,
-				Charset: CharsetLetters,
-				Case:    CaseUpper,
-			},
-		},
-		Extra: map[string]string{
-			"hello": "world",
-			"salut": "le monde",
-		},
-	})
-
-	// Some overrides
-	sut.Override(ConfigOverrides{
-		BodyTemplatePath: opt.NewString("overridden-template"),
-		Extra: map[string]string{
-			"hello":      "overridden",
-			"additional": "value",
-		},
-	})
-	assert.Equal(t, sut, GroupConfig{
-		Paths: []string{"path"},
-		Note: NoteConfig{
-			FilenameTemplate: "filename",
-			BodyTemplatePath: opt.NewString("overridden-template"),
-			IDOptions: IDOptions{
-				Length:  4,
-				Charset: CharsetLetters,
-				Case:    CaseUpper,
-			},
-		},
-		Extra: map[string]string{
-			"hello":      "overridden",
-			"salut":      "le monde",
-			"additional": "value",
 		},
 	})
 }

@@ -1,4 +1,4 @@
-package zk
+package core
 
 // IDOptions holds the options used to generate an ID.
 type IDOptions struct {
@@ -29,3 +29,9 @@ const (
 	CaseUpper
 	CaseMixed
 )
+
+// IDGenerator is a function returning a new ID with each invocation.
+type IDGenerator func() string
+
+// IDGeneratorFactory creates a new IDGenerator function using the given IDOptions.
+type IDGeneratorFactory func(opts IDOptions) func() string

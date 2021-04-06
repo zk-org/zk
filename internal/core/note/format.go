@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/style"
-	"github.com/mickael-menu/zk/internal/core/templ"
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
@@ -15,7 +15,7 @@ import (
 type Formatter struct {
 	basePath    string
 	currentPath string
-	renderer    templ.Renderer
+	renderer    core.Template
 	// Regex replacement for a term marked in a snippet.
 	snippetTermReplacement string
 }
@@ -25,9 +25,9 @@ type Formatter struct {
 // The absolute path to the notebook (basePath) and the working directory
 // (currentPath) are used to make the path of each note relative to the working
 // directory.
-func NewFormatter(basePath string, currentPath string, format opt.String, templates templ.Loader, styler style.Styler) (*Formatter, error) {
+func NewFormatter(basePath string, currentPath string, format opt.String, templates core.TemplateLoader, styler style.Styler) (*Formatter, error) {
 	template := resolveFormatTemplate(format)
-	renderer, err := templates.Load(template)
+	renderer, err := templates.LoadTemplate(template)
 	if err != nil {
 		return nil, err
 	}
