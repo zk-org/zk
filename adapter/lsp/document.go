@@ -10,7 +10,7 @@ import (
 
 // document represents an opened file.
 type document struct {
-	URI     protocol.DocumentUri
+	Path    string
 	Content string
 	Log     logging.Logger
 	lines   []string

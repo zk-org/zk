@@ -141,7 +141,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		server.documents[params.TextDocument.URI] = &document{
-			URI:     params.TextDocument.URI,
+			Path:    strings.TrimPrefix(params.TextDocument.URI, "file://"),
 			Content: params.TextDocument.Text,
 			Log:     server.server.Log,
 		}
@@ -209,7 +209,7 @@ func NewServer(opts ServerOpts) *Server {
 			if link == nil || err != nil {
 				return err
 			}
-			target, err = server.targetForHref(link.Href, zk.Path, finder)
+			target, err = server.targetForHref(link.Href, doc, zk.Path, finder)
 			return err
 		})
 		if err != nil || target == "" || strutil.IsURL(target) {
@@ -254,7 +254,7 @@ func NewServer(opts ServerOpts) *Server {
 			}
 
 			for _, link := range links {
-				target, err := server.targetForHref(link.Href, zk.Path, finder)
+				target, err := server.targetForHref(link.Href, doc, zk.Path, finder)
 				if target == "" || err != nil {
 					continue
 				}
@@ -295,7 +295,7 @@ func NewServer(opts ServerOpts) *Server {
 			if link == nil || err != nil {
 				return err
 			}
-			target, err = server.targetForHref(link.Href, zk.Path, finder)
+			target, err = server.targetForHref(link.Href, doc, zk.Path, finder)
 			return err
 		})
 		if link == nil || target == "" || err != nil {
@@ -320,11 +320,16 @@ func NewServer(opts ServerOpts) *Server {
 }
 
 // targetForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) targetForHref(href string, basePath string, finder note.Finder) (string, error) {
+func (s *Server) targetForHref(href string, doc *document, basePath string, finder note.Finder) (string, error) {
 	if strutil.IsURL(href) {
 		return href, nil
 	} else {
-		note, err := finder.FindByHref(href)
+		path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
+		path, err := filepath.Rel(basePath, path)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to resolve href: %s", href)
+		}
+		note, err := finder.FindByHref(path)
 		if err != nil {
 			s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
 			return "", err
@@ -433,8 +438,7 @@ func (s *Server) buildTextEditForLink(zk *zk.Zk, note note.Match, document *docu
 	var text string
 
 	path := filepath.Join(zk.Path, note.Path)
-	documentPath := strings.TrimPrefix(document.URI, "file://")
-	path, err := filepath.Rel(filepath.Dir(documentPath), path)
+	path, err := filepath.Rel(filepath.Dir(document.Path), path)
 	if err != nil {
 		path = note.Path
 	}
