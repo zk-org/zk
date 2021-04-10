@@ -67,14 +67,16 @@ func (cmd *Edit) Run(container *cli.Container) error {
 			paths = append(paths, absPath)
 		}
 
-		// FIXME:
-		// note.Edit(zk, paths...)
+		editor, err := container.NewNoteEditor(notebook)
+		if err != nil {
+			return err
+		}
+		return editor.Open(paths...)
 
 	} else {
 		fmt.Println("Found 0 note")
+		return nil
 	}
-
-	return err
 }
 
 // newNoteDir returns the directory in which to create a new note when the fzf

@@ -67,8 +67,10 @@ func (cmd *New) Run(container *cli.Container) error {
 		fmt.Printf("%+v\n", path)
 		return nil
 	} else {
-		// FIXME:
-		// return notebook.Edit(path)
-		return nil
+		editor, err := container.NewNoteEditor(notebook)
+		if err != nil {
+			return err
+		}
+		return editor.Open(path)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mickael-menu/zk/internal/adapter/editor"
 	"github.com/mickael-menu/zk/internal/adapter/fs"
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
@@ -157,6 +158,10 @@ func (c *Container) CurrentNotebook() (*core.Notebook, error) {
 
 func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
 	return fzf.NewNoteFilter(opts, c.Terminal)
+}
+
+func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, error) {
+	return editor.NewEditor(notebook.Config.Tool.Editor)
 }
 
 // Paginate creates an auto-closing io.Writer which will be automatically

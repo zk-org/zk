@@ -1,10 +1,9 @@
-package note
+package editor
 
 import (
 	"os"
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
@@ -13,51 +12,48 @@ func TestEditorUsesZkEditorFirst(t *testing.T) {
 	os.Setenv("ZK_EDITOR", "zk-editor")
 	os.Setenv("VISUAL", "visual")
 	os.Setenv("EDITOR", "editor")
-	zk := zk.Zk{Config: zk.Config{
-		Tool: zk.ToolConfig{
-			Editor: opt.NewString("custom-editor"),
-		},
-	}}
 
-	assert.Equal(t, editor(&zk), opt.NewString("zk-editor"))
+	editor, err := NewEditor(opt.NewString("custom-editor"))
+	assert.Nil(t, err)
+	assert.Equal(t, editor.editor, "zk-editor")
 }
 
 func TestEditorFallsbackOnUserConfig(t *testing.T) {
 	os.Unsetenv("ZK_EDITOR")
 	os.Setenv("VISUAL", "visual")
 	os.Setenv("EDITOR", "editor")
-	zk := zk.Zk{Config: zk.Config{
-		Tool: zk.ToolConfig{
-			Editor: opt.NewString("custom-editor"),
-		},
-	}}
 
-	assert.Equal(t, editor(&zk), opt.NewString("custom-editor"))
+	editor, err := NewEditor(opt.NewString("custom-editor"))
+	assert.Nil(t, err)
+	assert.Equal(t, editor.editor, "custom-editor")
 }
 
 func TestEditorFallsbackOnVisual(t *testing.T) {
 	os.Unsetenv("ZK_EDITOR")
 	os.Setenv("VISUAL", "visual")
 	os.Setenv("EDITOR", "editor")
-	zk := zk.Zk{}
 
-	assert.Equal(t, editor(&zk), opt.NewString("visual"))
+	editor, err := NewEditor(opt.NullString)
+	assert.Nil(t, err)
+	assert.Equal(t, editor.editor, "visual")
 }
 
 func TestEditorFallsbackOnEditor(t *testing.T) {
 	os.Unsetenv("ZK_EDITOR")
 	os.Unsetenv("VISUAL")
 	os.Setenv("EDITOR", "editor")
-	zk := zk.Zk{}
 
-	assert.Equal(t, editor(&zk), opt.NewString("editor"))
+	editor, err := NewEditor(opt.NullString)
+	assert.Nil(t, err)
+	assert.Equal(t, editor.editor, "editor")
 }
 
-func TestEditorWhenUnset(t *testing.T) {
+func TestEditorFailsWhenUnset(t *testing.T) {
 	os.Unsetenv("ZK_EDITOR")
 	os.Unsetenv("VISUAL")
 	os.Unsetenv("EDITOR")
-	zk := zk.Zk{}
 
-	assert.Equal(t, editor(&zk), opt.NullString)
+	editor, err := NewEditor(opt.NullString)
+	assert.Err(t, err, "no editor set in config")
+	assert.Nil(t, editor)
 }
