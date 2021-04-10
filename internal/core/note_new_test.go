@@ -1,4 +1,4 @@
-package note
+package core
 
 /*
 import (

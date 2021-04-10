@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
@@ -75,7 +74,7 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 
 // FindOrCreate returns the ID of the collection with given kind and name.
 // Creates the collection if it does not already exist.
-func (d *CollectionDAO) FindOrCreate(kind note.CollectionKind, name string) (core.CollectionID, error) {
+func (d *CollectionDAO) FindOrCreate(kind core.CollectionKind, name string) (core.CollectionID, error) {
 	id, err := d.findCollection(kind, name)
 
 	switch {
@@ -88,14 +87,14 @@ func (d *CollectionDAO) FindOrCreate(kind note.CollectionKind, name string) (cor
 	}
 }
 
-func (d *CollectionDAO) FindAll(kind note.CollectionKind) ([]note.Collection, error) {
+func (d *CollectionDAO) FindAll(kind core.CollectionKind) ([]core.Collection, error) {
 	rows, err := d.findAllCollectionsStmt.Query(kind)
 	if err != nil {
-		return []note.Collection{}, err
+		return []core.Collection{}, err
 	}
 	defer rows.Close()
 
-	collections := []note.Collection{}
+	collections := []core.Collection{}
 
 	for rows.Next() {
 		var name string
@@ -105,7 +104,7 @@ func (d *CollectionDAO) FindAll(kind note.CollectionKind) ([]note.Collection, er
 			return collections, err
 		}
 
-		collections = append(collections, note.Collection{
+		collections = append(collections, core.Collection{
 			Kind:      kind,
 			Name:      name,
 			NoteCount: count,
@@ -115,7 +114,7 @@ func (d *CollectionDAO) FindAll(kind note.CollectionKind) ([]note.Collection, er
 	return collections, nil
 }
 
-func (d *CollectionDAO) findCollection(kind note.CollectionKind, name string) (core.CollectionID, error) {
+func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (core.CollectionID, error) {
 	wrap := errors.Wrapperf("failed to get %s named %s", kind, name)
 
 	row, err := d.findCollectionStmt.QueryRow(kind, name)
@@ -136,7 +135,7 @@ func (d *CollectionDAO) findCollection(kind note.CollectionKind, name string) (c
 	}
 }
 
-func (d *CollectionDAO) create(kind note.CollectionKind, name string) (core.CollectionID, error) {
+func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.CollectionID, error) {
 	wrap := errors.Wrapperf("failed to create new %s named %s", kind, name)
 
 	res, err := d.createCollectionStmt.Exec(kind, name)

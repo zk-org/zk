@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/mickael-menu/zk/internal/adapter/markdown/extensions"
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
 	"github.com/mickael-menu/zk/internal/util/yaml"
@@ -60,9 +60,9 @@ func NewParser(options ParserOpts) *Parser {
 	}
 }
 
-// Parse implements note.Parse.
-func (p *Parser) Parse(source string) (*note.Content, error) {
-	bytes := []byte(source)
+// Parse implements core.NoteParser.
+func (p *Parser) Parse(content string) (*core.ParsedNote, error) {
+	bytes := []byte(content)
 
 	context := parser.NewContext()
 	root := p.md.Parser().Parse(
@@ -91,7 +91,7 @@ func (p *Parser) Parse(source string) (*note.Content, error) {
 		return nil, err
 	}
 
-	return &note.Content{
+	return &core.ParsedNote{
 		Title:    title,
 		Body:     body,
 		Lead:     parseLead(body),
@@ -208,8 +208,8 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 }
 
 // parseLinks extracts outbound links from the note.
-func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
-	links := make([]note.Link, 0)
+func parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
+	links := make([]core.Link, 0)
 
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
@@ -218,11 +218,11 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 				href := string(link.Destination)
 				if href != "" {
 					snippet, snStart, snEnd := extractLines(n, source)
-					links = append(links, note.Link{
+					links = append(links, core.Link{
 						Title:        string(link.Text(source)),
 						Href:         href,
-						Rels:         strings.Fields(string(link.Title)),
-						External:     strutil.IsURL(href),
+						Rels:         core.LinkRels(strings.Fields(string(link.Title))...),
+						IsExternal:   strutil.IsURL(href),
 						Snippet:      snippet,
 						SnippetStart: snStart,
 						SnippetEnd:   snEnd,
@@ -232,11 +232,11 @@ func parseLinks(root ast.Node, source []byte) ([]note.Link, error) {
 			case *ast.AutoLink:
 				if href := string(link.URL(source)); href != "" && link.AutoLinkType == ast.AutoLinkURL {
 					snippet, snStart, snEnd := extractLines(n, source)
-					links = append(links, note.Link{
+					links = append(links, core.Link{
 						Title:        string(link.Label(source)),
 						Href:         href,
-						Rels:         []string{},
-						External:     true,
+						Rels:         []core.LinkRelation{},
+						IsExternal:   true,
 						Snippet:      snippet,
 						SnippetStart: snStart,
 						SnippetEnd:   snEnd,

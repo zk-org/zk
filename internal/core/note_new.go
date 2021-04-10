@@ -8,7 +8,7 @@ import (
 	"github.com/mickael-menu/zk/internal/util/paths"
 )
 
-type newNoteCmd struct {
+type newNoteTask struct {
 	dir              Dir
 	title            string
 	content          string
@@ -22,30 +22,30 @@ type newNoteCmd struct {
 	genID            IDGenerator
 }
 
-func (c *newNoteCmd) execute() (string, error) {
-	filenameTemplate, err := c.templates.LoadTemplate(c.filenameTemplate)
+func (t *newNoteTask) execute() (string, error) {
+	filenameTemplate, err := t.templates.LoadTemplate(t.filenameTemplate)
 	if err != nil {
 		return "", err
 	}
 
 	var contentTemplate Template = NullTemplate
-	if templatePath := c.bodyTemplatePath.Unwrap(); templatePath != "" {
-		contentTemplate, err = c.templates.LoadTemplateAt(templatePath)
+	if templatePath := t.bodyTemplatePath.Unwrap(); templatePath != "" {
+		contentTemplate, err = t.templates.LoadTemplateAt(templatePath)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	context := renderContext{
-		Title:   c.title,
-		Content: c.content,
-		Dir:     c.dir.Name,
-		Extra:   c.extra,
-		Now:     c.date,
-		Env:     c.env,
+		Title:   t.title,
+		Content: t.content,
+		Dir:     t.dir.Name,
+		Extra:   t.extra,
+		Now:     t.date,
+		Env:     t.env,
 	}
 
-	path, context, err := c.generatePath(context, filenameTemplate)
+	path, context, err := t.generatePath(context, filenameTemplate)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +55,7 @@ func (c *newNoteCmd) execute() (string, error) {
 		return "", err
 	}
 
-	err = c.fs.Write(path, []byte(content))
+	err = t.fs.Write(path, []byte(content))
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +63,7 @@ func (c *newNoteCmd) execute() (string, error) {
 	return path, nil
 }
 
-func (c *newNoteCmd) generatePath(context renderContext, filenameTemplate Template) (string, renderContext, error) {
+func (c *newNoteTask) generatePath(context renderContext, filenameTemplate Template) (string, renderContext, error) {
 	var err error
 	var filename string
 	var path string

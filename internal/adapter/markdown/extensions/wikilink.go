@@ -3,7 +3,7 @@ package extensions
 import (
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -38,7 +38,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 	var (
 		href  string
 		label string
-		rel   note.LinkRelation
+		rel   core.LinkRelation
 	)
 
 	var (
@@ -65,7 +65,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		if closed {
 			// Supports trailing hash syntax for Neuron's Folgezettel, e.g. [[id]]#
 			if char == '#' {
-				rel = note.LinkRelationDown
+				rel = core.LinkRelationDown
 			}
 			break
 		}
@@ -74,7 +74,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 			switch char {
 			// Supports leading hash syntax for Neuron's Folgezettel, e.g. #[[id]]
 			case '#':
-				rel = note.LinkRelationUp
+				rel = core.LinkRelationUp
 				continue
 			case '[':
 				openerCharCount += 1
@@ -104,7 +104,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 					closed = true
 					// Neuron's legacy [[[Folgezettel]]].
 					if closerCharCount == 3 {
-						rel = note.LinkRelationDown
+						rel = core.LinkRelationDown
 					}
 				}
 				continue

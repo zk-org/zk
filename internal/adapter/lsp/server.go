@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -317,10 +316,10 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {
-	var tags []note.Collection
+	var tags []core.Collection
 	// FIXME:
 	// err = db.WithTransaction(func(tx sqlite.Transaction) error {
-	// tags, err = sqlite.NewCollectionDAO(tx, s.container.Logger).FindAll(note.CollectionKindTag)
+	// tags, err = sqlite.NewCollectionDAO(tx, s.container.Logger).FindAll(core.CollectionKindTag)
 	// return err
 	// })
 	// if err != nil {

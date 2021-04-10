@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	sqlite "github.com/mattn/go-sqlite3"
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
 
@@ -155,7 +155,7 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 				 SELECT n.*, GROUP_CONCAT(c.name, '` + "\x01" + `') AS tags
 				   FROM notes n
 				   LEFT JOIN notes_collections nc ON nc.note_id = n.id
-				   LEFT JOIN collections c ON nc.collection_id = c.id AND c.kind = '` + string(note.CollectionKindTag) + `'
+				   LEFT JOIN collections c ON nc.collection_id = c.id AND c.kind = '` + string(core.CollectionKindTag) + `'
 				  GROUP BY n.id`,
 
 				`PRAGMA user_version = 2`,

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
@@ -43,7 +42,7 @@ func TestCollectionDaoFindAll(t *testing.T) {
 		// Finds existing
 		cs, err = dao.FindAll("tag")
 		assert.Nil(t, err)
-		assert.Equal(t, cs, []note.Collection{
+		assert.Equal(t, cs, []core.Collection{
 			{Kind: "tag", Name: "adventure", NoteCount: 2},
 			{Kind: "tag", Name: "fantasy", NoteCount: 1},
 			{Kind: "tag", Name: "fiction", NoteCount: 1},

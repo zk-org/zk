@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
@@ -84,7 +83,7 @@ func (ni *NoteIndex) Update(note core.Note) error {
 
 func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteId core.NoteID, tags []string) error {
 	for _, tag := range tags {
-		tagId, err := collections.FindOrCreate(note.CollectionKindTag, tag)
+		tagId, err := collections.FindOrCreate(core.CollectionKindTag, tag)
 		if err != nil {
 			return err
 		}

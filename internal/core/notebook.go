@@ -16,6 +16,7 @@ type Notebook struct {
 	Config Config
 
 	index                 NoteIndex
+	parser                NoteParser
 	fs                    FileStorage
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
@@ -32,6 +33,7 @@ func NewNotebook(
 		Path:                  path,
 		Config:                config,
 		index:                 ports.NoteIndex,
+		parser:                ports.NoteParser,
 		fs:                    ports.FS,
 		templateLoaderFactory: ports.TemplateLoaderFactory,
 		idGeneratorFactory:    ports.IDGeneratorFactory,
@@ -41,6 +43,7 @@ func NewNotebook(
 
 type NotebookPorts struct {
 	NoteIndex             NoteIndex
+	NoteParser            NoteParser
 	FS                    FileStorage
 	TemplateLoaderFactory TemplateLoaderFactory
 	IDGeneratorFactory    IDGeneratorFactory
@@ -111,7 +114,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 		return "", wrap(err)
 	}
 
-	cmd := newNoteCmd{
+	task := newNoteTask{
 		dir:              dir,
 		title:            opts.Title.OrString(config.Note.DefaultTitle).Unwrap(),
 		content:          opts.Content,
@@ -124,7 +127,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 		templates:        templates,
 		genID:            n.idGeneratorFactory(config.Note.IDOptions),
 	}
-	path, err := cmd.execute()
+	path, err := task.execute()
 	return path, wrap(err)
 }
 

@@ -3,7 +3,7 @@ package markdown
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
@@ -346,13 +346,13 @@ Tags: [tag1, "#tag1", tag2]
 }
 
 func TestParseLinks(t *testing.T) {
-	test := func(source string, links []note.Link) {
+	test := func(source string, links []core.Link) {
 		content := parse(t, source)
 		assert.Equal(t, content.Links, links)
 	}
 
-	test("", []note.Link{})
-	test("No links around here", []note.Link{})
+	test("", []core.Link{})
+	test("No links around here", []core.Link{})
 
 	test(`
 # Heading with a [link](heading)
@@ -375,51 +375,51 @@ A #[[leading hash]] is used for #uplinks.
 Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]
 
 [External links](http://example.com) are marked [as such](ftp://domain).
-`, []note.Link{
+`, []core.Link{
 		{
 			Title:        "link",
 			Href:         "heading",
-			Rels:         []string{},
-			External:     false,
+			Rels:         []core.LinkRelation{},
+			IsExternal:   false,
 			Snippet:      "Heading with a [link](heading)",
 			SnippetStart: 3,
 			SnippetEnd:   33,
 		},
 		{
-			Title:    "multiple links",
-			Href:     "stripped-formatting",
-			Rels:     []string{},
-			External: false,
+			Title:      "multiple links",
+			Href:       "stripped-formatting",
+			Rels:       []core.LinkRelation{},
+			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 			SnippetStart: 35,
 			SnippetEnd:   222,
 		},
 		{
-			Title:    "relative",
-			Href:     "../other",
-			Rels:     []string{},
-			External: false,
+			Title:      "relative",
+			Href:       "../other",
+			Rels:       []core.LinkRelation{},
+			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 			SnippetStart: 35,
 			SnippetEnd:   222,
 		},
 		{
-			Title:    "one relation",
-			Href:     "one",
-			Rels:     []string{"rel-1"},
-			External: false,
+			Title:      "one relation",
+			Href:       "one",
+			Rels:       core.LinkRels("rel-1"),
+			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 			SnippetStart: 35,
 			SnippetEnd:   222,
 		},
 		{
-			Title:    "several relations",
-			Href:     "several",
-			Rels:     []string{"rel-1", "rel-2"},
-			External: false,
+			Title:      "several relations",
+			Href:       "several",
+			Rels:       core.LinkRels("rel-1", "rel-2"),
+			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
 A link can have [one relation](one "rel-1") or [several relations](several "rel-1 rel-2").`,
 			SnippetStart: 35,
@@ -428,8 +428,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "https://inline-link.com",
 			Href:         "https://inline-link.com",
-			External:     true,
-			Rels:         []string{},
+			IsExternal:   true,
+			Rels:         []core.LinkRelation{},
 			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
 			SnippetStart: 224,
 			SnippetEnd:   286,
@@ -437,8 +437,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "http://another-inline-link.com",
 			Href:         "http://another-inline-link.com",
-			External:     true,
-			Rels:         []string{},
+			IsExternal:   true,
+			Rels:         []core.LinkRelation{},
 			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
 			SnippetStart: 224,
 			SnippetEnd:   286,
@@ -446,8 +446,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Wiki link",
 			Href:         "Wiki link",
-			External:     false,
-			Rels:         []string{},
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
 			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
 			SnippetStart: 288,
 			SnippetEnd:   351,
@@ -455,8 +455,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "two brackets",
 			Href:         "2-brackets",
-			External:     false,
-			Rels:         []string{},
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
 			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
 			SnippetStart: 288,
 			SnippetEnd:   351,
@@ -464,8 +464,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        `esca]]ped [chara\cters`,
 			Href:         `esca]]ped [chara\cters`,
-			External:     false,
-			Rels:         []string{},
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
 			Snippet:      `It can contain [[esca]\]ped \[chara\\cters]].`,
 			SnippetStart: 353,
 			SnippetEnd:   398,
@@ -473,8 +473,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Folgezettel link",
 			Href:         "Folgezettel link",
-			External:     false,
-			Rels:         []string{"down"},
+			IsExternal:   false,
+			Rels:         core.LinkRels("down"),
 			Snippet:      "A [[[Folgezettel link]]] is surrounded by three brackets.",
 			SnippetStart: 400,
 			SnippetEnd:   457,
@@ -482,8 +482,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "trailing hash",
 			Href:         "trailing hash",
-			External:     false,
-			Rels:         []string{"down"},
+			IsExternal:   false,
+			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
 			SnippetStart: 459,
 			SnippetEnd:   523,
@@ -491,8 +491,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "leading hash",
 			Href:         "leading hash",
-			External:     false,
-			Rels:         []string{"up"},
+			IsExternal:   false,
+			Rels:         core.LinkRels("up"),
 			Snippet:      "A #[[leading hash]] is used for #uplinks.",
 			SnippetStart: 525,
 			SnippetEnd:   566,
@@ -500,8 +500,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Trailing link",
 			Href:         "trailing",
-			External:     false,
-			Rels:         []string{"down"},
+			IsExternal:   false,
+			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
 			SnippetStart: 568,
 			SnippetEnd:   650,
@@ -509,8 +509,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Leading link",
 			Href:         "leading",
-			External:     false,
-			Rels:         []string{"up"},
+			IsExternal:   false,
+			Rels:         core.LinkRels("up"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
 			SnippetStart: 568,
 			SnippetEnd:   650,
@@ -518,8 +518,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "External links",
 			Href:         "http://example.com",
-			Rels:         []string{},
-			External:     true,
+			Rels:         []core.LinkRelation{},
+			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
 			SnippetStart: 652,
 			SnippetEnd:   724,
@@ -527,8 +527,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "as such",
 			Href:         "ftp://domain",
-			Rels:         []string{},
-			External:     true,
+			Rels:         []core.LinkRelation{},
+			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
 			SnippetStart: 652,
 			SnippetEnd:   724,
@@ -564,7 +564,7 @@ Paragraph
 	})
 }
 
-func parse(t *testing.T, source string) note.Content {
+func parse(t *testing.T, source string) core.ParsedNote {
 	return parseWithOptions(t, source, ParserOpts{
 		HashtagEnabled:      true,
 		MultiWordTagEnabled: true,
@@ -572,7 +572,7 @@ func parse(t *testing.T, source string) note.Content {
 	})
 }
 
-func parseWithOptions(t *testing.T, source string, options ParserOpts) note.Content {
+func parseWithOptions(t *testing.T, source string, options ParserOpts) core.ParsedNote {
 	content, err := NewParser(options).Parse(source)
 	assert.Nil(t, err)
 	return *content
