@@ -12,15 +12,43 @@ import (
 
 // Notebook handles queries and commands performed on an opened notebook.
 type Notebook struct {
-	Path                  string
-	config                Config
+	Path   string
+	Config Config
+
 	index                 NoteIndex
 	fs                    FileStorage
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
-	// Returns the OS environment variables.
-	osEnv func() map[string]string
+	osEnv                 func() map[string]string
 }
+
+// NewNotebook creates a new Notebook instance.
+func NewNotebook(
+	path string,
+	config Config,
+	ports NotebookPorts,
+) *Notebook {
+	return &Notebook{
+		Path:                  path,
+		Config:                config,
+		index:                 ports.NoteIndex,
+		fs:                    ports.FS,
+		templateLoaderFactory: ports.TemplateLoaderFactory,
+		idGeneratorFactory:    ports.IDGeneratorFactory,
+		osEnv:                 ports.OSEnv,
+	}
+}
+
+type NotebookPorts struct {
+	NoteIndex             NoteIndex
+	FS                    FileStorage
+	TemplateLoaderFactory TemplateLoaderFactory
+	IDGeneratorFactory    IDGeneratorFactory
+	OSEnv                 func() map[string]string
+}
+
+// NotebookFactory creates a new Notebook instance at the given root path.
+type NotebookFactory func(path string, config Config) (*Notebook, error)
 
 // Index indexes the content of the notebook to be searchable.
 // If force is true, existing notes will be reindexed.
@@ -68,7 +96,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 		return "", wrap(err)
 	}
 
-	config, err := n.config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
+	config, err := n.Config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
 	if err != nil {
 		return "", wrap(err)
 	}
@@ -78,7 +106,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 		extra[k] = v
 	}
 
-	templates, err := n.newTemplateLoader(config.Note.Lang)
+	templates, err := n.templateLoaderFactory(config.Note.Lang)
 	if err != nil {
 		return "", wrap(err)
 	}
@@ -98,11 +126,6 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 	}
 	path, err := cmd.execute()
 	return path, wrap(err)
-}
-
-func (n *Notebook) newTemplateLoader(lang string) (TemplateLoader, error) {
-	lookupPaths := []string{filepath.Join(n.Path, ".zk/templates")}
-	return n.templateLoaderFactory(lang, lookupPaths)
 }
 
 // FindNotes retrieves the notes matching the given filtering options.
@@ -166,7 +189,7 @@ func (n *Notebook) dirAt(path string) (dir, error) {
 		return dir{}, err
 	}
 
-	group, err := n.config.GroupNameForPath(name)
+	group, err := n.Config.GroupNameForPath(name)
 	if err != nil {
 		return dir{}, err
 	}

@@ -13,6 +13,9 @@ type FileStorage interface {
 	// DirExists returns whether a directory exists at the given file path.
 	DirExists(path string) (bool, error)
 
+	// IsDescendantOf returns whether the given path is dir or one of its descendants.
+	IsDescendantOf(dir string, path string) (bool, error)
+
 	// Read returns the bytes content of the file at the given file path.
 	Read(path string) ([]byte, error)
 
@@ -57,4 +60,4 @@ type TemplateLoader interface {
 
 // TemplateLoaderFactory creates a new instance of an implementation of the
 // TemplateLoader port.
-type TemplateLoaderFactory func(language string, lookupPaths []string) (TemplateLoader, error)
+type TemplateLoaderFactory func(language string) (TemplateLoader, error)

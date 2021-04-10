@@ -7,11 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/adapter"
-	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
-	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -25,7 +22,7 @@ import (
 // Server holds the state of the Language Server.
 type Server struct {
 	server    *glspserv.Server
-	container *adapter.Container
+	notebooks *core.NotebookStore
 	documents map[protocol.DocumentUri]*document
 }
 
@@ -34,7 +31,7 @@ type ServerOpts struct {
 	Name      string
 	Version   string
 	LogFile   opt.String
-	Container *adapter.Container
+	Notebooks *core.NotebookStore
 }
 
 // NewServer creates a new Server instance.
@@ -48,7 +45,7 @@ func NewServer(opts ServerOpts) *Server {
 	handler := protocol.Handler{}
 	server := &Server{
 		server:    glspserv.NewServer(&handler, opts.Name, debug),
-		container: opts.Container,
+		notebooks: opts.Notebooks,
 		documents: map[string]*document{},
 	}
 
@@ -67,8 +64,6 @@ func NewServer(opts ServerOpts) *Server {
 			workspace.addFolder(*params.RootPath)
 		}
 
-		server.container.OpenNotebook(workspace.folders)
-
 		// To see the logs with coc.nvim, run :CocCommand workspace.showOutput
 		// https://github.com/neoclide/coc.nvim/wiki/Debug-language-server#using-output-channel
 		if params.Trace != nil {
@@ -78,29 +73,18 @@ func NewServer(opts ServerOpts) *Server {
 		capabilities := handler.CreateServerCapabilities()
 		capabilities.HoverProvider = true
 
-		zk, err := server.container.Zk()
-		if err == nil {
-			capabilities.TextDocumentSync = protocol.TextDocumentSyncKindIncremental
-			capabilities.DocumentLinkProvider = &protocol.DocumentLinkOptions{
-				ResolveProvider: boolPtr(true),
-			}
-
-			triggerChars := []string{"["}
-
-			// Setup tag completion trigger characters
-			if zk.Config.Format.Markdown.Hashtags {
-				triggerChars = append(triggerChars, "#")
-			}
-			if zk.Config.Format.Markdown.ColonTags {
-				triggerChars = append(triggerChars, ":")
-			}
-
-			capabilities.CompletionProvider = &protocol.CompletionOptions{
-				TriggerCharacters: triggerChars,
-			}
-
-			capabilities.DefinitionProvider = boolPtr(true)
+		capabilities.TextDocumentSync = protocol.TextDocumentSyncKindIncremental
+		capabilities.DocumentLinkProvider = &protocol.DocumentLinkOptions{
+			ResolveProvider: boolPtr(true),
 		}
+
+		triggerChars := []string{"[", "#", ":"}
+
+		capabilities.CompletionProvider = &protocol.CompletionOptions{
+			TriggerCharacters: triggerChars,
+		}
+
+		capabilities.DefinitionProvider = boolPtr(true)
 
 		return protocol.InitializeResult{
 			Capabilities: capabilities,
@@ -171,17 +155,31 @@ func NewServer(opts ServerOpts) *Server {
 
 	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
 		triggerChar := params.Context.TriggerCharacter
-
 		if params.Context.TriggerKind != protocol.CompletionTriggerKindTriggerCharacter || triggerChar == nil {
 			return nil, nil
 		}
 
-		switch *triggerChar {
-		case "#", ":":
-			return server.buildTagCompletionList(*triggerChar)
+		doc, ok := server.documents[params.TextDocument.URI]
+		if !ok {
+			return nil, nil
+		}
 
+		notebook, err := server.notebookOf(params.TextDocument.URI)
+		if err != nil {
+			return nil, err
+		}
+
+		switch *triggerChar {
+		case "#":
+			if notebook.Config.Format.Markdown.Hashtags {
+				return server.buildTagCompletionList(notebook, "#")
+			}
+		case ":":
+			if notebook.Config.Format.Markdown.ColonTags {
+				return server.buildTagCompletionList(notebook, ":")
+			}
 		case "[":
-			return server.buildLinkCompletionList(params)
+			return server.buildLinkCompletionList(doc, notebook, params)
 		}
 
 		return nil, nil
@@ -198,18 +196,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		zk, err := server.container.Zk()
+		notebook, err := server.notebookOf(params.TextDocument.URI)
 		if err != nil {
 			return nil, err
 		}
 
-		db, _, err := server.container.Database(false)
-		if err != nil {
-			return nil, err
-		}
-
-		index := sqlite.NewNoteIndex(db, server.container.Logger)
-		target, err := server.targetForHref(link.Href, zk.Path, index)
+		target, err := server.targetForHref(link.Href, notebook)
 		if err != nil || target == "" || strutil.IsURL(target) {
 			return nil, err
 		}
@@ -239,21 +231,14 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		zk, err := server.container.Zk()
+		notebook, err := server.notebookOf(params.TextDocument.URI)
 		if err != nil {
 			return nil, err
 		}
-
-		db, _, err := server.container.Database(false)
-		if err != nil {
-			return nil, err
-		}
-
-		index := sqlite.NewNoteIndex(db, server.container.Logger)
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.targetForHref(link.Href, zk.Path, index)
+			target, err := server.targetForHref(link.Href, notebook)
 			if target == "" || err != nil {
 				continue
 			}
@@ -278,18 +263,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		zk, err := server.container.Zk()
+		notebook, err := server.notebookOf(params.TextDocument.URI)
 		if err != nil {
 			return nil, err
 		}
 
-		db, _, err := server.container.Database(false)
-		if err != nil {
-			return nil, err
-		}
-
-		index := sqlite.NewNoteIndex(db, server.container.Logger)
-		target, err := server.targetForHref(link.Href, zk.Path, index)
+		target, err := server.targetForHref(link.Href, notebook)
 		if link == nil || target == "" || err != nil {
 			return nil, err
 		}
@@ -309,8 +288,12 @@ func NewServer(opts ServerOpts) *Server {
 	return server
 }
 
+func (s *Server) notebookOf(path protocol.DocumentUri) (*core.Notebook, error) {
+	return s.notebooks.Open(path)
+}
+
 // targetForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) targetForHref(href string, basePath string, index core.NoteIndex) (string, error) {
+func (s *Server) targetForHref(href string, notebook *core.Notebook) (string, error) {
 	if strutil.IsURL(href) {
 		return href, nil
 	} else {
@@ -333,30 +316,22 @@ func (s *Server) Run() error {
 	return errors.Wrap(s.server.RunStdio(), "lsp")
 }
 
-func (s *Server) buildTagCompletionList(triggerChar string) ([]protocol.CompletionItem, error) {
-	zk, err := s.container.Zk()
-	if err != nil {
-		return nil, err
-	}
-	db, _, err := s.container.Database(false)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {
 	var tags []note.Collection
-	err = db.WithTransaction(func(tx sqlite.Transaction) error {
-		tags, err = sqlite.NewCollectionDAO(tx, s.container.Logger).FindAll(note.CollectionKindTag)
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
+	// FIXME:
+	// err = db.WithTransaction(func(tx sqlite.Transaction) error {
+	// tags, err = sqlite.NewCollectionDAO(tx, s.container.Logger).FindAll(note.CollectionKindTag)
+	// return err
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	var items []protocol.CompletionItem
 	for _, tag := range tags {
 		items = append(items, protocol.CompletionItem{
 			Label:      tag.Name,
-			InsertText: s.buildInsertForTag(tag.Name, triggerChar, zk.Config),
+			InsertText: s.buildInsertForTag(tag.Name, triggerChar, notebook.Config),
 			Detail:     stringPtr(fmt.Sprintf("%d %s", tag.NoteCount, strutil.Pluralize("note", tag.NoteCount))),
 		})
 	}
@@ -364,7 +339,7 @@ func (s *Server) buildTagCompletionList(triggerChar string) ([]protocol.Completi
 	return items, nil
 }
 
-func (s *Server) buildInsertForTag(name string, triggerChar string, config zk.Config) *string {
+func (s *Server) buildInsertForTag(name string, triggerChar string, config core.Config) *string {
 	switch triggerChar {
 	case ":":
 		name += ":"
@@ -380,23 +355,8 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config zk.Co
 	return &name
 }
 
-func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
-	zk, err := s.container.Zk()
-	if err != nil {
-		return nil, err
-	}
-	doc, ok := s.documents[params.TextDocument.URI]
-	if !ok {
-		return nil, nil
-	}
-
-	db, _, err := s.container.Database(false)
-	if err != nil {
-		return nil, err
-	}
-
-	index := sqlite.NewNoteIndex(db, s.container.Logger)
-	notes, err := index.Find(core.NoteFindOpts{})
+func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
+	notes, err := notebook.FindNotes(core.NoteFindOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +365,7 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 	for _, note := range notes {
 		items = append(items, protocol.CompletionItem{
 			Label:    note.Title,
-			TextEdit: s.buildTextEditForLink(zk, note, doc, params.Position),
+			TextEdit: s.buildTextEditForLink(notebook, note, doc, params.Position),
 			Documentation: protocol.MarkupContent{
 				Kind:  protocol.MarkupKindMarkdown,
 				Value: note.RawContent,
@@ -416,11 +376,11 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 	return items, nil
 }
 
-func (s *Server) buildTextEditForLink(zk *zk.Zk, note core.ContextualNote, document *document, pos protocol.Position) interface{} {
+func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.ContextualNote, document *document, pos protocol.Position) interface{} {
 	isWikiLink := (document.LookBehind(pos, 2) == "[[")
 	var text string
 
-	path := filepath.Join(zk.Path, note.Path)
+	path := filepath.Join(notebook.Path, note.Path)
 	documentPath := strings.TrimPrefix(document.URI, "file://")
 	path, err := filepath.Rel(filepath.Dir(documentPath), path)
 	if err != nil {

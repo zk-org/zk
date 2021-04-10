@@ -1,43 +1,30 @@
-package adapter
+package internal
 
 import (
-	"io"
+	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/mickael-menu/zk/internal/adapter/fs"
-	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
-	"github.com/mickael-menu/zk/internal/adapter/markdown"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/adapter/term"
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
-	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/pager"
+	osutil "github.com/mickael-menu/zk/internal/util/os"
 	"github.com/mickael-menu/zk/internal/util/paths"
-	"github.com/schollz/progressbar/v3"
+	"github.com/mickael-menu/zk/internal/util/rand"
 )
 
 type Container struct {
-	NotebookStore  *core.NotebookStore
-	Version        string
-	Config         zk.Config
-	Date           date.Provider
-	Logger         util.Logger
-	Terminal       *term.Terminal
-	WorkingDir     string
-	templateLoader *handlebars.Loader
-	newConfig      core.Config
-	notebook       *core.Notebook
-	notebookErr    error
-	zk             *zk.Zk
-	zkErr          error
-	fs             core.FileStorage
+	Version            string
+	Config             core.Config
+	Logger             util.Logger
+	Terminal           *term.Terminal
+	Notebooks          *core.NotebookStore
+	currentNotebook    *core.Notebook
+	currentNotebookErr error
 }
 
 func NewContainer(version string) (*Container, error) {
@@ -46,8 +33,7 @@ func NewContainer(version string) (*Container, error) {
 	term := term.New()
 	logger := util.NewStdLogger("zk: ", 0)
 	fs, err := fs.NewFileStorage("")
-	config := zk.NewDefaultConfig()
-	newConfig := core.NewDefaultConfig()
+	config := core.NewDefaultConfig()
 
 	// Load global user config
 	configPath, err := locateGlobalConfig()
@@ -55,28 +41,59 @@ func NewContainer(version string) (*Container, error) {
 		return nil, wrap(err)
 	}
 	if configPath != "" {
-		config, err = zk.OpenConfig(configPath, config)
-		if err != nil {
-			return nil, wrap(err)
-		}
-		newConfig, err = core.OpenConfig(configPath, newConfig, fs)
+		config, err = core.OpenConfig(configPath, config, fs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 	}
 
-	date := date.NewFrozenNow()
-
 	return &Container{
-		Version: version,
-		Config:  config,
-		// zk is short-lived, so we freeze the current date to use the same
-		// date for any template rendering during the execution.
-		Date:      &date,
-		Logger:    logger,
-		Terminal:  term,
-		newConfig: newConfig,
-		fs:        fs,
+		Version:  version,
+		Config:   config,
+		Logger:   logger,
+		Terminal: term,
+		Notebooks: core.NewNotebookStore(config, core.NotebookStorePorts{
+			FS: fs,
+			NotebookFactory: func(path string, config core.Config) (*core.Notebook, error) {
+				dbPath := filepath.Join(path, ".zk/notebook.db")
+				db, err := sqlite.Open(dbPath)
+				if err != nil {
+					return nil, err
+				}
+
+				needsReindexing, err := db.Migrate()
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to migrate the database")
+				}
+
+				// FIXME: index (opt. with force)
+				fmt.Println(needsReindexing)
+				// stats, err = c.index(db, forceIndexing || needsReindexing)
+				// if err != nil {
+				// 	return nil, stats, err
+				// }
+
+				return core.NewNotebook(path, config, core.NotebookPorts{
+					NoteIndex: sqlite.NewNoteIndex(db, logger),
+					FS:        fs,
+					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
+						// FIXME: multiple notebooks
+						handlebars.Init(config.Note.Lang, term.SupportsUTF8(), logger, term)
+						lookupPaths := []string{
+							filepath.Join(globalConfigDir(), "templates"),
+							filepath.Join(path, ".zk/templates"),
+						}
+						return handlebars.NewLoader(lookupPaths), nil
+					},
+					IDGeneratorFactory: func(opts core.IDOptions) func() string {
+						return rand.NewIDGenerator(opts)
+					},
+					OSEnv: func() map[string]string {
+						return osutil.Env()
+					},
+				}), nil
+			},
+		}),
 	}, nil
 }
 
@@ -84,16 +101,7 @@ func NewContainer(version string) (*Container, error) {
 // XDG Base Directory specification
 // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 func locateGlobalConfig() (string, error) {
-	configHome, ok := os.LookupEnv("XDG_CONFIG_HOME")
-	if !ok {
-		home, ok := os.LookupEnv("HOME")
-		if !ok {
-			home = "~/"
-		}
-		configHome = filepath.Join(home, ".config")
-	}
-
-	configPath := filepath.Join(configHome, "zk/config.toml")
+	configPath := filepath.Join(globalConfigDir(), "config.toml")
 	exists, err := paths.Exists(configPath)
 	switch {
 	case err != nil:
@@ -105,41 +113,45 @@ func locateGlobalConfig() (string, error) {
 	}
 }
 
-// OpenNotebook resolves and loads the first notebook found in the given
-// searchPaths.
-func (c *Container) OpenNotebook(searchPaths []string) {
+// globalConfigDir returns the parent directory of the global configuration file.
+func globalConfigDir() string {
+	path, ok := os.LookupEnv("XDG_CONFIG_HOME")
+	if !ok {
+		home, ok := os.LookupEnv("HOME")
+		if !ok {
+			home = "~/"
+		}
+		path = filepath.Join(home, ".config")
+	}
+	return filepath.Join(path, "zk")
+}
+
+// SetCurrentNotebook sets the first notebook found in the given search paths
+// as the current default one.
+func (c *Container) SetCurrentNotebook(searchPaths []string) {
 	if len(searchPaths) == 0 {
-		panic("no notebook search paths provided")
+		return
 	}
 
 	for _, path := range searchPaths {
-		c.notebook, c.notebookErr = c.NotebookStore.Open(path)
-		c.zk, c.zkErr = zk.Open(path, c.Config)
-		if c.notebookErr == nil && c.zkErr == nil {
-			c.WorkingDir = path
-			c.Config = c.zk.Config
-			os.Setenv("ZK_NOTEBOOK_DIR", c.zk.Path)
+		c.currentNotebook, c.currentNotebookErr = c.Notebooks.Open(path)
+		if c.currentNotebookErr == nil {
+			// FIXME
+			// c.WorkingDir = path
+			c.Config = c.currentNotebook.Config
+			// FIXME: multiple notebooks
+			os.Setenv("ZK_NOTEBOOK_DIR", c.currentNotebook.Path)
 			return
 		}
 	}
 }
 
-func (c *Container) Notebook() (*core.Notebook, error) {
-	return c.notebook, c.notebookErr
+// CurrentNotebook returns the current default notebook.
+func (c *Container) CurrentNotebook() (*core.Notebook, error) {
+	return c.currentNotebook, c.currentNotebookErr
 }
 
-func (c *Container) Zk() (*zk.Zk, error) {
-	return c.zk, c.zkErr
-}
-
-func (c *Container) TemplateLoader(lang string) *handlebars.Loader {
-	if c.templateLoader == nil {
-		handlebars.Init(lang, c.Terminal.SupportsUTF8(), c.Logger, c.Terminal)
-		c.templateLoader = handlebars.NewLoader([]string{})
-	}
-	return c.templateLoader
-}
-
+/*
 func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser(markdown.ParserOpts{
 		HashtagEnabled:      c.Config.Format.Markdown.Hashtags,
@@ -154,33 +166,8 @@ func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *
 	// return fzf.NewNoteFinder(opts, notes, c.Terminal)
 }
 
-// Database returns the DB instance for the given notebook, after executing any
-// pending migration and indexing the notes if needed.
-func (c *Container) Database(forceIndexing bool) (*sqlite.DB, note.IndexingStats, error) {
-	var stats note.IndexingStats
-
-	if c.zkErr != nil {
-		return nil, stats, c.zkErr
-	}
-
-	db, err := sqlite.Open(c.zk.DBPath())
-	if err != nil {
-		return nil, stats, err
-	}
-	needsReindexing, err := db.Migrate()
-	if err != nil {
-		return nil, stats, errors.Wrap(err, "failed to migrate the database")
-	}
-
-	stats, err = c.index(db, forceIndexing || needsReindexing)
-	if err != nil {
-		return nil, stats, err
-	}
-
-	return db, stats, err
-}
-
 func (c *Container) index(db *sqlite.DB, force bool) (note.IndexingStats, error) {
+	// FIXME: observe indexing process
 	var bar = progressbar.NewOptions(-1,
 		progressbar.OptionSetWriter(os.Stderr),
 		progressbar.OptionThrottle(100*time.Millisecond),
@@ -190,8 +177,8 @@ func (c *Container) index(db *sqlite.DB, force bool) (note.IndexingStats, error)
 	var err error
 	var stats note.IndexingStats
 
-	if c.zkErr != nil {
-		return stats, c.zkErr
+	if c.currentNotebookErr != nil {
+		return stats, c.currentNotebookErr
 	}
 
 	err = db.WithTransaction(func(tx sqlite.Transaction) error {
@@ -234,3 +221,4 @@ func (c *Container) pager(noPager bool) (*pager.Pager, error) {
 		return pager.New(c.Config.Tool.Pager, c.Logger)
 	}
 }
+*/

@@ -9,32 +9,27 @@ import (
 
 // NotebookStore retrieves or creates new notebooks.
 type NotebookStore struct {
-	// Global user configuration.
-	config Config
+	config          Config
+	notebookFactory NotebookFactory
+	fs              FileStorage
 
-	// Ports
-	fs                    FileStorage
-	templateLoaderFactory TemplateLoaderFactory
-	idGeneratorFactory    IDGeneratorFactory
-	osEnv                 func() map[string]string
+	// Cached opened notebooks.
+	notebooks map[string]*Notebook
 }
 
-type Ports struct {
-	FS                    FileStorage
-	TemplateLoaderFactory TemplateLoaderFactory
-	IDGeneratorFactory    IDGeneratorFactory
-	OSEnv                 func() map[string]string
+type NotebookStorePorts struct {
+	NotebookFactory NotebookFactory
+	FS              FileStorage
 }
 
 // NewNotebookStore creates a new NotebookStore instance using the given
 // options and port implementations.
-func NewNotebookStore(config Config, ports Ports) *NotebookStore {
+func NewNotebookStore(config Config, ports NotebookStorePorts) *NotebookStore {
 	return &NotebookStore{
-		config:                config,
-		fs:                    ports.FS,
-		templateLoaderFactory: ports.TemplateLoaderFactory,
-		idGeneratorFactory:    ports.IDGeneratorFactory,
-		osEnv:                 ports.OSEnv,
+		config:          config,
+		notebookFactory: ports.NotebookFactory,
+		fs:              ports.FS,
+		notebooks:       map[string]*Notebook{},
 	}
 }
 
@@ -45,10 +40,15 @@ func (e ErrNotebookNotFound) Error() string {
 	return fmt.Sprintf("no notebook found in %s or a parent directory", string(e))
 }
 
-// OpenNotebook returns a new Notebook instance for the notebook containing the
+// Open returns a new Notebook instance for the notebook containing the
 // given file path.
-func (ns *NotebookStore) OpenNotebook(path string) (*Notebook, error) {
+func (ns *NotebookStore) Open(path string) (*Notebook, error) {
 	wrap := errors.Wrapper("open failed")
+
+	nb := ns.cachedNotebookAt(path)
+	if nb != nil {
+		return nb, nil
+	}
 
 	path, err := ns.fs.Abs(path)
 	if err != nil {
@@ -65,18 +65,33 @@ func (ns *NotebookStore) OpenNotebook(path string) (*Notebook, error) {
 		return nil, wrap(err)
 	}
 
-	return &Notebook{
-		Path:                  path,
-		config:                config,
-		fs:                    ns.fs,
-		templateLoaderFactory: ns.templateLoaderFactory,
-		idGeneratorFactory:    ns.idGeneratorFactory,
-		osEnv:                 ns.osEnv,
-	}, nil
+	nb, err = ns.notebookFactory(path, config)
+	if err != nil {
+		return nil, wrap(err)
+	}
+	ns.notebooks[path] = nb
+
+	return nb, nil
 }
 
-// InitNotebook creates a new notebook at the given file path.
-func (ns *NotebookStore) InitNotebook(path string) error {
+// cachedNotebookAt returns any cached notebook containing the given path.
+func (ns *NotebookStore) cachedNotebookAt(path string) *Notebook {
+	path, err := ns.fs.Abs(path)
+	if err != nil {
+		return nil
+	}
+
+	for root, nb := range ns.notebooks {
+		if isDesc, err := ns.fs.IsDescendantOf(root, path); isDesc && err == nil {
+			return nb
+		}
+	}
+
+	return nil
+}
+
+// Init creates a new notebook at the given file path.
+func (ns *NotebookStore) Init(path string) error {
 	wrap := errors.Wrapper("init failed")
 
 	path, err := ns.fs.Abs(path)

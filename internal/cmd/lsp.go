@@ -16,7 +16,7 @@ func (cmd *LSP) Run(container *adapter.Container) error {
 		Name:      "zk",
 		Version:   container.Version,
 		LogFile:   opt.NewNotEmptyString(cmd.Log),
-		Container: container,
+		Notebooks: container.NotebookStore,
 	})
 
 	return server.Run()

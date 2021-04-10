@@ -13,7 +13,7 @@ type Init struct {
 }
 
 func (cmd *Init) Run(container *adapter.Container) error {
-	err := container.NotebookStore.InitNotebook(cmd.Directory)
+	err := container.NotebookStore.Init(cmd.Directory)
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // FileStorage implements the port core.FileStorage.
@@ -65,6 +66,33 @@ func (fs *FileStorage) fileInfo(path string) (*os.FileInfo, error) {
 	} else {
 		return nil, err
 	}
+}
+
+// FIXME: unit test
+func (fs *FileStorage) IsDescendantOf(dir string, path string) (bool, error) {
+	dir, err := fs.Abs(dir)
+	if err != nil {
+		return false, err
+	}
+	dir, err = filepath.EvalSymlinks(dir)
+	if err != nil {
+		return false, err
+	}
+	path, err = fs.Abs(path)
+	if err != nil {
+		return false, err
+	}
+	path, err = filepath.EvalSymlinks(path)
+	if err != nil {
+		return false, err
+	}
+
+	path, err = filepath.Rel(dir, path)
+	if err != nil {
+		return false, err
+	}
+
+	return !strings.HasPrefix(path, ".."), nil
 }
 
 func (fs *FileStorage) Read(path string) ([]byte, error) {
