@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -7,8 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/kballard/go-shellquote"
-	"github.com/mickael-menu/zk/internal/core/note"
-	"github.com/mickael-menu/zk/internal/core/zk"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/strings"
@@ -129,136 +128,134 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 	return f, nil
 }
 
-// NewFinderOpts creates an instance of note.FinderOpts from a set of user flags.
-func NewFinderOpts(zk *zk.Zk, filtering Filtering) (*note.FinderOpts, error) {
-	filtering, err := filtering.ExpandNamedFilters(zk.Config.Filters, []string{})
+// NewNoteFindOpts creates an instance of core.NoteFindOpts from a set of user flags.
+func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, error) {
+	opts := core.NoteFindOpts{}
+
+	f, err := f.ExpandNamedFilters(notebook.Config.Filters, []string{})
 	if err != nil {
-		return nil, err
+		return opts, err
 	}
 
-	opts := note.FinderOpts{}
+	opts.Match = opt.NewNotEmptyString(f.Match)
 
-	opts.Match = opt.NewNotEmptyString(filtering.Match)
-
-	if paths, ok := relPaths(zk, filtering.Path); ok {
+	if paths, ok := relPaths(notebook, f.Path); ok {
 		opts.IncludePaths = paths
 	}
 
-	if paths, ok := relPaths(zk, filtering.Exclude); ok {
+	if paths, ok := relPaths(notebook, f.Exclude); ok {
 		opts.ExcludePaths = paths
 	}
 
-	if len(filtering.Tag) > 0 {
-		opts.Tags = filtering.Tag
+	if len(f.Tag) > 0 {
+		opts.Tags = f.Tag
 	}
 
-	if len(filtering.Mention) > 0 {
-		opts.Mention = filtering.Mention
+	if len(f.Mention) > 0 {
+		opts.Mention = f.Mention
 	}
 
-	if len(filtering.MentionedBy) > 0 {
-		opts.MentionedBy = filtering.MentionedBy
+	if len(f.MentionedBy) > 0 {
+		opts.MentionedBy = f.MentionedBy
 	}
 
-	if paths, ok := relPaths(zk, filtering.LinkedBy); ok {
-		opts.LinkedBy = &note.LinkFilter{
+	if paths, ok := relPaths(notebook, f.LinkedBy); ok {
+		opts.LinkedBy = &core.LinkFilter{
 			Paths:       paths,
 			Negate:      false,
-			Recursive:   filtering.Recursive,
-			MaxDistance: filtering.MaxDistance,
+			Recursive:   f.Recursive,
+			MaxDistance: f.MaxDistance,
 		}
-	} else if paths, ok := relPaths(zk, filtering.NoLinkedBy); ok {
-		opts.LinkedBy = &note.LinkFilter{
+	} else if paths, ok := relPaths(notebook, f.NoLinkedBy); ok {
+		opts.LinkedBy = &core.LinkFilter{
 			Paths:  paths,
 			Negate: true,
 		}
 	}
 
-	if paths, ok := relPaths(zk, filtering.LinkTo); ok {
-		opts.LinkTo = &note.LinkFilter{
+	if paths, ok := relPaths(notebook, f.LinkTo); ok {
+		opts.LinkTo = &core.LinkFilter{
 			Paths:       paths,
 			Negate:      false,
-			Recursive:   filtering.Recursive,
-			MaxDistance: filtering.MaxDistance,
+			Recursive:   f.Recursive,
+			MaxDistance: f.MaxDistance,
 		}
-	} else if paths, ok := relPaths(zk, filtering.NoLinkTo); ok {
-		opts.LinkTo = &note.LinkFilter{
+	} else if paths, ok := relPaths(notebook, f.NoLinkTo); ok {
+		opts.LinkTo = &core.LinkFilter{
 			Paths:  paths,
 			Negate: true,
 		}
 	}
 
-	if paths, ok := relPaths(zk, filtering.Related); ok {
+	if paths, ok := relPaths(notebook, f.Related); ok {
 		opts.Related = paths
 	}
 
-	opts.Orphan = filtering.Orphan
+	opts.Orphan = f.Orphan
 
-	if filtering.Created != "" {
-		start, end, err := parseDayRange(filtering.Created)
+	if f.Created != "" {
+		start, end, err := parseDayRange(f.Created)
 		if err != nil {
-			return nil, err
+			return opts, err
 		}
 		opts.CreatedStart = &start
 		opts.CreatedEnd = &end
 	} else {
-		if filtering.CreatedBefore != "" {
-			date, err := parseDate(filtering.CreatedBefore)
+		if f.CreatedBefore != "" {
+			date, err := parseDate(f.CreatedBefore)
 			if err != nil {
-				return nil, err
+				return opts, err
 			}
 			opts.CreatedEnd = &date
 		}
-		if filtering.CreatedAfter != "" {
-			date, err := parseDate(filtering.CreatedAfter)
+		if f.CreatedAfter != "" {
+			date, err := parseDate(f.CreatedAfter)
 			if err != nil {
-				return nil, err
+				return opts, err
 			}
 			opts.CreatedStart = &date
 		}
 	}
 
-	if filtering.Modified != "" {
-		start, end, err := parseDayRange(filtering.Modified)
+	if f.Modified != "" {
+		start, end, err := parseDayRange(f.Modified)
 		if err != nil {
-			return nil, err
+			return opts, err
 		}
 		opts.ModifiedStart = &start
 		opts.ModifiedEnd = &end
 	} else {
-		if filtering.ModifiedBefore != "" {
-			date, err := parseDate(filtering.ModifiedBefore)
+		if f.ModifiedBefore != "" {
+			date, err := parseDate(f.ModifiedBefore)
 			if err != nil {
-				return nil, err
+				return opts, err
 			}
 			opts.ModifiedEnd = &date
 		}
-		if filtering.ModifiedAfter != "" {
-			date, err := parseDate(filtering.ModifiedAfter)
+		if f.ModifiedAfter != "" {
+			date, err := parseDate(f.ModifiedAfter)
 			if err != nil {
-				return nil, err
+				return opts, err
 			}
 			opts.ModifiedStart = &date
 		}
 	}
 
-	opts.Interactive = filtering.Interactive
-
-	sorters, err := note.SortersFromStrings(filtering.Sort)
+	sorters, err := core.NoteSortersFromStrings(f.Sort)
 	if err != nil {
-		return nil, err
+		return opts, err
 	}
 	opts.Sorters = sorters
 
-	opts.Limit = filtering.Limit
+	opts.Limit = f.Limit
 
-	return &opts, nil
+	return opts, nil
 }
 
-func relPaths(zk *zk.Zk, paths []string) ([]string, bool) {
+func relPaths(notebook *core.Notebook, paths []string) ([]string, bool) {
 	relPaths := make([]string, 0)
 	for _, p := range paths {
-		path, err := zk.RelPath(p)
+		path, err := notebook.RelPath(p)
 		if err == nil {
 			relPaths = append(relPaths, path)
 		}

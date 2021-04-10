@@ -8,16 +8,16 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/mickael-menu/zk/internal/adapter"
-	"github.com/mickael-menu/zk/internal/cmd"
-	"github.com/mickael-menu/zk/internal/core/style"
+	"github.com/mickael-menu/zk/internal/cli"
+	"github.com/mickael-menu/zk/internal/cli/cmd"
+	"github.com/mickael-menu/zk/internal/core"
 	executil "github.com/mickael-menu/zk/internal/util/exec"
 )
 
 var Version = "dev"
 var Build = "dev"
 
-var cli struct {
+var root struct {
 	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
 	Index cmd.Index `cmd group:"zk" help:"Index the notes to be searchable."`
 
@@ -36,7 +36,7 @@ var cli struct {
 // NoInput is a flag preventing any user prompt when enabled.
 type NoInput bool
 
-func (f NoInput) BeforeApply(container *adapter.Container) error {
+func (f NoInput) BeforeApply(container *cli.Container) error {
 	container.Terminal.NoInput = true
 	return nil
 }
@@ -44,8 +44,8 @@ func (f NoInput) BeforeApply(container *adapter.Container) error {
 // ShowHelp is the default command run. It's equivalent to `zk --help`.
 type ShowHelp struct{}
 
-func (cmd *ShowHelp) Run(container *adapter.Container) error {
-	parser, err := kong.New(&cli, options(container)...)
+func (cmd *ShowHelp) Run(container *cli.Container) error {
+	parser, err := kong.New(&root, options(container)...)
 	if err != nil {
 		return err
 	}
@@ -58,25 +58,25 @@ func (cmd *ShowHelp) Run(container *adapter.Container) error {
 
 func main() {
 	// Create the dependency graph.
-	container, err := adapter.NewContainer(Version)
+	container, err := cli.NewContainer(Version)
 	fatalIfError(err)
 
 	// Open the notebook if there's any.
 	searchPaths, err := notebookSearchPaths()
 	fatalIfError(err)
-	container.OpenNotebook(searchPaths)
+	container.SetCurrentNotebook(searchPaths)
 
 	// Run the alias or command.
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
 		fatalIfError(err)
 	} else {
-		ctx := kong.Parse(&cli, options(container)...)
+		ctx := kong.Parse(&root, options(container)...)
 		err := ctx.Run(container)
 		ctx.FatalIfErrorf(err)
 	}
 }
 
-func options(container *adapter.Container) []kong.Option {
+func options(container *cli.Container) []kong.Option {
 	term := container.Terminal
 	return []kong.Option{
 		kong.Bind(container),
@@ -93,8 +93,8 @@ func options(container *adapter.Container) []kong.Option {
 			"filter": "Filtering",
 			"sort":   "Sorting",
 			"format": "Formatting",
-			"notes":  term.MustStyle("NOTES", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("Edit or browse your notes", style.RuleBold),
-			"zk":     term.MustStyle("NOTEBOOK", style.RuleYellow, style.RuleBold) + "\n" + term.MustStyle("A notebook is a directory containing a collection of notes", style.RuleBold),
+			"notes":  term.MustStyle("NOTES", core.StyleYellow, core.StyleBold) + "\n" + term.MustStyle("Edit or browse your notes", core.StyleBold),
+			"zk":     term.MustStyle("NOTEBOOK", core.StyleYellow, core.StyleBold) + "\n" + term.MustStyle("A notebook is a directory containing a collection of notes", core.StyleBold),
 		}),
 	}
 }
@@ -107,7 +107,7 @@ func fatalIfError(err error) {
 }
 
 // runAlias will execute a user alias if the command is one of them.
-func runAlias(container *adapter.Container, args []string) (bool, error) {
+func runAlias(container *cli.Container, args []string) (bool, error) {
 	if len(args) < 1 {
 		return false, nil
 	}
@@ -121,9 +121,10 @@ func runAlias(container *adapter.Container, args []string) (bool, error) {
 		// Prevent infinite loop if an alias calls itself.
 		os.Setenv("ZK_RUNNING_ALIAS", alias)
 
-		// Move to the provided working directory if it is not the current one,
-		// before running the alias.
-		cmdStr = `cd "` + container.WorkingDir + `" && ` + cmdStr
+		// Move to the current notebook's root directory before running the alias.
+		if notebook, err := container.CurrentNotebook(); err == nil {
+			cmdStr = `cd "` + notebook.Path + `" && ` + cmdStr
+		}
 
 		cmd := executil.CommandFromString(cmdStr, args[1:]...)
 		cmd.Stdin = os.Stdin

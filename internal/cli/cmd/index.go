@@ -1,10 +1,6 @@
 package cmd
 
-import (
-	"fmt"
-
-	"github.com/mickael-menu/zk/internal/adapter"
-)
+import "github.com/mickael-menu/zk/internal/cli"
 
 // Index indexes the content of all the notes in the notebook.
 type Index struct {
@@ -16,15 +12,17 @@ func (cmd *Index) Help() string {
 	return "You usually do not need to run `zk index` manually, as notes are indexed automatically when needed."
 }
 
-func (cmd *Index) Run(container *adapter.Container) error {
-	_, stats, err := container.Database(cmd.Force)
-	if err != nil {
-		return err
-	}
+func (cmd *Index) Run(container *cli.Container) error {
+	// FIXME
+	// _, stats, err := container.Database(cmd.Force)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if err == nil && !cmd.Quiet {
-		fmt.Println(stats)
-	}
+	// 	if err == nil && !cmd.Quiet {
+	// 		fmt.Println(stats)
+	// 	}
+	// return err
 
-	return err
+	return nil
 }

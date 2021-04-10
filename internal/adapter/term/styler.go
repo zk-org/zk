@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/internal/core/style"
+	"github.com/mickael-menu/zk/internal/core"
 )
 
 // Style implements style.Styler using ANSI escape codes to be used with a terminal.
-func (t *Terminal) Style(text string, rules ...style.Rule) (string, error) {
+func (t *Terminal) Style(text string, rules ...core.Style) (string, error) {
 	if text == "" {
 		return text, nil
 	}
@@ -22,7 +22,7 @@ func (t *Terminal) Style(text string, rules ...style.Rule) (string, error) {
 	return color.New(attrs...).Sprint(text), nil
 }
 
-func (t *Terminal) MustStyle(text string, rules ...style.Rule) string {
+func (t *Terminal) MustStyle(text string, rules ...core.Style) string {
 	text, err := t.Style(text, rules...)
 	if err != nil {
 		panic(err.Error())
@@ -31,7 +31,7 @@ func (t *Terminal) MustStyle(text string, rules ...style.Rule) string {
 }
 
 // FIXME: User config
-var themeAliases = map[style.Rule][]style.Rule{
+var themeAliases = map[core.Style][]core.Style{
 	"title":      {"bold", "yellow"},
 	"path":       {"underline", "cyan"},
 	"term":       {"red"},
@@ -39,8 +39,8 @@ var themeAliases = map[style.Rule][]style.Rule{
 	"understate": {"faint"},
 }
 
-func expandThemeAliases(rules []style.Rule) []style.Rule {
-	expanded := make([]style.Rule, 0)
+func expandThemeAliases(rules []core.Style) []core.Style {
+	expanded := make([]core.Style, 0)
 	for _, rule := range rules {
 		aliases, ok := themeAliases[rule]
 		if ok {
@@ -57,54 +57,54 @@ func expandThemeAliases(rules []style.Rule) []style.Rule {
 	return expanded
 }
 
-var attrsMapping = map[style.Rule]color.Attribute{
-	style.RuleBold:          color.Bold,
-	style.RuleFaint:         color.Faint,
-	style.RuleItalic:        color.Italic,
-	style.RuleUnderline:     color.Underline,
-	style.RuleBlink:         color.BlinkSlow,
-	style.RuleReverse:       color.ReverseVideo,
-	style.RuleHidden:        color.Concealed,
-	style.RuleStrikethrough: color.CrossedOut,
+var attrsMapping = map[core.Style]color.Attribute{
+	core.StyleBold:          color.Bold,
+	core.StyleFaint:         color.Faint,
+	core.StyleItalic:        color.Italic,
+	core.StyleUnderline:     color.Underline,
+	core.StyleBlink:         color.BlinkSlow,
+	core.StyleReverse:       color.ReverseVideo,
+	core.StyleHidden:        color.Concealed,
+	core.StyleStrikethrough: color.CrossedOut,
 
-	style.RuleBlack:   color.FgBlack,
-	style.RuleRed:     color.FgRed,
-	style.RuleGreen:   color.FgGreen,
-	style.RuleYellow:  color.FgYellow,
-	style.RuleBlue:    color.FgBlue,
-	style.RuleMagenta: color.FgMagenta,
-	style.RuleCyan:    color.FgCyan,
-	style.RuleWhite:   color.FgWhite,
+	core.StyleBlack:   color.FgBlack,
+	core.StyleRed:     color.FgRed,
+	core.StyleGreen:   color.FgGreen,
+	core.StyleYellow:  color.FgYellow,
+	core.StyleBlue:    color.FgBlue,
+	core.StyleMagenta: color.FgMagenta,
+	core.StyleCyan:    color.FgCyan,
+	core.StyleWhite:   color.FgWhite,
 
-	style.RuleBlackBg:   color.BgBlack,
-	style.RuleRedBg:     color.BgRed,
-	style.RuleGreenBg:   color.BgGreen,
-	style.RuleYellowBg:  color.BgYellow,
-	style.RuleBlueBg:    color.BgBlue,
-	style.RuleMagentaBg: color.BgMagenta,
-	style.RuleCyanBg:    color.BgCyan,
-	style.RuleWhiteBg:   color.BgWhite,
+	core.StyleBlackBg:   color.BgBlack,
+	core.StyleRedBg:     color.BgRed,
+	core.StyleGreenBg:   color.BgGreen,
+	core.StyleYellowBg:  color.BgYellow,
+	core.StyleBlueBg:    color.BgBlue,
+	core.StyleMagentaBg: color.BgMagenta,
+	core.StyleCyanBg:    color.BgCyan,
+	core.StyleWhiteBg:   color.BgWhite,
 
-	style.RuleBrightBlack:   color.FgHiBlack,
-	style.RuleBrightRed:     color.FgHiRed,
-	style.RuleBrightGreen:   color.FgHiGreen,
-	style.RuleBrightYellow:  color.FgHiYellow,
-	style.RuleBrightBlue:    color.FgHiBlue,
-	style.RuleBrightMagenta: color.FgHiMagenta,
-	style.RuleBrightCyan:    color.FgHiCyan,
-	style.RuleBrightWhite:   color.FgHiWhite,
+	core.StyleBrightBlack:   color.FgHiBlack,
+	core.StyleBrightRed:     color.FgHiRed,
+	core.StyleBrightGreen:   color.FgHiGreen,
+	core.StyleBrightYellow:  color.FgHiYellow,
+	core.StyleBrightBlue:    color.FgHiBlue,
+	core.StyleBrightMagenta: color.FgHiMagenta,
+	core.StyleBrightCyan:    color.FgHiCyan,
+	core.StyleBrightWhite:   color.FgHiWhite,
 
-	style.RuleBrightBlackBg:   color.BgHiBlack,
-	style.RuleBrightRedBg:     color.BgHiRed,
-	style.RuleBrightGreenBg:   color.BgHiGreen,
-	style.RuleBrightYellowBg:  color.BgHiYellow,
-	style.RuleBrightBlueBg:    color.BgHiBlue,
-	style.RuleBrightMagentaBg: color.BgHiMagenta,
-	style.RuleBrightCyanBg:    color.BgHiCyan,
-	style.RuleBrightWhiteBg:   color.BgHiWhite,
+	core.StyleBrightBlackBg:   color.BgHiBlack,
+	core.StyleBrightRedBg:     color.BgHiRed,
+	core.StyleBrightGreenBg:   color.BgHiGreen,
+	core.StyleBrightYellowBg:  color.BgHiYellow,
+	core.StyleBrightBlueBg:    color.BgHiBlue,
+	core.StyleBrightMagentaBg: color.BgHiMagenta,
+	core.StyleBrightCyanBg:    color.BgHiCyan,
+	core.StyleBrightWhiteBg:   color.BgHiWhite,
 }
 
-func attributes(rules []style.Rule) ([]color.Attribute, error) {
+func attributes(rules []core.Style) ([]color.Attribute, error) {
 	attrs := make([]color.Attribute, 0)
 
 	for _, rule := range rules {

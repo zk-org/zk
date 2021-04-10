@@ -8,11 +8,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
 )
+
+// ErrCancelled is returned when the user cancelled fzf.
+var ErrCancelled = errors.New("cancelled")
 
 // fzf exit codes
 var (
@@ -142,7 +144,7 @@ func New(opts Opts) (*Fzf, error) {
 			exitErr, ok := err.(*exec.ExitError)
 			switch {
 			case ok && exitErr.ExitCode() == exitInterrupted:
-				f.err = note.ErrCanceled
+				f.err = ErrCancelled
 			case ok && exitErr.ExitCode() == exitNoMatch:
 				break
 			default:

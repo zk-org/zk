@@ -1,36 +1,22 @@
 package core
 
-// FileStorage is a port providing read and write access to a file storage.
-type FileStorage interface {
-
-	// Abs makes the given file path absolute if needed, using the FileStorage
-	// working directory.
-	Abs(path string) (string, error)
-
-	// FileExists returns whether a file exists at the given file path.
-	FileExists(path string) (bool, error)
-
-	// DirExists returns whether a directory exists at the given file path.
-	DirExists(path string) (bool, error)
-
-	// IsDescendantOf returns whether the given path is dir or one of its descendants.
-	IsDescendantOf(dir string, path string) (bool, error)
-
-	// Read returns the bytes content of the file at the given file path.
-	Read(path string) ([]byte, error)
-
-	// Write creates or overwrite the content at the given file path, creating
-	// any intermediate directories if needed.
-	Write(path string, content []byte) error
-}
-
 // Template produces a string using a given context.
 type Template interface {
+
+	// Styler used to format the templates content.
+	Styler() Styler
+
+	// Render generates this template using the given variable context.
 	Render(context interface{}) (string, error)
 }
 
 // TemplateFunc is an adapter to use a function as a Template.
 type TemplateFunc func(context interface{}) (string, error)
+
+// Styler implements Template.
+func (f TemplateFunc) Styler() Styler {
+	return NullStyler
+}
 
 // Render implements Template.
 func (f TemplateFunc) Render(context interface{}) (string, error) {
@@ -42,13 +28,16 @@ var NullTemplate = nullTemplate{}
 
 type nullTemplate struct{}
 
+func (t nullTemplate) Styler() Styler {
+	return NullStyler
+}
+
 func (t nullTemplate) Render(context interface{}) (string, error) {
 	return "", nil
 }
 
 // TemplateLoader parses a string into a new Template instance.
 type TemplateLoader interface {
-
 	// LoadTemplate creates a Template instance from a string template.
 	LoadTemplate(template string) (Template, error)
 

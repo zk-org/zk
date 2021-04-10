@@ -5,25 +5,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core/style"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/fixtures"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
 func init() {
-	Init("en", true, &util.NullLogger, &styler{})
+	Init("en", true, &util.NullLogger)
 }
 
 // styler is a test double for core.Styler
 // "hello", "red" -> "red(hello)"
 type styler struct{}
 
-func (s *styler) Style(text string, rules ...style.Rule) (string, error) {
+func (s *styler) Style(text string, rules ...core.Style) (string, error) {
 	return s.MustStyle(text, rules...), nil
 }
 
-func (s *styler) MustStyle(text string, rules ...style.Rule) string {
+func (s *styler) MustStyle(text string, rules ...core.Style) string {
 	for _, rule := range rules {
 		text = fmt.Sprintf("%s(%s)", rule, text)
 	}
@@ -31,7 +31,7 @@ func (s *styler) MustStyle(text string, rules ...style.Rule) string {
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
-	sut := NewLoader([]string{})
+	sut := NewLoader([]string{}, &styler{}, &util.NullLogger)
 
 	templ, err := sut.LoadTemplate(template)
 	assert.Nil(t, err)
@@ -44,7 +44,7 @@ func testString(t *testing.T, template string, context interface{}, expected str
 // FIXME test lookup paths
 
 func testFile(t *testing.T, name string, context interface{}, expected string) {
-	sut := NewLoader([]string{})
+	sut := NewLoader([]string{}, &styler{}, &util.NullLogger)
 
 	templ, err := sut.LoadTemplateAt(fixtures.Path(name))
 	assert.Nil(t, err)

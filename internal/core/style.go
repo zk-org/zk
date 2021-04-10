@@ -82,3 +82,8 @@ type nullStyler struct{}
 func (s nullStyler) Style(text string, rule ...Style) (string, error) {
 	return text, nil
 }
+
+// MustStyle implements Styler.
+func (s nullStyler) MustStyle(text string, rule ...Style) string {
+	return text
+}

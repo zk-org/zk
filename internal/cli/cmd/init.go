@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/adapter"
+	"github.com/mickael-menu/zk/internal/cli"
 )
 
 // Init creates a notebook in the given directory
@@ -12,8 +12,14 @@ type Init struct {
 	Directory string `arg optional type:"path" default:"." help:"Directory containing the notebook."`
 }
 
-func (cmd *Init) Run(container *adapter.Container) error {
-	err := container.NotebookStore.Init(cmd.Directory)
+func (cmd *Init) Run(container *cli.Container) error {
+	notebook, err := container.Notebooks.Init(cmd.Directory)
+	if err != nil {
+		return err
+	}
+
+	force := false
+	_, err = notebook.Index(force)
 	if err != nil {
 		return err
 	}

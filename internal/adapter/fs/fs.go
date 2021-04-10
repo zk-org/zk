@@ -40,6 +40,10 @@ func (fs *FileStorage) Abs(path string) (string, error) {
 	return path, nil
 }
 
+func (fs *FileStorage) Rel(path string) (string, error) {
+	return filepath.Rel(fs.wd, path)
+}
+
 func (fs *FileStorage) FileExists(path string) (bool, error) {
 	fi, err := fs.fileInfo(path)
 	if err != nil {

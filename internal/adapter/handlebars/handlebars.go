@@ -8,13 +8,13 @@ import (
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/style"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
 )
 
-func Init(lang string, supportsUTF8 bool, logger util.Logger, styler style.Styler) {
+func Init(lang string, supportsUTF8 bool, logger util.Logger) {
+	// FIXME: RegisterHelper per template for parameterized helpers
 	helpers.RegisterConcat()
 	helpers.RegisterDate(logger)
 	helpers.RegisterJoin()
@@ -22,15 +22,20 @@ func Init(lang string, supportsUTF8 bool, logger util.Logger, styler style.Style
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
 	helpers.RegisterSlug(lang, logger)
-	helpers.RegisterStyle(styler, logger)
 }
 
 // Template renders a parsed handlebars template.
 type Template struct {
 	template *raymond.Template
+	styler   core.Styler
 }
 
-// Render renders the template with the given context.
+// Styler implements core.Template.
+func (t *Template) Styler() core.Styler {
+	return t.styler
+}
+
+// Render implements core.Template.
 func (t *Template) Render(context interface{}) (string, error) {
 	res, err := t.template.Exec(context)
 	if err != nil {
@@ -44,16 +49,20 @@ type Loader struct {
 	strings     map[string]*Template
 	files       map[string]*Template
 	lookupPaths []string
+	styler      core.Styler
+	logger      util.Logger
 }
 
 // NewLoader creates a new instance of Loader.
 //
 // lookupPaths is used to resolve relative template paths.
-func NewLoader(lookupPaths []string) *Loader {
+func NewLoader(lookupPaths []string, styler core.Styler, logger util.Logger) *Loader {
 	return &Loader{
 		strings:     make(map[string]*Template),
 		files:       make(map[string]*Template),
 		lookupPaths: lookupPaths,
+		styler:      styler,
+		logger:      logger,
 	}
 }
 
@@ -72,7 +81,7 @@ func (l *Loader) LoadTemplate(content string) (core.Template, error) {
 	if err != nil {
 		return nil, wrap(err)
 	}
-	template = &Template{vendorTempl}
+	template = l.newTemplate(vendorTempl)
 	l.strings[content] = template
 	return template, nil
 }
@@ -97,7 +106,7 @@ func (l *Loader) LoadTemplateAt(path string) (core.Template, error) {
 	if err != nil {
 		return nil, wrap(err)
 	}
-	template = &Template{vendorTempl}
+	template = l.newTemplate(vendorTempl)
 	l.files[path] = template
 	return template, nil
 }
@@ -125,4 +134,12 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 	}
 
 	return path, false
+}
+
+func (l *Loader) newTemplate(vendorTempl *raymond.Template) *Template {
+	vendorTempl.RegisterHelpers(map[string]interface{}{
+		"style": helpers.NewStyleHelper(l.styler, l.logger),
+	})
+
+	return &Template{vendorTempl, l.styler}
 }

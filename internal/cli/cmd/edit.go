@@ -4,50 +4,47 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/adapter"
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
-	"github.com/mickael-menu/zk/internal/adapter/sqlite"
-	"github.com/mickael-menu/zk/internal/core/note"
-	"github.com/mickael-menu/zk/internal/core/zk"
+	"github.com/mickael-menu/zk/internal/cli"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
 
 // Edit opens notes matching a set of criteria with the user editor.
 type Edit struct {
 	Force bool `short:f help:"Do not confirm before editing many notes at the same time."`
-	Filtering
+	cli.Filtering
 }
 
-func (cmd *Edit) Run(container *adapter.Container) error {
-	zk, err := container.Zk()
+func (cmd *Edit) Run(container *cli.Container) error {
+	notebook, err := container.CurrentNotebook()
 	if err != nil {
 		return err
 	}
 
-	opts, err := NewFinderOpts(zk, cmd.Filtering)
+	findOpts, err := cmd.Filtering.NewNoteFindOpts(notebook)
 	if err != nil {
 		return errors.Wrapf(err, "incorrect criteria")
 	}
 
-	db, _, err := container.Database(false)
+	notes, err := notebook.FindNotes(findOpts)
 	if err != nil {
 		return err
 	}
 
-	var notes []note.Match
-	err = db.WithTransaction(func(tx sqlite.Transaction) error {
-		finder := container.NoteFinder(tx, fzf.NoteFinderOpts{
-			AlwaysFilter: true,
-			PreviewCmd:   container.Config.Tool.FzfPreview,
-			NewNoteDir:   cmd.newNoteDir(zk),
-			BasePath:     zk.Path,
-			CurrentPath:  container.WorkingDir,
-		})
-		notes, err = finder.Find(*opts)
-		return err
+	filter := container.NewNoteFilter(fzf.NoteFilterOpts{
+		Interactive:  cmd.Interactive,
+		AlwaysFilter: true,
+		PreviewCmd:   container.Config.Tool.FzfPreview,
+		NewNoteDir:   cmd.newNoteDir(notebook),
+		BasePath:     notebook.Path,
+		// FIXME: check if correct path
+		CurrentPath: notebook.Path,
 	})
+
+	notes, err = filter.Apply(notes)
 	if err != nil {
-		if err == note.ErrCanceled {
+		if err == fzf.ErrCancelled {
 			return nil
 		}
 		return err
@@ -66,11 +63,12 @@ func (cmd *Edit) Run(container *adapter.Container) error {
 		}
 		paths := make([]string, 0)
 		for _, note := range notes {
-			absPath := filepath.Join(zk.Path, note.Path)
+			absPath := filepath.Join(notebook.Path, note.Path)
 			paths = append(paths, absPath)
 		}
 
-		note.Edit(zk, paths...)
+		// FIXME:
+		// note.Edit(zk, paths...)
 
 	} else {
 		fmt.Println("Found 0 note")
@@ -81,17 +79,17 @@ func (cmd *Edit) Run(container *adapter.Container) error {
 
 // newNoteDir returns the directory in which to create a new note when the fzf
 // binding is triggered.
-func (cmd *Edit) newNoteDir(zk *zk.Zk) *zk.Dir {
+func (cmd *Edit) newNoteDir(notebook *core.Notebook) *core.Dir {
 	switch len(cmd.Path) {
 	case 0:
-		dir := zk.RootDir()
+		dir := notebook.RootDir()
 		return &dir
 	case 1:
-		dir, err := zk.DirAt(cmd.Path[0])
+		dir, err := notebook.DirAt(cmd.Path[0])
 		if err != nil {
 			return nil
 		}
-		return dir
+		return &dir
 	default:
 		// More than one directory, it's ambiguous for the "new note" fzf binding.
 		return nil

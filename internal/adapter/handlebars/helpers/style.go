@@ -4,20 +4,20 @@ import (
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/core/style"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 )
 
-// RegisterStyle register the {{style}} template helpers which stylizes the
-// text input according to predefined styling rules.
+// NewStyleHelper creates a new template helper which stylizes the text input
+// according to predefined styling rules.
 //
 // {{style "date" created}}
 // {{#style "red"}}Hello, world{{/style}}
-func RegisterStyle(styler style.Styler, logger util.Logger) {
+func NewStyleHelper(styler core.Styler, logger util.Logger) interface{} {
 	style := func(keys string, text string) string {
-		rules := make([]style.Rule, 0)
+		rules := make([]core.Style, 0)
 		for _, key := range strings.Fields(keys) {
-			rules = append(rules, style.Rule(key))
+			rules = append(rules, core.Style(key))
 		}
 		res, err := styler.Style(text, rules...)
 		if err != nil {
@@ -28,7 +28,7 @@ func RegisterStyle(styler style.Styler, logger util.Logger) {
 		}
 	}
 
-	raymond.RegisterHelper("style", func(rules string, opt interface{}) string {
+	return func(rules string, opt interface{}) string {
 		switch arg := opt.(type) {
 		case *raymond.Options:
 			return style(rules, arg.Fn())
@@ -38,5 +38,5 @@ func RegisterStyle(styler style.Styler, logger util.Logger) {
 			logger.Printf("the {{style}} template helper is expecting a string as input, received: %v", opt)
 			return ""
 		}
-	})
+	}
 }

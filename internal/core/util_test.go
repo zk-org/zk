@@ -53,6 +53,10 @@ func NewTemplateSpyString(result string) *TemplateSpy {
 	}
 }
 
+func (m *TemplateSpy) Styler() Styler {
+	return NullStyler
+}
+
 func (m *TemplateSpy) Render(context interface{}) (string, error) {
 	m.Contexts = append(m.Contexts, context)
 	return m.Result(context), nil

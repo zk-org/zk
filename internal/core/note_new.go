@@ -9,7 +9,7 @@ import (
 )
 
 type newNoteCmd struct {
-	dir              dir
+	dir              Dir
 	title            string
 	content          string
 	date             time.Time

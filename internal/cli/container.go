@@ -1,11 +1,13 @@
-package internal
+package cli
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/internal/adapter/fs"
+	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/adapter/term"
@@ -13,6 +15,7 @@ import (
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	osutil "github.com/mickael-menu/zk/internal/util/os"
+	"github.com/mickael-menu/zk/internal/util/pager"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	"github.com/mickael-menu/zk/internal/util/rand"
 )
@@ -31,6 +34,7 @@ func NewContainer(version string) (*Container, error) {
 	wrap := errors.Wrapper("initialization")
 
 	term := term.New()
+	styler := term
 	logger := util.NewStdLogger("zk: ", 0)
 	fs, err := fs.NewFileStorage("")
 	config := core.NewDefaultConfig()
@@ -78,12 +82,12 @@ func NewContainer(version string) (*Container, error) {
 					FS:        fs,
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
 						// FIXME: multiple notebooks
-						handlebars.Init(config.Note.Lang, term.SupportsUTF8(), logger, term)
+						handlebars.Init(config.Note.Lang, term.SupportsUTF8(), logger)
 						lookupPaths := []string{
 							filepath.Join(globalConfigDir(), "templates"),
 							filepath.Join(path, ".zk/templates"),
 						}
-						return handlebars.NewLoader(lookupPaths), nil
+						return handlebars.NewLoader(lookupPaths, styler, logger), nil
 					},
 					IDGeneratorFactory: func(opts core.IDOptions) func() string {
 						return rand.NewIDGenerator(opts)
@@ -151,6 +155,32 @@ func (c *Container) CurrentNotebook() (*core.Notebook, error) {
 	return c.currentNotebook, c.currentNotebookErr
 }
 
+func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
+	return fzf.NewNoteFilter(opts, c.Terminal)
+}
+
+// Paginate creates an auto-closing io.Writer which will be automatically
+// paginated if noPager is false, using the user's pager.
+//
+// You can write to the pager only in the run callback.
+func (c *Container) Paginate(noPager bool, run func(out io.Writer) error) error {
+	pager, err := c.pager(noPager || c.Config.Tool.Pager.IsEmpty())
+	if err != nil {
+		return err
+	}
+	err = run(pager)
+	pager.Close()
+	return err
+}
+
+func (c *Container) pager(noPager bool) (*pager.Pager, error) {
+	if noPager || !c.Terminal.IsInteractive() {
+		return pager.PassthroughPager, nil
+	} else {
+		return pager.New(c.Config.Tool.Pager, c.Logger)
+	}
+}
+
 /*
 func (c *Container) Parser() *markdown.Parser {
 	return markdown.NewParser(markdown.ParserOpts{
@@ -198,27 +228,5 @@ func (c *Container) index(db *sqlite.DB, force bool) (note.IndexingStats, error)
 	bar.Clear()
 
 	return stats, err
-}
-
-// Paginate creates an auto-closing io.Writer which will be automatically
-// paginated if noPager is false, using the user's pager.
-//
-// You can write to the pager only in the run callback.
-func (c *Container) Paginate(noPager bool, run func(out io.Writer) error) error {
-	pager, err := c.pager(noPager || c.Config.Tool.Pager.IsEmpty())
-	if err != nil {
-		return err
-	}
-	err = run(pager)
-	pager.Close()
-	return err
-}
-
-func (c *Container) pager(noPager bool) (*pager.Pager, error) {
-	if noPager || !c.Terminal.IsInteractive() {
-		return pager.PassthroughPager, nil
-	} else {
-		return pager.New(c.Config.Tool.Pager, c.Logger)
-	}
 }
 */

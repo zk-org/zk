@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/adapter"
+	"github.com/mickael-menu/zk/internal/cli"
 	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/os"
 )
@@ -22,8 +21,8 @@ type New struct {
 	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
 }
 
-func (cmd *New) Run(container *adapter.Container) error {
-	nb, err := container.Notebook()
+func (cmd *New) Run(container *cli.Container) error {
+	notebook, err := container.CurrentNotebook()
 	if err != nil {
 		return err
 	}
@@ -33,7 +32,7 @@ func (cmd *New) Run(container *adapter.Container) error {
 		return err
 	}
 
-	path, err := nb.NewNote(core.NewNoteOpts{
+	path, err := notebook.NewNote(core.NewNoteOpts{
 		Title:     opt.NewNotEmptyString(cmd.Title),
 		Content:   content.Unwrap(),
 		Directory: opt.NewNotEmptyString(cmd.Directory),
@@ -48,7 +47,7 @@ func (cmd *New) Run(container *adapter.Container) error {
 			return err
 		}
 
-		relPath, err := nb.RelPath(path)
+		relPath, err := notebook.RelPath(path)
 		if err != nil {
 			return err
 		}
@@ -68,10 +67,8 @@ func (cmd *New) Run(container *adapter.Container) error {
 		fmt.Printf("%+v\n", path)
 		return nil
 	} else {
-		zk, err := container.Zk()
-		if err != nil {
-			return err
-		}
-		return note.Edit(zk, path)
+		// FIXME:
+		// return notebook.Edit(path)
+		return nil
 	}
 }

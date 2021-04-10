@@ -91,7 +91,7 @@ func (e ErrNoteExists) Error() string {
 func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 	wrap := errors.Wrapper("new note")
 
-	dir, err := n.requireDirAt(opts.Directory.OrString(n.Path).Unwrap())
+	dir, err := n.RequireDirAt(opts.Directory.OrString(n.Path).Unwrap())
 	if err != nil {
 		return "", wrap(err)
 	}
@@ -161,8 +161,8 @@ func (n *Notebook) RelPath(originalPath string) (string, error) {
 	return path, nil
 }
 
-// dir represents a directory inside a notebook.
-type dir struct {
+// Dir represents a directory inside a notebook.
+type Dir struct {
 	// Name of the directory, which is the path relative to the notebook's root.
 	Name string
 	// Absolute path to the directory.
@@ -171,40 +171,38 @@ type dir struct {
 	Group string
 }
 
-// rootDir returns the root directory for this notebook.
-func (n *Notebook) rootDir() dir {
-	return dir{
+// RootDir returns the root directory for this notebook.
+func (n *Notebook) RootDir() Dir {
+	return Dir{
 		Name:  "",
 		Path:  n.Path,
 		Group: "",
 	}
 }
 
-// dirAt returns a dir representation of the notebook directory at the given path.
-//
-// If config overrides are provided, the dir.Config will be modified using them.
-func (n *Notebook) dirAt(path string) (dir, error) {
+// DirAt returns a Dir representation of the notebook directory at the given path.
+func (n *Notebook) DirAt(path string) (Dir, error) {
 	name, err := n.RelPath(path)
 	if err != nil {
-		return dir{}, err
+		return Dir{}, err
 	}
 
 	group, err := n.Config.GroupNameForPath(name)
 	if err != nil {
-		return dir{}, err
+		return Dir{}, err
 	}
 
-	return dir{
+	return Dir{
 		Name:  name,
 		Path:  path,
 		Group: group,
 	}, nil
 }
 
-// requireDirAt is the same as dirAt, but checks that the directory exists
-// before returning the dir.
-func (n *Notebook) requireDirAt(path string) (dir, error) {
-	dir, err := n.dirAt(path)
+// RequireDirAt is the same as DirAt, but checks that the directory exists
+// before returning the Dir.
+func (n *Notebook) RequireDirAt(path string) (Dir, error) {
+	dir, err := n.DirAt(path)
 	if err != nil {
 		return dir, err
 	}
@@ -216,4 +214,18 @@ func (n *Notebook) requireDirAt(path string) (dir, error) {
 		return dir, fmt.Errorf("%v: directory not found", path)
 	}
 	return dir, nil
+}
+
+// NewNoteFormatter returns a NoteFormatter used to format notes with the given template.
+func (n *Notebook) NewNoteFormatter(templateString string) (NoteFormatter, error) {
+	templates, err := n.templateLoaderFactory(n.Config.Note.Lang)
+	if err != nil {
+		return nil, err
+	}
+	template, err := templates.LoadTemplate(templateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return newNoteFormatter(n.Path, template, n.fs)
 }

@@ -91,31 +91,31 @@ func (ns *NotebookStore) cachedNotebookAt(path string) *Notebook {
 }
 
 // Init creates a new notebook at the given file path.
-func (ns *NotebookStore) Init(path string) error {
+func (ns *NotebookStore) Init(path string) (*Notebook, error) {
 	wrap := errors.Wrapper("init failed")
 
 	path, err := ns.fs.Abs(path)
 	if err != nil {
-		return wrap(err)
+		return nil, wrap(err)
 	}
 
 	if existingPath, err := ns.locateNotebook(path); err == nil {
-		return wrap(fmt.Errorf("a notebook already exists in %v", existingPath))
+		return nil, wrap(fmt.Errorf("a notebook already exists in %v", existingPath))
 	}
 
 	// Create the default configuration file.
 	err = ns.fs.Write(filepath.Join(path, ".zk/config.toml"), []byte(defaultConfig))
 	if err != nil {
-		return wrap(err)
+		return nil, wrap(err)
 	}
 
 	// Create the default template.
 	err = ns.fs.Write(filepath.Join(path, ".zk/templates/default.md"), []byte(defaultTemplate))
 	if err != nil {
-		return wrap(err)
+		return nil, wrap(err)
 	}
 
-	return nil
+	return ns.Open(path)
 }
 
 // locateNotebook finds the root of the notebook containing the given path.

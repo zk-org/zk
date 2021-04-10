@@ -1,7 +1,6 @@
 package note
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,9 +9,6 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
-
-// ErrCanceled is returned when the user cancelled an operation.
-var ErrCanceled = errors.New("canceled")
 
 // Finder retrieves notes matching the given options.
 type Finder interface {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/internal/core/style"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
@@ -20,24 +20,24 @@ func TestStyleNoRule(t *testing.T) {
 }
 
 func TestStyleOneRule(t *testing.T) {
-	res, err := createTerminal().Style("Hello", style.Rule("red"))
+	res, err := createTerminal().Style("Hello", core.Style("red"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31mHello\033[0m")
 }
 
 func TestStyleMultipleRule(t *testing.T) {
-	res, err := createTerminal().Style("Hello", style.Rule("red"), style.Rule("bold"))
+	res, err := createTerminal().Style("Hello", core.Style("red"), core.Style("bold"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "\033[31;1mHello\033[0m")
 }
 
 func TestStyleUnknownRule(t *testing.T) {
-	_, err := createTerminal().Style("Hello", style.Rule("unknown"))
+	_, err := createTerminal().Style("Hello", core.Style("unknown"))
 	assert.Err(t, err, "unknown styling rule: unknown")
 }
 
 func TestStyleEmptyString(t *testing.T) {
-	res, err := createTerminal().Style("", style.Rule("bold"))
+	res, err := createTerminal().Style("", core.Style("bold"))
 	assert.Nil(t, err)
 	assert.Equal(t, res, "")
 }
@@ -45,7 +45,7 @@ func TestStyleEmptyString(t *testing.T) {
 func TestStyleAllRules(t *testing.T) {
 	styler := createTerminal()
 	test := func(rule string, expected string) {
-		res, err := styler.Style("Hello", style.Rule(rule))
+		res, err := styler.Style("Hello", core.Style(rule))
 		assert.Nil(t, err)
 		assert.Equal(t, res, "\033["+expected+"Hello\033[0m")
 	}

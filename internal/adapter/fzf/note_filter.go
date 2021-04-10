@@ -6,68 +6,66 @@ import (
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/internal/adapter/term"
-	"github.com/mickael-menu/zk/internal/core/note"
-	"github.com/mickael-menu/zk/internal/core/style"
-	"github.com/mickael-menu/zk/internal/core/zk"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
 )
 
-// NoteFinder wraps a note.Finder and filters its result interactively using fzf.
-type NoteFinder struct {
-	opts     NoteFinderOpts
-	finder   note.Finder
+// NoteFilter uses fzf to filter interactively a set of notes.
+type NoteFilter struct {
+	opts     NoteFilterOpts
 	terminal *term.Terminal
 }
 
-// NoteFinderOpts holds the configuration for the fzf notes finder.
+// NoteFilterOpts holds the configuration for the fzf notes filtering.
 //
 // The absolute path to the notebook (BasePath) and the working directory
 // (CurrentPath) are used to make the path of each note relative to the working
 // directory.
-type NoteFinderOpts struct {
+type NoteFilterOpts struct {
+	// Indicates whether the filtering is interactive. If not, fzf is bypassed.
+	Interactive bool
 	// Indicates whether fzf is opened for every query, even if empty.
 	AlwaysFilter bool
 	// Preview command to run when selecting a note.
 	PreviewCmd opt.String
-	// When non nil, a "create new note from query" binding will be added to
+	// When non null, a "create new note from query" binding will be added to
 	// fzf to create a note in this directory.
-	NewNoteDir *zk.Dir
+	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
 	BasePath string
 	// Path to the working directory.
 	CurrentPath string
 }
 
-func NewNoteFinder(opts NoteFinderOpts, finder note.Finder, terminal *term.Terminal) *NoteFinder {
-	return &NoteFinder{
+func NewNoteFilter(opts NoteFilterOpts, terminal *term.Terminal) *NoteFilter {
+	return &NoteFilter{
 		opts:     opts,
-		finder:   finder,
 		terminal: terminal,
 	}
 }
 
-func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
-	selectedMatches := make([]note.Match, 0)
-	matches, err := f.finder.Find(opts)
+// Apply filters the given notes with fzf.
+func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, error) {
+	selectedNotes := make([]core.ContextualNote, 0)
 	relPaths := []string{}
 
-	if !opts.Interactive || !f.terminal.IsInteractive() || err != nil || (!f.opts.AlwaysFilter && len(matches) == 0) {
-		return matches, err
+	if !f.opts.Interactive || !f.terminal.IsInteractive() || (!f.opts.AlwaysFilter && len(notes) == 0) {
+		return notes, nil
 	}
 
-	for _, match := range matches {
-		absPath := filepath.Join(f.opts.BasePath, match.Path)
+	for _, note := range notes {
+		absPath := filepath.Join(f.opts.BasePath, note.Path)
 		relPath, err := filepath.Rel(f.opts.CurrentPath, absPath)
 		if err != nil {
-			return selectedMatches, err
+			return selectedNotes, err
 		}
 		relPaths = append(relPaths, relPath)
 	}
 
 	zkBin, err := os.Executable()
 	if err != nil {
-		return selectedMatches, err
+		return selectedNotes, err
 	}
 
 	bindings := []Binding{}
@@ -98,34 +96,34 @@ func (f *NoteFinder) Find(opts note.FinderOpts) ([]note.Match, error) {
 		Bindings:   bindings,
 	})
 	if err != nil {
-		return selectedMatches, err
+		return selectedNotes, err
 	}
 
-	for i, match := range matches {
-		title := match.Title
+	for i, note := range notes {
+		title := note.Title
 		if title == "" {
 			title = relPaths[i]
 		}
 		fzf.Add([]string{
-			f.terminal.MustStyle(title, style.RuleYellow),
-			f.terminal.MustStyle(stringsutil.JoinLines(match.Body), style.RuleUnderstate),
-			f.terminal.MustStyle(relPaths[i], style.RuleUnderstate),
+			f.terminal.MustStyle(title, core.StyleYellow),
+			f.terminal.MustStyle(stringsutil.JoinLines(note.Body), core.StyleUnderstate),
+			f.terminal.MustStyle(relPaths[i], core.StyleUnderstate),
 		})
 	}
 
 	selection, err := fzf.Selection()
 	if err != nil {
-		return selectedMatches, err
+		return selectedNotes, err
 	}
 
 	for _, s := range selection {
 		path := s[len(s)-1]
-		for i, m := range matches {
+		for i, m := range notes {
 			if relPaths[i] == path {
-				selectedMatches = append(selectedMatches, m)
+				selectedNotes = append(selectedNotes, m)
 			}
 		}
 	}
 
-	return selectedMatches, nil
+	return selectedNotes, nil
 }
