@@ -12,8 +12,9 @@ import (
 
 // Notebook handles queries and commands performed on an opened notebook.
 type Notebook struct {
-	path                  string
+	Path                  string
 	config                Config
+	index                 NoteIndex
 	fs                    FileStorage
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
@@ -21,19 +22,10 @@ type Notebook struct {
 	osEnv func() map[string]string
 }
 
-// IndexStats holds statistics about a notebook indexing process.
-type IndexStats struct {
-	SourceCount   int
-	AddedCount    int
-	ModifiedCount int
-	RemovedCount  int
-	Duration      time.Duration
-}
-
 // Index indexes the content of the notebook to be searchable.
 // If force is true, existing notes will be reindexed.
-func (n *Notebook) Index(force bool) (IndexStats, error) {
-	return IndexStats{}, nil
+func (n *Notebook) Index(force bool) (NoteIndexingStats, error) {
+	return NoteIndexingStats{}, nil
 }
 
 // NewNoteOpts holds the options used to create a new note in a Notebook.
@@ -71,7 +63,7 @@ func (e ErrNoteExists) Error() string {
 func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 	wrap := errors.Wrapper("new note")
 
-	dir, err := n.requireDirAt(opts.Directory.OrString(n.path).Unwrap())
+	dir, err := n.requireDirAt(opts.Directory.OrString(n.Path).Unwrap())
 	if err != nil {
 		return "", wrap(err)
 	}
@@ -109,19 +101,19 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 }
 
 func (n *Notebook) newTemplateLoader(lang string) (TemplateLoader, error) {
-	lookupPaths := []string{filepath.Join(n.path, ".zk/templates")}
+	lookupPaths := []string{filepath.Join(n.Path, ".zk/templates")}
 	return n.templateLoaderFactory(lang, lookupPaths)
 }
 
 // FindNotes retrieves the notes matching the given filtering options.
-func (n *Notebook) FindNotes(opts NoteFilteringOpts) ([]ContextualNote, error) {
-	return []ContextualNote{}, nil
+func (n *Notebook) FindNotes(opts NoteFindOpts) ([]ContextualNote, error) {
+	return n.index.Find(opts)
 }
 
 // FindMinimalNotes retrieves lightweight metadata for the notes matching
 // the given filtering options.
-func (n *Notebook) FindMinimalNotes(opts NoteFilteringOpts) ([]MinimalNote, error) {
-	return []MinimalNote{}, nil
+func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
+	return n.index.FindMinimal(opts)
 }
 
 // RelPath returns the path relative to the notebook root to the given path.
@@ -133,7 +125,7 @@ func (n *Notebook) RelPath(originalPath string) (string, error) {
 		return path, wrap(err)
 	}
 
-	path, err = filepath.Rel(n.path, path)
+	path, err = filepath.Rel(n.Path, path)
 	if err != nil {
 		return path, wrap(err)
 	}
@@ -152,7 +144,7 @@ type dir struct {
 	Name string
 	// Absolute path to the directory.
 	Path string
-	// Name of the group this directory belongs to, if any.
+	// Name of the config group this directory belongs to, if any.
 	Group string
 }
 
@@ -160,7 +152,7 @@ type dir struct {
 func (n *Notebook) rootDir() dir {
 	return dir{
 		Name:  "",
-		Path:  n.path,
+		Path:  n.Path,
 		Group: "",
 	}
 }

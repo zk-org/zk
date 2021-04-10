@@ -26,7 +26,7 @@ import (
 )
 
 type Container struct {
-	ZK             *core.ZK
+	NotebookStore  *core.NotebookStore
 	Version        string
 	Config         zk.Config
 	Date           date.Provider
@@ -70,7 +70,7 @@ func NewContainer(version string) (*Container, error) {
 	date := date.NewFrozenNow()
 
 	return &Container{
-		ZK: core.NewZK(newConfig, core.Ports{
+		NotebookStore: core.NewNotebookStore(newConfig, core.Ports{
 			FS: fs,
 			TemplateLoaderFactory: func(language string, lookupPaths []string) (core.TemplateLoader, error) {
 				handlebars.Init(language, term.SupportsUTF8(), logger, term)
@@ -128,7 +128,7 @@ func (c *Container) OpenNotebook(searchPaths []string) {
 	}
 
 	for _, path := range searchPaths {
-		c.notebook, c.notebookErr = c.ZK.OpenNotebook(path)
+		c.notebook, c.notebookErr = c.NotebookStore.OpenNotebook(path)
 		c.zk, c.zkErr = zk.Open(path, c.Config)
 		if c.notebookErr == nil && c.zkErr == nil {
 			c.WorkingDir = path
@@ -164,14 +164,9 @@ func (c *Container) Parser() *markdown.Parser {
 }
 
 func (c *Container) NoteFinder(tx sqlite.Transaction, opts fzf.NoteFinderOpts) *fzf.NoteFinder {
-	notes := sqlite.NewNoteDAO(tx, c.Logger)
-	return fzf.NewNoteFinder(opts, notes, c.Terminal)
-}
-
-func (c *Container) NoteIndexer(tx sqlite.Transaction) *sqlite.NoteIndexer {
-	notes := sqlite.NewNoteDAO(tx, c.Logger)
-	collections := sqlite.NewCollectionDAO(tx, c.Logger)
-	return sqlite.NewNoteIndexer(notes, collections, c.Logger)
+	return nil
+	// notes := sqlite.NewNoteDAO(tx, c.Logger)
+	// return fzf.NewNoteFinder(opts, notes, c.Terminal)
 }
 
 // Database returns the DB instance for the given notebook, after executing any
@@ -219,7 +214,7 @@ func (c *Container) index(db *sqlite.DB, force bool) (note.IndexingStats, error)
 			c.zk,
 			force,
 			c.Parser(),
-			c.NoteIndexer(tx),
+			nil,
 			c.Logger,
 			func(change paths.DiffChange) {
 				bar.Add(1)

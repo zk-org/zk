@@ -5,9 +5,11 @@ import (
 )
 
 // NoteID represents the unique ID of a note collection relative to a given
-// Notebook implementation.
-type NoteID interface {
-	IsValid() bool
+// NoteIndex implementation.
+type NoteID int64
+
+func (id NoteID) IsValid() bool {
+	return id > 0
 }
 
 // Note holds the metadata and content of a single note.

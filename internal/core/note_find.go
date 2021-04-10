@@ -9,13 +9,8 @@ import (
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
-type NoteFinder interface {
-	// FindNotes retrieves the notes matching the given filtering criteria.
-	FindNotes(opts NoteFilteringOpts) ([]ContextualNote, error)
-}
-
-// NoteFilteringOpts holds a set of filtering options used to find notes.
-type NoteFilteringOpts struct {
+// NoteFindOpts holds a set of filtering options used to find notes.
+type NoteFindOpts struct {
 	// Filter used to match the notes with FTS predicates.
 	Match opt.String
 	// Filter by note paths.
@@ -23,7 +18,7 @@ type NoteFilteringOpts struct {
 	// Filter excluding notes at the given paths.
 	ExcludePaths []string
 	// Filter excluding notes with the given IDs.
-	ExcludeIds []NoteID
+	ExcludeIDs []NoteID
 	// Filter by tags found in the notes.
 	Tags []string
 	// Filter the notes mentioning the given ones.
@@ -52,14 +47,14 @@ type NoteFilteringOpts struct {
 	Sorters []NoteSorter
 }
 
-// ExcludingIds creates a new FinderOpts after adding the given ids to the list
-// of excluded note ids.
-func (o NoteFilteringOpts) ExcludingIds(ids ...NoteID) NoteFilteringOpts {
-	if o.ExcludeIds == nil {
-		o.ExcludeIds = []NoteID{}
+// ExcludingID creates a new FinderOpts after adding the given ID to the list
+// of excluded note IDs.
+func (o NoteFindOpts) ExcludingID(id NoteID) NoteFindOpts {
+	if o.ExcludeIDs == nil {
+		o.ExcludeIDs = []NoteID{}
 	}
 
-	o.ExcludeIds = append(o.ExcludeIds, ids...)
+	o.ExcludeIDs = append(o.ExcludeIDs, id)
 	return o
 }
 
@@ -77,7 +72,7 @@ type NoteSorter struct {
 	Ascending bool
 }
 
-// SortField represents a note field used to sort a list of notes.
+// NoteSortField represents a note field used to sort a list of notes.
 type NoteSortField int
 
 const (
@@ -112,7 +107,7 @@ func NoteSortersFromStrings(strs []string) ([]NoteSorter, error) {
 	return sorters, nil
 }
 
-// SorterFromString returns a Sorter from its string representation.
+// NoteSorterFromString returns a NoteSorter from its string representation.
 //
 // If the input str has for suffix `+`, then the order will be ascending, while
 // descending for `-`. If no suffix is given, then the default order for the

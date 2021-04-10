@@ -43,7 +43,7 @@ func (cmd *New) Run(container *adapter.Container) error {
 		Date:      time.Now(),
 	})
 	if err != nil {
-		var noteExists note.ErrNoteExists
+		var noteExists core.ErrNoteExists
 		if !errors.As(err, &noteExists) {
 			return err
 		}

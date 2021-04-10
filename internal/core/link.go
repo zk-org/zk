@@ -27,3 +27,12 @@ const (
 	// LinkRelationDown defines the target note as a parent of the source.
 	LinkRelationUp LinkRelation = "up"
 )
+
+// LinkRels creates a slice of LinkRelation from a list of strings.
+func LinkRels(rel ...string) []LinkRelation {
+	rels := []LinkRelation{}
+	for _, r := range rel {
+		rels = append(rels, LinkRelation(r))
+	}
+	return rels
+}

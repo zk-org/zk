@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
@@ -15,7 +15,7 @@ import (
 
 func TestNoteDAOIndexed(t *testing.T) {
 	testNoteDAOWithFixtures(t, "", func(tx Transaction, dao *NoteDAO) {
-		for _, note := range []note.Metadata{
+		for _, note := range []core.Note{
 			{
 				Path:     "a.md",
 				Modified: time.Date(2020, 1, 20, 8, 52, 42, 0, time.UTC),
@@ -104,7 +104,7 @@ func TestNoteDAOIndexed(t *testing.T) {
 
 func TestNoteDAOAdd(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		_, err := dao.Add(note.Metadata{
+		_, err := dao.Add(core.Note{
 			Path:       "log/added.md",
 			Title:      "Added note",
 			Lead:       "Note",
@@ -137,13 +137,13 @@ func TestNoteDAOAdd(t *testing.T) {
 
 func TestNoteDAOAddWithLinks(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		id, err := dao.Add(note.Metadata{
+		id, err := dao.Add(core.Note{
 			Path: "log/added.md",
-			Links: []note.Link{
+			Links: []core.Link{
 				{
 					Title: "Same dir",
 					Href:  "log/2021-01-04",
-					Rels:  []string{"rel-1", "rel-2"},
+					Rels:  core.LinkRels("rel-1", "rel-2"),
 				},
 				{
 					Title:        "Relative",
@@ -155,17 +155,17 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				{
 					Title: "Second is added",
 					Href:  "f39c8",
-					Rels:  []string{"second"},
+					Rels:  core.LinkRels("second"),
 				},
 				{
 					Title: "Unknown",
 					Href:  "unknown",
 				},
 				{
-					Title:    "URL",
-					Href:     "http://example.com",
-					External: true,
-					Snippet:  "External [URL](http://example.com)",
+					Title:      "URL",
+					Href:       "http://example.com",
+					IsExternal: true,
+					Snippet:    "External [URL](http://example.com)",
 				},
 			},
 		})
@@ -205,13 +205,13 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				Rels:     "",
 			},
 			{
-				SourceId: id,
-				TargetId: nil,
-				Title:    "URL",
-				Href:     "http://example.com",
-				External: true,
-				Rels:     "",
-				Snippet:  "External [URL](http://example.com)",
+				SourceId:   id,
+				TargetId:   nil,
+				Title:      "URL",
+				Href:       "http://example.com",
+				IsExternal: true,
+				Rels:       "",
+				Snippet:    "External [URL](http://example.com)",
 			},
 		})
 	})
@@ -219,7 +219,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 
 func TestNoteDAOAddFillsLinksMissingTargetId(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		id, err := dao.Add(note.Metadata{
+		id, err := dao.Add(core.Note{
 			Path: "missing_target.md",
 		})
 		assert.Nil(t, err)
@@ -240,14 +240,14 @@ func TestNoteDAOAddFillsLinksMissingTargetId(t *testing.T) {
 // Check that we can't add a duplicate note with an existing path.
 func TestNoteDAOAddExistingNote(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		_, err := dao.Add(note.Metadata{Path: "ref/test/a.md"})
+		_, err := dao.Add(core.Note{Path: "ref/test/a.md"})
 		assert.Err(t, err, "UNIQUE constraint failed: notes.path")
 	})
 }
 
 func TestNoteDAOUpdate(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		id, err := dao.Update(note.Metadata{
+		id, err := dao.Update(core.Note{
 			Path:       "ref/test/a.md",
 			Title:      "Updated note",
 			Lead:       "Updated lead",
@@ -260,7 +260,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 			Modified:   time.Date(2020, 11, 22, 16, 49, 47, 0, time.UTC),
 		})
 		assert.Nil(t, err)
-		assert.Equal(t, id, SQLNoteID(6))
+		assert.Equal(t, id, core.NoteID(6))
 
 		row, err := queryNoteRow(tx, `path = "ref/test/a.md"`)
 		assert.Nil(t, err)
@@ -281,7 +281,7 @@ func TestNoteDAOUpdate(t *testing.T) {
 
 func TestNoteDAOUpdateUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		_, err := dao.Update(note.Metadata{
+		_, err := dao.Update(core.Note{
 			Path: "unknown/unknown.md",
 		})
 		assert.Err(t, err, "note not found in the index")
@@ -300,30 +300,30 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				Snippet:  "[[An internal link]]",
 			},
 			{
-				SourceId: 1,
-				TargetId: nil,
-				Title:    "An external link",
-				Href:     "https://domain.com",
-				External: true,
-				Snippet:  "[[An external link]]",
+				SourceId:   1,
+				TargetId:   nil,
+				Title:      "An external link",
+				Href:       "https://domain.com",
+				IsExternal: true,
+				Snippet:    "[[An external link]]",
 			},
 		})
 
-		_, err := dao.Update(note.Metadata{
+		_, err := dao.Update(core.Note{
 			Path: "log/2021-01-03.md",
-			Links: []note.Link{
+			Links: []core.Link{
 				{
-					Title:    "A new link",
-					Href:     "index",
-					External: false,
-					Rels:     []string{"rel"},
-					Snippet:  "[[A new link]]",
+					Title:      "A new link",
+					Href:       "index",
+					IsExternal: false,
+					Rels:       core.LinkRels("rel"),
+					Snippet:    "[[A new link]]",
 				},
 				{
-					Title:    "An external link",
-					Href:     "https://domain.com",
-					External: true,
-					Snippet:  "[[An external link]]",
+					Title:      "An external link",
+					Href:       "https://domain.com",
+					IsExternal: true,
+					Snippet:    "[[An external link]]",
 				},
 			},
 		})
@@ -340,12 +340,12 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				Snippet:  "[[A new link]]",
 			},
 			{
-				SourceId: 1,
-				TargetId: nil,
-				Title:    "An external link",
-				Href:     "https://domain.com",
-				External: true,
-				Snippet:  "[[An external link]]",
+				SourceId:   1,
+				TargetId:   nil,
+				Title:      "An external link",
+				Href:       "https://domain.com",
+				IsExternal: true,
+				Snippet:    "[[An external link]]",
 			},
 		})
 	})
@@ -378,7 +378,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 		assert.Equal(t, len(links) > 0, true)
 
 		links = queryLinkRows(t, tx, `id = 4`)
-		assert.Equal(t, *links[0].TargetId, SQLNoteID(1))
+		assert.Equal(t, *links[0].TargetId, core.NoteID(1))
 
 		err := dao.Remove("log/2021-01-03.md")
 		assert.Nil(t, err)
@@ -392,7 +392,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 }
 
 func TestNoteDAOFindByHref(t *testing.T) {
-	test := func(href string, expected *note.Match) {
+	test := func(href string, expected *core.ContextualNote) {
 		testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 			actual, err := dao.FindByHref(href)
 			assert.Nil(t, err)
@@ -403,15 +403,15 @@ func TestNoteDAOFindByHref(t *testing.T) {
 	test("not-found", nil)
 
 	// Full path
-	test("log/2021-01-03.md", &note.Match{
-		Metadata: note.Metadata{
+	test("log/2021-01-03.md", &core.ContextualNote{
+		Note: core.Note{
 			Path:       "log/2021-01-03.md",
 			Title:      "Daily note",
 			Lead:       "A daily note",
 			Body:       "A daily note\n\nWith lot of content",
 			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 			WordCount:  3,
-			Links:      []note.Link{},
+			Links:      []core.Link{},
 			Tags:       []string{"fiction", "adventure"},
 			Metadata: map[string]interface{}{
 				"author": "Dom",
@@ -424,15 +424,15 @@ func TestNoteDAOFindByHref(t *testing.T) {
 	})
 
 	// Prefix
-	test("log/2021-01", &note.Match{
-		Metadata: note.Metadata{
+	test("log/2021-01", &core.ContextualNote{
+		Note: core.Note{
 			Path:       "log/2021-01-03.md",
 			Title:      "Daily note",
 			Lead:       "A daily note",
 			Body:       "A daily note\n\nWith lot of content",
 			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 			WordCount:  3,
-			Links:      []note.Link{},
+			Links:      []core.Link{},
 			Tags:       []string{"fiction", "adventure"},
 			Metadata: map[string]interface{}{
 				"author": "Dom",
@@ -453,14 +453,14 @@ func TestNoteDAOFindByHref(t *testing.T) {
 }
 
 func TestNoteDAOFindAll(t *testing.T) {
-	testNoteDAOFindPaths(t, note.FinderOpts{}, []string{
+	testNoteDAOFindPaths(t, core.NoteFindOpts{}, []string{
 		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
 		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
 }
 
 func TestNoteDAOFindLimit(t *testing.T) {
-	testNoteDAOFindPaths(t, note.FinderOpts{Limit: 2}, []string{
+	testNoteDAOFindPaths(t, core.NoteFindOpts{Limit: 2}, []string{
 		"ref/test/b.md",
 		"f39c8.md",
 	})
@@ -468,7 +468,7 @@ func TestNoteDAOFindLimit(t *testing.T) {
 
 func TestNoteDAOFindTag(t *testing.T) {
 	test := func(tags []string, expectedPaths []string) {
-		testNoteDAOFindPaths(t, note.FinderOpts{Tags: tags}, expectedPaths)
+		testNoteDAOFindPaths(t, core.NoteFindOpts{Tags: tags}, expectedPaths)
 	}
 
 	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
@@ -487,17 +487,17 @@ func TestNoteDAOFindTag(t *testing.T) {
 
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
-		note.FinderOpts{Match: opt.NewString("daily | index")},
-		[]note.Match{
+		core.NoteFindOpts{Match: opt.NewString("daily | index")},
+		[]core.ContextualNote{
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "index.md",
 					Title:      "Index",
 					Lead:       "Index of the Zettelkasten",
 					Body:       "Index of the Zettelkasten",
 					RawContent: "# Index\nIndex of the Zettelkasten",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata: map[string]interface{}{
 						"aliases": []interface{}{"First page"},
@@ -509,14 +509,14 @@ func TestNoteDAOFindMatch(t *testing.T) {
 				Snippets: []string{"<zk:match>Index</zk:match> of the Zettelkasten"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 					WordCount:  3,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},
 					Metadata: map[string]interface{}{
 						"author": "Dom",
@@ -528,14 +528,14 @@ func TestNoteDAOFindMatch(t *testing.T) {
 				Snippets: []string{"A <zk:match>daily</zk:match> note\n\nWith lot of content"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-02-04.md",
 					Title:      "February 4, 2021",
 					Lead:       "A third daily note",
 					Body:       "A third daily note",
 					RawContent: "# A third daily note",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
@@ -545,14 +545,14 @@ func TestNoteDAOFindMatch(t *testing.T) {
 				Snippets: []string{"A third <zk:match>daily</zk:match> note"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-01-04.md",
 					Title:      "January 4, 2021",
 					Lead:       "A second daily note",
 					Body:       "A second daily note",
 					RawContent: "# A second daily note",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
@@ -567,10 +567,10 @@ func TestNoteDAOFindMatch(t *testing.T) {
 
 func TestNoteDAOFindMatchWithSort(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			Match: opt.NewString("daily | index"),
-			Sorters: []note.Sorter{
-				{Field: note.SortPath, Ascending: false},
+			Sorters: []core.NoteSorter{
+				{Field: core.NoteSortPath, Ascending: false},
 			},
 		},
 		[]string{
@@ -584,7 +584,7 @@ func TestNoteDAOFindMatchWithSort(t *testing.T) {
 
 func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			IncludePaths: []string{"log/2021-01-03.md"},
 		},
 		[]string{"log/2021-01-03.md"},
@@ -594,7 +594,7 @@ func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 // You can look for files with only their prefix.
 func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			IncludePaths: []string{"log/2021-01"},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
@@ -604,13 +604,13 @@ func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 // For directory, only complete names work, no prefixes.
 func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			IncludePaths: []string{"lo"},
 		},
 		[]string{},
 	)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			IncludePaths: []string{"log"},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"},
@@ -620,7 +620,7 @@ func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 // You can look for multiple paths, in which case notes can be in any of them.
 func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			IncludePaths: []string{"ref", "index.md"},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
@@ -629,7 +629,7 @@ func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 
 func TestNoteDAOFindExcludingPath(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			ExcludePaths: []string{"log"},
 		},
 		[]string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "index.md"},
@@ -638,7 +638,7 @@ func TestNoteDAOFindExcludingPath(t *testing.T) {
 
 func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			ExcludePaths: []string{"ref", "log/2021-01"},
 		},
 		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
@@ -647,17 +647,17 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 
 func TestNoteDAOFindMentions(t *testing.T) {
 	testNoteDAOFind(t,
-		note.FinderOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
-		[]note.Match{
+		core.NoteFindOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
+		[]core.ContextualNote{
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "ref/test/b.md",
 					Title:      "A nested note",
 					Lead:       "This one is in a sub sub directory",
 					Body:       "This one is in a sub sub directory, not the first page",
 					RawContent: "# A nested note\nThis one is in a sub sub directory",
 					WordCount:  8,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{"adventure", "history"},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
@@ -667,14 +667,14 @@ func TestNoteDAOFindMentions(t *testing.T) {
 				Snippets: []string{"This one is in a sub sub directory, not the <zk:match>first page</zk:match>"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-02-04.md",
 					Title:      "February 4, 2021",
 					Lead:       "A third daily note",
 					Body:       "A third daily note",
 					RawContent: "# A third daily note",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
@@ -684,14 +684,14 @@ func TestNoteDAOFindMentions(t *testing.T) {
 				Snippets: []string{"A third <zk:match>daily note</zk:match>"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-01-04.md",
 					Title:      "January 4, 2021",
 					Lead:       "A second daily note",
 					Body:       "A second daily note",
 					RawContent: "# A second daily note",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2020, 11, 29, 8, 20, 18, 0, time.UTC),
@@ -707,9 +707,9 @@ func TestNoteDAOFindMentions(t *testing.T) {
 // Common use case: `--mention x --no-link-to x`
 func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			Mention: []string{"log/2021-01-03.md", "index.md"},
-			LinkTo: &note.LinkFilter{
+			LinkTo: &core.LinkFilter{
 				Paths:  []string{"log/2021-01-03.md", "index.md"},
 				Negate: true,
 			},
@@ -720,17 +720,17 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 
 func TestNoteDAOFindMentionedBy(t *testing.T) {
 	testNoteDAOFind(t,
-		note.FinderOpts{MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"}},
-		[]note.Match{
+		core.NoteFindOpts{MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"}},
+		[]core.ContextualNote{
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 					WordCount:  3,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},
 					Metadata: map[string]interface{}{
 						"author": "Dom",
@@ -742,14 +742,14 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 				Snippets: []string{"A second <zk:match>daily note</zk:match>"},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "index.md",
 					Title:      "Index",
 					Lead:       "Index of the Zettelkasten",
 					Body:       "Index of the Zettelkasten",
 					RawContent: "# Index\nIndex of the Zettelkasten",
 					WordCount:  4,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata: map[string]interface{}{
 						"aliases": []interface{}{
@@ -769,9 +769,9 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 // Common use case: `--mentioned-by x --no-linked-by x`
 func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"},
-			LinkedBy: &note.LinkFilter{
+			LinkedBy: &core.LinkFilter{
 				Paths:  []string{"ref/test/b.md", "log/2021-01-04.md"},
 				Negate: true,
 			},
@@ -782,8 +782,8 @@ func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 
 func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkedBy: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    false,
 				Recursive: false,
@@ -795,8 +795,8 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 
 func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkedBy: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
@@ -808,8 +808,8 @@ func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 
 func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkedBy: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
@@ -822,19 +822,19 @@ func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 
 func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	testNoteDAOFind(t,
-		note.FinderOpts{
-			LinkedBy: &note.LinkFilter{Paths: []string{"f39c8.md"}},
+		core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{Paths: []string{"f39c8.md"}},
 		},
-		[]note.Match{
+		[]core.ContextualNote{
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "ref/test/a.md",
 					Title:      "Another nested note",
 					Lead:       "It shall appear before b.md",
 					Body:       "It shall appear before b.md",
 					RawContent: "#Another nested note\nIt shall appear before b.md",
 					WordCount:  5,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{},
 					Metadata: map[string]interface{}{
 						"alias": "a.md",
@@ -849,14 +849,14 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 				},
 			},
 			{
-				Metadata: note.Metadata{
+				Note: core.Note{
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
 					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
 					WordCount:  3,
-					Links:      []note.Link{},
+					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},
 					Metadata: map[string]interface{}{
 						"author": "Dom",
@@ -875,8 +875,8 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 
 func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkedBy: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{
 				Paths:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    true,
 				Recursive: false,
@@ -888,8 +888,8 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 
 func TestNoteDAOFindLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkTo: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{
 				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
 				Negate:    false,
 				Recursive: false,
@@ -901,8 +901,8 @@ func TestNoteDAOFindLinkTo(t *testing.T) {
 
 func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkTo: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{
 				Paths:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
@@ -914,8 +914,8 @@ func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 
 func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkTo: &note.LinkFilter{
+		core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{
 				Paths:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
@@ -928,8 +928,8 @@ func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 
 func TestNoteDAOFindNotLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			LinkTo: &note.LinkFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
+		core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
@@ -937,14 +937,14 @@ func TestNoteDAOFindNotLinkTo(t *testing.T) {
 
 func TestNoteDAOFindRelated(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			Related: []string{"log/2021-02-04"},
 		},
 		[]string{},
 	)
 
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			Related: []string{"log/2021-01-03.md"},
 		},
 		[]string{"index.md"},
@@ -953,7 +953,7 @@ func TestNoteDAOFindRelated(t *testing.T) {
 
 func TestNoteDAOFindOrphan(t *testing.T) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{Orphan: true},
+		core.NoteFindOpts{Orphan: true},
 		[]string{"ref/test/b.md", "log/2021-02-04.md"},
 	)
 }
@@ -962,7 +962,7 @@ func TestNoteDAOFindCreatedOn(t *testing.T) {
 	start := time.Date(2020, 11, 22, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 11, 23, 0, 0, 0, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			CreatedStart: &start,
 			CreatedEnd:   &end,
 		},
@@ -973,7 +973,7 @@ func TestNoteDAOFindCreatedOn(t *testing.T) {
 func TestNoteDAOFindCreatedBefore(t *testing.T) {
 	end := time.Date(2019, 12, 04, 11, 59, 11, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			CreatedEnd: &end,
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md"},
@@ -983,7 +983,7 @@ func TestNoteDAOFindCreatedBefore(t *testing.T) {
 func TestNoteDAOFindCreatedAfter(t *testing.T) {
 	start := time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			CreatedStart: &start,
 		},
 		[]string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"},
@@ -994,7 +994,7 @@ func TestNoteDAOFindModifiedOn(t *testing.T) {
 	start := time.Date(2020, 01, 20, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 01, 21, 0, 0, 0, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			ModifiedStart: &start,
 			ModifiedEnd:   &end,
 		},
@@ -1005,7 +1005,7 @@ func TestNoteDAOFindModifiedOn(t *testing.T) {
 func TestNoteDAOFindModifiedBefore(t *testing.T) {
 	end := time.Date(2020, 01, 20, 8, 52, 42, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			ModifiedEnd: &end,
 		},
 		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
@@ -1015,7 +1015,7 @@ func TestNoteDAOFindModifiedBefore(t *testing.T) {
 func TestNoteDAOFindModifiedAfter(t *testing.T) {
 	start := time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC)
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
+		core.NoteFindOpts{
 			ModifiedStart: &start,
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
@@ -1023,70 +1023,70 @@ func TestNoteDAOFindModifiedAfter(t *testing.T) {
 }
 
 func TestNoteDAOFindSortCreated(t *testing.T) {
-	testNoteDAOFindSort(t, note.SortCreated, true, []string{
+	testNoteDAOFindSort(t, core.NoteSortCreated, true, []string{
 		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
 		"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md",
 	})
-	testNoteDAOFindSort(t, note.SortCreated, false, []string{
+	testNoteDAOFindSort(t, core.NoteSortCreated, false, []string{
 		"log/2021-02-04.md", "log/2021-01-04.md", "log/2021-01-03.md",
 		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
 	})
 }
 
 func TestNoteDAOFindSortModified(t *testing.T) {
-	testNoteDAOFindSort(t, note.SortModified, true, []string{
+	testNoteDAOFindSort(t, core.NoteSortModified, true, []string{
 		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
 		"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md",
 	})
-	testNoteDAOFindSort(t, note.SortModified, false, []string{
+	testNoteDAOFindSort(t, core.NoteSortModified, false, []string{
 		"log/2021-01-04.md", "log/2021-01-03.md", "log/2021-02-04.md",
 		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
 	})
 }
 
 func TestNoteDAOFindSortPath(t *testing.T) {
-	testNoteDAOFindSort(t, note.SortPath, true, []string{
+	testNoteDAOFindSort(t, core.NoteSortPath, true, []string{
 		"f39c8.md", "index.md", "log/2021-01-03.md", "log/2021-01-04.md",
 		"log/2021-02-04.md", "ref/test/a.md", "ref/test/b.md",
 	})
-	testNoteDAOFindSort(t, note.SortPath, false, []string{
+	testNoteDAOFindSort(t, core.NoteSortPath, false, []string{
 		"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md",
 		"log/2021-01-04.md", "log/2021-01-03.md", "index.md", "f39c8.md",
 	})
 }
 
 func TestNoteDAOFindSortTitle(t *testing.T) {
-	testNoteDAOFindSort(t, note.SortTitle, true, []string{
+	testNoteDAOFindSort(t, core.NoteSortTitle, true, []string{
 		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
 		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
-	testNoteDAOFindSort(t, note.SortTitle, false, []string{
+	testNoteDAOFindSort(t, core.NoteSortTitle, false, []string{
 		"log/2021-01-04.md", "index.md", "log/2021-02-04.md",
 		"log/2021-01-03.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md",
 	})
 }
 
 func TestNoteDAOFindSortWordCount(t *testing.T) {
-	testNoteDAOFindSort(t, note.SortWordCount, true, []string{
+	testNoteDAOFindSort(t, core.NoteSortWordCount, true, []string{
 		"log/2021-01-03.md", "log/2021-02-04.md", "index.md",
 		"log/2021-01-04.md", "f39c8.md", "ref/test/a.md", "ref/test/b.md",
 	})
-	testNoteDAOFindSort(t, note.SortWordCount, false, []string{
+	testNoteDAOFindSort(t, core.NoteSortWordCount, false, []string{
 		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
 		"index.md", "log/2021-01-04.md", "log/2021-01-03.md",
 	})
 }
 
-func testNoteDAOFindSort(t *testing.T, field note.SortField, ascending bool, expected []string) {
+func testNoteDAOFindSort(t *testing.T, field core.NoteSortField, ascending bool, expected []string) {
 	testNoteDAOFindPaths(t,
-		note.FinderOpts{
-			Sorters: []note.Sorter{{Field: field, Ascending: ascending}},
+		core.NoteFindOpts{
+			Sorters: []core.NoteSorter{{Field: field, Ascending: ascending}},
 		},
 		expected,
 	)
 }
 
-func testNoteDAOFindPaths(t *testing.T, opts note.FinderOpts, expected []string) {
+func testNoteDAOFindPaths(t *testing.T, opts core.NoteFindOpts, expected []string) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		matches, err := dao.Find(opts)
 		assert.Nil(t, err)
@@ -1099,7 +1099,7 @@ func testNoteDAOFindPaths(t *testing.T, opts note.FinderOpts, expected []string)
 	})
 }
 
-func testNoteDAOFind(t *testing.T, opts note.FinderOpts, expected []note.Match) {
+func testNoteDAOFind(t *testing.T, opts core.NoteFindOpts, expected []core.ContextualNote) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		actual, err := dao.Find(opts)
 		assert.Nil(t, err)
@@ -1136,11 +1136,11 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 }
 
 type linkRow struct {
-	SourceId                   SQLNoteID
-	TargetId                   *SQLNoteID
+	SourceId                   core.NoteID
+	TargetId                   *core.NoteID
 	Href, Title, Rels, Snippet string
 	SnippetStart, SnippetEnd   int
-	External                   bool
+	IsExternal                 bool
 }
 
 func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
@@ -1158,9 +1158,9 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 		var row linkRow
 		var sourceId int64
 		var targetId *int64
-		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.External, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
+		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.IsExternal, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
-		row.SourceId = SQLNoteID(sourceId)
+		row.SourceId = core.NoteID(sourceId)
 		if targetId != nil {
 			row.TargetId = idPointer(*targetId)
 		}
@@ -1172,7 +1172,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	return links
 }
 
-func idPointer(i int64) *SQLNoteID {
-	id := SQLNoteID(i)
+func idPointer(i int64) *core.NoteID {
+	id := core.NoteID(i)
 	return &id
 }

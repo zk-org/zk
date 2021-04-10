@@ -58,24 +58,3 @@ type TemplateLoader interface {
 // TemplateLoaderFactory creates a new instance of an implementation of the
 // TemplateLoader port.
 type TemplateLoaderFactory func(language string, lookupPaths []string) (TemplateLoader, error)
-
-// Styler stylizes text according to predefined styling rules.
-//
-// A rule key can be either semantic, e.g. "title" or explicit, e.g. "red".
-type Styler interface {
-	// Style formats the given text according to the provided styling rules.
-	Style(text string, rules ...Style) (string, error)
-	// Style formats the given text according to the provided styling rules,
-	// panicking if the rules are unknown.
-	MustStyle(text string, rules ...Style) string
-}
-
-// NullStyler is a Styler with no styling rules.
-var NullStyler = nullStyler{}
-
-type nullStyler struct{}
-
-// Style implements Styler.
-func (s nullStyler) Style(text string, rule ...Style) (string, error) {
-	return text, nil
-}

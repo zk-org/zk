@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core/note"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/fts5"
@@ -20,7 +20,6 @@ import (
 )
 
 // NoteDAO persists notes in the SQLite database.
-// It implements the core port note.Finder.
 type NoteDAO struct {
 	tx     Transaction
 	logger util.Logger
@@ -150,7 +149,7 @@ func (d *NoteDAO) Indexed() (<-chan paths.Metadata, error) {
 }
 
 // Add inserts a new note to the index.
-func (d *NoteDAO) Add(note note.Metadata) (SQLNoteID, error) {
+func (d *NoteDAO) Add(note core.Note) (core.NoteID, error) {
 	// For sortable_path, we replace in path / by the shortest non printable
 	// character available to make it sortable. Without this, sorting by the
 	// path would be a lexicographical sort instead of being the same order
@@ -171,16 +170,16 @@ func (d *NoteDAO) Add(note note.Metadata) (SQLNoteID, error) {
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return SQLNoteID(0), err
+		return 0, err
 	}
 
-	id := SQLNoteID(lastId)
+	id := core.NoteID(lastId)
 	err = d.addLinks(id, note)
 	return id, err
 }
 
 // Update modifies an existing note.
-func (d *NoteDAO) Update(note note.Metadata) (SQLNoteID, error) {
+func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
 	id, err := d.findIdByPath(note.Path)
 	if err != nil {
 		return 0, err
@@ -207,7 +206,7 @@ func (d *NoteDAO) Update(note note.Metadata) (SQLNoteID, error) {
 	return id, err
 }
 
-func (d *NoteDAO) metadataToJSON(note note.Metadata) string {
+func (d *NoteDAO) metadataToJSON(note core.Note) string {
 	json, err := json.Marshal(note.Metadata)
 	if err != nil {
 		// Failure to serialize the metadata to JSON should not prevent the
@@ -219,14 +218,14 @@ func (d *NoteDAO) metadataToJSON(note note.Metadata) string {
 }
 
 // addLinks inserts all the outbound links of the given note.
-func (d *NoteDAO) addLinks(id SQLNoteID, note note.Metadata) error {
+func (d *NoteDAO) addLinks(id core.NoteID, note core.Note) error {
 	for _, link := range note.Links {
 		targetId, err := d.findIdByPathPrefix(link.Href)
 		if err != nil {
 			return err
 		}
 
-		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.External, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
+		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.IsExternal, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
 		if err != nil {
 			return err
 		}
@@ -238,12 +237,16 @@ func (d *NoteDAO) addLinks(id SQLNoteID, note note.Metadata) error {
 
 // joinLinkRels will concatenate a list of rels into a SQLite ready string.
 // Each rel is delimited by \x01 for easy matching in queries.
-func joinLinkRels(rels []string) string {
+func joinLinkRels(rels []core.LinkRelation) string {
 	if len(rels) == 0 {
 		return ""
 	}
 	delimiter := "\x01"
-	return delimiter + strings.Join(rels, delimiter) + delimiter
+	res := delimiter
+	for _, rel := range rels {
+		res += string(rel) + delimiter
+	}
+	return res
 }
 
 // Remove deletes the note with the given path from the index.
@@ -260,16 +263,16 @@ func (d *NoteDAO) Remove(path string) error {
 	return err
 }
 
-func (d *NoteDAO) findIdByPath(path string) (SQLNoteID, error) {
+func (d *NoteDAO) findIdByPath(path string) (core.NoteID, error) {
 	row, err := d.findIdByPathStmt.QueryRow(path)
 	if err != nil {
-		return SQLNoteID(0), err
+		return core.NoteID(0), err
 	}
 	return idForRow(row)
 }
 
-func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]SQLNoteID, error) {
-	ids := make([]SQLNoteID, 0)
+func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteID, error) {
+	ids := make([]core.NoteID, 0)
 	for _, path := range paths {
 		id, err := d.findIdByPathPrefix(path)
 		if err != nil {
@@ -286,30 +289,30 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]SQLNoteID, error) {
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdByPathPrefix(path string) (SQLNoteID, error) {
+func (d *NoteDAO) findIdByPathPrefix(path string) (core.NoteID, error) {
 	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
 	if err != nil {
-		return SQLNoteID(0), err
+		return 0, err
 	}
 	return idForRow(row)
 }
 
-func idForRow(row *sql.Row) (SQLNoteID, error) {
+func idForRow(row *sql.Row) (core.NoteID, error) {
 	var id sql.NullInt64
 	err := row.Scan(&id)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return SQLNoteID(0), nil
+		return 0, nil
 	case err != nil:
-		return SQLNoteID(0), err
+		return 0, err
 	default:
-		return SQLNoteID(id.Int64), nil
+		return core.NoteID(id.Int64), nil
 	}
 }
 
 // FindByHref returns the first note matching the given link href.
-func (d *NoteDAO) FindByHref(href string) (*note.Match, error) {
+func (d *NoteDAO) FindByHref(href string) (*core.ContextualNote, error) {
 	id, err := d.findIdByPathPrefix(href)
 	if err != nil {
 		return nil, err
@@ -318,12 +321,12 @@ func (d *NoteDAO) FindByHref(href string) (*note.Match, error) {
 	if err != nil {
 		return nil, err
 	}
-	return d.scanNoteMatch(row)
+	return d.scanNote(row)
 }
 
 // Find returns all the notes matching the given criteria.
-func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
-	matches := make([]note.Match, 0)
+func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
+	matches := make([]core.ContextualNote, 0)
 
 	opts, err := d.expandMentionsIntoMatch(opts)
 	if err != nil {
@@ -337,7 +340,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		match, err := d.scanNoteMatch(rows)
+		match, err := d.scanNote(rows)
 		if err != nil {
 			d.logger.Err(err)
 			continue
@@ -350,7 +353,7 @@ func (d *NoteDAO) Find(opts note.FinderOpts) ([]note.Match, error) {
 	return matches, nil
 }
 
-func (d *NoteDAO) scanNoteMatch(row RowScanner) (*note.Match, error) {
+func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
 	var (
 		id, wordCount                 int
 		title, lead, body, rawContent string
@@ -374,16 +377,16 @@ func (d *NoteDAO) scanNoteMatch(row RowScanner) (*note.Match, error) {
 			d.logger.Err(errors.Wrap(err, path))
 		}
 
-		return &note.Match{
+		return &core.ContextualNote{
 			Snippets: parseListFromNullString(snippets),
-			Metadata: note.Metadata{
+			Note: core.Note{
 				Path:       path,
 				Title:      title,
 				Lead:       lead,
 				Body:       body,
 				RawContent: rawContent,
 				WordCount:  wordCount,
-				Links:      []note.Link{},
+				Links:      []core.Link{},
 				Tags:       parseListFromNullString(tags),
 				Metadata:   metadata,
 				Created:    created,
@@ -406,7 +409,7 @@ func parseListFromNullString(str sql.NullString) []string {
 
 // expandMentionsIntoMatch finds the titles associated with the notes in opts.Mention to
 // expand them into the opts.Match predicate.
-func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts, error) {
+func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFindOpts, error) {
 	if opts.Mention == nil {
 		return opts, nil
 	}
@@ -419,7 +422,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 
 	// Exclude the mentioned notes from the results.
 	for _, id := range ids {
-		opts = opts.ExcludingId(id)
+		opts = opts.ExcludingID(id)
 	}
 
 	// Find their titles.
@@ -454,7 +457,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts note.FinderOpts) (note.FinderOpts
 	return opts, nil
 }
 
-func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
+func (d *NoteDAO) findRows(opts core.NoteFindOpts) (*sql.Rows, error) {
 	snippetCol := `n.lead`
 	joinClauses := []string{}
 	whereExprs := []string{}
@@ -601,7 +604,7 @@ func (d *NoteDAO) findRows(opts note.FinderOpts) (*sql.Rows, error) {
 SELECT note_id FROM notes_collections
 WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 )`,
-				note.CollectionKindTag,
+				core.CollectionKindTag,
 				strings.Join(globs, " OR "),
 			)
 			whereExprs = append(whereExprs, expr)
@@ -616,7 +619,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 
 		// Exclude the mentioning notes from the results.
 		for _, id := range ids {
-			opts = opts.ExcludingId(id)
+			opts = opts.ExcludingID(id)
 		}
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
@@ -676,9 +679,8 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		args = append(args, opts.ModifiedEnd)
 	}
 
-	if opts.ExcludeIds != nil {
-		ids := SQLNoteIDsFromCoreIDs(opts.ExcludeIds)
-		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(ids, ",")+")")
+	if opts.ExcludeIDs != nil {
+		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIDs, ",")+")")
 	}
 
 	orderTerms := []string{}
@@ -747,27 +749,27 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	return d.tx.Query(query, args...)
 }
 
-func orderTerm(sorter note.Sorter) string {
+func orderTerm(sorter core.NoteSorter) string {
 	order := " ASC"
 	if !sorter.Ascending {
 		order = " DESC"
 	}
 
 	switch sorter.Field {
-	case note.SortCreated:
+	case core.NoteSortCreated:
 		return "n.created" + order
-	case note.SortModified:
+	case core.NoteSortModified:
 		return "n.modified" + order
-	case note.SortPath:
+	case core.NoteSortPath:
 		return "n.path" + order
-	case note.SortRandom:
+	case core.NoteSortRandom:
 		return "RANDOM()"
-	case note.SortTitle:
+	case core.NoteSortTitle:
 		return "n.title" + order
-	case note.SortWordCount:
+	case core.NoteSortWordCount:
 		return "n.word_count" + order
 	default:
-		panic(fmt.Sprintf("%v: unknown note.SortField", sorter.Field))
+		panic(fmt.Sprintf("%v: unknown core.NoteSortField", sorter.Field))
 	}
 }
 
@@ -778,7 +780,7 @@ func pathRegex(path string) string {
 	return path + "[^/]*|" + path + "/.+"
 }
 
-func (d *NoteDAO) idToSql(id SQLNoteID) sql.NullInt64 {
+func (d *NoteDAO) idToSql(id core.NoteID) sql.NullInt64 {
 	if id.IsValid() {
 		return sql.NullInt64{Int64: int64(id), Valid: true}
 	} else {
@@ -786,7 +788,7 @@ func (d *NoteDAO) idToSql(id SQLNoteID) sql.NullInt64 {
 	}
 }
 
-func (d *NoteDAO) joinIds(ids []SQLNoteID, delimiter string) string {
+func (d *NoteDAO) joinIds(ids []core.NoteID, delimiter string) string {
 	strs := make([]string, 0)
 	for _, i := range ids {
 		strs = append(strs, strconv.FormatInt(int64(i), 10))

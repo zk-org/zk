@@ -9,6 +9,7 @@ import (
 
 	"github.com/mickael-menu/zk/internal/adapter"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/core/note"
 	"github.com/mickael-menu/zk/internal/core/zk"
 	"github.com/mickael-menu/zk/internal/util/errors"
@@ -192,6 +193,11 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, nil
 		}
 
+		link, err := doc.DocumentLinkAt(params.Position)
+		if link == nil || err != nil {
+			return nil, err
+		}
+
 		zk, err := server.container.Zk()
 		if err != nil {
 			return nil, err
@@ -202,19 +208,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		var target string
-		err = db.WithTransaction(func(tx sqlite.Transaction) error {
-			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
-			link, err := doc.DocumentLinkAt(params.Position)
-			if link == nil || err != nil {
-				return err
-			}
-			target, err = server.targetForHref(link.Href, zk.Path, finder)
-			return err
-		})
+		index := sqlite.NewNoteIndex(db, server.container.Logger)
+		target, err := server.targetForHref(link.Href, zk.Path, index)
 		if err != nil || target == "" || strutil.IsURL(target) {
 			return nil, err
 		}
+
 		target = strings.TrimPrefix(target, "file://")
 		contents, err := ioutil.ReadFile(target)
 		if err != nil {
@@ -232,7 +231,12 @@ func NewServer(opts ServerOpts) *Server {
 	handler.TextDocumentDocumentLink = func(context *glsp.Context, params *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {
 		doc, ok := server.documents[params.TextDocument.URI]
 		if !ok {
-			return []protocol.DocumentLink{}, nil
+			return nil, nil
+		}
+
+		links, err := doc.DocumentLinks()
+		if err != nil {
+			return nil, err
 		}
 
 		zk, err := server.container.Zk()
@@ -245,28 +249,20 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		var documentLinks []protocol.DocumentLink
-		err = db.WithTransaction(func(tx sqlite.Transaction) error {
-			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
-			links, err := doc.DocumentLinks()
-			if err != nil {
-				return err
+		index := sqlite.NewNoteIndex(db, server.container.Logger)
+
+		documentLinks := []protocol.DocumentLink{}
+		for _, link := range links {
+			target, err := server.targetForHref(link.Href, zk.Path, index)
+			if target == "" || err != nil {
+				continue
 			}
 
-			for _, link := range links {
-				target, err := server.targetForHref(link.Href, zk.Path, finder)
-				if target == "" || err != nil {
-					continue
-				}
-
-				documentLinks = append(documentLinks, protocol.DocumentLink{
-					Range:  link.Range,
-					Target: &target,
-				})
-			}
-
-			return nil
-		})
+			documentLinks = append(documentLinks, protocol.DocumentLink{
+				Range:  link.Range,
+				Target: &target,
+			})
+		}
 
 		return documentLinks, err
 	}
@@ -274,7 +270,12 @@ func NewServer(opts ServerOpts) *Server {
 	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
 		doc, ok := server.documents[params.TextDocument.URI]
 		if !ok {
-			return []protocol.DocumentLink{}, nil
+			return nil, nil
+		}
+
+		link, err := doc.DocumentLinkAt(params.Position)
+		if link == nil || err != nil {
+			return nil, err
 		}
 
 		zk, err := server.container.Zk()
@@ -287,17 +288,8 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		var link *documentLink
-		var target string
-		err = db.WithTransaction(func(tx sqlite.Transaction) error {
-			finder := sqlite.NewNoteDAO(tx, server.container.Logger)
-			link, err = doc.DocumentLinkAt(params.Position)
-			if link == nil || err != nil {
-				return err
-			}
-			target, err = server.targetForHref(link.Href, zk.Path, finder)
-			return err
-		})
+		index := sqlite.NewNoteIndex(db, server.container.Logger)
+		target, err := server.targetForHref(link.Href, zk.Path, index)
 		if link == nil || target == "" || err != nil {
 			return nil, err
 		}
@@ -318,19 +310,21 @@ func NewServer(opts ServerOpts) *Server {
 }
 
 // targetForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) targetForHref(href string, basePath string, finder note.Finder) (string, error) {
+func (s *Server) targetForHref(href string, basePath string, index core.NoteIndex) (string, error) {
 	if strutil.IsURL(href) {
 		return href, nil
 	} else {
-		note, err := finder.FindByHref(href)
-		if err != nil {
-			s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
-			return "", err
-		}
-		if note == nil {
-			return "", nil
-		}
-		return "file://" + filepath.Join(basePath, note.Path), nil
+		// FIXME:
+		return "", nil
+		// note, err := finder.FindByHref(href)
+		// if err != nil {
+		// 	s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
+		// 	return "", err
+		// }
+		// if note == nil {
+		// 	return "", nil
+		// }
+		// return "file://" + filepath.Join(basePath, note.Path), nil
 	}
 }
 
@@ -401,12 +395,8 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 		return nil, err
 	}
 
-	var notes []note.Match
-	err = db.WithTransaction(func(tx sqlite.Transaction) error {
-		finder := sqlite.NewNoteDAO(tx, s.container.Logger)
-		notes, err = finder.Find(note.FinderOpts{})
-		return err
-	})
+	index := sqlite.NewNoteIndex(db, s.container.Logger)
+	notes, err := index.Find(core.NoteFindOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +416,7 @@ func (s *Server) buildLinkCompletionList(params *protocol.CompletionParams) ([]p
 	return items, nil
 }
 
-func (s *Server) buildTextEditForLink(zk *zk.Zk, note note.Match, document *document, pos protocol.Position) interface{} {
+func (s *Server) buildTextEditForLink(zk *zk.Zk, note core.ContextualNote, document *document, pos protocol.Position) interface{} {
 	isWikiLink := (document.LookBehind(pos, 2) == "[[")
 	var text string
 

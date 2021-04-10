@@ -13,15 +13,19 @@ type Collection struct {
 }
 
 // CollectionID represents the unique ID of a collection relative to a given
-// Notebook implementation.
-type CollectionID interface {
-	IsValid() bool
+// NoteIndex implementation.
+type CollectionID int64
+
+func (id CollectionID) IsValid() bool {
+	return id > 0
 }
 
 // NoteCollectionID represents the unique ID of an association between a note
-// and a collection in a Notebook implementation.
-type NoteCollectionID interface {
-	IsValid() bool
+// and a collection in a NoteIndex implementation.
+type NoteCollectionID int64
+
+func (id NoteCollectionID) IsValid() bool {
+	return id > 0
 }
 
 // CollectionKind defines a kind of note collection, such as tags.

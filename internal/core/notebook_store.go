@@ -7,8 +7,8 @@ import (
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
 
-// ZK is the entry-point to the core API.
-type ZK struct {
+// NotebookStore retrieves or creates new notebooks.
+type NotebookStore struct {
 	// Global user configuration.
 	config Config
 
@@ -26,10 +26,10 @@ type Ports struct {
 	OSEnv                 func() map[string]string
 }
 
-// NewZK creates a new ZK entry-point using the given options and port
-// implementations.
-func NewZK(config Config, ports Ports) *ZK {
-	return &ZK{
+// NewNotebookStore creates a new NotebookStore instance using the given
+// options and port implementations.
+func NewNotebookStore(config Config, ports Ports) *NotebookStore {
+	return &NotebookStore{
 		config:                config,
 		fs:                    ports.FS,
 		templateLoaderFactory: ports.TemplateLoaderFactory,
@@ -47,55 +47,55 @@ func (e ErrNotebookNotFound) Error() string {
 
 // OpenNotebook returns a new Notebook instance for the notebook containing the
 // given file path.
-func (zk *ZK) OpenNotebook(path string) (*Notebook, error) {
+func (ns *NotebookStore) OpenNotebook(path string) (*Notebook, error) {
 	wrap := errors.Wrapper("open failed")
 
-	path, err := zk.fs.Abs(path)
+	path, err := ns.fs.Abs(path)
 	if err != nil {
 		return nil, wrap(err)
 	}
-	path, err = zk.locateNotebook(path)
+	path, err = ns.locateNotebook(path)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	configPath := filepath.Join(path, ".zk/config.toml")
-	config, err := OpenConfig(configPath, zk.config, zk.fs)
+	config, err := OpenConfig(configPath, ns.config, ns.fs)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	return &Notebook{
-		path:                  path,
+		Path:                  path,
 		config:                config,
-		fs:                    zk.fs,
-		templateLoaderFactory: zk.templateLoaderFactory,
-		idGeneratorFactory:    zk.idGeneratorFactory,
-		osEnv:                 zk.osEnv,
+		fs:                    ns.fs,
+		templateLoaderFactory: ns.templateLoaderFactory,
+		idGeneratorFactory:    ns.idGeneratorFactory,
+		osEnv:                 ns.osEnv,
 	}, nil
 }
 
 // InitNotebook creates a new notebook at the given file path.
-func (zk *ZK) InitNotebook(path string) error {
+func (ns *NotebookStore) InitNotebook(path string) error {
 	wrap := errors.Wrapper("init failed")
 
-	path, err := zk.fs.Abs(path)
+	path, err := ns.fs.Abs(path)
 	if err != nil {
 		return wrap(err)
 	}
 
-	if existingPath, err := zk.locateNotebook(path); err == nil {
+	if existingPath, err := ns.locateNotebook(path); err == nil {
 		return wrap(fmt.Errorf("a notebook already exists in %v", existingPath))
 	}
 
 	// Create the default configuration file.
-	err = zk.fs.Write(filepath.Join(path, ".zk/config.toml"), []byte(defaultConfig))
+	err = ns.fs.Write(filepath.Join(path, ".zk/config.toml"), []byte(defaultConfig))
 	if err != nil {
 		return wrap(err)
 	}
 
 	// Create the default template.
-	err = zk.fs.Write(filepath.Join(path, ".zk/templates/default.md"), []byte(defaultTemplate))
+	err = ns.fs.Write(filepath.Join(path, ".zk/templates/default.md"), []byte(defaultTemplate))
 	if err != nil {
 		return wrap(err)
 	}
@@ -104,7 +104,7 @@ func (zk *ZK) InitNotebook(path string) error {
 }
 
 // locateNotebook finds the root of the notebook containing the given path.
-func (zk *ZK) locateNotebook(path string) (string, error) {
+func (ns *NotebookStore) locateNotebook(path string) (string, error) {
 	if !filepath.IsAbs(path) {
 		panic("absolute path expected")
 	}
@@ -114,7 +114,7 @@ func (zk *ZK) locateNotebook(path string) (string, error) {
 		if currentPath == "/" || currentPath == "." {
 			return "", ErrNotebookNotFound(path)
 		}
-		exists, err := zk.fs.DirExists(filepath.Join(currentPath, ".zk"))
+		exists, err := ns.fs.DirExists(filepath.Join(currentPath, ".zk"))
 		switch {
 		case err != nil:
 			return "", err
