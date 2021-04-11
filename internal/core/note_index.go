@@ -39,6 +39,11 @@ type NoteIndex interface {
 
 	// Commit performs a set of operations atomically.
 	Commit(transaction func(idx NoteIndex) error) error
+
+	// NeedsReindexing returns whether all notes should be reindexed.
+	NeedsReindexing() (bool, error)
+	// SetNeedsReindexing indicates whether all notes should be reindexed.
+	SetNeedsReindexing(needsReindexing bool) error
 }
 
 // NoteIndexingStats holds statistics about a notebook indexing process.
@@ -83,6 +88,13 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	stats := NoteIndexingStats{}
 	startTime := time.Now()
 
+	needsReindexing, err := t.index.NeedsReindexing()
+	if err != nil {
+		return stats, wrap(err)
+	}
+
+	force := t.force || needsReindexing
+
 	// FIXME: Use Extension defined in each DirConfig.
 	source := paths.Walk(t.notebook.Path, t.notebook.Config.Note.Extension, t.logger)
 	target, err := t.index.IndexedPaths()
@@ -91,7 +103,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 
 	// FIXME: Use the FS?
-	count, err := paths.Diff(source, target, t.force, func(change paths.DiffChange) error {
+	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
 		callback(change)
 
 		switch change.Kind {
@@ -121,6 +133,10 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 	stats.SourceCount = count
 	stats.Duration = time.Since(startTime)
+
+	if needsReindexing {
+		err = t.index.SetNeedsReindexing(false)
+	}
 
 	return stats, wrap(err)
 }

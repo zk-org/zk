@@ -6,6 +6,9 @@ import (
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
 
+// Known metadata keys.
+var reindexingRequiredKey = "zk.reindexing_required"
+
 // MetadataDAO persists arbitrary key/value pairs in the SQLite database.
 type MetadataDAO struct {
 	tx Transaction

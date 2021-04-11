@@ -204,11 +204,10 @@ func (db *DB) migrate() error {
 			}
 		}
 
-		needsReindexing = true
 		if needsReindexing {
 			metadata := NewMetadataDAO(tx)
 			// During the next indexing, all notes will be reindexed.
-			err = metadata.Set("reindexing_required", "true")
+			err = metadata.Set(reindexingRequiredKey, "true")
 			if err != nil {
 				return err
 			}

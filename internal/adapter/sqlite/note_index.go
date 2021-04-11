@@ -10,10 +10,15 @@ import (
 // NoteIndex persists note indexing results in the SQLite database.
 // It implements the port core.NoteIndex and acts as a facade to the DAOs.
 type NoteIndex struct {
-	db          *DB
+	db     *DB
+	dao    *dao
+	logger util.Logger
+}
+
+type dao struct {
 	notes       *NoteDAO
 	collections *CollectionDAO
-	logger      util.Logger
+	metadata    *MetadataDAO
 }
 
 func NewNoteIndex(db *DB, logger util.Logger) *NoteIndex {
@@ -25,8 +30,8 @@ func NewNoteIndex(db *DB, logger util.Logger) *NoteIndex {
 
 // Find implements core.NoteIndex.
 func (ni *NoteIndex) Find(opts core.NoteFindOpts) (notes []core.ContextualNote, err error) {
-	err = ni.commit(func(dao *NoteDAO, _ *CollectionDAO) error {
-		notes, err = dao.Find(opts)
+	err = ni.commit(func(dao *dao) error {
+		notes, err = dao.notes.Find(opts)
 		return err
 	})
 	return
@@ -39,8 +44,8 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 
 // FindCollections implements core.NoteIndex.
 func (ni *NoteIndex) FindCollections(kind core.CollectionKind) (collections []core.Collection, err error) {
-	err = ni.commit(func(_ *NoteDAO, dao *CollectionDAO) error {
-		collections, err = dao.FindAll(kind)
+	err = ni.commit(func(dao *dao) error {
+		collections, err = dao.collections.FindAll(kind)
 		return err
 	})
 	return
@@ -48,8 +53,8 @@ func (ni *NoteIndex) FindCollections(kind core.CollectionKind) (collections []co
 
 // IndexedPaths implements core.NoteIndex.
 func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) {
-	err = ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
-		metadata, err = notes.Indexed()
+	err = ni.commit(func(dao *dao) error {
+		metadata, err = dao.notes.Indexed()
 		return err
 	})
 	err = errors.Wrap(err, "failed to get indexed notes")
@@ -58,13 +63,13 @@ func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) 
 
 // Add implements core.NoteIndex.
 func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
-	err = ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
-		id, err = notes.Add(note)
+	err = ni.commit(func(dao *dao) error {
+		id, err = dao.notes.Add(note)
 		if err != nil {
 			return err
 		}
 
-		return ni.associateTags(collections, id, note.Tags)
+		return ni.associateTags(dao.collections, id, note.Tags)
 	})
 
 	err = errors.Wrapf(err, "%v: failed to index the note", note.Path)
@@ -73,18 +78,18 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 
 // Update implements core.NoteIndex.
 func (ni *NoteIndex) Update(note core.Note) error {
-	err := ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
-		noteId, err := notes.Update(note)
+	err := ni.commit(func(dao *dao) error {
+		noteId, err := dao.notes.Update(note)
 		if err != nil {
 			return err
 		}
 
-		err = collections.RemoveAssociations(noteId)
+		err = dao.collections.RemoveAssociations(noteId)
 		if err != nil {
 			return err
 		}
 
-		return ni.associateTags(collections, noteId, note.Tags)
+		return ni.associateTags(dao.collections, noteId, note.Tags)
 	})
 
 	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
@@ -107,32 +112,56 @@ func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteId core.NoteI
 
 // Remove implements core.NoteIndex
 func (ni *NoteIndex) Remove(path string) error {
-	err := ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
-		return notes.Remove(path)
+	err := ni.commit(func(dao *dao) error {
+		return dao.notes.Remove(path)
 	})
 	return errors.Wrapf(err, "%v: failed to remove note from index", path)
 }
 
 // Commit implements core.NoteIndex.
 func (ni *NoteIndex) Commit(transaction func(idx core.NoteIndex) error) error {
-	return ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
+	return ni.commit(func(dao *dao) error {
 		return transaction(&NoteIndex{
-			db:          ni.db,
-			notes:       notes,
-			collections: collections,
-			logger:      ni.logger,
+			db:     ni.db,
+			dao:    dao,
+			logger: ni.logger,
 		})
 	})
 }
 
-func (ni *NoteIndex) commit(transaction func(notes *NoteDAO, collections *CollectionDAO) error) error {
-	if ni.notes != nil && ni.collections != nil {
-		return transaction(ni.notes, ni.collections)
+// NeedsReindexing implements core.NoteIndex.
+func (ni *NoteIndex) NeedsReindexing() (needsReindexing bool, err error) {
+	err = ni.commit(func(dao *dao) error {
+		res, err := dao.metadata.Get(reindexingRequiredKey)
+		needsReindexing = (res == "true")
+		return err
+	})
+	return
+}
+
+// SetNeedsReindexing implements core.NoteIndex.
+func (ni *NoteIndex) SetNeedsReindexing(needsReindexing bool) error {
+	return ni.commit(func(dao *dao) error {
+		value := "false"
+		if needsReindexing {
+			value = "true"
+		}
+
+		return dao.metadata.Set(reindexingRequiredKey, value)
+	})
+}
+
+func (ni *NoteIndex) commit(transaction func(dao *dao) error) error {
+	if ni.dao != nil {
+		return transaction(ni.dao)
 	} else {
 		return ni.db.WithTransaction(func(tx Transaction) error {
-			notes := NewNoteDAO(tx, ni.logger)
-			collections := NewCollectionDAO(tx, ni.logger)
-			return transaction(notes, collections)
+			dao := dao{
+				notes:       NewNoteDAO(tx, ni.logger),
+				collections: NewCollectionDAO(tx, ni.logger),
+				metadata:    NewMetadataDAO(tx),
+			}
+			return transaction(&dao)
 		})
 	}
 }
