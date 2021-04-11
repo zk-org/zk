@@ -71,6 +71,16 @@ func main() {
 		fatalIfError(err)
 	} else {
 		ctx := kong.Parse(&root, options(container)...)
+
+		// Index the current notebook except if the user is running the `index`
+		// command, otherwise it would hide the stats.
+		if ctx.Command() != "index" {
+			if notebook, err := container.CurrentNotebook(); err == nil {
+				_, err = notebook.Index(false)
+				ctx.FatalIfErrorf(err)
+			}
+		}
+
 		err := ctx.Run(container)
 		ctx.FatalIfErrorf(err)
 	}

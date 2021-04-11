@@ -62,7 +62,7 @@ type NotebookFactory func(path string, config Config) (*Notebook, error)
 
 // Index indexes the content of the notebook to be searchable.
 // If force is true, existing notes will be reindexed.
-func (n *Notebook) Index(force bool) (NoteIndexingStats, error) {
+func (n *Notebook) Index(force bool) (stats NoteIndexingStats, err error) {
 	// FIXME: Move out of Core
 	bar := progressbar.NewOptions(-1,
 		progressbar.OptionSetWriter(os.Stderr),
@@ -70,20 +70,24 @@ func (n *Notebook) Index(force bool) (NoteIndexingStats, error) {
 		progressbar.OptionSpinnerType(14),
 	)
 
-	task := indexTask{
-		notebook: n,
-		force:    force,
-		index:    n.index,
-		parser:   n.parser,
-		logger:   n.logger,
-	}
-	stats, err := task.execute(func(change paths.DiffChange) {
-		bar.Add(1)
-		bar.Describe(change.String())
+	err = n.index.Commit(func(index NoteIndex) error {
+		task := indexTask{
+			notebook: n,
+			force:    force,
+			index:    index,
+			parser:   n.parser,
+			logger:   n.logger,
+		}
+		stats, err = task.execute(func(change paths.DiffChange) {
+			bar.Add(1)
+			bar.Describe(change.String())
+		})
+		return err
 	})
 
 	bar.Clear()
-	return stats, errors.Wrap(err, "indexing")
+	err = errors.Wrap(err, "indexing")
+	return
 }
 
 // NewNoteOpts holds the options used to create a new note in a Notebook.

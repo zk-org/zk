@@ -55,6 +55,19 @@ type NoteIndexingStats struct {
 	Duration time.Duration
 }
 
+// String implements Stringer
+func (s NoteIndexingStats) String() string {
+	return fmt.Sprintf(`Indexed %d %v in %v
+  + %d added
+  ~ %d modified
+  - %d removed`,
+		s.SourceCount,
+		strutil.Pluralize("note", s.SourceCount),
+		s.Duration.Round(500*time.Millisecond),
+		s.AddedCount, s.ModifiedCount, s.RemovedCount,
+	)
+}
+
 // indexTask indexes the notes in the given directory with the NoteIndex.
 type indexTask struct {
 	notebook *Notebook

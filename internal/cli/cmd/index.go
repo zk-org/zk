@@ -1,6 +1,10 @@
 package cmd
 
-import "github.com/mickael-menu/zk/internal/cli"
+import (
+	"fmt"
+
+	"github.com/mickael-menu/zk/internal/cli"
+)
 
 // Index indexes the content of all the notes in the notebook.
 type Index struct {
@@ -13,16 +17,19 @@ func (cmd *Index) Help() string {
 }
 
 func (cmd *Index) Run(container *cli.Container) error {
-	// FIXME
-	// _, stats, err := container.Database(cmd.Force)
-	// if err != nil {
-	// 	return err
-	// }
+	notebook, err := container.CurrentNotebook()
+	if err != nil {
+		return err
+	}
 
-	// 	if err == nil && !cmd.Quiet {
-	// 		fmt.Println(stats)
-	// 	}
-	// return err
+	stats, err := notebook.Index(cmd.Force)
+	if err != nil {
+		return err
+	}
+
+	if !cmd.Quiet {
+		fmt.Println(stats)
+	}
 
 	return nil
 }
