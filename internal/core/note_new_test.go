@@ -1,21 +1,14 @@
 package core
 
 /*
-import (
-	"fmt"
-	"testing"
 
-	"github.com/mickael-menu/zk/core/templ"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/core/zk"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/os"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
-)
+var Now = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
-func TestCreate(t *testing.T) {
-	filenameTemplate := core.NewTemplateSpyString("filename")
-	bodyTemplate := NewRendererSpyString("body")
+func TestNotebookNewNote(t *testing.T) {
+	filenameTemplate := NewTemplateSpyString("filename")
+	bodyTemplate := NewTemplateSpyString("body")
+
+	// notebook := NewNotebook(path string, config Config, ports NotebookPorts)
 
 	res, err := create(
 		CreateOpts{
@@ -77,11 +70,11 @@ func TestCreate(t *testing.T) {
 	}})
 }
 
-func TestCreateTriesUntilValidPath(t *testing.T) {
-	filenameTemplate := NewRendererSpy(func(context interface{}) string {
+func TestNotebookNewNoteTriesUntilValidPath(t *testing.T) {
+	filenameTemplate := NewTemplateSpy(func(context interface{}) string {
 		return context.(renderContext).ID
 	})
-	bodyTemplate := NewRendererSpyString("body")
+	bodyTemplate := NewTemplateSpyString("body")
 
 	res, err := create(
 		CreateOpts{
@@ -153,10 +146,10 @@ func TestCreateErrorWhenNoValidPaths(t *testing.T) {
 			},
 		},
 		createDeps{
-			filenameTemplate: templ.RendererFunc(func(context interface{}) (string, error) {
+			filenameTemplate: TemplateFunc(func(context interface{}) (string, error) {
 				return "filename", nil
 			}),
-			bodyTemplate: templ.NullRenderer,
+			bodyTemplate: NullTemplate,
 			genId:        func() string { return "abc" },
 			validatePath: func(path string) (bool, error) { return false, nil },
 			now:          Now,

@@ -2,10 +2,7 @@ package core
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mickael-menu/zk/internal/util/opt"
@@ -371,37 +368,6 @@ func TestParseIDCase(t *testing.T) {
 	test("upper", CaseUpper)
 	test("mixed", CaseMixed)
 	test("unknown", CaseLower)
-}
-
-func TestLocateTemplate(t *testing.T) {
-	root := fmt.Sprintf("/tmp/zk-test-%d", time.Now().Unix())
-	os.Remove(root)
-	os.MkdirAll(filepath.Join(root, "templates"), os.ModePerm)
-
-	test := func(template string, expected string, exists bool) {
-		conf, err := ParseConfig([]byte(""), filepath.Join(root, "config.toml"), NewDefaultConfig())
-		assert.Nil(t, err)
-
-		path, ok := conf.LocateTemplate(template)
-		if exists {
-			assert.True(t, ok)
-			if path != expected {
-				t.Errorf("Didn't resolve template `%v` as expected: %v", template, expected)
-			}
-		} else {
-			assert.False(t, ok)
-		}
-	}
-
-	tpl1 := filepath.Join(root, "templates/template.tpl")
-	test("template.tpl", tpl1, false)
-	os.Create(tpl1)
-	test("template.tpl", tpl1, true)
-
-	tpl2 := filepath.Join(root, "abs.tpl")
-	test(tpl2, tpl2, false)
-	os.Create(tpl2)
-	test(tpl2, tpl2, true)
 }
 
 func TestGroupConfigClone(t *testing.T) {

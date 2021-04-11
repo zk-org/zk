@@ -154,7 +154,7 @@ func newNoteFormatter(t *testing.T, format opt.String) (*NoteFormatter, *Templat
 
 func newNoteFormatterWithPaths(t *testing.T, basePath, currentPath string, format opt.String) (*NoteFormatter, *TemplateLoaderSpy) {
 	templates := NewTemplateLoaderSpy()
-	styler := &StylerMock{}
+	styler := &stylerMock{}
 	formatter, err := NewNoteFormatter(basePath, currentPath, format, templates, styler)
 	assert.Nil(t, err)
 	return formatter, templates

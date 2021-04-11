@@ -7,7 +7,7 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 )
 
-// Style implements style.Styler using ANSI escape codes to be used with a terminal.
+// Style implements core.Styler using ANSI escape codes to be used with a terminal.
 func (t *Terminal) Style(text string, rules ...core.Style) (string, error) {
 	if text == "" {
 		return text, nil

@@ -2,12 +2,15 @@ package handlebars
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/fixtures"
+	"github.com/mickael-menu/zk/internal/util/paths"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
@@ -41,8 +44,6 @@ func testString(t *testing.T, template string, context interface{}, expected str
 	assert.Equal(t, actual, expected)
 }
 
-// FIXME test lookup paths
-
 func testFile(t *testing.T, name string, context interface{}, expected string) {
 	sut := NewLoader([]string{}, &styler{}, &util.NullLogger)
 
@@ -52,6 +53,45 @@ func testFile(t *testing.T, name string, context interface{}, expected string) {
 	actual, err := templ.Render(context)
 	assert.Nil(t, err)
 	assert.Equal(t, actual, expected)
+}
+
+func TestLookupPaths(t *testing.T) {
+	root := fmt.Sprintf("/tmp/zk-test-%d", time.Now().Unix())
+	os.Remove(root)
+	path1 := filepath.Join(root, "1")
+	os.MkdirAll(path1, os.ModePerm)
+	path2 := filepath.Join(root, "1")
+	os.MkdirAll(filepath.Join(path2, "subdir"), os.ModePerm)
+
+	sut := NewLoader([]string{path1, path2}, &styler{}, &util.NullLogger)
+
+	test := func(path string, expected string) {
+		tpl, err := sut.LoadTemplateAt(path)
+		assert.Nil(t, err)
+		res, err := tpl.Render(nil)
+		assert.Nil(t, err)
+		assert.Equal(t, res, expected)
+	}
+
+	test1 := filepath.Join(path1, "test1.tpl")
+
+	tpl1, err := sut.LoadTemplateAt(test1)
+	assert.Err(t, err, "cannot find template at "+test1)
+	assert.Nil(t, tpl1)
+
+	paths.WriteString(test1, "Test 1")
+	test(test1, "Test 1")       // absolute
+	test("test1.tpl", "Test 1") // relative
+
+	test2 := filepath.Join(path2, "test2.tpl")
+	paths.WriteString(test2, "Test 2")
+	test(test2, "Test 2")       // absolute
+	test("test2.tpl", "Test 2") // relative
+
+	test3 := filepath.Join(path2, "subdir/test3.tpl")
+	paths.WriteString(test3, "Test 3")
+	test(test3, "Test 3")              // absolute
+	test("subdir/test3.tpl", "Test 3") // relative
 }
 
 func TestRenderString(t *testing.T) {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/paths"
 	toml "github.com/pelletier/go-toml"
 )
 
@@ -91,32 +90,6 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 	}
 
 	return "", nil
-}
-
-// FIXME
-// LocateTemplate returns the absolute path for the given template path, by
-// looking for it in the templates directories registered in this Config.
-func (c Config) LocateTemplate(path string) (string, bool) {
-	if path == "" {
-		return "", false
-	}
-
-	exists := func(path string) bool {
-		exists, err := paths.Exists(path)
-		return exists && err == nil
-	}
-
-	if filepath.IsAbs(path) {
-		return path, exists(path)
-	}
-
-	for _, dir := range c.TemplatesDirs {
-		if candidate := filepath.Join(dir, path); exists(candidate) {
-			return candidate, true
-		}
-	}
-
-	return path, false
 }
 
 // FormatConfig holds the configuration for document formats, such as Markdown.
