@@ -25,6 +25,9 @@ type NoteIndex interface {
 	// given filtering and sorting criteria.
 	FindMinimal(opts NoteFindOpts) ([]MinimalNote, error)
 
+	// FindCollections retrieves all the collections of the given kind.
+	FindCollections(kind CollectionKind) ([]Collection, error)
+
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)
 	// Add indexes a new note from its metadata.

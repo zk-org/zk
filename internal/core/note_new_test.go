@@ -380,6 +380,7 @@ func TestNotebookNewNoteErrorWhenNoFreePath(t *testing.T) {
 
 var now = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
+// newNoteTest builds and runs the SUT for new note test cases.
 type newNoteTest struct {
 	rootDir                string
 	files                  map[string]string

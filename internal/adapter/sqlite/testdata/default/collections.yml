@@ -13,3 +13,6 @@
 - id: 5
   kind: "tag"
   name: "history"
+- id: 6
+  kind: "tag"
+  name: "empty"

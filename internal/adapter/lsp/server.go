@@ -316,15 +316,10 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {
-	var tags []core.Collection
-	// FIXME:
-	// err = db.WithTransaction(func(tx sqlite.Transaction) error {
-	// tags, err = sqlite.NewCollectionDAO(tx, s.container.Logger).FindAll(core.CollectionKindTag)
-	// return err
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	tags, err := notebook.FindCollections(core.CollectionKindTag)
+	if err != nil {
+		return nil, err
+	}
 
 	var items []protocol.CompletionItem
 	for _, tag := range tags {

@@ -46,7 +46,7 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 		findAllCollectionsStmt: tx.PrepareLazy(`
 			SELECT c.name, COUNT(nc.id) as count
 			  FROM collections c
-			  LEFT JOIN notes_collections nc ON nc.collection_id = c.id
+			 INNER JOIN notes_collections nc ON nc.collection_id = c.id
 			 WHERE kind = ?
 			 GROUP BY c.id
 			 ORDER BY c.name

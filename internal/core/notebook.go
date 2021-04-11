@@ -169,6 +169,11 @@ func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
 	return n.index.FindMinimal(opts)
 }
 
+// FindCollections retrieves all the collections of the given kind.
+func (n *Notebook) FindCollections(kind CollectionKind) ([]Collection, error) {
+	return n.index.FindCollections(kind)
+}
+
 // RelPath returns the path relative to the notebook root to the given path.
 func (n *Notebook) RelPath(originalPath string) (string, error) {
 	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)

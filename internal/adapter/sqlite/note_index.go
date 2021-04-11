@@ -37,6 +37,15 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 	panic("not implemented")
 }
 
+// FindCollections implements core.NoteIndex.
+func (ni *NoteIndex) FindCollections(kind core.CollectionKind) (collections []core.Collection, err error) {
+	err = ni.commit(func(_ *NoteDAO, dao *CollectionDAO) error {
+		collections, err = dao.FindAll(kind)
+		return err
+	})
+	return
+}
+
 // IndexedPaths implements core.NoteIndex.
 func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) {
 	err = ni.commit(func(notes *NoteDAO, collections *CollectionDAO) error {
