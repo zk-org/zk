@@ -17,8 +17,6 @@ func testDB(t *testing.T) *DB {
 func testDBWithFixtures(t *testing.T, fixturesDir opt.String) *DB {
 	db, err := OpenInMemory()
 	assert.Nil(t, err)
-	_, err = db.Migrate()
-	assert.Nil(t, err)
 
 	if !fixturesDir.IsNull() {
 		fixtures, err := testfixtures.New(

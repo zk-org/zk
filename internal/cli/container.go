@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -66,20 +65,6 @@ func NewContainer(version string) (*Container, error) {
 				if err != nil {
 					return nil, err
 				}
-
-				needsReindexing, err := db.Migrate()
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to migrate the database")
-				}
-
-				// FIXME: index (opt. with force)
-				if needsReindexing {
-					fmt.Println("reindexing needed")
-				}
-				// stats, err = c.index(db, forceIndexing || needsReindexing)
-				// if err != nil {
-				// 	return nil, stats, err
-				// }
 
 				notebook := core.NewNotebook(path, config, core.NotebookPorts{
 					NoteIndex: sqlite.NewNoteIndex(db, logger),

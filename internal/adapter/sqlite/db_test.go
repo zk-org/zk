@@ -23,12 +23,6 @@ func TestMigrateFrom0(t *testing.T) {
 	db, err := OpenInMemory()
 	assert.Nil(t, err)
 
-	_, err = db.Migrate()
-	assert.Nil(t, err)
-	// Should be able to migrate twice in a row
-	_, err = db.Migrate()
-	assert.Nil(t, err)
-
 	err = db.WithTransaction(func(tx Transaction) error {
 		var version int
 		err := tx.QueryRow("PRAGMA user_version").Scan(&version)

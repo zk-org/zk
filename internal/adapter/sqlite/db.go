@@ -38,19 +38,26 @@ func OpenInMemory() (*DB, error) {
 func open(uri string) (*DB, error) {
 	wrap := errors.Wrapper("failed to open the database")
 
-	db, err := sql.Open("sqlite3_custom", uri)
+	nativeDB, err := sql.Open("sqlite3_custom", uri)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
 	// Make sure that CASCADE statements are properly applied by enabling
 	// foreign keys.
-	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	_, err = nativeDB.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
 		return nil, wrap(err)
 	}
 
-	return &DB{db}, nil
+	db := &DB{nativeDB}
+
+	err = db.migrate()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to migrate the database")
+	}
+
+	return db, nil
 }
 
 // Close terminates the connections to the SQLite database.
@@ -59,14 +66,16 @@ func (db *DB) Close() error {
 	return errors.Wrap(err, "failed to close the database")
 }
 
-// Migrate upgrades the SQL schema of the database.
-func (db *DB) Migrate() (needsReindexing bool, err error) {
-	err = db.WithTransaction(func(tx Transaction) error {
+// migrate upgrades the SQL schema of the database.
+func (db *DB) migrate() error {
+	err := db.WithTransaction(func(tx Transaction) error {
 		var version int
 		err := tx.QueryRow("PRAGMA user_version").Scan(&version)
 		if err != nil {
 			return err
 		}
+
+		needsReindexing := false
 
 		if version <= 0 {
 			err = tx.ExecStmts([]string{
@@ -123,7 +132,6 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 				END`,
 				`PRAGMA user_version = 1`,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -160,7 +168,6 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 
 				`PRAGMA user_version = 2`,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -177,7 +184,6 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 
 				`PRAGMA user_version = 3`,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -185,9 +191,31 @@ func (db *DB) Migrate() (needsReindexing bool, err error) {
 			needsReindexing = true
 		}
 
+		if version <= 3 {
+			err = tx.ExecStmts([]string{
+				// Metadata
+				`CREATE TABLE IF NOT EXISTS metadata (
+					key TEXT PRIMARY KEY NOT NULL,
+					value TEXT NO NULL
+				)`,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		needsReindexing = true
+		if needsReindexing {
+			metadata := NewMetadataDAO(tx)
+			// During the next indexing, all notes will be reindexed.
+			err = metadata.Set("reindexing_required", "true")
+			if err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 
-	err = errors.Wrap(err, "database migration failed")
-	return
+	return errors.Wrap(err, "database migration failed")
 }
