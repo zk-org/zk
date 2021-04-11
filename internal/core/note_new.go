@@ -36,7 +36,7 @@ func (t *newNoteTask) execute() (string, error) {
 		}
 	}
 
-	context := renderContext{
+	context := newNoteTemplateContext{
 		Title:   t.title,
 		Content: t.content,
 		Dir:     t.dir.Name,
@@ -63,7 +63,7 @@ func (t *newNoteTask) execute() (string, error) {
 	return path, nil
 }
 
-func (c *newNoteTask) generatePath(context renderContext, filenameTemplate Template) (string, renderContext, error) {
+func (c *newNoteTask) generatePath(context newNoteTemplateContext, filenameTemplate Template) (string, newNoteTemplateContext, error) {
 	var err error
 	var filename string
 	var path string
@@ -93,8 +93,8 @@ func (c *newNoteTask) generatePath(context renderContext, filenameTemplate Templ
 	}
 }
 
-// renderContext holds the placeholder values which will be expanded in the templates.
-type renderContext struct {
+// newNoteTemplateContext holds the placeholder values which will be expanded in the templates.
+type newNoteTemplateContext struct {
 	ID           string `handlebars:"id"`
 	Title        string
 	Content      string

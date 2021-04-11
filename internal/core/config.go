@@ -262,6 +262,7 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 		}
 	}
 
+	// FIXME: Still needed?
 	config.TemplatesDirs = append([]string{filepath.Join(filepath.Dir(path), "templates")}, config.TemplatesDirs...)
 
 	return config, nil

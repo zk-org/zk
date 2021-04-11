@@ -34,12 +34,6 @@ func NewNotebook(
 	config Config,
 	ports NotebookPorts,
 ) *Notebook {
-	if path == "" || ports.NoteIndex == nil || ports.NoteParser == nil ||
-		ports.TemplateLoaderFactory == nil || ports.IDGeneratorFactory == nil ||
-		ports.FS == nil || ports.Logger == nil || ports.OSEnv == nil {
-		panic("notebook port missing")
-	}
-
 	return &Notebook{
 		Path:                  path,
 		Config:                config,
@@ -218,6 +212,11 @@ func (n *Notebook) RootDir() Dir {
 
 // DirAt returns a Dir representation of the notebook directory at the given path.
 func (n *Notebook) DirAt(path string) (Dir, error) {
+	path, err := n.fs.Abs(path)
+	if err != nil {
+		return Dir{}, err
+	}
+
 	name, err := n.RelPath(path)
 	if err != nil {
 		return Dir{}, err

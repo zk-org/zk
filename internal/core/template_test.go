@@ -1,29 +1,50 @@
 package core
 
-// templateLoaderSpy implements TemplateLoader and saves the render
-// contexts provided to the templates it creates.
-//
-// The generated Template returns the template used to create them without
-// modification.
-type templateLoaderSpy struct {
-	Contexts []interface{}
+// templateLoaderMock implements an in-memory TemplateLoader for testing.
+type templateLoaderMock struct {
+	templates     map[string]*templateSpy
+	fileTemplates map[string]*templateSpy
 }
 
-func newTemplateLoaderSpy() *templateLoaderSpy {
-	return &templateLoaderSpy{
-		Contexts: make([]interface{}, 0),
+func newTemplateLoaderMock() *templateLoaderMock {
+	return &templateLoaderMock{
+		templates:     map[string]*templateSpy{},
+		fileTemplates: map[string]*templateSpy{},
 	}
 }
 
-func (l *templateLoaderSpy) LoadTemplate(template string) (Template, error) {
-	return newTemplateSpy(func(context interface{}) string {
-		l.Contexts = append(l.Contexts, context)
-		return template
-	}), nil
+func (m *templateLoaderMock) Spy(template string, result func(context interface{}) string) *templateSpy {
+	spy := newTemplateSpy(result)
+	m.templates[template] = spy
+	return spy
 }
 
-func (l *templateLoaderSpy) LoadTemplateAt(path string) (Template, error) {
-	panic("not implemented")
+func (m *templateLoaderMock) SpyString(content string) *templateSpy {
+	spy := newTemplateSpyString(content)
+	m.templates[content] = spy
+	return spy
+}
+
+func (m *templateLoaderMock) SpyFile(path string, content string) *templateSpy {
+	spy := newTemplateSpyString(content)
+	m.fileTemplates[path] = spy
+	return spy
+}
+
+func (l *templateLoaderMock) LoadTemplate(template string) (Template, error) {
+	tpl, ok := l.templates[template]
+	if !ok {
+		panic("no template spy for content: " + template)
+	}
+	return tpl, nil
+}
+
+func (l *templateLoaderMock) LoadTemplateAt(path string) (Template, error) {
+	tpl, ok := l.fileTemplates[path]
+	if !ok {
+		panic("no template spy for path: " + path)
+	}
+	return tpl, nil
 }
 
 // templateSpy implements Template and saves the provided render contexts.
