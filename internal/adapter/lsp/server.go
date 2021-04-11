@@ -125,7 +125,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		server.documents[params.TextDocument.URI] = &document{
-			URI:     params.TextDocument.URI,
+			Path:    strings.TrimPrefix(params.TextDocument.URI, "file://"),
 			Content: params.TextDocument.Text,
 			Log:     server.server.Log,
 		}
@@ -200,7 +200,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.targetForHref(link.Href, notebook)
+		target, err := server.targetForHref(link.Href, doc, notebook)
 		if err != nil || target == "" || strutil.IsURL(target) {
 			return nil, err
 		}
@@ -237,7 +237,7 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.targetForHref(link.Href, notebook)
+			target, err := server.targetForHref(link.Href, doc, notebook)
 			if target == "" || err != nil {
 				continue
 			}
@@ -267,12 +267,14 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.targetForHref(link.Href, notebook)
+		target, err := server.targetForHref(link.Href, doc, notebook)
 		if link == nil || target == "" || err != nil {
 			return nil, err
 		}
 
-		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		// FIXME: Waiting for https://github.com/tliron/glsp/pull/3 to be
+		// merged before using LocationLink.
+		if false && isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target,
@@ -292,12 +294,17 @@ func (s *Server) notebookOf(path protocol.DocumentUri) (*core.Notebook, error) {
 }
 
 // targetForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) targetForHref(href string, notebook *core.Notebook) (string, error) {
+func (s *Server) targetForHref(href string, doc *document, notebook *core.Notebook) (string, error) {
 	if strutil.IsURL(href) {
 		return href, nil
 	} else {
 		// FIXME:
 		return "", nil
+		// path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
+		// path, err := filepath.Rel(basePath, path)
+		// if err != nil {
+		// 	return "", errors.Wrapf(err, "failed to resolve href: %s", href)
+		// }
 		// note, err := finder.FindByHref(href)
 		// if err != nil {
 		// 	s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
@@ -375,8 +382,7 @@ func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.Context
 	var text string
 
 	path := filepath.Join(notebook.Path, note.Path)
-	documentPath := strings.TrimPrefix(document.URI, "file://")
-	path, err := filepath.Rel(filepath.Dir(documentPath), path)
+	path, err := filepath.Rel(filepath.Dir(document.Path), path)
 	if err != nil {
 		path = note.Path
 	}
