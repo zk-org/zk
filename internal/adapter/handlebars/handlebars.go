@@ -13,15 +13,13 @@ import (
 	"github.com/mickael-menu/zk/internal/util/paths"
 )
 
-func Init(lang string, supportsUTF8 bool, logger util.Logger) {
-	// FIXME: RegisterHelper per template for parameterized helpers
+func Init(supportsUTF8 bool, logger util.Logger) {
 	helpers.RegisterConcat()
 	helpers.RegisterDate(logger)
 	helpers.RegisterJoin()
 	helpers.RegisterList(supportsUTF8)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
-	helpers.RegisterSlug(lang, logger)
 }
 
 // Template renders a parsed handlebars template.
@@ -49,20 +47,29 @@ type Loader struct {
 	strings     map[string]*Template
 	files       map[string]*Template
 	lookupPaths []string
+	lang        string
 	styler      core.Styler
 	logger      util.Logger
 }
 
+type LoaderOpts struct {
+	// LookupPaths is used to resolve relative template paths.
+	LookupPaths []string
+	Lang        string
+	Styler      core.Styler
+	Logger      util.Logger
+}
+
 // NewLoader creates a new instance of Loader.
 //
-// lookupPaths is used to resolve relative template paths.
-func NewLoader(lookupPaths []string, styler core.Styler, logger util.Logger) *Loader {
+func NewLoader(opts LoaderOpts) *Loader {
 	return &Loader{
 		strings:     make(map[string]*Template),
 		files:       make(map[string]*Template),
-		lookupPaths: lookupPaths,
-		styler:      styler,
-		logger:      logger,
+		lookupPaths: opts.LookupPaths,
+		lang:        opts.Lang,
+		styler:      opts.Styler,
+		logger:      opts.Logger,
 	}
 }
 
@@ -139,6 +146,7 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 func (l *Loader) newTemplate(vendorTempl *raymond.Template) *Template {
 	vendorTempl.RegisterHelpers(map[string]interface{}{
 		"style": helpers.NewStyleHelper(l.styler, l.logger),
+		"slug":  helpers.NewSlugHelper(l.lang, l.logger),
 	})
 
 	return &Template{vendorTempl, l.styler}

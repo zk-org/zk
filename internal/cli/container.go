@@ -40,6 +40,8 @@ func NewContainer(version string) (*Container, error) {
 	fs, err := fs.NewFileStorage("")
 	config := core.NewDefaultConfig()
 
+	handlebars.Init(term.SupportsUTF8(), logger)
+
 	// Load global user config
 	configPath, err := locateGlobalConfig()
 	if err != nil {
@@ -74,13 +76,15 @@ func NewContainer(version string) (*Container, error) {
 						ColontagEnabled:     config.Format.Markdown.ColonTags,
 					}),
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
-						// FIXME: multiple notebooks
-						handlebars.Init(config.Note.Lang, term.SupportsUTF8(), logger)
-						lookupPaths := []string{
-							filepath.Join(globalConfigDir(), "templates"),
-							filepath.Join(path, ".zk/templates"),
-						}
-						return handlebars.NewLoader(lookupPaths, styler, logger), nil
+						return handlebars.NewLoader(handlebars.LoaderOpts{
+							LookupPaths: []string{
+								filepath.Join(globalConfigDir(), "templates"),
+								filepath.Join(path, ".zk/templates"),
+							},
+							Lang:   config.Note.Lang,
+							Styler: styler,
+							Logger: logger,
+						}), nil
 					},
 					IDGeneratorFactory: func(opts core.IDOptions) func() string {
 						return rand.NewIDGenerator(opts)

@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	Init("en", true, &util.NullLogger)
+	Init(true, &util.NullLogger)
 }
 
 // styler is a test double for core.Styler
@@ -34,7 +34,7 @@ func (s *styler) MustStyle(text string, rules ...core.Style) string {
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
-	sut := NewLoader([]string{}, &styler{}, &util.NullLogger)
+	sut := testLoader([]string{})
 
 	templ, err := sut.LoadTemplate(template)
 	assert.Nil(t, err)
@@ -45,7 +45,7 @@ func testString(t *testing.T, template string, context interface{}, expected str
 }
 
 func testFile(t *testing.T, name string, context interface{}, expected string) {
-	sut := NewLoader([]string{}, &styler{}, &util.NullLogger)
+	sut := testLoader([]string{})
 
 	templ, err := sut.LoadTemplateAt(fixtures.Path(name))
 	assert.Nil(t, err)
@@ -63,7 +63,7 @@ func TestLookupPaths(t *testing.T) {
 	path2 := filepath.Join(root, "1")
 	os.MkdirAll(filepath.Join(path2, "subdir"), os.ModePerm)
 
-	sut := NewLoader([]string{path1, path2}, &styler{}, &util.NullLogger)
+	sut := testLoader([]string{path1, path2})
 
 	test := func(path string, expected string) {
 		tpl, err := sut.LoadTemplateAt(path)
@@ -224,4 +224,13 @@ func TestStyleHelper(t *testing.T) {
 
 	// block
 	testString(t, "{{#style 'single'}}A multiline\ntext{{/style}}", nil, "single(A multiline\ntext)")
+}
+
+func testLoader(lookupPaths []string) *Loader {
+	return NewLoader(LoaderOpts{
+		LookupPaths: lookupPaths,
+		Lang:        "en",
+		Styler:      &styler{},
+		Logger:      &util.NullLogger,
+	})
 }

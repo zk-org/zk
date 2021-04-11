@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/mattn/go-isatty"
 )
 
@@ -32,4 +33,19 @@ func (t *Terminal) SupportsUTF8() bool {
 	lang := strings.ToUpper(os.Getenv("LANG"))
 	lc := strings.ToUpper(os.Getenv("LC_ALL"))
 	return strings.Contains(lang, "UTF") || strings.Contains(lc, "UTF")
+}
+
+// Confirm is a shortcut to prompt a yes/no question to the user.
+func (t *Terminal) Confirm(msg string, defaultAnswer bool) (confirmed, skipped bool) {
+	if !t.IsInteractive() {
+		return defaultAnswer, true
+	}
+
+	confirmed = false
+	prompt := &survey.Confirm{
+		Message: msg,
+		Default: defaultAnswer,
+	}
+	survey.AskOne(prompt, &confirmed)
+	return confirmed, false
 }
