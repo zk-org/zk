@@ -10,6 +10,7 @@ import (
 	"github.com/mickael-menu/zk/internal/adapter/fs"
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
+	"github.com/mickael-menu/zk/internal/adapter/markdown"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/adapter/term"
 	"github.com/mickael-menu/zk/internal/core"
@@ -72,15 +73,21 @@ func NewContainer(version string) (*Container, error) {
 				}
 
 				// FIXME: index (opt. with force)
-				fmt.Println(needsReindexing)
+				if needsReindexing {
+					fmt.Println("reindexing needed")
+				}
 				// stats, err = c.index(db, forceIndexing || needsReindexing)
 				// if err != nil {
 				// 	return nil, stats, err
 				// }
 
-				return core.NewNotebook(path, config, core.NotebookPorts{
+				notebook := core.NewNotebook(path, config, core.NotebookPorts{
 					NoteIndex: sqlite.NewNoteIndex(db, logger),
-					FS:        fs,
+					NoteParser: markdown.NewParser(markdown.ParserOpts{
+						HashtagEnabled:      config.Format.Markdown.Hashtags,
+						MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
+						ColontagEnabled:     config.Format.Markdown.ColonTags,
+					}),
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
 						// FIXME: multiple notebooks
 						handlebars.Init(config.Note.Lang, term.SupportsUTF8(), logger)
@@ -93,10 +100,14 @@ func NewContainer(version string) (*Container, error) {
 					IDGeneratorFactory: func(opts core.IDOptions) func() string {
 						return rand.NewIDGenerator(opts)
 					},
+					FS:     fs,
+					Logger: logger,
 					OSEnv: func() map[string]string {
 						return osutil.Env()
 					},
-				}), nil
+				})
+
+				return notebook, nil
 			},
 		}),
 	}, nil

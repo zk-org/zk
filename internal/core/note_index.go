@@ -52,13 +52,13 @@ type NoteIndexingStats struct {
 	Duration time.Duration
 }
 
+// indexTask indexes the notes in the given directory with the NoteIndex.
 type indexTask struct {
-	notebook      *Notebook
-	force         bool
-	noteExtension string
-	index         NoteIndex
-	parser        NoteParser
-	logger        util.Logger
+	notebook *Notebook
+	force    bool
+	index    NoteIndex
+	parser   NoteParser
+	logger   util.Logger
 }
 
 func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexingStats, error) {
@@ -68,12 +68,13 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	startTime := time.Now()
 
 	// FIXME: Use Extension defined in each DirConfig.
-	source := paths.Walk(t.notebook.Path, t.noteExtension, t.logger)
+	source := paths.Walk(t.notebook.Path, t.notebook.Config.Note.Extension, t.logger)
 	target, err := t.index.IndexedPaths()
 	if err != nil {
 		return stats, wrap(err)
 	}
 
+	// FIXME: Use the FS?
 	count, err := paths.Diff(source, target, t.force, func(change paths.DiffChange) error {
 		callback(change)
 

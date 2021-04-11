@@ -2,12 +2,16 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/schollz/progressbar/v3"
 )
 
 // Notebook handles queries and commands performed on an opened notebook.
@@ -17,9 +21,10 @@ type Notebook struct {
 
 	index                 NoteIndex
 	parser                NoteParser
-	fs                    FileStorage
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
+	fs                    FileStorage
+	logger                util.Logger
 	osEnv                 func() map[string]string
 }
 
@@ -29,14 +34,21 @@ func NewNotebook(
 	config Config,
 	ports NotebookPorts,
 ) *Notebook {
+	if path == "" || ports.NoteIndex == nil || ports.NoteParser == nil ||
+		ports.TemplateLoaderFactory == nil || ports.IDGeneratorFactory == nil ||
+		ports.FS == nil || ports.Logger == nil || ports.OSEnv == nil {
+		panic("notebook port missing")
+	}
+
 	return &Notebook{
 		Path:                  path,
 		Config:                config,
 		index:                 ports.NoteIndex,
 		parser:                ports.NoteParser,
-		fs:                    ports.FS,
 		templateLoaderFactory: ports.TemplateLoaderFactory,
 		idGeneratorFactory:    ports.IDGeneratorFactory,
+		fs:                    ports.FS,
+		logger:                ports.Logger,
 		osEnv:                 ports.OSEnv,
 	}
 }
@@ -44,9 +56,10 @@ func NewNotebook(
 type NotebookPorts struct {
 	NoteIndex             NoteIndex
 	NoteParser            NoteParser
-	FS                    FileStorage
 	TemplateLoaderFactory TemplateLoaderFactory
 	IDGeneratorFactory    IDGeneratorFactory
+	FS                    FileStorage
+	Logger                util.Logger
 	OSEnv                 func() map[string]string
 }
 
@@ -56,7 +69,27 @@ type NotebookFactory func(path string, config Config) (*Notebook, error)
 // Index indexes the content of the notebook to be searchable.
 // If force is true, existing notes will be reindexed.
 func (n *Notebook) Index(force bool) (NoteIndexingStats, error) {
-	return NoteIndexingStats{}, nil
+	// FIXME: Move out of Core
+	bar := progressbar.NewOptions(-1,
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionThrottle(100*time.Millisecond),
+		progressbar.OptionSpinnerType(14),
+	)
+
+	task := indexTask{
+		notebook: n,
+		force:    force,
+		index:    n.index,
+		parser:   n.parser,
+		logger:   n.logger,
+	}
+	stats, err := task.execute(func(change paths.DiffChange) {
+		bar.Add(1)
+		bar.Describe(change.String())
+	})
+
+	bar.Clear()
+	return stats, errors.Wrap(err, "indexing")
 }
 
 // NewNoteOpts holds the options used to create a new note in a Notebook.
