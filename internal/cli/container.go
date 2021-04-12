@@ -24,7 +24,7 @@ import (
 type Container struct {
 	Version            string
 	Config             core.Config
-	Logger             util.Logger
+	Logger             *util.ProxyLogger
 	Terminal           *term.Terminal
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
@@ -36,7 +36,7 @@ func NewContainer(version string) (*Container, error) {
 
 	term := term.New()
 	styler := term
-	logger := util.NewStdLogger("zk: ", 0)
+	logger := util.NewProxyLogger(util.NewStdLogger("zk: ", 0))
 	fs, err := fs.NewFileStorage("")
 	config := core.NewDefaultConfig()
 

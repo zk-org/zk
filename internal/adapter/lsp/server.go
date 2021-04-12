@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/mickael-menu/zk/internal/core"
+	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -30,6 +31,7 @@ type ServerOpts struct {
 	Name      string
 	Version   string
 	LogFile   opt.String
+	Logger    *util.ProxyLogger
 	Notebooks *core.NotebookStore
 }
 
@@ -46,6 +48,12 @@ func NewServer(opts ServerOpts) *Server {
 		server:    glspserv.NewServer(&handler, opts.Name, debug),
 		notebooks: opts.Notebooks,
 		documents: map[string]*document{},
+	}
+
+	// Redirect zk's logger to GLSP's to avoid breaking the JSON-RPC protocol
+	// with unwanted output.
+	if opts.Logger != nil {
+		opts.Logger.Logger = newGlspLogger(server.server.Log)
 	}
 
 	var clientCapabilities protocol.ClientCapabilities

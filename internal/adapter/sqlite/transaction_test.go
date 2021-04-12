@@ -77,7 +77,7 @@ func exists(t *testing.T, db *DB, sql string, args ...interface{}) bool {
 	return exists == 1
 }
 
-// FIXME: Still needed?
+// FIXME: Migrate to DB-based versions?
 func assertExistOrNotTx(t *testing.T, tx Transaction, shouldExist bool, sql string, args ...interface{}) {
 	if shouldExist {
 		assertExistTx(t, tx, sql, args...)

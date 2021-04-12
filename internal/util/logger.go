@@ -38,3 +38,25 @@ func (l StdLogger) Err(err error) {
 		l.Printf("warning: %v", err)
 	}
 }
+
+// ProxyLogger is a logger delegating to an underlying logger.
+// Can be used to change the active logger during runtime.
+type ProxyLogger struct {
+	Logger Logger
+}
+
+func NewProxyLogger(logger Logger) *ProxyLogger {
+	return &ProxyLogger{logger}
+}
+
+func (l *ProxyLogger) Printf(format string, v ...interface{}) {
+	l.Logger.Printf(format, v...)
+}
+
+func (l *ProxyLogger) Println(v ...interface{}) {
+	l.Logger.Println(v...)
+}
+
+func (l *ProxyLogger) Err(err error) {
+	l.Logger.Err(err)
+}
