@@ -11,6 +11,10 @@ type FileStorage interface {
 	// directory.
 	Rel(path string) (string, error)
 
+	// Canonical returns the canonical version of this path, resolving any
+	// symbolic link.
+	Canonical(path string) string
+
 	// FileExists returns whether a file exists at the given file path.
 	FileExists(path string) (bool, error)
 

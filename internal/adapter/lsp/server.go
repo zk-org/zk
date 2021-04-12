@@ -24,6 +24,8 @@ type Server struct {
 	server    *glspserv.Server
 	notebooks *core.NotebookStore
 	documents map[protocol.DocumentUri]*document
+	fs        core.FileStorage
+	logger    util.Logger
 }
 
 // ServerOpts holds the options to create a new Server.
@@ -33,10 +35,12 @@ type ServerOpts struct {
 	LogFile   opt.String
 	Logger    *util.ProxyLogger
 	Notebooks *core.NotebookStore
+	FS        core.FileStorage
 }
 
 // NewServer creates a new Server instance.
 func NewServer(opts ServerOpts) *Server {
+	fs := opts.FS
 	debug := !opts.LogFile.IsNull()
 	if debug {
 		logging.Configure(10, opts.LogFile.Value)
@@ -48,12 +52,14 @@ func NewServer(opts ServerOpts) *Server {
 		server:    glspserv.NewServer(&handler, opts.Name, debug),
 		notebooks: opts.Notebooks,
 		documents: map[string]*document{},
+		fs:        fs,
 	}
 
 	// Redirect zk's logger to GLSP's to avoid breaking the JSON-RPC protocol
 	// with unwanted output.
 	if opts.Logger != nil {
 		opts.Logger.Logger = newGlspLogger(server.server.Log)
+		server.logger = opts.Logger
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -132,8 +138,10 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
+		path := fs.Canonical(strings.TrimPrefix(params.TextDocument.URI, "file://"))
+
 		server.documents[params.TextDocument.URI] = &document{
-			Path:    strings.TrimPrefix(params.TextDocument.URI, "file://"),
+			Path:    path,
 			Content: params.TextDocument.Text,
 			Log:     server.server.Log,
 		}
@@ -171,7 +179,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, nil
 		}
 
-		notebook, err := server.notebookOf(params.TextDocument.URI)
+		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +211,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		notebook, err := server.notebookOf(params.TextDocument.URI)
+		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -238,7 +246,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		notebook, err := server.notebookOf(params.TextDocument.URI)
+		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -270,7 +278,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		notebook, err := server.notebookOf(params.TextDocument.URI)
+		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -297,8 +305,8 @@ func NewServer(opts ServerOpts) *Server {
 	return server
 }
 
-func (s *Server) notebookOf(path protocol.DocumentUri) (*core.Notebook, error) {
-	return s.notebooks.Open(path)
+func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
+	return s.notebooks.Open(doc.Path)
 }
 
 // targetForHref returns the LSP documentUri for the note at the given HREF.
@@ -311,9 +319,9 @@ func (s *Server) targetForHref(href string, doc *document, notebook *core.Notebo
 		if err != nil {
 			return "", errors.Wrapf(err, "failed to resolve href: %s", href)
 		}
-		note, err := notebook.FindByHref(href)
+		note, err := notebook.FindByHref(path)
 		if err != nil {
-			s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
+			s.logger.Printf("findByHref(%s): %s", href, err.Error())
 			return "", err
 		}
 		if note == nil {
@@ -388,6 +396,7 @@ func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.Context
 	var text string
 
 	path := filepath.Join(notebook.Path, note.Path)
+	path = s.fs.Canonical(path)
 	path, err := filepath.Rel(filepath.Dir(document.Path), path)
 	if err != nil {
 		path = note.Path

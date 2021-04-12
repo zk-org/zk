@@ -40,6 +40,10 @@ func (fs *fileStorageMock) Rel(path string) (string, error) {
 	return filepath.Rel(fs.WorkingDir, path)
 }
 
+func (fs *fileStorageMock) Canonical(path string) string {
+	return path
+}
+
 func (fs *fileStorageMock) FileExists(path string) (bool, error) {
 	_, ok := fs.Files[path]
 	return ok, nil

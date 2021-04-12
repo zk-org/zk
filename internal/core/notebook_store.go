@@ -45,6 +45,7 @@ func (e ErrNotebookNotFound) Error() string {
 func (ns *NotebookStore) Open(path string) (*Notebook, error) {
 	wrap := errors.Wrapper("open failed")
 
+	path = ns.fs.Canonical(path)
 	nb := ns.cachedNotebookAt(path)
 	if nb != nil {
 		return nb, nil

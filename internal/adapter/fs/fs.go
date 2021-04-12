@@ -5,17 +5,20 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mickael-menu/zk/internal/util"
 )
 
 // FileStorage implements the port core.FileStorage.
 type FileStorage struct {
 	// Current working directory.
-	wd string
+	wd     string
+	logger util.Logger
 }
 
 // NewFileStorage creates a new instance of FileStorage using the given working
 // directory as reference point for relative paths.
-func NewFileStorage(workingDir string) (*FileStorage, error) {
+func NewFileStorage(workingDir string, logger util.Logger) (*FileStorage, error) {
 	if workingDir == "" {
 		var err error
 		workingDir, err = os.Getwd()
@@ -24,7 +27,7 @@ func NewFileStorage(workingDir string) (*FileStorage, error) {
 		}
 	}
 
-	return &FileStorage{workingDir}, nil
+	return &FileStorage{workingDir, logger}, nil
 }
 
 func (fs *FileStorage) Abs(path string) (string, error) {
@@ -42,6 +45,19 @@ func (fs *FileStorage) Abs(path string) (string, error) {
 
 func (fs *FileStorage) Rel(path string) (string, error) {
 	return filepath.Rel(fs.wd, path)
+}
+
+func (fs *FileStorage) Canonical(path string) string {
+	path = filepath.Clean(path)
+
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		fs.logger.Err(err)
+	} else {
+		path = resolvedPath
+	}
+
+	return path
 }
 
 func (fs *FileStorage) FileExists(path string) (bool, error) {
@@ -78,18 +94,13 @@ func (fs *FileStorage) IsDescendantOf(dir string, path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	dir, err = filepath.EvalSymlinks(dir)
-	if err != nil {
-		return false, err
-	}
+	dir = fs.Canonical(dir)
+
 	path, err = fs.Abs(path)
 	if err != nil {
 		return false, err
 	}
-	path, err = filepath.EvalSymlinks(path)
-	if err != nil {
-		return false, err
-	}
+	path = fs.Canonical(path)
 
 	path, err = filepath.Rel(dir, path)
 	if err != nil {

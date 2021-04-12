@@ -18,6 +18,7 @@ func (cmd *LSP) Run(container *cli.Container) error {
 		Logger:    container.Logger,
 		LogFile:   opt.NewNotEmptyString(cmd.Log),
 		Notebooks: container.Notebooks,
+		FS:        container.FS,
 	})
 
 	return server.Run()

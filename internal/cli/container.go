@@ -26,6 +26,7 @@ type Container struct {
 	Config             core.Config
 	Logger             *util.ProxyLogger
 	Terminal           *term.Terminal
+	FS                 core.FileStorage
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
 	currentNotebookErr error
@@ -37,7 +38,7 @@ func NewContainer(version string) (*Container, error) {
 	term := term.New()
 	styler := term
 	logger := util.NewProxyLogger(util.NewStdLogger("zk: ", 0))
-	fs, err := fs.NewFileStorage("")
+	fs, err := fs.NewFileStorage("", logger)
 	config := core.NewDefaultConfig()
 
 	handlebars.Init(term.SupportsUTF8(), logger)
@@ -59,6 +60,7 @@ func NewContainer(version string) (*Container, error) {
 		Config:   config,
 		Logger:   logger,
 		Terminal: term,
+		FS:       fs,
 		Notebooks: core.NewNotebookStore(config, core.NotebookStorePorts{
 			FS: fs,
 			NotebookFactory: func(path string, config core.Config) (*core.Notebook, error) {
