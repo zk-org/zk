@@ -39,7 +39,11 @@ func (ni *NoteIndex) Find(opts core.NoteFindOpts) (notes []core.ContextualNote, 
 
 // FindMinimal implements core.NoteIndex.
 func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNote, err error) {
-	panic("not implemented")
+	err = ni.commit(func(dao *dao) error {
+		notes, err = dao.notes.FindMinimal(opts)
+		return err
+	})
+	return
 }
 
 // FindCollections implements core.NoteIndex.

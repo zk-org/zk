@@ -311,46 +311,82 @@ func idForRow(row *sql.Row) (core.NoteID, error) {
 	}
 }
 
-// FindByHref returns the first note matching the given link href.
-func (d *NoteDAO) FindByHref(href string) (*core.ContextualNote, error) {
-	id, err := d.findIdByPathPrefix(href)
-	if err != nil {
-		return nil, err
-	}
-	row, err := d.findByIdStmt.QueryRow(id)
-	if err != nil {
-		return nil, err
-	}
-	return d.scanNote(row)
-}
-
-// Find returns all the notes matching the given criteria.
-func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
-	matches := make([]core.ContextualNote, 0)
+func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error) {
+	notes := make([]core.MinimalNote, 0)
 
 	opts, err := d.expandMentionsIntoMatch(opts)
 	if err != nil {
-		return matches, err
+		return notes, err
 	}
 
-	rows, err := d.findRows(opts)
+	rows, err := d.findRows(opts, true)
 	if err != nil {
-		return matches, err
+		return notes, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		match, err := d.scanNote(rows)
+		note, err := d.scanMinimalNote(rows)
 		if err != nil {
 			d.logger.Err(err)
 			continue
 		}
-		if match != nil {
-			matches = append(matches, *match)
+		if note != nil {
+			notes = append(notes, *note)
 		}
 	}
 
-	return matches, nil
+	return notes, nil
+}
+
+func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
+	var (
+		id          int
+		path, title string
+	)
+
+	err := row.Scan(&id, &path, &title)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
+		return nil, err
+	default:
+		return &core.MinimalNote{
+			ID:    core.NoteID(id),
+			Path:  path,
+			Title: title,
+		}, nil
+	}
+}
+
+// Find returns all the notes matching the given criteria.
+func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
+	notes := make([]core.ContextualNote, 0)
+
+	opts, err := d.expandMentionsIntoMatch(opts)
+	if err != nil {
+		return notes, err
+	}
+
+	rows, err := d.findRows(opts, false)
+	if err != nil {
+		return notes, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		note, err := d.scanNote(rows)
+		if err != nil {
+			d.logger.Err(err)
+			continue
+		}
+		if note != nil {
+			notes = append(notes, *note)
+		}
+	}
+
+	return notes, nil
 }
 
 func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
@@ -380,6 +416,7 @@ func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
 		return &core.ContextualNote{
 			Snippets: parseListFromNullString(snippets),
 			Note: core.Note{
+				ID:         core.NoteID(id),
 				Path:       path,
 				Title:      title,
 				Lead:       lead,
@@ -457,7 +494,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	return opts, nil
 }
 
-func (d *NoteDAO) findRows(opts core.NoteFindOpts) (*sql.Rows, error) {
+func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, error) {
 	snippetCol := `n.lead`
 	joinClauses := []string{}
 	whereExprs := []string{}
@@ -722,9 +759,12 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		query += "\n)\n"
 	}
 
-	query += fmt.Sprintf("SELECT n.id, n.path, n.title, n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.metadata, n.checksum, n.tags, %s AS snippet\n", snippetCol)
+	query += "SELECT n.id, n.path, n.title"
+	if !minimal {
+		query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.metadata, n.checksum, n.tags, %s AS snippet", snippetCol)
+	}
 
-	query += "FROM notes_with_metadata n\n"
+	query += "\nFROM notes_with_metadata n\n"
 
 	for _, clause := range joinClauses {
 		query += clause + "\n"
@@ -744,8 +784,9 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		query += fmt.Sprintf("LIMIT %d\n", opts.Limit)
 	}
 
-	// fmt.Println(query)
-	// fmt.Println(args)
+	// d.logger.Println(query)
+	// d.logger.Println(args)
+
 	return d.tx.Query(query, args...)
 }
 
@@ -768,6 +809,8 @@ func orderTerm(sorter core.NoteSorter) string {
 		return "n.title" + order
 	case core.NoteSortWordCount:
 		return "n.word_count" + order
+	case core.NoteSortPathLength:
+		return "LENGTH(path)" + order
 	default:
 		panic(fmt.Sprintf("%v: unknown core.NoteSortField", sorter.Field))
 	}

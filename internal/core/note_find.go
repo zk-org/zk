@@ -88,6 +88,10 @@ const (
 	NoteSortTitle
 	// Sort by the number of words in the note bodies.
 	NoteSortWordCount
+	// Sort by the length of the note path.
+	// This is not accessible to the user but used for technical reasons, to
+	// find the best match when searching a path prefix.
+	NoteSortPathLength
 )
 
 // NoteSortersFromStrings returns a list of NoteSorter from their string

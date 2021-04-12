@@ -173,6 +173,26 @@ func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
 	return n.index.FindMinimal(opts)
 }
 
+// FindByHref retrieves the first note matching the given link href.
+func (n *Notebook) FindByHref(href string) (*MinimalNote, error) {
+	notes, err := n.FindMinimalNotes(NoteFindOpts{
+		IncludePaths: []string{href},
+		Limit:        1,
+		// To find the best match possible, we sort by path length.
+		// See https://github.com/mickael-menu/zk/issues/23
+		Sorters: []NoteSorter{{Field: NoteSortPathLength, Ascending: true}},
+	})
+
+	switch {
+	case err != nil:
+		return nil, err
+	case len(notes) == 0:
+		return nil, nil
+	default:
+		return &notes[0], nil
+	}
+}
+
 // FindCollections retrieves all the collections of the given kind.
 func (n *Notebook) FindCollections(kind CollectionKind) ([]Collection, error) {
 	return n.index.FindCollections(kind)

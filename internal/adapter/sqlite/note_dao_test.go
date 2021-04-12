@@ -391,64 +391,37 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 	})
 }
 
-func TestNoteDAOFindByHref(t *testing.T) {
-	test := func(href string, expected *core.ContextualNote) {
-		testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-			actual, err := dao.FindByHref(href)
-			assert.Nil(t, err)
-			assert.Equal(t, actual, expected)
-		})
-	}
-
-	test("not-found", nil)
-
-	// Full path
-	test("log/2021-01-03.md", &core.ContextualNote{
-		Note: core.Note{
-			Path:       "log/2021-01-03.md",
-			Title:      "Daily note",
-			Lead:       "A daily note",
-			Body:       "A daily note\n\nWith lot of content",
-			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
-			WordCount:  3,
-			Links:      []core.Link{},
-			Tags:       []string{"fiction", "adventure"},
-			Metadata: map[string]interface{}{
-				"author": "Dom",
-			},
-			Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-			Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-			Checksum: "qwfpgj",
-		},
-		Snippets: []string{"A daily note"},
-	})
-
-	// Prefix
-	test("log/2021-01", &core.ContextualNote{
-		Note: core.Note{
-			Path:       "log/2021-01-03.md",
-			Title:      "Daily note",
-			Lead:       "A daily note",
-			Body:       "A daily note\n\nWith lot of content",
-			RawContent: "# A daily note\nA daily note\n\nWith lot of content",
-			WordCount:  3,
-			Links:      []core.Link{},
-			Tags:       []string{"fiction", "adventure"},
-			Metadata: map[string]interface{}{
-				"author": "Dom",
-			},
-			Created:  time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-			Modified: time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
-			Checksum: "qwfpgj",
-		},
-		Snippets: []string{"A daily note"},
-	})
-
-	// Prefix matches the shortest path (fixes https://github.com/mickael-menu/zk/issues/23)
-	testNoteDAOWithFixtures(t, "issue23", func(tx Transaction, dao *NoteDAO) {
-		actual, err := dao.FindByHref("prefix")
+func TestNoteDAOFindMinimalAll(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		notes, err := dao.FindMinimal(core.NoteFindOpts{})
 		assert.Nil(t, err)
-		assert.Equal(t, actual.Path, "prefix-short.md")
+
+		assert.Equal(t, notes, []core.MinimalNote{
+			{ID: 5, Path: "ref/test/b.md", Title: "A nested note"},
+			{ID: 4, Path: "f39c8.md", Title: "An interesting note"},
+			{ID: 6, Path: "ref/test/a.md", Title: "Another nested note"},
+			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note"},
+			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021"},
+			{ID: 3, Path: "index.md", Title: "Index"},
+			{ID: 2, Path: "log/2021-01-04.md", Title: "January 4, 2021"},
+		})
+	})
+}
+
+func TestNoteDAOFindMinimalWithFilter(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		notes, err := dao.FindMinimal(core.NoteFindOpts{
+			Match:   opt.NewString("daily | index"),
+			Sorters: []core.NoteSorter{{Field: core.NoteSortWordCount, Ascending: true}},
+			Limit:   3,
+		})
+		assert.Nil(t, err)
+
+		assert.Equal(t, notes, []core.MinimalNote{
+			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note"},
+			{ID: 3, Path: "index.md", Title: "Index"},
+			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021"},
+		})
 	})
 }
 
@@ -491,6 +464,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
+					ID:         3,
 					Path:       "index.md",
 					Title:      "Index",
 					Lead:       "Index of the Zettelkasten",
@@ -510,6 +484,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         1,
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",
@@ -529,6 +504,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         7,
 					Path:       "log/2021-02-04.md",
 					Title:      "February 4, 2021",
 					Lead:       "A third daily note",
@@ -546,6 +522,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         2,
 					Path:       "log/2021-01-04.md",
 					Title:      "January 4, 2021",
 					Lead:       "A second daily note",
@@ -651,6 +628,7 @@ func TestNoteDAOFindMentions(t *testing.T) {
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
+					ID:         5,
 					Path:       "ref/test/b.md",
 					Title:      "A nested note",
 					Lead:       "This one is in a sub sub directory",
@@ -668,6 +646,7 @@ func TestNoteDAOFindMentions(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         7,
 					Path:       "log/2021-02-04.md",
 					Title:      "February 4, 2021",
 					Lead:       "A third daily note",
@@ -685,6 +664,7 @@ func TestNoteDAOFindMentions(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         2,
 					Path:       "log/2021-01-04.md",
 					Title:      "January 4, 2021",
 					Lead:       "A second daily note",
@@ -724,6 +704,7 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
+					ID:         1,
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",
@@ -743,6 +724,7 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         3,
 					Path:       "index.md",
 					Title:      "Index",
 					Lead:       "Index of the Zettelkasten",
@@ -828,6 +810,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
+					ID:         6,
 					Path:       "ref/test/a.md",
 					Title:      "Another nested note",
 					Lead:       "It shall appear before b.md",
@@ -850,6 +833,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 			},
 			{
 				Note: core.Note{
+					ID:         1,
 					Path:       "log/2021-01-03.md",
 					Title:      "Daily note",
 					Lead:       "A daily note",

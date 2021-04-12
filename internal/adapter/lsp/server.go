@@ -298,22 +298,20 @@ func (s *Server) targetForHref(href string, doc *document, notebook *core.Notebo
 	if strutil.IsURL(href) {
 		return href, nil
 	} else {
-		// FIXME:
-		return "", nil
-		// path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
-		// path, err := filepath.Rel(basePath, path)
-		// if err != nil {
-		// 	return "", errors.Wrapf(err, "failed to resolve href: %s", href)
-		// }
-		// note, err := finder.FindByHref(href)
-		// if err != nil {
-		// 	s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
-		// 	return "", err
-		// }
-		// if note == nil {
-		// 	return "", nil
-		// }
-		// return "file://" + filepath.Join(basePath, note.Path), nil
+		path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
+		path, err := filepath.Rel(notebook.Path, path)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to resolve href: %s", href)
+		}
+		note, err := notebook.FindByHref(href)
+		if err != nil {
+			s.server.Log.Errorf("findByHref(%s): %s", href, err.Error())
+			return "", err
+		}
+		if note == nil {
+			return "", nil
+		}
+		return "file://" + filepath.Join(notebook.Path, note.Path), nil
 	}
 }
 
