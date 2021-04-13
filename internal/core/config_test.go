@@ -39,10 +39,9 @@ func TestParseDefaultConfig(t *testing.T) {
 			Pager:      opt.NullString,
 			FzfPreview: opt.NullString,
 		},
-		Filters:       make(map[string]string),
-		Aliases:       make(map[string]string),
-		Extra:         make(map[string]string),
-		TemplatesDirs: []string{".zk/templates"},
+		Filters: make(map[string]string),
+		Aliases: make(map[string]string),
+		Extra:   make(map[string]string),
 	})
 }
 
@@ -208,7 +207,6 @@ func TestParseComplete(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
-		TemplatesDirs: []string{".zk/templates"},
 	})
 }
 
@@ -310,7 +308,6 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
-		TemplatesDirs: []string{".zk/templates"},
 	})
 }
 

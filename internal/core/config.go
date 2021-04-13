@@ -18,8 +18,6 @@ type Config struct {
 	Filters map[string]string
 	Aliases map[string]string
 	Extra   map[string]string
-	// Base directories for the relative template paths used in NoteConfig.
-	TemplatesDirs []string
 }
 
 // NewDefaultConfig creates a new Config with the default settings.
@@ -45,10 +43,9 @@ func NewDefaultConfig() Config {
 				MultiwordTags: false,
 			},
 		},
-		Filters:       map[string]string{},
-		Aliases:       map[string]string{},
-		Extra:         map[string]string{},
-		TemplatesDirs: []string{},
+		Filters: map[string]string{},
+		Aliases: map[string]string{},
+		Extra:   map[string]string{},
 	}
 }
 
@@ -261,9 +258,6 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 			config.Aliases[k] = v
 		}
 	}
-
-	// FIXME: Still needed?
-	config.TemplatesDirs = append([]string{filepath.Join(filepath.Dir(path), "templates")}, config.TemplatesDirs...)
 
 	return config, nil
 }

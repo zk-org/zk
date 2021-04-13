@@ -4,29 +4,34 @@ package core
 type templateLoaderMock struct {
 	templates     map[string]*templateSpy
 	fileTemplates map[string]*templateSpy
+	styler        Styler
 }
 
 func newTemplateLoaderMock() *templateLoaderMock {
 	return &templateLoaderMock{
 		templates:     map[string]*templateSpy{},
 		fileTemplates: map[string]*templateSpy{},
+		styler:        &stylerMock{},
 	}
 }
 
 func (m *templateLoaderMock) Spy(template string, result func(context interface{}) string) *templateSpy {
 	spy := newTemplateSpy(result)
+	spy.styler = m.styler
 	m.templates[template] = spy
 	return spy
 }
 
 func (m *templateLoaderMock) SpyString(content string) *templateSpy {
 	spy := newTemplateSpyString(content)
+	spy.styler = m.styler
 	m.templates[content] = spy
 	return spy
 }
 
 func (m *templateLoaderMock) SpyFile(path string, content string) *templateSpy {
 	spy := newTemplateSpyString(content)
+	spy.styler = m.styler
 	m.fileTemplates[path] = spy
 	return spy
 }
@@ -51,6 +56,7 @@ func (l *templateLoaderMock) LoadTemplateAt(path string) (Template, error) {
 type templateSpy struct {
 	Result   func(interface{}) string
 	Contexts []interface{}
+	styler   Styler
 }
 
 func newTemplateSpy(result func(interface{}) string) *templateSpy {
@@ -68,7 +74,7 @@ func newTemplateSpyString(result string) *templateSpy {
 }
 
 func (m *templateSpy) Styler() Styler {
-	return NullStyler
+	return m.styler
 }
 
 func (m *templateSpy) Render(context interface{}) (string, error) {

@@ -8,7 +8,7 @@ import (
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
-// FIXME: missing tests
+// FIXME: Missing tests
 
 func TestNoteIndexAddWithTags(t *testing.T) {
 	db, index := testNoteIndex(t)
