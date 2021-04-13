@@ -51,9 +51,8 @@ func (cmd *List) Run(container *cli.Container) error {
 		Interactive:  cmd.Interactive,
 		AlwaysFilter: false,
 		PreviewCmd:   container.Config.Tool.FzfPreview,
-		BasePath:     notebook.Path,
-		// FIXME: check if correct path
-		CurrentPath: notebook.Path,
+		NotebookDir:  notebook.Path,
+		WorkingDir:   container.WorkingDir,
 	})
 
 	notes, err = filter.Apply(notes)

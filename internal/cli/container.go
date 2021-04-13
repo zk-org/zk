@@ -27,6 +27,7 @@ type Container struct {
 	Logger             *util.ProxyLogger
 	Terminal           *term.Terminal
 	FS                 core.FileStorage
+	WorkingDir         string
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
 	currentNotebookErr error
@@ -143,8 +144,7 @@ func (c *Container) SetCurrentNotebook(searchPaths []string) {
 	for _, path := range searchPaths {
 		c.currentNotebook, c.currentNotebookErr = c.Notebooks.Open(path)
 		if c.currentNotebookErr == nil {
-			// FIXME
-			// c.WorkingDir = path
+			c.WorkingDir = path
 			c.Config = c.currentNotebook.Config
 			// FIXME: multiple notebooks
 			os.Setenv("ZK_NOTEBOOK_DIR", c.currentNotebook.Path)

@@ -37,9 +37,8 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		AlwaysFilter: true,
 		PreviewCmd:   container.Config.Tool.FzfPreview,
 		NewNoteDir:   cmd.newNoteDir(notebook),
-		BasePath:     notebook.Path,
-		// FIXME: check if correct path
-		CurrentPath: notebook.Path,
+		NotebookDir:  notebook.Path,
+		WorkingDir:   container.WorkingDir,
 	})
 
 	notes, err = filter.Apply(notes)

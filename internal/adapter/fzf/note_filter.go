@@ -19,8 +19,8 @@ type NoteFilter struct {
 
 // NoteFilterOpts holds the configuration for the fzf notes filtering.
 //
-// The absolute path to the notebook (BasePath) and the working directory
-// (CurrentPath) are used to make the path of each note relative to the working
+// The absolute path to the notebook (NotebookDir) and the working directory
+// (WorkingDir) are used to make the path of each note relative to the working
 // directory.
 type NoteFilterOpts struct {
 	// Indicates whether the filtering is interactive. If not, fzf is bypassed.
@@ -33,9 +33,9 @@ type NoteFilterOpts struct {
 	// fzf to create a note in this directory.
 	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
-	BasePath string
-	// Path to the working directory.
-	CurrentPath string
+	NotebookDir string
+	// Absolute path to the working directory.
+	WorkingDir string
 }
 
 func NewNoteFilter(opts NoteFilterOpts, terminal *term.Terminal) *NoteFilter {
@@ -55,8 +55,8 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	}
 
 	for _, note := range notes {
-		absPath := filepath.Join(f.opts.BasePath, note.Path)
-		relPath, err := filepath.Rel(f.opts.CurrentPath, absPath)
+		absPath := filepath.Join(f.opts.NotebookDir, note.Path)
+		relPath, err := filepath.Rel(f.opts.WorkingDir, absPath)
 		if err != nil {
 			return selectedNotes, err
 		}
@@ -87,7 +87,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	if previewCmd != "" {
 		// The note paths will be relative to the current path, so we need to
 		// move there otherwise the preview command will fail.
-		previewCmd = `cd "` + f.opts.CurrentPath + `" && ` + previewCmd
+		previewCmd = `cd "` + f.opts.WorkingDir + `" && ` + previewCmd
 	}
 
 	fzf, err := New(Opts{
