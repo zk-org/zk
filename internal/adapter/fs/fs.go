@@ -12,8 +12,8 @@ import (
 // FileStorage implements the port core.FileStorage.
 type FileStorage struct {
 	// Current working directory.
-	wd     string
-	logger util.Logger
+	WorkingDir string
+	logger     util.Logger
 }
 
 // NewFileStorage creates a new instance of FileStorage using the given working
@@ -33,7 +33,7 @@ func NewFileStorage(workingDir string, logger util.Logger) (*FileStorage, error)
 func (fs *FileStorage) Abs(path string) (string, error) {
 	var err error
 	if !filepath.IsAbs(path) {
-		path = filepath.Join(fs.wd, path)
+		path = filepath.Join(fs.WorkingDir, path)
 		path, err = filepath.Abs(path)
 		if err != nil {
 			return path, err
@@ -44,7 +44,7 @@ func (fs *FileStorage) Abs(path string) (string, error) {
 }
 
 func (fs *FileStorage) Rel(path string) (string, error) {
-	return filepath.Rel(fs.wd, path)
+	return filepath.Rel(fs.WorkingDir, path)
 }
 
 func (fs *FileStorage) Canonical(path string) string {
@@ -88,7 +88,6 @@ func (fs *FileStorage) fileInfo(path string) (*os.FileInfo, error) {
 	}
 }
 
-// FIXME: unit test
 func (fs *FileStorage) IsDescendantOf(dir string, path string) (bool, error) {
 	dir, err := fs.Abs(dir)
 	if err != nil {

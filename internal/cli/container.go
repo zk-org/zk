@@ -26,7 +26,7 @@ type Container struct {
 	Config             core.Config
 	Logger             *util.ProxyLogger
 	Terminal           *term.Terminal
-	FS                 core.FileStorage
+	FS                 *fs.FileStorage
 	WorkingDir         string
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
@@ -145,8 +145,9 @@ func (c *Container) SetCurrentNotebook(searchPaths []string) {
 		c.currentNotebook, c.currentNotebookErr = c.Notebooks.Open(path)
 		if c.currentNotebookErr == nil {
 			c.WorkingDir = path
+			c.FS.WorkingDir = path
 			c.Config = c.currentNotebook.Config
-			// FIXME: multiple notebooks
+			// FIXME: Is there something to do to support multiple notebooks here?
 			os.Setenv("ZK_NOTEBOOK_DIR", c.currentNotebook.Path)
 			return
 		}

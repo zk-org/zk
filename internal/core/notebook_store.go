@@ -93,7 +93,7 @@ func (ns *NotebookStore) cachedNotebookAt(path string) *Notebook {
 
 // Init creates a new notebook at the given file path.
 func (ns *NotebookStore) Init(path string) (*Notebook, error) {
-	wrap := errors.Wrapper("init failed")
+	wrap := errors.Wrapper("init")
 
 	path, err := ns.fs.Abs(path)
 	if err != nil {
@@ -208,11 +208,11 @@ template = "default.md"
 # the group. This can be useful to quickly declare a group by the name of the
 # directory it applies to.
 
-#[dir."<NAME>"]
+#[group."<NAME>"]
 #paths = ["<DIR1>", "<DIR2>"]
-#[dir."<NAME>".note]
+#[group."<NAME>".note]
 #filename = "{{date now}}"
-#[dir."<NAME>".extra]
+#[group."<NAME>".extra]
 #key = "value"
 
 
