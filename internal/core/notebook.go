@@ -291,5 +291,10 @@ func (n *Notebook) NewNoteFormatter(templateString string) (NoteFormatter, error
 		return nil, err
 	}
 
-	return newNoteFormatter(n.Path, template, n.fs)
+	linkFormatter, err := NewLinkFormatter(n.Config.Format.Markdown, templates)
+	if err != nil {
+		return nil, err
+	}
+
+	return newNoteFormatter(n.Path, template, linkFormatter, n.fs)
 }

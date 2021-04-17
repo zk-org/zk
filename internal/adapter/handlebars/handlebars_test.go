@@ -173,7 +173,7 @@ func TestListHelper(t *testing.T) {
 func TestLinkHelper(t *testing.T) {
 	sut := testLoader(LoaderOpts{})
 
-	templ, err := sut.LoadTemplate(`{{link "path/to note.md" "An interesting subject"}}`)
+	templ, err := sut.LoadTemplate(`{{format-link "path/to note.md" "An interesting subject"}}`)
 	assert.Nil(t, err)
 
 	actual, err := templ.Render(map[string]interface{}{})
@@ -254,7 +254,7 @@ func testLoader(opts LoaderOpts) *Loader {
 	formatter := func(path, title string) (string, error) {
 		return path + " - " + title, nil
 	}
-	loader.RegisterHelper("link", helpers.NewLinkHelper(formatter, &util.NullLogger))
+	loader.RegisterHelper("format-link", helpers.NewLinkHelper(formatter, &util.NullLogger))
 
 	return loader
 }

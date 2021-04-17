@@ -1,6 +1,8 @@
 package core
 
 import (
+	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -9,7 +11,7 @@ import (
 // NoteFormatter formats notes to be printed on the screen.
 type NoteFormatter func(note ContextualNote) (string, error)
 
-func newNoteFormatter(basePath string, template Template, fs FileStorage) (NoteFormatter, error) {
+func newNoteFormatter(basePath string, template Template, linkFormatter LinkFormatter, fs FileStorage) (NoteFormatter, error) {
 	termRepl, err := template.Styler().Style("$1", StyleTerm)
 	if err != nil {
 		return nil, err
@@ -27,8 +29,12 @@ func newNoteFormatter(basePath string, template Template, fs FileStorage) (NoteF
 		}
 
 		return template.Render(noteFormatRenderContext{
-			Path:       path,
-			Title:      note.Title,
+			Path:  path,
+			Title: note.Title,
+			Link: newLazyStringer(func() string {
+				link, _ := linkFormatter(path, note.Title)
+				return link
+			}),
 			Lead:       note.Lead,
 			Body:       note.Body,
 			Snippets:   snippets,
@@ -50,6 +56,7 @@ var noteTermRegex = regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
 type noteFormatRenderContext struct {
 	Path       string
 	Title      string
+	Link       fmt.Stringer
 	Lead       string
 	Body       string
 	Snippets   []string
@@ -61,4 +68,16 @@ type noteFormatRenderContext struct {
 	Modified   time.Time
 	Checksum   string
 	Env        map[string]string
+}
+
+func (c noteFormatRenderContext) Equal(other noteFormatRenderContext) bool {
+	json1, err := json.Marshal(c)
+	if err != nil {
+		return false
+	}
+	json2, err := json.Marshal(other)
+	if err != nil {
+		return false
+	}
+	return string(json1) == string(json2)
 }

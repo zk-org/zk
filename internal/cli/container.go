@@ -100,7 +100,7 @@ func NewContainer(version string) (*Container, error) {
 						if err != nil {
 							return nil, err
 						}
-						loader.RegisterHelper("link", hbhelpers.NewLinkHelper(linkFormatter, logger))
+						loader.RegisterHelper("format-link", hbhelpers.NewLinkHelper(linkFormatter, logger))
 
 						return loader, nil
 					},
