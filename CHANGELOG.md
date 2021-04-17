@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* Pair `--match` with `--exact-match` / `-e` to search for (case insensitive) exact occurrences in your notes.
+    * This can be useful when looking for terms including special characters, such as `[[name]]`.
+
 ### Changed
 
 * The local configuration is not required anymore in a notebook's `.zk` directory.

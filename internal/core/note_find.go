@@ -13,6 +13,8 @@ import (
 type NoteFindOpts struct {
 	// Filter used to match the notes with FTS predicates.
 	Match opt.String
+	// Search for exact occurrences of the Match string.
+	ExactMatch bool
 	// Filter by note paths.
 	IncludePaths []string
 	// Filter excluding notes at the given paths.

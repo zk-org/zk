@@ -21,6 +21,7 @@ type Filtering struct {
 	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
 	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
 	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
+	ExactMatch     bool     `group:filter short:e                     help:"Search for exact occurrences of the --match argument (case insensitive)."`
 	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
 	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
 	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
@@ -84,6 +85,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			f.Related = append(f.Related, parsedFilter.Related...)
 			f.Sort = append(f.Sort, parsedFilter.Sort...)
 
+			f.ExactMatch = f.ExactMatch || parsedFilter.ExactMatch
 			f.Interactive = f.Interactive || parsedFilter.Interactive
 			f.Orphan = f.Orphan || parsedFilter.Orphan
 			f.Recursive = f.Recursive || parsedFilter.Recursive
@@ -138,6 +140,7 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 	}
 
 	opts.Match = opt.NewNotEmptyString(f.Match)
+	opts.ExactMatch = f.ExactMatch
 
 	if paths, ok := relPaths(notebook, f.Path); ok {
 		opts.IncludePaths = paths

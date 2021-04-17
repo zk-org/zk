@@ -489,7 +489,7 @@ func TestNoteDAOFindMatch(t *testing.T) {
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
-					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					RawContent: "# Daily note\nA note\n\nWith lot of content",
 					WordCount:  3,
 					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},
@@ -557,6 +557,33 @@ func TestNoteDAOFindMatchWithSort(t *testing.T) {
 			"index.md",
 		},
 	)
+}
+
+func TestNoteDAOFindExactMatch(t *testing.T) {
+	test := func(match string, expected []string) {
+		testNoteDAOFindPaths(t,
+			core.NoteFindOpts{
+				Match:      opt.NewString(match),
+				ExactMatch: true,
+			},
+			expected,
+		)
+	}
+
+	// Case insensitive
+	test("dailY NOTe", []string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"})
+	// Special characters
+	test(`[exact% ch\ar_acters]`, []string{"ref/test/a.md"})
+}
+
+func TestNoteDAOFindExactMatchCannotBeUsedWithMention(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		_, err := dao.Find(core.NoteFindOpts{
+			ExactMatch: true,
+			Mention:    []string{"mention"},
+		})
+		assert.Err(t, err, "--exact-match and --mention cannot be used together")
+	})
 }
 
 func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
@@ -709,7 +736,7 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
-					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					RawContent: "# Daily note\nA note\n\nWith lot of content",
 					WordCount:  3,
 					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},
@@ -815,7 +842,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					Title:      "Another nested note",
 					Lead:       "It shall appear before b.md",
 					Body:       "It shall appear before b.md",
-					RawContent: "#Another nested note\nIt shall appear before b.md",
+					RawContent: "#Another nested note\nIt shall appear before b.md\nMatch [exact% ch\\ar_acters]",
 					WordCount:  5,
 					Links:      []core.Link{},
 					Tags:       []string{},
@@ -838,7 +865,7 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 					Title:      "Daily note",
 					Lead:       "A daily note",
 					Body:       "A daily note\n\nWith lot of content",
-					RawContent: "# A daily note\nA daily note\n\nWith lot of content",
+					RawContent: "# Daily note\nA note\n\nWith lot of content",
 					WordCount:  3,
 					Links:      []core.Link{},
 					Tags:       []string{"fiction", "adventure"},

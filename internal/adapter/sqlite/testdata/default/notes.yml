@@ -4,7 +4,7 @@
   title: "Daily note"
   lead: "A daily note"
   body: "A daily note\n\nWith lot of content"
-  raw_content: "# A daily note\nA daily note\n\nWith lot of content"
+  raw_content: "# Daily note\nA note\n\nWith lot of content"
   word_count: 3
   checksum: "qwfpgj"
   created: "2020-11-22T16:27:45Z"
@@ -69,7 +69,7 @@
   title: "Another nested note"
   lead: "It shall appear before b.md"
   body: "It shall appear before b.md"
-  raw_content: "#Another nested note\nIt shall appear before b.md"
+  raw_content: "#Another nested note\nIt shall appear before b.md\nMatch [exact% ch\\ar_acters]"
   word_count: 5
   checksum: "iecywst"
   created: "2019-11-20T20:32:56Z"

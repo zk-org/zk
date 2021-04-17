@@ -106,6 +106,15 @@ Prefixing a query with `^` will match notes whose title or body start with the f
 "title: ^journal"
 ```
 
+### Search for special characters
+
+If you need to find patterns containing special characters, such as an `email@addre.ss` or a `[[wiki-link]]`, use the `--exact-match` / `-e` option. The search will be case-insensitive.
+
+```
+$ zk list --exact-match --match "[[link]]"
+$ zk list -em "[[link]]"
+```
+
 ## Filter by tags
 
 You can filter your notes by their [tags](tags.md) using `--tags` (or `-t`).
