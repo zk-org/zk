@@ -89,13 +89,14 @@ func TestExpandNamedFiltersJoinBools(t *testing.T) {
 
 	res, err := f.ExpandNamedFilters(
 		map[string]string{
-			"f1": "--interactive --orphan",
+			"f1": "--exact-match --interactive --orphan",
 			"f2": "--recursive",
 		},
 		[]string{},
 	)
 
 	assert.Nil(t, err)
+	assert.True(t, res.ExactMatch)
 	assert.True(t, res.Interactive)
 	assert.True(t, res.Orphan)
 	assert.True(t, res.Recursive)
