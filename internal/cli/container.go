@@ -21,6 +21,11 @@ import (
 	"github.com/mickael-menu/zk/internal/util/rand"
 )
 
+type Dirs struct {
+	NotebookDir string
+	WorkingDir  string
+}
+
 type Container struct {
 	Version            string
 	Config             core.Config
@@ -136,16 +141,18 @@ func globalConfigDir() string {
 
 // SetCurrentNotebook sets the first notebook found in the given search paths
 // as the current default one.
-func (c *Container) SetCurrentNotebook(searchPaths []string) {
-	if len(searchPaths) == 0 {
+func (c *Container) SetCurrentNotebook(searchDirs []Dirs) {
+	if len(searchDirs) == 0 {
 		return
 	}
 
-	for _, path := range searchPaths {
-		c.currentNotebook, c.currentNotebookErr = c.Notebooks.Open(path)
+	for _, dirs := range searchDirs {
+		notebookDir := c.FS.Canonical(dirs.NotebookDir)
+		workingDir := c.FS.Canonical(dirs.WorkingDir)
+
+		c.currentNotebook, c.currentNotebookErr = c.Notebooks.Open(notebookDir)
 		if c.currentNotebookErr == nil {
-			c.WorkingDir = path
-			c.FS.WorkingDir = path
+			c.setWorkingDir(workingDir)
 			c.Config = c.currentNotebook.Config
 			// FIXME: Is there something to do to support multiple notebooks here?
 			os.Setenv("ZK_NOTEBOOK_DIR", c.currentNotebook.Path)
@@ -154,13 +161,20 @@ func (c *Container) SetCurrentNotebook(searchPaths []string) {
 	}
 }
 
+// SetWorkingDir resets the current working directory.
+func (c *Container) setWorkingDir(path string) {
+	path = c.FS.Canonical(path)
+	c.WorkingDir = path
+	c.FS.SetWorkingDir(path)
+}
+
 // CurrentNotebook returns the current default notebook.
 func (c *Container) CurrentNotebook() (*core.Notebook, error) {
 	return c.currentNotebook, c.currentNotebookErr
 }
 
 func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
-	return fzf.NewNoteFilter(opts, c.Terminal)
+	return fzf.NewNoteFilter(opts, c.FS, c.Terminal)
 }
 
 func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, error) {

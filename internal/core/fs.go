@@ -3,6 +3,9 @@ package core
 // FileStorage is a port providing read and write access to a file storage.
 type FileStorage interface {
 
+	// WorkingDir returns the current working directory.
+	WorkingDir() string
+
 	// Abs makes the given file path absolute if needed, using the FileStorage
 	// working directory.
 	Abs(path string) (string, error)

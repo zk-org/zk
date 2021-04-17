@@ -212,7 +212,7 @@ func (n *Notebook) RelPath(originalPath string) (string, error) {
 		return path, wrap(err)
 	}
 	if strings.HasPrefix(path, "..") {
-		return path, fmt.Errorf("%s: path is outside the notebook", originalPath)
+		return path, fmt.Errorf("%s: path is outside the notebook at %s", originalPath, n.Path)
 	}
 	if path == "." {
 		path = ""

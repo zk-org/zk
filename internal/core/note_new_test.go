@@ -29,7 +29,7 @@ func TestNotebookNewNote(t *testing.T) {
 	assert.Equal(t, path, "/notebook/filename.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.Files[path], "body")
+	assert.Equal(t, test.fs.files[path], "body")
 
 	assert.Equal(t, test.receivedLang, test.config.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, test.config.Note.IDOptions)
@@ -115,7 +115,7 @@ func TestNotebookNewNoteInDir(t *testing.T) {
 	assert.Equal(t, path, "/notebook/a-dir/filename.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.Files[path], "body")
+	assert.Equal(t, test.fs.files[path], "body")
 
 	// Check that the templates received the proper render contexts.
 	assert.Equal(t, test.filenameTemplate.Contexts, []interface{}{
@@ -189,7 +189,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 	assert.Equal(t, path, "/notebook/a-dir/group-filename.group-ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.Files[path], "group template body")
+	assert.Equal(t, test.fs.files[path], "group template body")
 
 	assert.Equal(t, test.receivedLang, groupConfig.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, groupConfig.Note.IDOptions)
@@ -264,7 +264,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 	assert.Equal(t, path, "/notebook/group-filename.group-ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.Files[path], "group template body")
+	assert.Equal(t, test.fs.files[path], "group template body")
 
 	assert.Equal(t, test.receivedLang, groupConfig.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, groupConfig.Note.IDOptions)
@@ -325,7 +325,7 @@ func TestNotebookNewNoteWithCustomTemplate(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, test.fs.Files[path], "custom body template")
+	assert.Equal(t, test.fs.files[path], "custom body template")
 }
 
 // Tries to generate a filename until one is free.
@@ -352,7 +352,7 @@ func TestNotebookNewNoteTriesUntilFreePath(t *testing.T) {
 	assert.Equal(t, path, "/notebook/filename4.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.Files[path], "body")
+	assert.Equal(t, test.fs.files[path], "body")
 }
 
 func TestNotebookNewNoteErrorWhenNoFreePath(t *testing.T) {
@@ -375,7 +375,7 @@ func TestNotebookNewNoteErrorWhenNoFreePath(t *testing.T) {
 	})
 
 	assert.Err(t, err, "/notebook/filename50.ext: note already exists")
-	assert.Equal(t, test.fs.Files, files)
+	assert.Equal(t, test.fs.files, files)
 }
 
 var now = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
@@ -409,7 +409,7 @@ func (t *newNoteTest) setup() {
 	t.dirs = append(t.dirs, t.rootDir)
 	t.fs = newFileStorageMock(t.rootDir, t.dirs)
 	if t.files != nil {
-		t.fs.Files = t.files
+		t.fs.files = t.files
 	}
 
 	t.templateLoader = newTemplateLoaderMock()

@@ -12,7 +12,7 @@ import (
 // FileStorage implements the port core.FileStorage.
 type FileStorage struct {
 	// Current working directory.
-	WorkingDir string
+	workingDir string
 	logger     util.Logger
 }
 
@@ -30,10 +30,18 @@ func NewFileStorage(workingDir string, logger util.Logger) (*FileStorage, error)
 	return &FileStorage{workingDir, logger}, nil
 }
 
+func (fs *FileStorage) WorkingDir() string {
+	return fs.workingDir
+}
+
+func (fs *FileStorage) SetWorkingDir(path string) {
+	fs.workingDir = path
+}
+
 func (fs *FileStorage) Abs(path string) (string, error) {
 	var err error
 	if !filepath.IsAbs(path) {
-		path = filepath.Join(fs.WorkingDir, path)
+		path = filepath.Join(fs.workingDir, path)
 		path, err = filepath.Abs(path)
 		if err != nil {
 			return path, err
@@ -44,7 +52,7 @@ func (fs *FileStorage) Abs(path string) (string, error) {
 }
 
 func (fs *FileStorage) Rel(path string) (string, error) {
-	return filepath.Rel(fs.WorkingDir, path)
+	return filepath.Rel(fs.workingDir, path)
 }
 
 func (fs *FileStorage) Canonical(path string) string {
