@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/fixtures"
@@ -170,11 +171,7 @@ func TestListHelper(t *testing.T) {
 }
 
 func TestLinkHelper(t *testing.T) {
-	sut := testLoader(LoaderOpts{
-		LinkFormatter: func(path, title string) (string, error) {
-			return path + " - " + title, nil
-		},
-	})
+	sut := testLoader(LoaderOpts{})
 
 	templ, err := sut.LoadTemplate(`{{link "path/to note.md" "An interesting subject"}}`)
 	assert.Nil(t, err)
@@ -245,15 +242,19 @@ func testLoader(opts LoaderOpts) *Loader {
 	if opts.LookupPaths == nil {
 		opts.LookupPaths = []string{}
 	}
-	if opts.Lang == "" {
-		opts.Lang = "en"
-	}
-	if opts.LinkFormatter == nil {
-		opts.LinkFormatter = func(path, title string) (string, error) { return "", nil }
-	}
 	if opts.Styler == nil {
 		opts.Styler = &styler{}
 	}
-	opts.Logger = &util.NullLogger
-	return NewLoader(opts)
+
+	loader := NewLoader(opts)
+
+	loader.RegisterHelper("style", helpers.NewStyleHelper(opts.Styler, &util.NullLogger))
+	loader.RegisterHelper("slug", helpers.NewSlugHelper("en", &util.NullLogger))
+
+	formatter := func(path, title string) (string, error) {
+		return path + " - " + title, nil
+	}
+	loader.RegisterHelper("link", helpers.NewLinkHelper(formatter, &util.NullLogger))
+
+	return loader
 }

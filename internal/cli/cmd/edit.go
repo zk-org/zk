@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
@@ -72,7 +73,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		return editor.Open(paths...)
 
 	} else {
-		fmt.Println("Found 0 note")
+		fmt.Fprintln(os.Stderr, "Found 0 note")
 		return nil
 	}
 }

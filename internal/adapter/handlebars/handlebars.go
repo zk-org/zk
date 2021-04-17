@@ -44,36 +44,34 @@ func (t *Template) Render(context interface{}) (string, error) {
 
 // Loader loads and holds parsed handlebars templates.
 type Loader struct {
-	strings       map[string]*Template
-	files         map[string]*Template
-	lookupPaths   []string
-	lang          string
-	linkFormatter core.LinkFormatter
-	styler        core.Styler
-	logger        util.Logger
+	strings     map[string]*Template
+	files       map[string]*Template
+	lookupPaths []string
+	styler      core.Styler
+	helpers     map[string]interface{}
 }
 
 type LoaderOpts struct {
 	// LookupPaths is used to resolve relative template paths.
-	LookupPaths   []string
-	Lang          string
-	LinkFormatter core.LinkFormatter
-	Styler        core.Styler
-	Logger        util.Logger
+	LookupPaths []string
+	Styler      core.Styler
 }
 
 // NewLoader creates a new instance of Loader.
 //
 func NewLoader(opts LoaderOpts) *Loader {
 	return &Loader{
-		strings:       make(map[string]*Template),
-		files:         make(map[string]*Template),
-		lookupPaths:   opts.LookupPaths,
-		lang:          opts.Lang,
-		linkFormatter: opts.LinkFormatter,
-		styler:        opts.Styler,
-		logger:        opts.Logger,
+		strings:     make(map[string]*Template),
+		files:       make(map[string]*Template),
+		lookupPaths: opts.LookupPaths,
+		styler:      opts.Styler,
+		helpers:     map[string]interface{}{},
 	}
+}
+
+// RegisterHelper declares a new template helper to be used with this loader only.
+func (l *Loader) RegisterHelper(name string, helper interface{}) {
+	l.helpers[name] = helper
 }
 
 // LoadTemplate implements core.TemplateLoader.
@@ -147,11 +145,6 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 }
 
 func (l *Loader) newTemplate(vendorTempl *raymond.Template) *Template {
-	vendorTempl.RegisterHelpers(map[string]interface{}{
-		"link":  helpers.NewLinkHelper(l.linkFormatter, l.logger),
-		"style": helpers.NewStyleHelper(l.styler, l.logger),
-		"slug":  helpers.NewSlugHelper(l.lang, l.logger),
-	})
-
+	vendorTempl.RegisterHelpers(l.helpers)
 	return &Template{vendorTempl, l.styler}
 }
