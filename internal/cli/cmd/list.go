@@ -52,7 +52,6 @@ func (cmd *List) Run(container *cli.Container) error {
 		AlwaysFilter: false,
 		PreviewCmd:   container.Config.Tool.FzfPreview,
 		NotebookDir:  notebook.Path,
-		WorkingDir:   container.WorkingDir,
 	})
 
 	notes, err = filter.Apply(notes)

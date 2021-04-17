@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -25,8 +26,9 @@ var root struct {
 	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
 	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
 
+	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
+	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
-	NotebookDir string  `placeholder:"PATH" help:"Run as if zk was started in <PATH> instead of the current working directory."`
 
 	ShowHelp ShowHelp         `cmd hidden default:"1"`
 	LSP      cmd.LSP          `cmd hidden`
@@ -62,9 +64,11 @@ func main() {
 	fatalIfError(err)
 
 	// Open the notebook if there's any.
-	searchPaths, err := notebookSearchPaths()
+	dirs, err := parseDirs()
 	fatalIfError(err)
-	container.SetCurrentNotebook(searchPaths)
+	searchDirs, err := notebookSearchDirs(dirs)
+	fatalIfError(err)
+	container.SetCurrentNotebook(searchDirs)
 
 	// Run the alias or command.
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
@@ -155,7 +159,7 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 	return false, nil
 }
 
-// notebookSearchPaths returns the places where zk will look for a notebook.
+// notebookSearchDirs returns the places where zk will look for a notebook.
 // The first successful candidate will be used as the working directory from
 // which path arguments are relative from.
 //
@@ -163,50 +167,77 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 //   1. --notebook-dir flag
 //   2. current working directory
 //   3. ZK_NOTEBOOK_DIR environment variable
-func notebookSearchPaths() ([]string, error) {
-	// 1. --notebook-dir flag
-	notebookDir, err := parseNotebookDirFlag()
-	if err != nil {
-		return []string{}, err
-	}
-	if notebookDir != "" {
-		// If --notebook-dir is used, we want to only check there to report errors.
-		return []string{notebookDir}, nil
-	}
-
-	candidates := []string{}
-
-	// 2. current working directory
+func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
-	candidates = append(candidates, wd)
+
+	// 1. --notebook-dir flag
+	if dirs.NotebookDir != "" {
+		// If --notebook-dir is used, we want to only check there to report
+		// "notebook not found" errors.
+		if dirs.WorkingDir == "" {
+			dirs.WorkingDir = wd
+		}
+		return []cli.Dirs{dirs}, nil
+	}
+
+	candidates := []cli.Dirs{}
+
+	// 2. current working directory
+	wdDirs := dirs
+	if wdDirs.WorkingDir == "" {
+		wdDirs.WorkingDir = wd
+	}
+	wdDirs.NotebookDir = wdDirs.WorkingDir
+	candidates = append(candidates, wdDirs)
 
 	// 3. ZK_NOTEBOOK_DIR environment variable
 	if notebookDir, ok := os.LookupEnv("ZK_NOTEBOOK_DIR"); ok {
-		candidates = append(candidates, notebookDir)
+		dirs := dirs
+		dirs.NotebookDir = notebookDir
+		if dirs.WorkingDir == "" {
+			dirs.WorkingDir = notebookDir
+		}
+		candidates = append(candidates, dirs)
 	}
 
 	return candidates, nil
 }
 
-// parseNotebookDir returns the path to the notebook specified with the
-// --notebook-dir flag.
+// parseDirs returns the paths specified with the --notebook-dir and
+// --working-dir flags.
 //
-// We need to parse the --notebook-dir flag before Kong, because we might need
-// it to resolve zk command aliases before parsing the CLI.
-func parseNotebookDirFlag() (string, error) {
-	foundFlag := false
-	for _, arg := range os.Args {
-		if arg == "--notebook-dir" {
-			foundFlag = true
-		} else if foundFlag {
-			return arg, nil
+// We need to parse these flags before Kong, because we might need it to
+// resolve zk command aliases before parsing the CLI.
+func parseDirs() (cli.Dirs, error) {
+	var d cli.Dirs
+	var err error
+
+	findFlag := func(long string, short string) (string, error) {
+		foundFlag := ""
+		for _, arg := range os.Args {
+			if arg == long || (short != "" && arg == short) {
+				foundFlag = arg
+			} else if foundFlag != "" {
+				return filepath.Abs(arg)
+			}
 		}
+		if foundFlag != "" {
+			return "", errors.New(foundFlag + " requires a path argument")
+		}
+		return "", nil
 	}
-	if foundFlag {
-		return "", errors.New("--notebook-dir requires an argument")
+
+	d.NotebookDir, err = findFlag("--notebook-dir", "")
+	if err != nil {
+		return d, err
 	}
-	return "", nil
+	d.WorkingDir, err = findFlag("--working-dir", "-W")
+	if err != nil {
+		return d, err
+	}
+
+	return d, nil
 }

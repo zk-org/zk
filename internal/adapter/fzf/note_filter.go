@@ -14,6 +14,7 @@ import (
 // NoteFilter uses fzf to filter interactively a set of notes.
 type NoteFilter struct {
 	opts     NoteFilterOpts
+	fs       core.FileStorage
 	terminal *term.Terminal
 }
 
@@ -34,13 +35,12 @@ type NoteFilterOpts struct {
 	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
 	NotebookDir string
-	// Absolute path to the working directory.
-	WorkingDir string
 }
 
-func NewNoteFilter(opts NoteFilterOpts, terminal *term.Terminal) *NoteFilter {
+func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal) *NoteFilter {
 	return &NoteFilter{
 		opts:     opts,
+		fs:       fs,
 		terminal: terminal,
 	}
 }
@@ -49,18 +49,15 @@ func NewNoteFilter(opts NoteFilterOpts, terminal *term.Terminal) *NoteFilter {
 func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, error) {
 	selectedNotes := make([]core.ContextualNote, 0)
 	relPaths := []string{}
+	absPaths := []string{}
 
 	if !f.opts.Interactive || !f.terminal.IsInteractive() || (!f.opts.AlwaysFilter && len(notes) == 0) {
 		return notes, nil
 	}
 
 	for _, note := range notes {
-		absPath := filepath.Join(f.opts.NotebookDir, note.Path)
-		relPath, err := filepath.Rel(f.opts.WorkingDir, absPath)
-		if err != nil {
-			return selectedNotes, err
-		}
-		relPaths = append(relPaths, relPath)
+		absPaths = append(absPaths, filepath.Join(f.opts.NotebookDir, note.Path))
+		relPaths = append(relPaths, note.Path)
 	}
 
 	zkBin, err := os.Executable()
@@ -84,11 +81,6 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	}
 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
-	if previewCmd != "" {
-		// The note paths will be relative to the current path, so we need to
-		// move there otherwise the preview command will fail.
-		previewCmd = `cd "` + f.opts.WorkingDir + `" && ` + previewCmd
-	}
 
 	fzf, err := New(Opts{
 		PreviewCmd: opt.NewNotEmptyString(previewCmd),
@@ -107,7 +99,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		fzf.Add([]string{
 			f.terminal.MustStyle(title, core.StyleYellow),
 			f.terminal.MustStyle(stringsutil.JoinLines(note.Body), core.StyleUnderstate),
-			f.terminal.MustStyle(relPaths[i], core.StyleUnderstate),
+			f.terminal.MustStyle(absPaths[i], core.StyleUnderstate),
 		})
 	}
 
@@ -119,7 +111,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	for _, s := range selection {
 		path := s[len(s)-1]
 		for i, m := range notes {
-			if relPaths[i] == path {
+			if absPaths[i] == path {
 				selectedNotes = append(selectedNotes, m)
 			}
 		}
