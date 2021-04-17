@@ -38,9 +38,12 @@ func NewDefaultConfig() Config {
 		Groups: map[string]GroupConfig{},
 		Format: FormatConfig{
 			Markdown: MarkdownConfig{
-				Hashtags:      true,
-				ColonTags:     false,
-				MultiwordTags: false,
+				Hashtags:          true,
+				ColonTags:         false,
+				MultiwordTags:     false,
+				LinkFormat:        "markdown",
+				LinkEncodePath:    true,
+				LinkDropExtension: true,
 			},
 		},
 		Filters: map[string]string{},
@@ -102,6 +105,15 @@ type MarkdownConfig struct {
 	ColonTags bool
 	// MultiwordTags indicates whether #multi-word tags# are supported.
 	MultiwordTags bool
+
+	// Format used to generate links between notes.
+	// Either "wiki", "markdown" or a custom template. Default is "markdown".
+	LinkFormat string
+	// Indicates whether a link's path will be percent-encoded.
+	// Defaults to true for "markdown" format only, false otherwise.
+	LinkEncodePath bool
+	// Indicates whether a link's path file extension will be removed.
+	LinkDropExtension bool
 }
 
 // ToolConfig holds the external tooling configuration.
@@ -232,6 +244,20 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if markdown.MultiwordTags != nil {
 		config.Format.Markdown.MultiwordTags = *markdown.MultiwordTags
 	}
+	if markdown.LinkFormat != nil && *markdown.LinkFormat == "" {
+		*markdown.LinkFormat = "markdown"
+	}
+	if markdown.LinkFormat != nil {
+		config.Format.Markdown.LinkFormat = *markdown.LinkFormat
+	}
+	if markdown.LinkEncodePath != nil {
+		config.Format.Markdown.LinkEncodePath = *markdown.LinkEncodePath
+	} else if markdown.LinkFormat != nil {
+		config.Format.Markdown.LinkEncodePath = (*markdown.LinkFormat == "markdown")
+	}
+	if markdown.LinkDropExtension != nil {
+		config.Format.Markdown.LinkDropExtension = *markdown.LinkDropExtension
+	}
 
 	// Tool
 	tool := tomlConf.Tool
@@ -342,9 +368,12 @@ type tomlFormatConfig struct {
 }
 
 type tomlMarkdownConfig struct {
-	Hashtags      *bool `toml:"hashtags"`
-	ColonTags     *bool `toml:"colon-tags"`
-	MultiwordTags *bool `toml:"multiword-tags"`
+	Hashtags          *bool   `toml:"hashtags"`
+	ColonTags         *bool   `toml:"colon-tags"`
+	MultiwordTags     *bool   `toml:"multiword-tags"`
+	LinkFormat        *string `toml:"link-format"`
+	LinkEncodePath    *bool   `toml:"link-encode-path"`
+	LinkDropExtension *bool   `toml:"link-drop-extension"`
 }
 
 type tomlToolConfig struct {
