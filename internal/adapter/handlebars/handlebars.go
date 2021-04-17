@@ -44,32 +44,35 @@ func (t *Template) Render(context interface{}) (string, error) {
 
 // Loader loads and holds parsed handlebars templates.
 type Loader struct {
-	strings     map[string]*Template
-	files       map[string]*Template
-	lookupPaths []string
-	lang        string
-	styler      core.Styler
-	logger      util.Logger
+	strings       map[string]*Template
+	files         map[string]*Template
+	lookupPaths   []string
+	lang          string
+	linkFormatter core.LinkFormatter
+	styler        core.Styler
+	logger        util.Logger
 }
 
 type LoaderOpts struct {
 	// LookupPaths is used to resolve relative template paths.
-	LookupPaths []string
-	Lang        string
-	Styler      core.Styler
-	Logger      util.Logger
+	LookupPaths   []string
+	Lang          string
+	LinkFormatter core.LinkFormatter
+	Styler        core.Styler
+	Logger        util.Logger
 }
 
 // NewLoader creates a new instance of Loader.
 //
 func NewLoader(opts LoaderOpts) *Loader {
 	return &Loader{
-		strings:     make(map[string]*Template),
-		files:       make(map[string]*Template),
-		lookupPaths: opts.LookupPaths,
-		lang:        opts.Lang,
-		styler:      opts.Styler,
-		logger:      opts.Logger,
+		strings:       make(map[string]*Template),
+		files:         make(map[string]*Template),
+		lookupPaths:   opts.LookupPaths,
+		lang:          opts.Lang,
+		linkFormatter: opts.LinkFormatter,
+		styler:        opts.Styler,
+		logger:        opts.Logger,
 	}
 }
 
@@ -145,6 +148,7 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 
 func (l *Loader) newTemplate(vendorTempl *raymond.Template) *Template {
 	vendorTempl.RegisterHelpers(map[string]interface{}{
+		"link":  helpers.NewLinkHelper(l.linkFormatter, l.logger),
 		"style": helpers.NewStyleHelper(l.styler, l.logger),
 		"slug":  helpers.NewSlugHelper(l.lang, l.logger),
 	})
