@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/mickael-menu/zk/internal/util/paths"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
@@ -70,6 +72,7 @@ func TestNewNoteFormatter(t *testing.T) {
 		noteFormatRenderContext{
 			Path:       "note1",
 			Title:      "Note 1",
+			Link:       opt.NewString("[Note 1](note1)"),
 			Lead:       "Lead 1",
 			Body:       "Body 1",
 			Snippets:   []string{"snippet1", "snippet2"},
@@ -87,6 +90,7 @@ func TestNewNoteFormatter(t *testing.T) {
 		noteFormatRenderContext{
 			Path:       "dir/note2",
 			Title:      "Note 2",
+			Link:       opt.NewString("[Note 2](dir/note2)"),
 			Lead:       "Lead 2",
 			Body:       "Body 2",
 			Snippets:   []string{},
@@ -117,6 +121,7 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
 				Path:     expected,
+				Link:     opt.NewString("[](" + paths.DropExt(expected) + ")"),
 				Snippets: []string{},
 			},
 		})
@@ -146,6 +151,7 @@ func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
 				Path:     ".",
+				Link:     opt.NewString("[]()"),
 				Snippets: []string{expected},
 			},
 		})

@@ -3,7 +3,6 @@ package lsp
 import (
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -194,7 +193,9 @@ func NewServer(opts ServerOpts) *Server {
 				return server.buildTagCompletionList(notebook, ":")
 			}
 		case "[":
-			return server.buildLinkCompletionList(doc, notebook, params)
+			if doc.LookBehind(params.Position, 2) == "[[" {
+				return server.buildLinkCompletionList(doc, notebook, params)
+			}
 		}
 
 		return nil, nil
@@ -371,6 +372,11 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config core.
 }
 
 func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
+	linkFormatter, err := notebook.NewLinkFormatter()
+	if err != nil {
+		return nil, err
+	}
+
 	notes, err := notebook.FindNotes(core.NoteFindOpts{})
 	if err != nil {
 		return nil, err
@@ -378,9 +384,20 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
+		textEdit, err := s.buildTextEditForLink(notebook, note, doc, params.Position, linkFormatter)
+		if err != nil {
+			s.logger.Err(errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path))
+			continue
+		}
+
+		label := note.Title
+		if label == "" {
+			label = note.Path
+		}
+
 		items = append(items, protocol.CompletionItem{
-			Label:    note.Title,
-			TextEdit: s.buildTextEditForLink(notebook, note, doc, params.Position),
+			Label:    label,
+			TextEdit: textEdit,
 			Documentation: protocol.MarkupContent{
 				Kind:  protocol.MarkupKindMarkdown,
 				Value: note.RawContent,
@@ -391,32 +408,30 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 	return items, nil
 }
 
-func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.ContextualNote, document *document, pos protocol.Position) interface{} {
-	isWikiLink := (document.LookBehind(pos, 2) == "[[")
-	var text string
-
+func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.ContextualNote, document *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
 	path := filepath.Join(notebook.Path, note.Path)
 	path = s.fs.Canonical(path)
 	path, err := filepath.Rel(filepath.Dir(document.Path), path)
 	if err != nil {
 		path = note.Path
 	}
-	ext := filepath.Ext(path)
-	path = strings.TrimSuffix(path, ext)
-	if isWikiLink {
-		text = path + "]]"
-	} else {
-		path = strings.ReplaceAll(url.PathEscape(path), "%2F", "/")
-		text = note.Title + "](" + path + ")"
+
+	link, err := linkFormatter(path, note.Title)
+	if err != nil {
+		return nil, err
 	}
+
+	// Overwrite [[ trigger
+	start := pos
+	start.Character -= 2
 
 	return protocol.TextEdit{
 		Range: protocol.Range{
-			Start: pos,
+			Start: start,
 			End:   pos,
 		},
-		NewText: text,
-	}
+		NewText: link,
+	}, nil
 }
 
 func positionInRange(content string, rng protocol.Range, pos protocol.Position) bool {

@@ -50,3 +50,16 @@ type TemplateLoader interface {
 // TemplateLoaderFactory creates a new instance of an implementation of the
 // TemplateLoader port.
 type TemplateLoaderFactory func(language string) (TemplateLoader, error)
+
+// NullTemplateLoader a TemplateLoader always returning a NullTemplate.
+var NullTemplateLoader = nullTemplateLoader{}
+
+type nullTemplateLoader struct{}
+
+func (t nullTemplateLoader) LoadTemplate(template string) (Template, error) {
+	return &NullTemplate, nil
+}
+
+func (t nullTemplateLoader) LoadTemplateAt(path string) (Template, error) {
+	return &NullTemplate, nil
+}

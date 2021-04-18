@@ -110,6 +110,7 @@ func (cmd *List) noteTemplate() string {
 
 var defaultNoteFormats = map[string]string{
 	"path": `{{path}}`,
+	"link": `{{link}}`,
 
 	"oneline": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})`,
 

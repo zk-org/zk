@@ -21,6 +21,7 @@ func TestListFormatPredefined(t *testing.T) {
 
 	// Known formats
 	test("path", `{{path}}`)
+	test("link", `{{link}}`)
 
 	test("oneline", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})`)
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/fixtures"
@@ -34,7 +35,7 @@ func (s *styler) MustStyle(text string, rules ...core.Style) string {
 }
 
 func testString(t *testing.T, template string, context interface{}, expected string) {
-	sut := testLoader([]string{})
+	sut := testLoader(LoaderOpts{})
 
 	templ, err := sut.LoadTemplate(template)
 	assert.Nil(t, err)
@@ -45,7 +46,7 @@ func testString(t *testing.T, template string, context interface{}, expected str
 }
 
 func testFile(t *testing.T, name string, context interface{}, expected string) {
-	sut := testLoader([]string{})
+	sut := testLoader(LoaderOpts{})
 
 	templ, err := sut.LoadTemplateAt(fixtures.Path(name))
 	assert.Nil(t, err)
@@ -63,7 +64,7 @@ func TestLookupPaths(t *testing.T) {
 	path2 := filepath.Join(root, "1")
 	os.MkdirAll(filepath.Join(path2, "subdir"), os.ModePerm)
 
-	sut := testLoader([]string{path1, path2})
+	sut := testLoader(LoaderOpts{LookupPaths: []string{path1, path2}})
 
 	test := func(path string, expected string) {
 		tpl, err := sut.LoadTemplateAt(path)
@@ -169,6 +170,17 @@ func TestListHelper(t *testing.T) {
 	test([]string{"An item\non several\nlines\n"}, "  ‣ An item\n    on several\n    lines\n")
 }
 
+func TestLinkHelper(t *testing.T) {
+	sut := testLoader(LoaderOpts{})
+
+	templ, err := sut.LoadTemplate(`{{format-link "path/to note.md" "An interesting subject"}}`)
+	assert.Nil(t, err)
+
+	actual, err := templ.Render(map[string]interface{}{})
+	assert.Nil(t, err)
+	assert.Equal(t, actual, "path/to note.md - An interesting subject")
+}
+
 func TestSlugHelper(t *testing.T) {
 	// inline
 	testString(t,
@@ -226,11 +238,23 @@ func TestStyleHelper(t *testing.T) {
 	testString(t, "{{#style 'single'}}A multiline\ntext{{/style}}", nil, "single(A multiline\ntext)")
 }
 
-func testLoader(lookupPaths []string) *Loader {
-	return NewLoader(LoaderOpts{
-		LookupPaths: lookupPaths,
-		Lang:        "en",
-		Styler:      &styler{},
-		Logger:      &util.NullLogger,
-	})
+func testLoader(opts LoaderOpts) *Loader {
+	if opts.LookupPaths == nil {
+		opts.LookupPaths = []string{}
+	}
+	if opts.Styler == nil {
+		opts.Styler = &styler{}
+	}
+
+	loader := NewLoader(opts)
+
+	loader.RegisterHelper("style", helpers.NewStyleHelper(opts.Styler, &util.NullLogger))
+	loader.RegisterHelper("slug", helpers.NewSlugHelper("en", &util.NullLogger))
+
+	formatter := func(path, title string) (string, error) {
+		return path + " - " + title, nil
+	}
+	loader.RegisterHelper("format-link", helpers.NewLinkHelper(formatter, &util.NullLogger))
+
+	return loader
 }

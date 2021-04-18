@@ -218,9 +218,20 @@ template = "default.md"
 
 # MARKDOWN SETTINGS
 [format.markdown]
-# Enable support for #hashtags
-hashtags = true
-# Enable support for :colon:separated:tags:
+
+# Format used to generate links between notes.
+# Either "wiki", "markdown" or a custom template. Default is "markdown".
+#link-format = "wiki"
+# Indicates whether a link's path will be percent-encoded.
+# Defaults to true for "markdown" format and false for "wiki" format.
+#link-encode-path = true
+# Indicates whether a link's path file extension will be removed.
+# Defaults to true.
+#link-drop-extension = true
+
+# Enable support for #hashtags.
+#hashtags = true
+# Enable support for :colon:separated:tags:.
 #colon-tags = true
 # Enable support for Bear's #multi-word tags#
 # Hashtags must be enabled for multi-word tags to work.

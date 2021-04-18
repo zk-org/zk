@@ -47,17 +47,14 @@ type Loader struct {
 	strings     map[string]*Template
 	files       map[string]*Template
 	lookupPaths []string
-	lang        string
 	styler      core.Styler
-	logger      util.Logger
+	helpers     map[string]interface{}
 }
 
 type LoaderOpts struct {
 	// LookupPaths is used to resolve relative template paths.
 	LookupPaths []string
-	Lang        string
 	Styler      core.Styler
-	Logger      util.Logger
 }
 
 // NewLoader creates a new instance of Loader.
@@ -67,10 +64,14 @@ func NewLoader(opts LoaderOpts) *Loader {
 		strings:     make(map[string]*Template),
 		files:       make(map[string]*Template),
 		lookupPaths: opts.LookupPaths,
-		lang:        opts.Lang,
 		styler:      opts.Styler,
-		logger:      opts.Logger,
+		helpers:     map[string]interface{}{},
 	}
+}
+
+// RegisterHelper declares a new template helper to be used with this loader only.
+func (l *Loader) RegisterHelper(name string, helper interface{}) {
+	l.helpers[name] = helper
 }
 
 // LoadTemplate implements core.TemplateLoader.
@@ -144,10 +145,6 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 }
 
 func (l *Loader) newTemplate(vendorTempl *raymond.Template) *Template {
-	vendorTempl.RegisterHelpers(map[string]interface{}{
-		"style": helpers.NewStyleHelper(l.styler, l.logger),
-		"slug":  helpers.NewSlugHelper(l.lang, l.logger),
-	})
-
+	vendorTempl.RegisterHelpers(l.helpers)
 	return &Template{vendorTempl, l.styler}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/mickael-menu/zk/internal/adapter/fs"
 	"github.com/mickael-menu/zk/internal/adapter/fzf"
 	"github.com/mickael-menu/zk/internal/adapter/handlebars"
+	hbhelpers "github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
 	"github.com/mickael-menu/zk/internal/adapter/markdown"
 	"github.com/mickael-menu/zk/internal/adapter/sqlite"
 	"github.com/mickael-menu/zk/internal/adapter/term"
@@ -84,15 +85,24 @@ func NewContainer(version string) (*Container, error) {
 						ColontagEnabled:     config.Format.Markdown.ColonTags,
 					}),
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
-						return handlebars.NewLoader(handlebars.LoaderOpts{
+						loader := handlebars.NewLoader(handlebars.LoaderOpts{
 							LookupPaths: []string{
 								filepath.Join(globalConfigDir(), "templates"),
 								filepath.Join(path, ".zk/templates"),
 							},
-							Lang:   config.Note.Lang,
 							Styler: styler,
-							Logger: logger,
-						}), nil
+						})
+
+						loader.RegisterHelper("style", hbhelpers.NewStyleHelper(styler, logger))
+						loader.RegisterHelper("slug", hbhelpers.NewSlugHelper(language, logger))
+
+						linkFormatter, err := core.NewLinkFormatter(config.Format.Markdown, loader)
+						if err != nil {
+							return nil, err
+						}
+						loader.RegisterHelper("format-link", hbhelpers.NewLinkHelper(linkFormatter, logger))
+
+						return loader, nil
 					},
 					IDGeneratorFactory: func(opts core.IDOptions) func() string {
 						return rand.NewIDGenerator(opts)

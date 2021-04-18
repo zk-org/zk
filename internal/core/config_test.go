@@ -29,9 +29,12 @@ func TestParseDefaultConfig(t *testing.T) {
 		Groups: make(map[string]GroupConfig),
 		Format: FormatConfig{
 			Markdown: MarkdownConfig{
-				Hashtags:      true,
-				ColonTags:     false,
-				MultiwordTags: false,
+				Hashtags:          true,
+				ColonTags:         false,
+				MultiwordTags:     false,
+				LinkFormat:        "markdown",
+				LinkEncodePath:    true,
+				LinkDropExtension: true,
 			},
 		},
 		Tool: ToolConfig{
@@ -68,6 +71,9 @@ func TestParseComplete(t *testing.T) {
 		hashtags = false
 		colon-tags = true
 		multiword-tags = true
+		link-format = "custom"
+		link-encode-path = true
+		link-drop-extension = false
 
 		[tool]
 		editor = "vim"
@@ -185,9 +191,12 @@ func TestParseComplete(t *testing.T) {
 		},
 		Format: FormatConfig{
 			Markdown: MarkdownConfig{
-				Hashtags:      false,
-				ColonTags:     true,
-				MultiwordTags: true,
+				Hashtags:          false,
+				ColonTags:         true,
+				MultiwordTags:     true,
+				LinkFormat:        "custom",
+				LinkEncodePath:    true,
+				LinkDropExtension: false,
 			},
 		},
 		Tool: ToolConfig{
@@ -297,9 +306,12 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		},
 		Format: FormatConfig{
 			Markdown: MarkdownConfig{
-				Hashtags:      true,
-				ColonTags:     false,
-				MultiwordTags: false,
+				Hashtags:          true,
+				ColonTags:         false,
+				MultiwordTags:     false,
+				LinkFormat:        "markdown",
+				LinkEncodePath:    true,
+				LinkDropExtension: true,
 			},
 		},
 		Filters: make(map[string]string),
@@ -365,6 +377,25 @@ func TestParseIDCase(t *testing.T) {
 	test("upper", CaseUpper)
 	test("mixed", CaseMixed)
 	test("unknown", CaseLower)
+}
+
+// If link-encode-path is not set explicitly, it defaults to true for
+// "markdown" format and false for anything else.
+func TestParseMarkdownLinkEncodePath(t *testing.T) {
+	test := func(format string, expected bool) {
+		toml := fmt.Sprintf(`
+			[format.markdown]
+			link-format = "%s"
+		`, format)
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		assert.Nil(t, err)
+		assert.Equal(t, conf.Format.Markdown.LinkEncodePath, expected)
+	}
+
+	test("", true)
+	test("markdown", true)
+	test("wiki", false)
+	test("custom", false)
 }
 
 func TestGroupConfigClone(t *testing.T) {

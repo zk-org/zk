@@ -46,9 +46,14 @@ func fileInfo(path string) (*os.FileInfo, error) {
 // FilenameStem returns the filename component of the given path,
 // after removing its file extension.
 func FilenameStem(path string) string {
-	filename := filepath.Base(path)
-	ext := filepath.Ext(filename)
-	return strings.TrimSuffix(filename, ext)
+	path = DropExt(path)
+	return filepath.Base(path)
+}
+
+// DropExt returns the path after removing any file extension.
+func DropExt(path string) string {
+	ext := filepath.Ext(path)
+	return strings.TrimSuffix(path, ext)
 }
 
 // WriteString writes the given content into a new file at the given path,
