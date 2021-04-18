@@ -9,6 +9,21 @@
 
 Besides the default Handlebars helpers, `zk` ships with additional helpers which you might find useful. They are available to all templates.
 
+### Format Link helper
+
+The `{{format-link}}` helper renders an internal link to another note, according to the user preferences set in the [note formats configuration](note-format.md).
+
+```
+{{format-link "path/to note.md" "An interesting note"}}
+
+can generate (depending on the user config):
+
+[An interesting note](path/to%20note.md)
+[[path/to note]]
+```
+
+The second parameter `title` is optional.
+
 ### Date helper
 
 The `{{date}}` helper formats the given date for display.
