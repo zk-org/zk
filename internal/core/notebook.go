@@ -298,3 +298,13 @@ func (n *Notebook) NewNoteFormatter(templateString string) (NoteFormatter, error
 
 	return newNoteFormatter(n.Path, template, linkFormatter, n.fs)
 }
+
+// NewLinkFormatter returns a LinkFormatter used to generate internal links between notes.
+func (n *Notebook) NewLinkFormatter() (LinkFormatter, error) {
+	templates, err := n.templateLoaderFactory(n.Config.Note.Lang)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewLinkFormatter(n.Config.Format.Markdown, templates)
+}
