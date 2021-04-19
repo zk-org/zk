@@ -85,7 +85,12 @@ func NewServer(opts ServerOpts) *Server {
 		capabilities := handler.CreateServerCapabilities()
 		capabilities.HoverProvider = true
 
-		capabilities.TextDocumentSync = protocol.TextDocumentSyncKindIncremental
+		change := protocol.TextDocumentSyncKindIncremental
+		capabilities.TextDocumentSync = protocol.TextDocumentSyncOptions{
+			OpenClose: boolPtr(true),
+			Change:    &change,
+			Save:      boolPtr(true),
+		}
 		capabilities.DocumentLinkProvider = &protocol.DocumentLinkOptions{
 			ResolveProvider: boolPtr(true),
 		}
@@ -384,34 +389,61 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
-		textEdit, err := s.buildTextEditForLink(notebook, note, doc, params.Position, linkFormatter)
+		item, err := s.newCompletionItem(notebook, note, doc, params.Position, linkFormatter)
 		if err != nil {
-			s.logger.Err(errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path))
+			s.logger.Err(err)
 			continue
 		}
 
-		label := note.Title
-		if label == "" {
-			label = note.Path
-		}
-
-		items = append(items, protocol.CompletionItem{
-			Label:    label,
-			TextEdit: textEdit,
-			Documentation: protocol.MarkupContent{
-				Kind:  protocol.MarkupKindMarkdown,
-				Value: note.RawContent,
-			},
-		})
+		items = append(items, item)
 	}
 
 	return items, nil
 }
 
-func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.ContextualNote, document *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
+func (s *Server) newCompletionItem(notebook *core.Notebook, note core.ContextualNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
+	kind := protocol.CompletionItemKindReference
+	item.Kind = &kind
+
+	if note.Title != "" {
+		item.Label = note.Title
+	} else {
+		item.Label = note.Path
+	}
+
+	item.TextEdit, err = s.newTextEditForLink(notebook, note, doc, pos, linkFormatter)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path)
+		return
+	}
+
+	addTextEdits := []protocol.TextEdit{}
+
+	// Some LSP clients (e.g. VSCode) don't support deleting the trigger
+	// characters with the main TextEdit. So let's add an additional
+	// TextEdit for that.
+	addTextEdits = append(addTextEdits, protocol.TextEdit{
+		NewText: "",
+		Range:   rangeFromPosition(pos, -2, 0),
+	})
+
+	item.AdditionalTextEdits = addTextEdits
+
+	item.Documentation = protocol.MarkupContent{
+		Kind:  protocol.MarkupKindMarkdown,
+		Value: note.RawContent,
+	}
+
+	// FIXME: path
+	// item.FilterText =
+
+	return item, nil
+}
+
+func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.ContextualNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
 	path := filepath.Join(notebook.Path, note.Path)
 	path = s.fs.Canonical(path)
-	path, err := filepath.Rel(filepath.Dir(document.Path), path)
+	path, err := filepath.Rel(filepath.Dir(doc.Path), path)
 	if err != nil {
 		path = note.Path
 	}
@@ -421,16 +453,16 @@ func (s *Server) buildTextEditForLink(notebook *core.Notebook, note core.Context
 		return nil, err
 	}
 
-	// Overwrite [[ trigger
-	start := pos
-	start.Character -= 2
+	// Some LSP clients (e.g. VSCode) auto-pair brackets, so we need to
+	// remove the closing ]] after the completion.
+	endOffset := 0
+	if doc.LookForward(pos, 2) == "]]" {
+		endOffset = 2
+	}
 
 	return protocol.TextEdit{
-		Range: protocol.Range{
-			Start: start,
-			End:   pos,
-		},
 		NewText: link,
+		Range:   rangeFromPosition(pos, 0, endOffset),
 	}, nil
 }
 
@@ -438,6 +470,23 @@ func positionInRange(content string, rng protocol.Range, pos protocol.Position) 
 	start, end := rng.IndexesIn(content)
 	i := pos.IndexIn(content)
 	return i >= start && i <= end
+}
+
+func rangeFromPosition(pos protocol.Position, startOffset, endOffset int) protocol.Range {
+	offsetPos := func(offset int) protocol.Position {
+		newPos := pos
+		if offset < 0 {
+			newPos.Character -= uint32(-offset)
+		} else {
+			newPos.Character += uint32(offset)
+		}
+		return newPos
+	}
+
+	return protocol.Range{
+		Start: offsetPos(startOffset),
+		End:   offsetPos(endOffset),
+	}
 }
 
 func boolPtr(v bool) *bool {
