@@ -143,6 +143,8 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 // noteAt parses a Note at the given path.
 func (t *indexTask) noteAt(path string) (Note, error) {
+	wrap := errors.Wrapper(path)
+
 	note := Note{
 		Path:  path,
 		Links: []Link{},
@@ -152,12 +154,12 @@ func (t *indexTask) noteAt(path string) (Note, error) {
 	absPath := filepath.Join(t.notebook.Path, path)
 	content, err := ioutil.ReadFile(absPath)
 	if err != nil {
-		return note, err
+		return note, wrap(err)
 	}
 	contentStr := string(content)
 	contentParts, err := t.parser.Parse(contentStr)
 	if err != nil {
-		return note, err
+		return note, wrap(err)
 	}
 	note.Title = contentParts.Title.String()
 	note.Lead = contentParts.Lead.String()
@@ -175,7 +177,7 @@ func (t *indexTask) noteAt(path string) (Note, error) {
 			href := filepath.Join(filepath.Dir(absPath), link.Href)
 			link.Href, err = t.notebook.RelPath(href)
 			if err != nil {
-				return note, err
+				return note, wrap(err)
 			}
 		}
 		note.Links = append(note.Links, link)
@@ -183,7 +185,7 @@ func (t *indexTask) noteAt(path string) (Note, error) {
 
 	times, err := times.Stat(absPath)
 	if err != nil {
-		return note, err
+		return note, wrap(err)
 	}
 
 	note.Modified = times.ModTime().UTC()
