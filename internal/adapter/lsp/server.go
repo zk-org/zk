@@ -99,6 +99,7 @@ func NewServer(opts ServerOpts) *Server {
 
 		capabilities.CompletionProvider = &protocol.CompletionOptions{
 			TriggerCharacters: triggerChars,
+			ResolveProvider:   boolPtr(true),
 		}
 
 		capabilities.DefinitionProvider = boolPtr(true)
@@ -204,6 +205,21 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		return nil, nil
+	}
+
+	handler.CompletionItemResolve = func(context *glsp.Context, params *protocol.CompletionItem) (*protocol.CompletionItem, error) {
+		if path, ok := params.Data.(string); ok {
+			content, err := ioutil.ReadFile(path)
+			if err != nil {
+				return params, err
+			}
+			params.Documentation = protocol.MarkupContent{
+				Kind:  protocol.MarkupKindMarkdown,
+				Value: string(content),
+			}
+		}
+
+		return params, nil
 	}
 
 	handler.TextDocumentHover = func(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
@@ -382,7 +398,7 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 		return nil, err
 	}
 
-	notes, err := notebook.FindNotes(core.NoteFindOpts{})
+	notes, err := notebook.FindMinimalNotes(core.NoteFindOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +417,7 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 	return items, nil
 }
 
-func (s *Server) newCompletionItem(notebook *core.Notebook, note core.ContextualNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
+func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
 	kind := protocol.CompletionItemKindReference
 	item.Kind = &kind
 
@@ -428,11 +444,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.Contextual
 	})
 
 	item.AdditionalTextEdits = addTextEdits
-
-	item.Documentation = protocol.MarkupContent{
-		Kind:  protocol.MarkupKindMarkdown,
-		Value: note.RawContent,
-	}
+	item.Data = filepath.Join(notebook.Path, note.Path)
 
 	// FIXME: path
 	// item.FilterText =
@@ -440,7 +452,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.Contextual
 	return item, nil
 }
 
-func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.ContextualNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
+func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
 	path := filepath.Join(notebook.Path, note.Path)
 	path = s.fs.Canonical(path)
 	path, err := filepath.Rel(filepath.Dir(doc.Path), path)
