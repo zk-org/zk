@@ -420,12 +420,16 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
 	kind := protocol.CompletionItemKindReference
 	item.Kind = &kind
+	item.Data = filepath.Join(notebook.Path, note.Path)
 
 	if note.Title != "" {
 		item.Label = note.Title
 	} else {
 		item.Label = note.Path
 	}
+
+	// Add the path to the filter text to be able to complete by it.
+	item.FilterText = stringPtr(item.Label + " " + note.Path)
 
 	item.TextEdit, err = s.newTextEditForLink(notebook, note, doc, pos, linkFormatter)
 	if err != nil {
@@ -444,10 +448,6 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 	})
 
 	item.AdditionalTextEdits = addTextEdits
-	item.Data = filepath.Join(notebook.Path, note.Path)
-
-	// FIXME: path
-	// item.FilterText =
 
 	return item, nil
 }

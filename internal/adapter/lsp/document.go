@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -149,6 +150,10 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 
 		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[4]:match[5]]
+			// Valid Markdown links are percent-encoded.
+			if decodedHref, err := url.PathUnescape(href); err == nil {
+				href = decodedHref
+			}
 			appendLink(href, match[0], match[1])
 		}
 
