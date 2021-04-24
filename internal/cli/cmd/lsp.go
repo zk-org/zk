@@ -8,7 +8,7 @@ import (
 
 // LSP starts a server implementing the Language Server Protocol.
 type LSP struct {
-	Log string `type:path placeholder:PATH help:"Absolute path to the log file"`
+	Log string `hidden type:path placeholder:PATH help:"Absolute path to the log file"`
 }
 
 func (cmd *LSP) Run(container *cli.Container) error {

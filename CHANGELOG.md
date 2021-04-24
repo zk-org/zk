@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+* An experimental Language Server for LSP-compatible editors:
+    * Auto-complete Markdown links with `[[` (setup wiki-links in the [note formats configuration](docs/note-format.md))
+    * Auto-complete [hashtags and colon-separated tags](docs/tags.md).
+    * Preview the content of a note when hovering a link.
+    * Navigate in your notes by following internal links.
+    * [And more to come...](https://github.com/mickael-menu/zk/issues/22)
+    * See [the documentation](docs/editors-integration.md) for configuration samples.
 * Pair `--match` with `--exact-match` / `-e` to search for (case insensitive) exact occurrences in your notes.
     * This can be useful when looking for terms including special characters, such as `[[name]]`.
 * Generating links to notes.
