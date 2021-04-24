@@ -5,7 +5,7 @@ go 1.15
 replace github.com/tliron/glsp => github.com/mickael-menu/glsp v0.1.0
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.7
+	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/alecthomas/kong v0.2.16-0.20210209082517-405b2f4fd9a4
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/fatih/color v1.10.0
@@ -16,6 +16,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.4
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mickael-menu/pretty v0.2.3
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.8.1
@@ -28,5 +29,9 @@ require (
 	github.com/tliron/kutil v0.1.22
 	github.com/yuin/goldmark v1.3.2
 	github.com/yuin/goldmark-meta v1.0.0
+	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
+	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
+	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed // indirect
+	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/djherbis/times.v1 v1.2.0
 )

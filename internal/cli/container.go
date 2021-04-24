@@ -70,6 +70,14 @@ func NewContainer(version string) (*Container, error) {
 		FS:       fs,
 		Notebooks: core.NewNotebookStore(config, core.NotebookStorePorts{
 			FS: fs,
+			TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
+				loader := handlebars.NewLoader(handlebars.LoaderOpts{
+					LookupPaths: []string{},
+					Styler:      styler,
+				})
+
+				return loader, nil
+			},
 			NotebookFactory: func(path string, config core.Config) (*core.Notebook, error) {
 				dbPath := filepath.Join(path, ".zk/notebook.db")
 				db, err := sqlite.Open(dbPath)
