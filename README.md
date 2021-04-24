@@ -13,6 +13,10 @@
 
 * [Creating notes from templates](docs/note-creation.md)
 * [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
+* [Integration with your favorite editors](docs/editors-integration.md):
+    * [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+, maintained by [Seth Messer](https://github.com/megalithic)
+    * [`zk-vscode`](https://github.com/mickael-menu/zk-vscode) for Visual Studio Code
+    * [Any LSP-compatible editor](docs/editors-integration.md)
 * [Interactive browser](docs/tool-fzf.md), powered by `fzf`
 * [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
 * [Made with automation in mind](docs/automation.md)

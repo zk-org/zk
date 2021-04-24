@@ -369,6 +369,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182aff
 github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2/go.mod h1:eD9eIE7cdwcMi9rYluz88Jz2VyhSmden33/aXg4oVIY=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b h1:j7+1HpAFS1zy5+Q4qx1fWh90gTKwiN4QCGoY9TWyyO4=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
+github.com/mickael-menu/glsp v0.1.0 h1:we6mTssWXxGPVeEcTpCW8AOpdCuUXwUZ6Q2UiYVnCOw=
+github.com/mickael-menu/glsp v0.1.0/go.mod h1:ouzTGvQteTU4hdsG+32vIx0if7E9CzMa64d7tYJJ91g=
 github.com/mickael-menu/pretty v0.2.3 h1:AXi5WcBuWxwQV6iY/GhmCFpaoboQO2SLtzfujrn7dv0=
 github.com/mickael-menu/pretty v0.2.3/go.mod h1:gupeWUSWoo3KX7BItIuouLgTqQLlmRylpaPdIK6IqLk=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
@@ -510,8 +512,6 @@ github.com/tj/assert v0.0.0-20190920132354-ee03d75cd160 h1:NSWpaDaurcAJY7PkL8Xt0
 github.com/tj/assert v0.0.0-20190920132354-ee03d75cd160/go.mod h1:mZ9/Rh9oLWpLLDRpvE+3b7gP/C2YyLFYxNmcLnPTMe0=
 github.com/tj/go-naturaldate v1.3.0 h1:OgJIPkR/Jk4bFMBLbxZ8w+QUxwjqSvzd9x+yXocY4RI=
 github.com/tj/go-naturaldate v1.3.0/go.mod h1:rpUbjivDKiS1BlfMGc2qUKNZ/yxgthOfmytQs8d8hKk=
-github.com/tliron/glsp v0.0.0-20210308190902-c7ec7df19257 h1:EIMeclnZjLgYIUs06pWOo+wIuOji9Q4Qz0MaU3va198=
-github.com/tliron/glsp v0.0.0-20210308190902-c7ec7df19257/go.mod h1:ouzTGvQteTU4hdsG+32vIx0if7E9CzMa64d7tYJJ91g=
 github.com/tliron/kutil v0.1.22 h1:VnwZ6YlTao2ISmm9wdv8CnVy5BjROBPpG65qIRc1LtE=
 github.com/tliron/kutil v0.1.22/go.mod h1:HkG4xQS2/BHI8EO9WfdOwnlUil7NhY/wmiV7U1uwEYw=
 github.com/tliron/yamlkeys v1.3.5/go.mod h1:8kJ1A/1s3p/I3MQUAbtv72dPEyQGoh0ZkQp0UAkABBo=

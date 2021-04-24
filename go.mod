@@ -2,6 +2,8 @@ module github.com/mickael-menu/zk
 
 go 1.15
 
+replace github.com/tliron/glsp => github.com/mickael-menu/glsp v0.1.0
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/alecthomas/kong v0.2.16-0.20210209082517-405b2f4fd9a4
