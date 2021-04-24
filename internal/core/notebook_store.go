@@ -9,27 +9,30 @@ import (
 
 // NotebookStore retrieves or creates new notebooks.
 type NotebookStore struct {
-	config          Config
-	notebookFactory NotebookFactory
-	fs              FileStorage
+	config                Config
+	notebookFactory       NotebookFactory
+	templateLoaderFactory TemplateLoaderFactory
+	fs                    FileStorage
 
 	// Cached opened notebooks.
 	notebooks map[string]*Notebook
 }
 
 type NotebookStorePorts struct {
-	NotebookFactory NotebookFactory
-	FS              FileStorage
+	NotebookFactory       NotebookFactory
+	TemplateLoaderFactory TemplateLoaderFactory
+	FS                    FileStorage
 }
 
 // NewNotebookStore creates a new NotebookStore instance using the given
 // options and port implementations.
 func NewNotebookStore(config Config, ports NotebookStorePorts) *NotebookStore {
 	return &NotebookStore{
-		config:          config,
-		notebookFactory: ports.NotebookFactory,
-		fs:              ports.FS,
-		notebooks:       map[string]*Notebook{},
+		config:                config,
+		notebookFactory:       ports.NotebookFactory,
+		templateLoaderFactory: ports.TemplateLoaderFactory,
+		fs:                    ports.FS,
+		notebooks:             map[string]*Notebook{},
 	}
 }
 
@@ -91,8 +94,16 @@ func (ns *NotebookStore) cachedNotebookAt(path string) *Notebook {
 	return nil
 }
 
+// InitOpts holds the user preferences when creating a new notebook.
+type InitOpts struct {
+	WikiLinks     bool
+	Hashtags      bool
+	ColonTags     bool
+	MultiwordTags bool
+}
+
 // Init creates a new notebook at the given file path.
-func (ns *NotebookStore) Init(path string) (*Notebook, error) {
+func (ns *NotebookStore) Init(path string, options InitOpts) (*Notebook, error) {
 	wrap := errors.Wrapper("init")
 
 	path, err := ns.fs.Abs(path)
@@ -105,7 +116,11 @@ func (ns *NotebookStore) Init(path string) (*Notebook, error) {
 	}
 
 	// Create the default configuration file.
-	err = ns.fs.Write(filepath.Join(path, ".zk/config.toml"), []byte(defaultConfig))
+	config, err := ns.generateConfig(options)
+	if err != nil {
+		return nil, wrap(err)
+	}
+	err = ns.fs.Write(filepath.Join(path, ".zk/config.toml"), []byte(config))
 	if err != nil {
 		return nil, wrap(err)
 	}
@@ -144,6 +159,18 @@ func (ns *NotebookStore) locateNotebook(path string) (string, error) {
 	return locate(path)
 }
 
+func (ns *NotebookStore) generateConfig(options InitOpts) (string, error) {
+	loader, err := ns.templateLoaderFactory("en")
+	if err != nil {
+		return "", err
+	}
+	template, err := loader.LoadTemplate(defaultConfig)
+	if err != nil {
+		return "", err
+	}
+	return template.Render(options)
+}
+
 const defaultConfig = `# zk configuration file
 #
 # Uncomment the properties you want to customize.
@@ -161,7 +188,7 @@ const defaultConfig = `# zk configuration file
 #default-title = "Untitled"
 
 # Template used to generate a note's filename, without extension.
-#filename = "{{id}}"
+#filename = "\{{id}}"
 
 # The file extension used for the notes.
 #extension = "md"
@@ -190,7 +217,7 @@ template = "default.md"
 # EXTRA VARIABLES
 #
 # A dictionary of variables you can use for any custom values when generating
-# new notes. They are accessible in templates with {{extra.<key>}}
+# new notes. They are accessible in templates with \{{extra.<key>}}
 [extra]
 
 #key = "value"
@@ -211,7 +238,7 @@ template = "default.md"
 #[group."<NAME>"]
 #paths = ["<DIR1>", "<DIR2>"]
 #[group."<NAME>".note]
-#filename = "{{date now}}"
+#filename = "\{{date now}}"
 #[group."<NAME>".extra]
 #key = "value"
 
@@ -221,7 +248,11 @@ template = "default.md"
 
 # Format used to generate links between notes.
 # Either "wiki", "markdown" or a custom template. Default is "markdown".
+{{#if WikiLinks}}
+link-format = "wiki"
+{{else}}
 #link-format = "wiki"
+{{/if}}
 # Indicates whether a link's path will be percent-encoded.
 # Defaults to true for "markdown" format and false for "wiki" format.
 #link-encode-path = true
@@ -230,12 +261,24 @@ template = "default.md"
 #link-drop-extension = true
 
 # Enable support for #hashtags.
-#hashtags = true
+{{#if Hashtags}}
+hashtags = true
+{{else}}
+hashtags = false
+{{/if}}
 # Enable support for :colon:separated:tags:.
-#colon-tags = true
+{{#if ColonTags}}
+colon-tags = true
+{{else}}
+colon-tags = false
+{{/if}}
 # Enable support for Bear's #multi-word tags#
 # Hashtags must be enabled for multi-word tags to work.
-#multiword-tags = true
+{{#if MultiwordTags}}
+multiword-tags = true
+{{else}}
+multiword-tags = false
+{{/if}}
 
 
 # EXTERNAL TOOLS
@@ -298,7 +341,7 @@ template = "default.md"
 # arguments. This can be useful to expand a complex search query into a flag
 # taking only paths. For example:
 #   zk list --link-to "` + "`" + `zk path -m potatoe` + "`" + `"
-#path = "zk list --quiet --format {{path}} --delimiter , $@"
+#path = "zk list --quiet --format \{{path}} --delimiter , $@"
 
 # Show a random note.
 #lucky = "zk list --quiet --format full --sort random --limit 1"

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+* Interactive wizard for the `zk init` command.
 * An experimental Language Server for LSP-compatible editors:
     * Auto-complete Markdown links with `[[` (setup wiki-links in the [note formats configuration](docs/note-format.md))
     * Auto-complete [hashtags and colon-separated tags](docs/tags.md).
@@ -26,6 +27,7 @@ All notable changes to this project will be documented in this file.
 * `--notebook-dir` does not change the working directory anymore, instead it sets manually the current notebook and disable auto-discovery. Use the new `--working-dir`/`-W` flag to run `zk` as if it was started from this path instead of the current working directory.
     * For convenience, `ZK_NOTEBOOK_DIR` behaves like setting a `--working-dir` fallback, instead of `--notebook-dir`. This way, paths will be relative to the root of the notebook.
     * A practical use case is to use `zk list -W .` when outside a notebook. This will list the notes in `ZK_NOTEBOOK_DIR` but print paths relative to the current directory, making them actionable from your terminal emulator.
+
 
 ## 0.3.0
 
