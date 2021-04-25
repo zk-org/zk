@@ -41,6 +41,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			Editor:     opt.NullString,
 			Pager:      opt.NullString,
 			FzfPreview: opt.NullString,
+			FzfLine:    opt.NullString,
 		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
@@ -79,6 +80,7 @@ func TestParseComplete(t *testing.T) {
 		editor = "vim"
 		pager = "less"
 		fzf-preview = "bat {1}"
+		fzf-line = "{{title}}"
 
 		[extra]
 		hello = "world"
@@ -203,6 +205,7 @@ func TestParseComplete(t *testing.T) {
 			Editor:     opt.NewString("vim"),
 			Pager:      opt.NewString("less"),
 			FzfPreview: opt.NewString("bat {1}"),
+			FzfLine:    opt.NewString("{{title}}"),
 		},
 		Filters: map[string]string{
 			"recents": "--created-after '2 weeks ago'",

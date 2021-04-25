@@ -50,7 +50,6 @@ func (cmd *List) Run(container *cli.Container) error {
 	filter := container.NewNoteFilter(fzf.NoteFilterOpts{
 		Interactive:  cmd.Interactive,
 		AlwaysFilter: false,
-		PreviewCmd:   container.Config.Tool.FzfPreview,
 		NotebookDir:  notebook.Path,
 	})
 

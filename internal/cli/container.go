@@ -33,6 +33,7 @@ type Container struct {
 	Logger             *util.ProxyLogger
 	Terminal           *term.Terminal
 	FS                 *fs.FileStorage
+	TemplateLoader     core.TemplateLoader
 	WorkingDir         string
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
@@ -49,6 +50,13 @@ func NewContainer(version string) (*Container, error) {
 	config := core.NewDefaultConfig()
 
 	handlebars.Init(term.SupportsUTF8(), logger)
+	// Template loader used for embedded templates (e.g. default config, fzf
+	// line, etc.).
+	templateLoader := handlebars.NewLoader(handlebars.LoaderOpts{
+		LookupPaths: []string{},
+		Styler:      styler,
+	})
+	templateLoader.RegisterHelper("style", hbhelpers.NewStyleHelper(styler, logger))
 
 	// Load global user config
 	configPath, err := locateGlobalConfig()
@@ -63,21 +71,15 @@ func NewContainer(version string) (*Container, error) {
 	}
 
 	return &Container{
-		Version:  version,
-		Config:   config,
-		Logger:   logger,
-		Terminal: term,
-		FS:       fs,
+		Version:        version,
+		Config:         config,
+		Logger:         logger,
+		Terminal:       term,
+		FS:             fs,
+		TemplateLoader: templateLoader,
 		Notebooks: core.NewNotebookStore(config, core.NotebookStorePorts{
-			FS: fs,
-			TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
-				loader := handlebars.NewLoader(handlebars.LoaderOpts{
-					LookupPaths: []string{},
-					Styler:      styler,
-				})
-
-				return loader, nil
-			},
+			FS:             fs,
+			TemplateLoader: templateLoader,
 			NotebookFactory: func(path string, config core.Config) (*core.Notebook, error) {
 				dbPath := filepath.Join(path, ".zk/notebook.db")
 				db, err := sqlite.Open(dbPath)
@@ -192,7 +194,9 @@ func (c *Container) CurrentNotebook() (*core.Notebook, error) {
 }
 
 func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
-	return fzf.NewNoteFilter(opts, c.FS, c.Terminal)
+	opts.PreviewCmd = c.Config.Tool.FzfPreview
+	opts.LineTemplate = c.Config.Tool.FzfLine
+	return fzf.NewNoteFilter(opts, c.FS, c.Terminal, c.TemplateLoader)
 }
 
 func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, error) {

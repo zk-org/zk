@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* Customize the format of `fzf`'s lines [with your own template](docs/tool-fzf.md).
+    ```toml
+    [tool]
+    fzf-line = "{{style 'green' path}}{{#each tags}} #{{this}}{{/each}} {{style 'black' body}}"
+    ```
+
 ### Fixed
 
 * Creating a new note from `fzf` in a directory containing spaces.
