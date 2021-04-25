@@ -36,7 +36,6 @@ func (cmd *Edit) Run(container *cli.Container) error {
 	filter := container.NewNoteFilter(fzf.NoteFilterOpts{
 		Interactive:  cmd.Interactive,
 		AlwaysFilter: true,
-		PreviewCmd:   container.Config.Tool.FzfPreview,
 		NewNoteDir:   cmd.newNoteDir(notebook),
 		NotebookDir:  notebook.Path,
 	})

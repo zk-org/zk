@@ -9,30 +9,30 @@ import (
 
 // NotebookStore retrieves or creates new notebooks.
 type NotebookStore struct {
-	config                Config
-	notebookFactory       NotebookFactory
-	templateLoaderFactory TemplateLoaderFactory
-	fs                    FileStorage
+	config          Config
+	notebookFactory NotebookFactory
+	templateLoader  TemplateLoader
+	fs              FileStorage
 
 	// Cached opened notebooks.
 	notebooks map[string]*Notebook
 }
 
 type NotebookStorePorts struct {
-	NotebookFactory       NotebookFactory
-	TemplateLoaderFactory TemplateLoaderFactory
-	FS                    FileStorage
+	NotebookFactory NotebookFactory
+	TemplateLoader  TemplateLoader
+	FS              FileStorage
 }
 
 // NewNotebookStore creates a new NotebookStore instance using the given
 // options and port implementations.
 func NewNotebookStore(config Config, ports NotebookStorePorts) *NotebookStore {
 	return &NotebookStore{
-		config:                config,
-		notebookFactory:       ports.NotebookFactory,
-		templateLoaderFactory: ports.TemplateLoaderFactory,
-		fs:                    ports.FS,
-		notebooks:             map[string]*Notebook{},
+		config:          config,
+		notebookFactory: ports.NotebookFactory,
+		templateLoader:  ports.TemplateLoader,
+		fs:              ports.FS,
+		notebooks:       map[string]*Notebook{},
 	}
 }
 
@@ -160,11 +160,7 @@ func (ns *NotebookStore) locateNotebook(path string) (string, error) {
 }
 
 func (ns *NotebookStore) generateConfig(options InitOpts) (string, error) {
-	loader, err := ns.templateLoaderFactory("en")
-	if err != nil {
-		return "", err
-	}
-	template, err := loader.LoadTemplate(defaultConfig)
+	template, err := ns.templateLoader.LoadTemplate(defaultConfig)
 	if err != nil {
 		return "", err
 	}

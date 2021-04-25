@@ -121,6 +121,7 @@ type ToolConfig struct {
 	Editor     opt.String
 	Pager      opt.String
 	FzfPreview opt.String
+	FzfLine    opt.String
 }
 
 // NoteConfig holds the user configuration used when generating new notes.
@@ -270,6 +271,9 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if tool.FzfPreview != nil {
 		config.Tool.FzfPreview = opt.NewStringWithPtr(tool.FzfPreview)
 	}
+	if tool.FzfLine != nil {
+		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
+	}
 
 	// Filters
 	if tomlConf.Filters != nil {
@@ -380,6 +384,7 @@ type tomlToolConfig struct {
 	Editor     *string
 	Pager      *string
 	FzfPreview *string `toml:"fzf-preview"`
+	FzfLine    *string `toml:"fzf-line"`
 }
 
 func charsetFromString(charset string) Charset {

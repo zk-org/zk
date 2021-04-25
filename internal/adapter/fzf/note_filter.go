@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/mickael-menu/zk/internal/adapter/term"
 	"github.com/mickael-menu/zk/internal/core"
@@ -13,9 +14,10 @@ import (
 
 // NoteFilter uses fzf to filter interactively a set of notes.
 type NoteFilter struct {
-	opts     NoteFilterOpts
-	fs       core.FileStorage
-	terminal *term.Terminal
+	opts           NoteFilterOpts
+	fs             core.FileStorage
+	terminal       *term.Terminal
+	templateLoader core.TemplateLoader
 }
 
 // NoteFilterOpts holds the configuration for the fzf notes filtering.
@@ -28,6 +30,8 @@ type NoteFilterOpts struct {
 	Interactive bool
 	// Indicates whether fzf is opened for every query, even if empty.
 	AlwaysFilter bool
+	// Format for a single line, taken from the config `fzf-line` property.
+	LineTemplate opt.String
 	// Preview command to run when selecting a note.
 	PreviewCmd opt.String
 	// When non null, a "create new note from query" binding will be added to
@@ -37,11 +41,12 @@ type NoteFilterOpts struct {
 	NotebookDir string
 }
 
-func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal) *NoteFilter {
+func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal, templateLoader core.TemplateLoader) *NoteFilter {
 	return &NoteFilter{
-		opts:     opts,
-		fs:       fs,
-		terminal: terminal,
+		opts:           opts,
+		fs:             fs,
+		terminal:       terminal,
+		templateLoader: templateLoader,
 	}
 }
 
@@ -55,9 +60,19 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		return notes, nil
 	}
 
+	lineTemplate, err := f.templateLoader.LoadTemplate(f.opts.LineTemplate.OrString(defaultLineTemplate).String())
+	if err != nil {
+		return selectedNotes, err
+	}
+
 	for _, note := range notes {
-		absPaths = append(absPaths, filepath.Join(f.opts.NotebookDir, note.Path))
-		relPaths = append(relPaths, note.Path)
+		absPath := filepath.Join(f.opts.NotebookDir, note.Path)
+		absPaths = append(absPaths, absPath)
+		if relPath, err := f.fs.Rel(absPath); err == nil {
+			relPaths = append(relPaths, relPath)
+		} else {
+			relPaths = append(relPaths, note.Path)
+		}
 	}
 
 	zkBin, err := os.Executable()
@@ -76,7 +91,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		bindings = append(bindings, Binding{
 			Keys:        "Ctrl-N",
 			Description: "create a note with the query as title" + suffix,
-			Action:      fmt.Sprintf("abort+execute(%s new %s --title {q} < /dev/tty > /dev/tty)", zkBin, dir.Path),
+			Action:      fmt.Sprintf(`abort+execute("%s" new "%s" --title {q} < /dev/tty > /dev/tty)`, zkBin, dir.Path),
 		})
 	}
 
@@ -92,15 +107,34 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	}
 
 	for i, note := range notes {
-		title := note.Title
-		if title == "" {
-			title = relPaths[i]
+		context := lineRenderContext{
+			Path:        note.Path,
+			AbsPath:     absPaths[i],
+			RelPath:     relPaths[i],
+			Title:       note.Title,
+			TitleOrPath: note.Title,
+			Body:        stringsutil.JoinLines(note.Body),
+			RawContent:  stringsutil.JoinLines(note.RawContent),
+			WordCount:   note.WordCount,
+			Tags:        note.Tags,
+			Metadata:    note.Metadata,
+			Created:     note.Created,
+			Modified:    note.Modified,
+			Checksum:    note.Checksum,
 		}
-		fzf.Add([]string{
-			f.terminal.MustStyle(title, core.StyleYellow),
-			f.terminal.MustStyle(stringsutil.JoinLines(note.Body), core.StyleUnderstate),
-			f.terminal.MustStyle(absPaths[i], core.StyleUnderstate),
-		})
+		if context.TitleOrPath == "" {
+			context.TitleOrPath = note.Path
+		}
+
+		line, err := lineTemplate.Render(context)
+		if err != nil {
+			return selectedNotes, err
+		}
+
+		// The absolute path is appended at the end of the line to be used in
+		// the preview command.
+		absPathField := f.terminal.MustStyle(context.AbsPath, core.StyleUnderstate)
+		fzf.Add([]string{line, absPathField})
 	}
 
 	selection, err := fzf.Selection()
@@ -118,4 +152,22 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	}
 
 	return selectedNotes, nil
+}
+
+var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}}`
+
+type lineRenderContext struct {
+	Path        string
+	AbsPath     string `handlebars:"abs-path"`
+	RelPath     string `handlebars:"rel-path"`
+	Title       string
+	TitleOrPath string `handlebars:"title-or-path"`
+	Body        string
+	RawContent  string `handlebars:"raw-content"`
+	WordCount   int    `handlebars:"word-count"`
+	Tags        []string
+	Metadata    map[string]interface{}
+	Created     time.Time
+	Modified    time.Time
+	Checksum    string
 }
