@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* Creating a new note from `fzf` in a directory containing spaces.
+
 
 ## 0.4.0
 

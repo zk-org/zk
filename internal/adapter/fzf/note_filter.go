@@ -76,7 +76,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		bindings = append(bindings, Binding{
 			Keys:        "Ctrl-N",
 			Description: "create a note with the query as title" + suffix,
-			Action:      fmt.Sprintf("abort+execute(%s new %s --title {q} < /dev/tty > /dev/tty)", zkBin, dir.Path),
+			Action:      fmt.Sprintf(`abort+execute("%s" new "%s" --title {q} < /dev/tty > /dev/tty)`, zkBin, dir.Path),
 		})
 	}
 
