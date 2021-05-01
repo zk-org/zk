@@ -49,15 +49,15 @@ type NoteIndex interface {
 // NoteIndexingStats holds statistics about a notebook indexing process.
 type NoteIndexingStats struct {
 	// Number of notes in the source.
-	SourceCount int
+	SourceCount int `json:"sourceCount"`
 	// Number of newly indexed notes.
-	AddedCount int
+	AddedCount int `json:"addedCount"`
 	// Number of notes modified since last indexing.
-	ModifiedCount int
+	ModifiedCount int `json:"modifiedCount"`
 	// Number of notes removed since last indexing.
-	RemovedCount int
+	RemovedCount int `json:"removedCount"`
 	// Duration of the indexing process.
-	Duration time.Duration
+	Duration time.Duration `json:"duration"`
 }
 
 // String implements Stringer

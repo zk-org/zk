@@ -5,15 +5,71 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mickael-menu/zk/internal/core"
+	"github.com/mickael-menu/zk/internal/util"
+	"github.com/mickael-menu/zk/internal/util/errors"
 	protocol "github.com/tliron/glsp/protocol_3_16"
-	"github.com/tliron/kutil/logging"
 )
+
+// documentStore holds opened documents.
+type documentStore struct {
+	documents map[string]*document
+	fs        core.FileStorage
+	logger    util.Logger
+}
+
+func newDocumentStore(fs core.FileStorage, logger util.Logger) *documentStore {
+	return &documentStore{
+		documents: map[string]*document{},
+		fs:        fs,
+		logger:    logger,
+	}
+}
+
+func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams) error {
+	langID := params.TextDocument.LanguageID
+	if langID != "markdown" && langID != "vimwiki" {
+		return nil
+	}
+
+	path, err := s.normalizePath(params.TextDocument.URI)
+	if err != nil {
+		return err
+	}
+	s.documents[path] = &document{
+		Path:    path,
+		Content: params.TextDocument.Text,
+	}
+
+	return nil
+}
+
+func (s *documentStore) Close(uri protocol.DocumentUri) {
+	delete(s.documents, uri)
+}
+
+func (s *documentStore) Get(pathOrURI string) (*document, bool) {
+	path, err := s.normalizePath(pathOrURI)
+	if err != nil {
+		s.logger.Err(err)
+		return nil, false
+	}
+	d, ok := s.documents[path]
+	return d, ok
+}
+
+func (s *documentStore) normalizePath(pathOrUri string) (string, error) {
+	path, err := uriToPath(pathOrUri)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to parse URI: %s", pathOrUri)
+	}
+	return s.fs.Canonical(path), nil
+}
 
 // document represents an opened file.
 type document struct {
 	Path    string
 	Content string
-	Log     logging.Logger
 	lines   []string
 }
 
