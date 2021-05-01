@@ -45,7 +45,6 @@ func NewServer(opts ServerOpts) *Server {
 		logging.Configure(10, opts.LogFile.Value)
 	}
 
-	workspace := newWorkspace()
 	handler := protocol.Handler{}
 	glspServer := glspserv.NewServer(&handler, opts.Name, debug)
 
@@ -67,16 +66,6 @@ func NewServer(opts ServerOpts) *Server {
 
 	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
 		clientCapabilities = params.Capabilities
-
-		if len(params.WorkspaceFolders) > 0 {
-			for _, f := range params.WorkspaceFolders {
-				workspace.addFolder(f.URI)
-			}
-		} else if params.RootURI != nil {
-			workspace.addFolder(*params.RootURI)
-		} else if params.RootPath != nil {
-			workspace.addFolder(*params.RootPath)
-		}
 
 		// To see the logs with coc.nvim, run :CocCommand workspace.showOutput
 		// https://github.com/neoclide/coc.nvim/wiki/Debug-language-server#using-output-channel
@@ -131,16 +120,6 @@ func NewServer(opts ServerOpts) *Server {
 
 	handler.SetTrace = func(context *glsp.Context, params *protocol.SetTraceParams) error {
 		protocol.SetTraceValue(params.Value)
-		return nil
-	}
-
-	handler.WorkspaceDidChangeWorkspaceFolders = func(context *glsp.Context, params *protocol.DidChangeWorkspaceFoldersParams) error {
-		for _, f := range params.Event.Added {
-			workspace.addFolder(f.URI)
-		}
-		for _, f := range params.Event.Removed {
-			workspace.removeFolder(f.URI)
-		}
 		return nil
 	}
 
