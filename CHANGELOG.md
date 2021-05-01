@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
     fzf-line = "{{style 'green' path}}{{#each tags}} #{{this}}{{/each}} {{style 'black' body}}"
     ```
 
+### Changed
+
+* Automatically index the notebook when saving a note with an LSP-enabled editor.
+    * This ensures that tags and notes auto-completion lists are up-to-date.
+
 ### Fixed
 
 * Creating a new note from `fzf` in a directory containing spaces.

@@ -143,6 +143,19 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentDidSave = func(context *glsp.Context, params *protocol.DidSaveTextDocumentParams) error {
+		doc, ok := server.documents.Get(params.TextDocument.URI)
+		if !ok {
+			return nil
+		}
+
+		notebook, err := server.notebookOf(doc)
+		if err != nil {
+			server.logger.Err(err)
+			return nil
+		}
+
+		_, err = notebook.Index(false)
+		server.logger.Err(err)
 		return nil
 	}
 
