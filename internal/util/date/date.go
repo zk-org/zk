@@ -1,6 +1,11 @@
 package date
 
-import "time"
+import (
+	"strconv"
+	"time"
+
+	"github.com/tj/go-naturaldate"
+)
 
 // Provider returns a date instance.
 type Provider interface {
@@ -29,4 +34,15 @@ func NewFrozen(date time.Time) Frozen {
 
 func (n *Frozen) Date() time.Time {
 	return n.date
+}
+
+// TimeFromNatural parses a human date into a time.Time.
+func TimeFromNatural(date string) (time.Time, error) {
+	if date == "" {
+		return time.Now(), nil
+	}
+	if i, err := strconv.ParseInt(date, 10, 0); err == nil && i >= 1000 && i < 5000 {
+		return time.Date(int(i), time.January, 0, 0, 0, 0, 0, time.UTC), nil
+	}
+	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
 }

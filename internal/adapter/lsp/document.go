@@ -109,6 +109,12 @@ func (d *document) WordAt(pos protocol.Position) string {
 	return ""
 }
 
+// ContentAtRange returns the document text at given range.
+func (d *document) ContentAtRange(rng protocol.Range) string {
+	startIndex, endIndex := rng.IndexesIn(d.Content)
+	return d.Content[startIndex:endIndex]
+}
+
 // GetLine returns the line at the given index.
 func (d *document) GetLine(index int) (string, bool) {
 	lines := d.GetLines()
