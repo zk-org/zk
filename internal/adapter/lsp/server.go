@@ -174,9 +174,13 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
-		triggerChar := params.Context.TriggerCharacter
-		if params.Context.TriggerKind != protocol.CompletionTriggerKindTriggerCharacter || triggerChar == nil {
-			return nil, nil
+		triggerChar := "["
+		// Clients don't have to send Context if they don't implement it, so it may be missing.
+		if params.Context != nil {
+			if params.Context.TriggerKind != protocol.CompletionTriggerKindTriggerCharacter || params.Context.TriggerCharacter == nil {
+				return nil, nil
+			}
+			triggerChar = *params.Context.TriggerCharacter
 		}
 
 		doc, ok := server.documents[params.TextDocument.URI]
@@ -189,7 +193,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		switch *triggerChar {
+		switch triggerChar {
 		case "#":
 			if notebook.Config.Format.Markdown.Hashtags {
 				return server.buildTagCompletionList(notebook, "#")
