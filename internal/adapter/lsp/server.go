@@ -143,7 +143,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		path := fs.Canonical(strings.TrimPrefix(params.TextDocument.URI, "file://"))
+		path, err := uriToPath(params.TextDocument.URI)
+		if err != nil {
+			server.logger.Printf("unable to parse URI: %v", err)
+			return nil
+		}
+		path = fs.Canonical(path)
 
 		server.documents[params.TextDocument.URI] = &document{
 			Path:    path,
@@ -243,8 +248,14 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target = strings.TrimPrefix(target, "file://")
-		contents, err := ioutil.ReadFile(target)
+		path, err := uriToPath(target)
+		if err != nil {
+			server.logger.Printf("unable to parse URI: %v", err)
+			return nil, err
+		}
+		path = fs.Canonical(path)
+
+		contents, err := ioutil.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
@@ -349,7 +360,8 @@ func (s *Server) targetForHref(href string, doc *document, notebook *core.Notebo
 		if note == nil {
 			return "", nil
 		}
-		return "file://" + filepath.Join(notebook.Path, note.Path), nil
+		joined_path := filepath.Join(notebook.Path, note.Path)
+		return pathToURI(joined_path), nil
 	}
 }
 
