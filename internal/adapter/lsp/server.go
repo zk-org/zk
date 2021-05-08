@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -338,31 +339,42 @@ func NewServer(opts ServerOpts) *Server {
 		if !ok {
 			return nil, nil
 		}
-		dir := filepath.Dir(doc.Path)
+		wd := filepath.Dir(doc.Path)
 
-		opts := cmdNewOpts{
-			Title: doc.ContentAtRange(params.Range),
-			Dir:   dir,
-			InsertLinkAtLocation: &protocol.Location{
-				URI:   params.TextDocument.URI,
-				Range: params.Range,
-			},
+		actions := []protocol.CodeAction{}
+
+		addAction := func(dir string, actionTitle string) error {
+			opts := cmdNewOpts{
+				Title: doc.ContentAtRange(params.Range),
+				Dir:   dir,
+				InsertLinkAtLocation: &protocol.Location{
+					URI:   params.TextDocument.URI,
+					Range: params.Range,
+				},
+			}
+
+			var jsonOpts map[string]interface{}
+			err := unmarshalJSON(opts, &jsonOpts)
+			if err != nil {
+				return err
+			}
+
+			actions = append(actions, protocol.CodeAction{
+				Title: actionTitle,
+				Kind:  stringPtr(protocol.CodeActionKindRefactor),
+				Command: &protocol.Command{
+					Command:   cmdNew,
+					Arguments: []interface{}{wd, jsonOpts},
+				},
+			})
+
+			return nil
 		}
 
-		var jsonOpts map[string]interface{}
-		err := unmarshalJSON(opts, &jsonOpts)
-		if err != nil {
-			return nil, err
-		}
+		addAction(wd, "New note in current directory")
+		addAction("", "New note in top directory")
 
-		return []protocol.CodeAction{{
-			Title: "New note from selection",
-			Kind:  stringPtr(protocol.CodeActionKindRefactor),
-			Command: &protocol.Command{
-				Command:   cmdNew,
-				Arguments: []interface{}{dir, jsonOpts},
-			},
-		}}, nil
+		return actions, nil
 	}
 
 	return server
