@@ -465,7 +465,11 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 		Date:      date,
 	})
 	if err != nil {
-		return nil, err
+		var noteExists core.ErrNoteExists
+		if !errors.As(err, &noteExists) {
+			return nil, err
+		}
+		path = noteExists.Path
 	}
 
 	// Index the notebook to be able to navigate to the new note.
