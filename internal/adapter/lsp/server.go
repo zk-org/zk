@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
+	dateutil "github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -22,7 +24,7 @@ import (
 type Server struct {
 	server    *glspserv.Server
 	notebooks *core.NotebookStore
-	documents map[protocol.DocumentUri]*document
+	documents *documentStore
 	fs        core.FileStorage
 	logger    util.Logger
 }
@@ -45,36 +47,27 @@ func NewServer(opts ServerOpts) *Server {
 		logging.Configure(10, opts.LogFile.Value)
 	}
 
-	workspace := newWorkspace()
 	handler := protocol.Handler{}
-	server := &Server{
-		server:    glspserv.NewServer(&handler, opts.Name, debug),
-		notebooks: opts.Notebooks,
-		documents: map[string]*document{},
-		fs:        fs,
-	}
+	glspServer := glspserv.NewServer(&handler, opts.Name, debug)
 
 	// Redirect zk's logger to GLSP's to avoid breaking the JSON-RPC protocol
 	// with unwanted output.
 	if opts.Logger != nil {
-		opts.Logger.Logger = newGlspLogger(server.server.Log)
-		server.logger = opts.Logger
+		opts.Logger.Logger = newGlspLogger(glspServer.Log)
+	}
+
+	server := &Server{
+		server:    glspServer,
+		notebooks: opts.Notebooks,
+		documents: newDocumentStore(fs, opts.Logger),
+		fs:        fs,
+		logger:    opts.Logger,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
 
 	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
 		clientCapabilities = params.Capabilities
-
-		if len(params.WorkspaceFolders) > 0 {
-			for _, f := range params.WorkspaceFolders {
-				workspace.addFolder(f.URI)
-			}
-		} else if params.RootURI != nil {
-			workspace.addFolder(*params.RootURI)
-		} else if params.RootPath != nil {
-			workspace.addFolder(*params.RootPath)
-		}
 
 		// To see the logs with coc.nvim, run :CocCommand workspace.showOutput
 		// https://github.com/neoclide/coc.nvim/wiki/Debug-language-server#using-output-channel
@@ -84,6 +77,8 @@ func NewServer(opts ServerOpts) *Server {
 
 		capabilities := handler.CreateServerCapabilities()
 		capabilities.HoverProvider = true
+		capabilities.DefinitionProvider = true
+		capabilities.CodeActionProvider = true
 
 		change := protocol.TextDocumentSyncKindIncremental
 		capabilities.TextDocumentSync = protocol.TextDocumentSyncOptions{
@@ -97,12 +92,16 @@ func NewServer(opts ServerOpts) *Server {
 
 		triggerChars := []string{"[", "#", ":"}
 
+		capabilities.ExecuteCommandProvider = &protocol.ExecuteCommandOptions{
+			Commands: []string{
+				cmdIndex,
+				cmdNew,
+			},
+		}
 		capabilities.CompletionProvider = &protocol.CompletionOptions{
 			TriggerCharacters: triggerChars,
 			ResolveProvider:   boolPtr(true),
 		}
-
-		capabilities.DefinitionProvider = boolPtr(true)
 
 		return protocol.InitializeResult{
 			Capabilities: capabilities,
@@ -127,40 +126,12 @@ func NewServer(opts ServerOpts) *Server {
 		return nil
 	}
 
-	handler.WorkspaceDidChangeWorkspaceFolders = func(context *glsp.Context, params *protocol.DidChangeWorkspaceFoldersParams) error {
-		for _, f := range params.Event.Added {
-			workspace.addFolder(f.URI)
-		}
-		for _, f := range params.Event.Removed {
-			workspace.removeFolder(f.URI)
-		}
-		return nil
-	}
-
 	handler.TextDocumentDidOpen = func(context *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
-		langID := params.TextDocument.LanguageID
-		if langID != "markdown" && langID != "vimwiki" {
-			return nil
-		}
-
-		path, err := uriToPath(params.TextDocument.URI)
-		if err != nil {
-			server.logger.Printf("unable to parse URI: %v", err)
-			return nil
-		}
-		path = fs.Canonical(path)
-
-		server.documents[params.TextDocument.URI] = &document{
-			Path:    path,
-			Content: params.TextDocument.Text,
-			Log:     server.server.Log,
-		}
-
-		return nil
+		return server.documents.DidOpen(*params)
 	}
 
 	handler.TextDocumentDidChange = func(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
-		doc, ok := server.documents[params.TextDocument.URI]
+		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil
 		}
@@ -170,11 +141,24 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentDidClose = func(context *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {
-		delete(server.documents, params.TextDocument.URI)
+		server.documents.Close(params.TextDocument.URI)
 		return nil
 	}
 
 	handler.TextDocumentDidSave = func(context *glsp.Context, params *protocol.DidSaveTextDocumentParams) error {
+		doc, ok := server.documents.Get(params.TextDocument.URI)
+		if !ok {
+			return nil
+		}
+
+		notebook, err := server.notebookOf(doc)
+		if err != nil {
+			server.logger.Err(err)
+			return nil
+		}
+
+		_, err = notebook.Index(false)
+		server.logger.Err(err)
 		return nil
 	}
 
@@ -184,7 +168,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, nil
 		}
 
-		doc, ok := server.documents[params.TextDocument.URI]
+		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
 		}
@@ -228,7 +212,7 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentHover = func(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
-		doc, ok := server.documents[params.TextDocument.URI]
+		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
 		}
@@ -269,7 +253,7 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentDocumentLink = func(context *glsp.Context, params *protocol.DocumentLinkParams) ([]protocol.DocumentLink, error) {
-		doc, ok := server.documents[params.TextDocument.URI]
+		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
 		}
@@ -301,7 +285,7 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
-		doc, ok := server.documents[params.TextDocument.URI]
+		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
 		}
@@ -335,7 +319,199 @@ func NewServer(opts ServerOpts) *Server {
 		}
 	}
 
+	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
+		switch params.Command {
+		case cmdIndex:
+			return server.executeCommandIndex(params.Arguments)
+		case cmdNew:
+			return server.executeCommandNew(context, params.Arguments)
+		default:
+			return nil, fmt.Errorf("unknown zk LSP command: %s", params.Command)
+		}
+	}
+
+	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (interface{}, error) {
+		if isRangeEmpty(params.Range) {
+			return nil, nil
+		}
+
+		doc, ok := server.documents.Get(params.TextDocument.URI)
+		if !ok {
+			return nil, nil
+		}
+		wd := filepath.Dir(doc.Path)
+
+		actions := []protocol.CodeAction{}
+
+		addAction := func(dir string, actionTitle string) error {
+			opts := cmdNewOpts{
+				Title: doc.ContentAtRange(params.Range),
+				Dir:   dir,
+				InsertLinkAtLocation: &protocol.Location{
+					URI:   params.TextDocument.URI,
+					Range: params.Range,
+				},
+			}
+
+			var jsonOpts map[string]interface{}
+			err := unmarshalJSON(opts, &jsonOpts)
+			if err != nil {
+				return err
+			}
+
+			actions = append(actions, protocol.CodeAction{
+				Title: actionTitle,
+				Kind:  stringPtr(protocol.CodeActionKindRefactor),
+				Command: &protocol.Command{
+					Command:   cmdNew,
+					Arguments: []interface{}{wd, jsonOpts},
+				},
+			})
+
+			return nil
+		}
+
+		addAction(wd, "New note in current directory")
+		addAction("", "New note in top directory")
+
+		return actions, nil
+	}
+
 	return server
+}
+
+const cmdIndex = "zk.index"
+
+func (s *Server) executeCommandIndex(args []interface{}) (interface{}, error) {
+	if len(args) == 0 {
+		return nil, fmt.Errorf("zk.index expects a notebook path as first argument")
+	}
+	path, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
+	}
+
+	force := false
+	if len(args) == 2 {
+		options, ok := args[1].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("zk.index expects a dictionary of options as second argument, got: %v", args[1])
+		}
+		if forceOption, ok := options["force"]; ok {
+			force = toBool(forceOption)
+		}
+	}
+
+	notebook, err := s.notebooks.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return notebook.Index(force)
+}
+
+const cmdNew = "zk.new"
+
+type cmdNewOpts struct {
+	Title                string             `json:"title,omitempty"`
+	Content              string             `json:"content,omitempty"`
+	Dir                  string             `json:"dir,omitempty"`
+	Group                string             `json:"group,omitempty"`
+	Template             string             `json:"template,omitempty"`
+	Extra                map[string]string  `json:"extra,omitempty"`
+	Date                 string             `json:"date,omitempty"`
+	Edit                 jsonBoolean        `json:"edit,omitempty"`
+	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation,omitempty"`
+}
+
+func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (interface{}, error) {
+	if len(args) == 0 {
+		return nil, fmt.Errorf("zk.index expects a notebook path as first argument")
+	}
+	wd, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
+	}
+
+	var opts cmdNewOpts
+	if len(args) > 1 {
+		arg, ok := args[1].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("zk.new expects a dictionary of options as second argument, got: %v", args[1])
+		}
+		err := unmarshalJSON(arg, &opts)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse zk.new args, got: %v", arg)
+		}
+	}
+
+	notebook, err := s.notebooks.Open(wd)
+	if err != nil {
+		return nil, err
+	}
+
+	date, err := dateutil.TimeFromNatural(opts.Date)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
+	}
+
+	path, err := notebook.NewNote(core.NewNoteOpts{
+		Title:     opt.NewNotEmptyString(opts.Title),
+		Content:   opts.Content,
+		Directory: opt.NewNotEmptyString(opts.Dir),
+		Group:     opt.NewNotEmptyString(opts.Group),
+		Template:  opt.NewNotEmptyString(opts.Template),
+		Extra:     opts.Extra,
+		Date:      date,
+	})
+	if err != nil {
+		var noteExists core.ErrNoteExists
+		if !errors.As(err, &noteExists) {
+			return nil, err
+		}
+		path = noteExists.Path
+	}
+
+	// Index the notebook to be able to navigate to the new note.
+	notebook.Index(false)
+
+	if opts.InsertLinkAtLocation != nil {
+		doc, ok := s.documents.Get(opts.InsertLinkAtLocation.URI)
+		if !ok {
+			return nil, fmt.Errorf("can't insert link in %s", opts.InsertLinkAtLocation.URI)
+		}
+		linkFormatter, err := notebook.NewLinkFormatter()
+		if err != nil {
+			return nil, err
+		}
+
+		relPath, err := filepath.Rel(filepath.Dir(doc.Path), path)
+		if err != nil {
+			return nil, err
+		}
+
+		link, err := linkFormatter(relPath, opts.Title)
+		if err != nil {
+			return nil, err
+		}
+
+		go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
+			Edit: protocol.WorkspaceEdit{
+				Changes: map[string][]protocol.TextEdit{
+					opts.InsertLinkAtLocation.URI: {{Range: opts.InsertLinkAtLocation.Range, NewText: link}},
+				},
+			},
+		}, nil)
+	}
+
+	if opts.Edit {
+		go context.Call(protocol.ServerWindowShowDocument, protocol.ShowDocumentParams{
+			URI:       "file://" + path,
+			TakeFocus: boolPtr(true),
+		}, nil)
+	}
+
+	return map[string]interface{}{"path": path}, nil
 }
 
 func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
@@ -513,6 +689,10 @@ func rangeFromPosition(pos protocol.Position, startOffset, endOffset int) protoc
 	}
 }
 
+func isRangeEmpty(pos protocol.Range) bool {
+	return pos.Start == pos.End
+}
+
 func boolPtr(v bool) *bool {
 	b := v
 	return &b
@@ -529,4 +709,17 @@ func isFalse(v *bool) bool {
 func stringPtr(v string) *string {
 	s := v
 	return &s
+}
+
+func unmarshalJSON(obj interface{}, v interface{}) error {
+	js, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(js, v)
+}
+
+func toBool(obj interface{}) bool {
+	s := strings.ToLower(fmt.Sprint(obj))
+	return s == "true" || s == "1"
 }

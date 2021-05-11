@@ -2,16 +2,15 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/internal/core"
+	dateutil "github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/strings"
-	"github.com/tj/go-naturaldate"
 )
 
 // Filtering holds filtering options to select notes.
@@ -205,14 +204,14 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 		opts.CreatedEnd = &end
 	} else {
 		if f.CreatedBefore != "" {
-			date, err := parseDate(f.CreatedBefore)
+			date, err := dateutil.TimeFromNatural(f.CreatedBefore)
 			if err != nil {
 				return opts, err
 			}
 			opts.CreatedEnd = &date
 		}
 		if f.CreatedAfter != "" {
-			date, err := parseDate(f.CreatedAfter)
+			date, err := dateutil.TimeFromNatural(f.CreatedAfter)
 			if err != nil {
 				return opts, err
 			}
@@ -229,14 +228,14 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 		opts.ModifiedEnd = &end
 	} else {
 		if f.ModifiedBefore != "" {
-			date, err := parseDate(f.ModifiedBefore)
+			date, err := dateutil.TimeFromNatural(f.ModifiedBefore)
 			if err != nil {
 				return opts, err
 			}
 			opts.ModifiedEnd = &date
 		}
 		if f.ModifiedAfter != "" {
-			date, err := parseDate(f.ModifiedAfter)
+			date, err := dateutil.TimeFromNatural(f.ModifiedAfter)
 			if err != nil {
 				return opts, err
 			}
@@ -266,15 +265,8 @@ func relPaths(notebook *core.Notebook, paths []string) ([]string, bool) {
 	return relPaths, len(relPaths) > 0
 }
 
-func parseDate(date string) (time.Time, error) {
-	if i, err := strconv.ParseInt(date, 10, 0); err == nil && i >= 1000 && i < 5000 {
-		return time.Date(int(i), time.January, 0, 0, 0, 0, 0, time.UTC), nil
-	}
-	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
-}
-
 func parseDayRange(date string) (start time.Time, end time.Time, err error) {
-	day, err := parseDate(date)
+	day, err := dateutil.TimeFromNatural(date)
 	if err != nil {
 		return
 	}
