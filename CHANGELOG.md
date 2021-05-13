@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * Creating a new note from `fzf` in a directory containing spaces.
+* Fix completion with Neovim's built-in LSP client (contributed by [@cormacrelf](https://github.com/mickael-menu/zk/pull/39)).
 
 
 ## 0.4.0
