@@ -163,11 +163,8 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
-		triggerChar := params.Context.TriggerCharacter
-		if params.Context.TriggerKind != protocol.CompletionTriggerKindTriggerCharacter || triggerChar == nil {
-			return nil, nil
-		}
-
+		// We don't use the context because clients might not send it. Instead,
+		// we'll look for trigger patterns in the document.
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -178,7 +175,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		switch *triggerChar {
+		switch doc.LookBehind(params.Position, 2) {
+		case "[[":
+			return server.buildLinkCompletionList(doc, notebook, params)
+		}
+
+		switch doc.LookBehind(params.Position, 1) {
 		case "#":
 			if notebook.Config.Format.Markdown.Hashtags {
 				return server.buildTagCompletionList(notebook, "#")
@@ -186,10 +188,6 @@ func NewServer(opts ServerOpts) *Server {
 		case ":":
 			if notebook.Config.Format.Markdown.ColonTags {
 				return server.buildTagCompletionList(notebook, ":")
-			}
-		case "[":
-			if doc.LookBehind(params.Position, 2) == "[[" {
-				return server.buildLinkCompletionList(doc, notebook, params)
 			}
 		}
 
