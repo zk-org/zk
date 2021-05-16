@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * [Editor integration through LSP](https://github.com/mickael-menu/zk/issues/22):
     * New code actions to create a note using the current selection as title.
     * Custom commands to [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
+    * Diagnostics to [report dead links or wiki-link titles](docs/config-lsp.md).
 * Customize the format of `fzf`'s lines [with your own template](docs/tool-fzf.md).
     ```toml
     [tool]
