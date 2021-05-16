@@ -68,7 +68,8 @@ func main() {
 	fatalIfError(err)
 	searchDirs, err := notebookSearchDirs(dirs)
 	fatalIfError(err)
-	container.SetCurrentNotebook(searchDirs)
+	err = container.SetCurrentNotebook(searchDirs)
+	fatalIfError(err)
 
 	// Run the alias or command.
 	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {

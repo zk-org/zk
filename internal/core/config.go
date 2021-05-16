@@ -15,6 +15,7 @@ type Config struct {
 	Groups  map[string]GroupConfig
 	Format  FormatConfig
 	Tool    ToolConfig
+	LSP     LSPConfig
 	Filters map[string]string
 	Aliases map[string]string
 	Extra   map[string]string
@@ -44,6 +45,12 @@ func NewDefaultConfig() Config {
 				LinkFormat:        "markdown",
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
+			},
+		},
+		LSP: LSPConfig{
+			Diagnostics: LSPDiagnosticConfig{
+				WikiTitle: LSPDiagnosticNone,
+				DeadLink:  LSPDiagnosticError,
 			},
 		},
 		Filters: map[string]string{},
@@ -124,6 +131,27 @@ type ToolConfig struct {
 	FzfLine    opt.String
 }
 
+// LSPConfig holds the Language Server Protocol configuration.
+type LSPConfig struct {
+	Diagnostics LSPDiagnosticConfig
+}
+
+// LSPDiagnosticConfig holds the LSP diagnostics configuration.
+type LSPDiagnosticConfig struct {
+	WikiTitle LSPDiagnosticSeverity
+	DeadLink  LSPDiagnosticSeverity
+}
+
+type LSPDiagnosticSeverity int
+
+const (
+	LSPDiagnosticNone    LSPDiagnosticSeverity = 0
+	LSPDiagnosticError   LSPDiagnosticSeverity = 1
+	LSPDiagnosticWarning LSPDiagnosticSeverity = 2
+	LSPDiagnosticInfo    LSPDiagnosticSeverity = 3
+	LSPDiagnosticHint    LSPDiagnosticSeverity = 4
+)
+
 // NoteConfig holds the user configuration used when generating new notes.
 type NoteConfig struct {
 	// Handlebars template used when generating a new filename.
@@ -184,12 +212,14 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage) (Config, error
 //
 // The parentConfig will be used to inherit default config settings.
 func ParseConfig(content []byte, path string, parentConfig Config) (Config, error) {
+	wrap := errors.Wrapperf("failed to read config")
+
 	config := parentConfig
 
 	var tomlConf tomlConfig
 	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
-		return config, errors.Wrap(err, "failed to read config")
+		return config, wrap(err)
 	}
 
 	// Note
@@ -275,6 +305,21 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
 	}
 
+	// LSP
+	lspDiags := tomlConf.LSP.Diagnostics
+	if lspDiags.WikiTitle != nil {
+		config.LSP.Diagnostics.WikiTitle, err = lspDiagnosticSeverityFromString(*lspDiags.WikiTitle)
+		if err != nil {
+			return config, wrap(err)
+		}
+	}
+	if lspDiags.DeadLink != nil {
+		config.LSP.Diagnostics.DeadLink, err = lspDiagnosticSeverityFromString(*lspDiags.DeadLink)
+		if err != nil {
+			return config, wrap(err)
+		}
+	}
+
 	// Filters
 	if tomlConf.Filters != nil {
 		for k, v := range tomlConf.Filters {
@@ -345,6 +390,7 @@ type tomlConfig struct {
 	Groups  map[string]tomlGroupConfig `toml:"group"`
 	Format  tomlFormatConfig
 	Tool    tomlToolConfig
+	LSP     tomlLSPConfig
 	Extra   map[string]string
 	Filters map[string]string `toml:"filter"`
 	Aliases map[string]string `toml:"alias"`
@@ -387,6 +433,13 @@ type tomlToolConfig struct {
 	FzfLine    *string `toml:"fzf-line"`
 }
 
+type tomlLSPConfig struct {
+	Diagnostics struct {
+		WikiTitle *string `toml:"wiki-title"`
+		DeadLink  *string `toml:"dead-link"`
+	}
+}
+
 func charsetFromString(charset string) Charset {
 	switch charset {
 	case "alphanum":
@@ -412,5 +465,22 @@ func caseFromString(c string) Case {
 		return CaseMixed
 	default:
 		return CaseLower
+	}
+}
+
+func lspDiagnosticSeverityFromString(s string) (LSPDiagnosticSeverity, error) {
+	switch s {
+	case "", "none":
+		return LSPDiagnosticNone, nil
+	case "error":
+		return LSPDiagnosticError, nil
+	case "warning":
+		return LSPDiagnosticWarning, nil
+	case "info":
+		return LSPDiagnosticInfo, nil
+	case "hint":
+		return LSPDiagnosticHint, nil
+	default:
+		return LSPDiagnosticNone, fmt.Errorf("%s: unknown LSP diagnostic severity - may be none, hint, info, warning or error", s)
 	}
 }
