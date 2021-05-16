@@ -8,6 +8,7 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
@@ -26,22 +27,24 @@ func newDocumentStore(fs core.FileStorage, logger util.Logger) *documentStore {
 	}
 }
 
-func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams) error {
+func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams, notify glsp.NotifyFunc) (*document, error) {
 	langID := params.TextDocument.LanguageID
 	if langID != "markdown" && langID != "vimwiki" {
-		return nil
+		return nil, nil
 	}
 
-	path, err := s.normalizePath(params.TextDocument.URI)
+	uri := params.TextDocument.URI
+	path, err := s.normalizePath(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.documents[path] = &document{
+	doc := &document{
+		URI:     uri,
 		Path:    path,
 		Content: params.TextDocument.Text,
 	}
-
-	return nil
+	s.documents[path] = doc
+	return doc, nil
 }
 
 func (s *documentStore) Close(uri protocol.DocumentUri) {
@@ -68,9 +71,11 @@ func (s *documentStore) normalizePath(pathOrUri string) (string, error) {
 
 // document represents an opened file.
 type document struct {
-	Path    string
-	Content string
-	lines   []string
+	URI                     protocol.DocumentUri
+	Path                    string
+	NeedsRefreshDiagnostics bool
+	Content                 string
+	lines                   []string
 }
 
 // ApplyChanges updates the content of the document from LSP textDocument/didChange events.
@@ -190,7 +195,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
 
-		appendLink := func(href string, start, end int) {
+		appendLink := func(href string, start, end int, hasTitle bool) {
 			if href == "" {
 				return
 			}
@@ -207,6 +212,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 						Character: protocol.UInteger(end),
 					},
 				},
+				HasTitle: hasTitle,
 			})
 		}
 
@@ -216,12 +222,13 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
-			appendLink(href, match[0], match[1])
+			appendLink(href, match[0], match[1], true)
 		}
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[2]:match[3]]
-			appendLink(href, match[0], match[1])
+			hasTitle := match[4] != -1
+			appendLink(href, match[0], match[1], hasTitle)
 		}
 	}
 
@@ -231,4 +238,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 type documentLink struct {
 	Href  string
 	Range protocol.Range
+	// HasTitle indicates whether this link has a title information. For
+	// example [[filename]] doesn't but [[filename|title]] does.
+	HasTitle bool
 }

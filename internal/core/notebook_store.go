@@ -296,6 +296,22 @@ multiword-tags = false
 #fzf-preview = "bat -p --color always {-1}"
 
 
+# LSP
+#
+#   Configure basic editor integration for LSP-compatible editors.
+#   See https://github.com/mickael-menu/zk/blob/main/docs/editors-integration.md
+#
+[lsp]
+
+[lsp.diagnostics]
+# Each diagnostic can have for value: none, hint, info, warning, error
+
+# Report titles of wiki-links as hints.
+#wiki-title = "hint"
+# Warn for dead links between notes.
+dead-link = "error"
+
+
 # NAMED FILTERS
 #
 #    A named filter is a set of note filtering options used frequently together.

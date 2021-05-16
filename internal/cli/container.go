@@ -161,9 +161,9 @@ func globalConfigDir() string {
 
 // SetCurrentNotebook sets the first notebook found in the given search paths
 // as the current default one.
-func (c *Container) SetCurrentNotebook(searchDirs []Dirs) {
+func (c *Container) SetCurrentNotebook(searchDirs []Dirs) error {
 	if len(searchDirs) == 0 {
-		return
+		return nil
 	}
 
 	for _, dirs := range searchDirs {
@@ -176,9 +176,14 @@ func (c *Container) SetCurrentNotebook(searchDirs []Dirs) {
 			c.Config = c.currentNotebook.Config
 			// FIXME: Is there something to do to support multiple notebooks here?
 			os.Setenv("ZK_NOTEBOOK_DIR", c.currentNotebook.Path)
-			return
+		}
+		// Report the error only if it's not the "notebook not found" one.
+		var errNotFound core.ErrNotebookNotFound
+		if !errors.As(c.currentNotebookErr, &errNotFound) {
+			return c.currentNotebookErr
 		}
 	}
+	return nil
 }
 
 // SetWorkingDir resets the current working directory.

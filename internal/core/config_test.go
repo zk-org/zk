@@ -43,6 +43,12 @@ func TestParseDefaultConfig(t *testing.T) {
 			FzfPreview: opt.NullString,
 			FzfLine:    opt.NullString,
 		},
+		LSP: LSPConfig{
+			Diagnostics: LSPDiagnosticConfig{
+				WikiTitle: LSPDiagnosticNone,
+				DeadLink:  LSPDiagnosticError,
+			},
+		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
 		Extra:   make(map[string]string),
@@ -115,6 +121,10 @@ func TestParseComplete(t *testing.T) {
 
 		[group."without path"]
 		paths = []
+		
+		[lsp.diagnostics]
+		wiki-title = "hint"
+		dead-link = "none"
 	`), ".zk/config.toml", NewDefaultConfig())
 
 	assert.Nil(t, err)
@@ -206,6 +216,12 @@ func TestParseComplete(t *testing.T) {
 			Pager:      opt.NewString("less"),
 			FzfPreview: opt.NewString("bat {1}"),
 			FzfLine:    opt.NewString("{{title}}"),
+		},
+		LSP: LSPConfig{
+			Diagnostics: LSPDiagnosticConfig{
+				WikiTitle: LSPDiagnosticHint,
+				DeadLink:  LSPDiagnosticNone,
+			},
 		},
 		Filters: map[string]string{
 			"recents": "--created-after '2 weeks ago'",
@@ -317,6 +333,12 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				LinkDropExtension: true,
 			},
 		},
+		LSP: LSPConfig{
+			Diagnostics: LSPDiagnosticConfig{
+				WikiTitle: LSPDiagnosticNone,
+				DeadLink:  LSPDiagnosticError,
+			},
+		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
 		Extra: map[string]string{
@@ -399,6 +421,34 @@ func TestParseMarkdownLinkEncodePath(t *testing.T) {
 	test("markdown", true)
 	test("wiki", false)
 	test("custom", false)
+}
+
+func TestParseLSPDiagnosticsSeverity(t *testing.T) {
+	test := func(value string, expected LSPDiagnosticSeverity) {
+		toml := fmt.Sprintf(`
+			[lsp.diagnostics]
+			wiki-title = "%s"
+			dead-link = "%s"
+		`, value, value)
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		assert.Nil(t, err)
+		assert.Equal(t, conf.LSP.Diagnostics.WikiTitle, expected)
+		assert.Equal(t, conf.LSP.Diagnostics.DeadLink, expected)
+	}
+
+	test("", LSPDiagnosticNone)
+	test("none", LSPDiagnosticNone)
+	test("error", LSPDiagnosticError)
+	test("warning", LSPDiagnosticWarning)
+	test("info", LSPDiagnosticInfo)
+	test("hint", LSPDiagnosticHint)
+
+	toml := `
+		[lsp.diagnostics]
+		wiki-title = "foobar"
+	`
+	_, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+	assert.Err(t, err, "foobar: unknown LSP diagnostic severity - may be none, hint, info, warning or error")
 }
 
 func TestGroupConfigClone(t *testing.T) {

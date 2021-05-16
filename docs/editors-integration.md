@@ -14,7 +14,10 @@ There are several extensions available to integrate `zk` in your favorite editor
 * Preview the content of a note when hovering a link.
 * Navigate in your notes by following internal links.
 * Create a new note using the current selection as title.
+* Diagnostics for dead links and wiki-links titles.
 * [And more to come...](https://github.com/mickael-menu/zk/issues/22)
+  
+You can configure some of these features in your notebook's [configuration file](config-lsp.md).
 
 ### Editor LSP configurations
 
