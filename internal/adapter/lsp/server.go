@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
@@ -127,7 +128,14 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentDidOpen = func(context *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
-		return server.documents.DidOpen(*params)
+		doc, err := server.documents.DidOpen(*params, context.Notify)
+		if err != nil {
+			return err
+		}
+		if doc != nil {
+			server.refreshDiagnosticsOfDocument(doc, context.Notify, false)
+		}
+		return nil
 	}
 
 	handler.TextDocumentDidChange = func(context *glsp.Context, params *protocol.DidChangeTextDocumentParams) error {
@@ -137,6 +145,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		doc.ApplyChanges(params.ContentChanges)
+		server.refreshDiagnosticsOfDocument(doc, context.Notify, true)
 		return nil
 	}
 
@@ -225,12 +234,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.targetForHref(link.Href, doc, notebook)
-		if err != nil || target == "" || strutil.IsURL(target) {
+		target, err := server.noteForHref(link.Href, doc, notebook)
+		if err != nil || target == nil {
 			return nil, err
 		}
 
-		path, err := uriToPath(target)
+		path, err := uriToPath(target.URI)
 		if err != nil {
 			server.logger.Printf("unable to parse URI: %v", err)
 			return nil, err
@@ -268,14 +277,14 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.targetForHref(link.Href, doc, notebook)
-			if target == "" || err != nil {
+			target, err := server.noteForHref(link.Href, doc, notebook)
+			if target == nil || err != nil {
 				continue
 			}
 
 			documentLinks = append(documentLinks, protocol.DocumentLink{
 				Range:  link.Range,
-				Target: &target,
+				Target: &target.URI,
 			})
 		}
 
@@ -298,8 +307,8 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.targetForHref(link.Href, doc, notebook)
-		if link == nil || target == "" || err != nil {
+		target, err := server.noteForHref(link.Href, doc, notebook)
+		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
 
@@ -308,11 +317,11 @@ func NewServer(opts ServerOpts) *Server {
 		if false && isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
-				TargetURI:            target,
+				TargetURI:            target.URI,
 			}, nil
 		} else {
 			return protocol.Location{
-				URI: target,
+				URI: target.URI,
 			}, nil
 		}
 	}
@@ -376,6 +385,11 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	return server
+}
+
+// Run starts the Language Server in stdio mode.
+func (s *Server) Run() error {
+	return errors.Wrap(s.server.RunStdio(), "lsp")
 }
 
 const cmdIndex = "zk.index"
@@ -516,32 +530,93 @@ func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 	return s.notebooks.Open(doc.Path)
 }
 
-// targetForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) targetForHref(href string, doc *document, notebook *core.Notebook) (string, error) {
+// noteForHref returns the LSP documentUri for the note at the given HREF.
+func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*Note, error) {
 	if strutil.IsURL(href) {
-		return href, nil
-	} else {
-		path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
-		path, err := filepath.Rel(notebook.Path, path)
-		if err != nil {
-			return "", errors.Wrapf(err, "failed to resolve href: %s", href)
-		}
-		note, err := notebook.FindByHref(path)
-		if err != nil {
-			s.logger.Printf("findByHref(%s): %s", href, err.Error())
-			return "", err
-		}
-		if note == nil {
-			return "", nil
-		}
-		joined_path := filepath.Join(notebook.Path, note.Path)
-		return pathToURI(joined_path), nil
+		return nil, nil
 	}
+
+	path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
+	path, err := filepath.Rel(notebook.Path, path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
+	}
+	note, err := notebook.FindByHref(path)
+	if err != nil {
+		s.logger.Printf("findByHref(%s): %s", href, err.Error())
+		return nil, err
+	}
+	if note == nil {
+		return nil, nil
+	}
+	joined_path := filepath.Join(notebook.Path, note.Path)
+
+	return &Note{*note, pathToURI(joined_path)}, nil
 }
 
-// Run starts the Language Server in stdio mode.
-func (s *Server) Run() error {
-	return errors.Wrap(s.server.RunStdio(), "lsp")
+type Note struct {
+	core.MinimalNote
+	URI protocol.DocumentUri
+}
+
+func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyFunc, delay bool) {
+	if doc.NeedsRefreshDiagnostics { // Already refreshing
+		return
+	}
+
+	doc.NeedsRefreshDiagnostics = true
+	go func() {
+		if delay {
+			time.Sleep(1 * time.Second)
+		}
+		doc.NeedsRefreshDiagnostics = false
+
+		notebook, err := s.notebookOf(doc)
+		if err != nil {
+			s.logger.Err(err)
+			return
+		}
+
+		diagnostics := []protocol.Diagnostic{}
+		links, err := doc.DocumentLinks()
+		if err != nil {
+			s.logger.Err(err)
+			return
+		}
+
+		for _, link := range links {
+			if strutil.IsURL(link.Href) {
+				continue
+			}
+			target, err := s.noteForHref(link.Href, doc, notebook)
+			if err != nil {
+				s.logger.Err(err)
+				continue
+			}
+
+			var severity protocol.DiagnosticSeverity
+			var message string
+			if target == nil {
+				severity = protocol.DiagnosticSeverityError
+				message = "not found"
+			} else {
+				severity = protocol.DiagnosticSeverityHint
+				message = target.Title
+			}
+
+			diagnostics = append(diagnostics, protocol.Diagnostic{
+				Range:    link.Range,
+				Severity: &severity,
+				Source:   stringPtr("zk"),
+				Message:  message,
+			})
+		}
+
+		go notify(protocol.ServerTextDocumentPublishDiagnostics, protocol.PublishDiagnosticsParams{
+			URI:         doc.URI,
+			Diagnostics: diagnostics,
+		})
+	}()
 }
 
 func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {

@@ -8,6 +8,7 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
@@ -26,22 +27,24 @@ func newDocumentStore(fs core.FileStorage, logger util.Logger) *documentStore {
 	}
 }
 
-func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams) error {
+func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams, notify glsp.NotifyFunc) (*document, error) {
 	langID := params.TextDocument.LanguageID
 	if langID != "markdown" && langID != "vimwiki" {
-		return nil
+		return nil, nil
 	}
 
-	path, err := s.normalizePath(params.TextDocument.URI)
+	uri := params.TextDocument.URI
+	path, err := s.normalizePath(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.documents[path] = &document{
+	doc := &document{
+		URI:     uri,
 		Path:    path,
 		Content: params.TextDocument.Text,
 	}
-
-	return nil
+	s.documents[path] = doc
+	return doc, nil
 }
 
 func (s *documentStore) Close(uri protocol.DocumentUri) {
@@ -68,9 +71,11 @@ func (s *documentStore) normalizePath(pathOrUri string) (string, error) {
 
 // document represents an opened file.
 type document struct {
-	Path    string
-	Content string
-	lines   []string
+	URI                     protocol.DocumentUri
+	Path                    string
+	NeedsRefreshDiagnostics bool
+	Content                 string
+	lines                   []string
 }
 
 // ApplyChanges updates the content of the document from LSP textDocument/didChange events.
