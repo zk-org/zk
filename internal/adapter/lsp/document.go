@@ -195,7 +195,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
 
-		appendLink := func(href string, start, end int) {
+		appendLink := func(href string, start, end int, hasTitle bool) {
 			if href == "" {
 				return
 			}
@@ -212,6 +212,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 						Character: protocol.UInteger(end),
 					},
 				},
+				HasTitle: hasTitle,
 			})
 		}
 
@@ -221,12 +222,13 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
-			appendLink(href, match[0], match[1])
+			appendLink(href, match[0], match[1], true)
 		}
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[2]:match[3]]
-			appendLink(href, match[0], match[1])
+			hasTitle := match[4] != -1
+			appendLink(href, match[0], match[1], hasTitle)
 		}
 	}
 
@@ -236,4 +238,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 type documentLink struct {
 	Href  string
 	Range protocol.Range
+	// HasTitle indicates whether this link has a title information. For
+	// example [[filename]] doesn't but [[filename|title]] does.
+	HasTitle bool
 }

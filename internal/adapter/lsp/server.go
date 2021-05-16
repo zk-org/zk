@@ -564,18 +564,24 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 		return
 	}
 
+	notebook, err := s.notebookOf(doc)
+	if err != nil {
+		s.logger.Err(err)
+		return
+	}
+
+	diagConfig := notebook.Config.LSP.Diagnostics
+	if diagConfig.WikiTitle == core.LSPDiagnosticNone && diagConfig.DeadLink == core.LSPDiagnosticNone {
+		// No diagnostic enabled.
+		return
+	}
+
 	doc.NeedsRefreshDiagnostics = true
 	go func() {
 		if delay {
 			time.Sleep(1 * time.Second)
 		}
 		doc.NeedsRefreshDiagnostics = false
-
-		notebook, err := s.notebookOf(doc)
-		if err != nil {
-			s.logger.Err(err)
-			return
-		}
 
 		diagnostics := []protocol.Diagnostic{}
 		links, err := doc.DocumentLinks()
@@ -597,10 +603,16 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 			var severity protocol.DiagnosticSeverity
 			var message string
 			if target == nil {
-				severity = protocol.DiagnosticSeverityError
+				if diagConfig.DeadLink == core.LSPDiagnosticNone {
+					continue
+				}
+				severity = protocol.DiagnosticSeverity(diagConfig.DeadLink)
 				message = "not found"
 			} else {
-				severity = protocol.DiagnosticSeverityHint
+				if link.HasTitle || diagConfig.WikiTitle == core.LSPDiagnosticNone {
+					continue
+				}
+				severity = protocol.DiagnosticSeverity(diagConfig.WikiTitle)
 				message = target.Title
 			}
 
