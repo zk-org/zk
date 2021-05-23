@@ -91,7 +91,7 @@ func NewServer(opts ServerOpts) *Server {
 			ResolveProvider: boolPtr(true),
 		}
 
-		triggerChars := []string{"[", "#", ":"}
+		triggerChars := []string{"(", "[", "#", ":"}
 
 		capabilities.ExecuteCommandProvider = &protocol.ExecuteCommandOptions{
 			Commands: []string{
@@ -182,6 +182,11 @@ func NewServer(opts ServerOpts) *Server {
 		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
+		}
+
+		switch doc.LookBehind(params.Position, 3) {
+		case "]((":
+			return server.buildLinkCompletionList(doc, notebook, params)
 		}
 
 		switch doc.LookBehind(params.Position, 2) {
@@ -666,7 +671,7 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config core.
 }
 
 func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
-	linkFormatter, err := notebook.NewLinkFormatter()
+	linkFormatter, err := newLinkFormatter(doc, notebook, params)
 	if err != nil {
 		return nil, err
 	}
@@ -688,6 +693,14 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 	}
 
 	return items, nil
+}
+
+func newLinkFormatter(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) (core.LinkFormatter, error) {
+	if doc.LookBehind(params.Position, 3) == "]((" {
+		return core.NewMarkdownLinkFormatter(notebook.Config.Format.Markdown, true)
+	} else {
+		return notebook.NewLinkFormatter()
+	}
 }
 
 func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
@@ -739,9 +752,10 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	}
 
 	// Some LSP clients (e.g. VSCode) auto-pair brackets, so we need to
-	// remove the closing ]] after the completion.
+	// remove the closing ]] or )) after the completion.
 	endOffset := 0
-	if doc.LookForward(pos, 2) == "]]" {
+	suffix := doc.LookForward(pos, 2)
+	if suffix == "]]" || suffix == "))" {
 		endOffset = 2
 	}
 

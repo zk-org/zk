@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
     * New code actions to create a note using the current selection as title.
     * Custom commands to [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
     * Diagnostics to [report dead links or wiki-link titles](docs/config-lsp.md).
+    * Auto-complete only the path of a Markdown link by typing `[custom title]((`.
 * Customize the format of `fzf`'s lines [with your own template](docs/tool-fzf.md).
     ```toml
     [tool]
