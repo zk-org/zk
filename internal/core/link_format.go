@@ -15,47 +15,36 @@ type LinkFormatter func(path string, title string) (string, error)
 // NewLinkFormatter generates a new LinkFormatter from the user Markdown
 // configuration.
 func NewLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader) (LinkFormatter, error) {
-	var formatter LinkFormatter
-	var err error
 	switch config.LinkFormat {
 	case "markdown", "":
-		formatter, err = newMarkdownLinkFormatter(config)
+		return NewMarkdownLinkFormatter(config, false)
 	case "wiki":
-		formatter, err = newWikiLinkFormatter(config)
+		return NewWikiLinkFormatter(config)
 	default:
-		formatter, err = newCustomLinkFormatter(config, templateLoader)
+		return NewCustomLinkFormatter(config, templateLoader)
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return func(path, title string) (string, error) {
-		if config.LinkDropExtension {
-			path = paths.DropExt(path)
-		}
-		if config.LinkEncodePath {
-			path = strings.ReplaceAll(url.PathEscape(path), "%2F", "/")
-		}
-
-		return formatter(path, title)
-	}, nil
 }
 
-func newMarkdownLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
+func NewMarkdownLinkFormatter(config MarkdownConfig, onlyHref bool) (LinkFormatter, error) {
 	return func(path, title string) (string, error) {
+		path = formatPath(path, config)
 		if !config.LinkEncodePath {
 			path = strings.ReplaceAll(path, `\`, `\\`)
 			path = strings.ReplaceAll(path, `)`, `\)`)
 		}
-		title = strings.ReplaceAll(title, `\`, `\\`)
-		title = strings.ReplaceAll(title, `]`, `\]`)
-		return fmt.Sprintf("[%s](%s)", title, path), nil
+		if onlyHref {
+			return fmt.Sprintf("(%s)", path), nil
+		} else {
+			title = strings.ReplaceAll(title, `\`, `\\`)
+			title = strings.ReplaceAll(title, `]`, `\]`)
+			return fmt.Sprintf("[%s](%s)", title, path), nil
+		}
 	}, nil
 }
 
-func newWikiLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
+func NewWikiLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
 	return func(path, title string) (string, error) {
+		path = formatPath(path, config)
 		if !config.LinkEncodePath {
 			path = strings.ReplaceAll(path, `\`, `\\`)
 			path = strings.ReplaceAll(path, `]]`, `\]]`)
@@ -64,7 +53,7 @@ func newWikiLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
 	}, nil
 }
 
-func newCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader) (LinkFormatter, error) {
+func NewCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader) (LinkFormatter, error) {
 	wrap := errors.Wrapperf("failed to render custom link with format: %s", config.LinkFormat)
 	template, err := templateLoader.LoadTemplate(config.LinkFormat)
 	if err != nil {
@@ -72,6 +61,7 @@ func newCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader
 	}
 
 	return func(path, title string) (string, error) {
+		path = formatPath(path, config)
 		return template.Render(customLinkRenderContext{Path: path, Title: title})
 	}, nil
 }
@@ -79,4 +69,14 @@ func newCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader
 type customLinkRenderContext struct {
 	Path  string
 	Title string
+}
+
+func formatPath(path string, config MarkdownConfig) string {
+	if config.LinkDropExtension {
+		path = paths.DropExt(path)
+	}
+	if config.LinkEncodePath {
+		path = strings.ReplaceAll(url.PathEscape(path), "%2F", "/")
+	}
+	return path
 }

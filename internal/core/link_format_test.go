@@ -36,6 +36,36 @@ func TestMarkdownLinkFormatter(t *testing.T) {
 	test("path/to note.md", "An interesting subject", "[An interesting subject](path/to%20note)")
 }
 
+func TestMarkdownLinkFormatterOnlyHref(t *testing.T) {
+	newTester := func(encodePath, dropExtension bool) func(path, expected string) {
+		formatter, err := NewMarkdownLinkFormatter(MarkdownConfig{
+			LinkFormat:        "markdown",
+			LinkEncodePath:    encodePath,
+			LinkDropExtension: dropExtension,
+		}, true)
+		assert.Nil(t, err)
+
+		return func(path, expected string) {
+			actual, err := formatter(path, "")
+			assert.Nil(t, err)
+			assert.Equal(t, actual, expected)
+		}
+	}
+
+	test := newTester(false, false)
+	test("path/to note.md", "(path/to note.md)")
+	test("", "()")
+	test("path/to note.md", "(path/to note.md)")
+	test(`path/(no\te).md`, `(path/(no\\te\).md)`)
+	test = newTester(true, false)
+	test("path/to note.md", "(path/to%20note.md)")
+	test(`path/(no\te).md`, `(path/%28no%5Cte%29.md)`)
+	test = newTester(false, true)
+	test("path/to note.md", "(path/to note)")
+	test = newTester(true, true)
+	test("path/to note.md", "(path/to%20note)")
+}
+
 func TestWikiLinkFormatter(t *testing.T) {
 	newTester := func(encodePath, dropExtension bool) func(path, title, expected string) {
 		formatter, err := NewLinkFormatter(MarkdownConfig{
