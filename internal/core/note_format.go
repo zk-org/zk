@@ -11,7 +11,7 @@ import (
 // NoteFormatter formats notes to be printed on the screen.
 type NoteFormatter func(note ContextualNote) (string, error)
 
-func newNoteFormatter(basePath string, template Template, linkFormatter LinkFormatter, fs FileStorage) (NoteFormatter, error) {
+func newNoteFormatter(basePath string, template Template, linkFormatter LinkFormatter, env map[string]string, fs FileStorage) (NoteFormatter, error) {
 	termRepl, err := template.Styler().Style("$1", StyleTerm)
 	if err != nil {
 		return nil, err
@@ -54,20 +54,20 @@ var noteTermRegex = regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
 // noteFormatRenderContext holds the variables available to the note formatting
 // templates.
 type noteFormatRenderContext struct {
-	Path       string
-	Title      string
-	Link       fmt.Stringer
-	Lead       string
-	Body       string
-	Snippets   []string
-	RawContent string `handlebars:"raw-content"`
-	WordCount  int    `handlebars:"word-count"`
-	Tags       []string
-	Metadata   map[string]interface{}
-	Created    time.Time
-	Modified   time.Time
-	Checksum   string
-	Env        map[string]string
+	Path       string                 `json:"path"`
+	Title      string                 `json:"title"`
+	Link       fmt.Stringer           `json:"link"`
+	Lead       string                 `json:"lead"`
+	Body       string                 `json:"body"`
+	Snippets   []string               `json:"snippets"`
+	RawContent string                 `json:"rawContent" handlebars:"raw-content"`
+	WordCount  int                    `json:"wordCount" handlebars:"word-count"`
+	Tags       []string               `json:"tags"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	Created    time.Time              `json:"created"`
+	Modified   time.Time              `json:"modified"`
+	Checksum   string                 `json:"checksum"`
+	Env        map[string]string      `json:"-"`
 }
 
 func (c noteFormatRenderContext) Equal(other noteFormatRenderContext) bool {
