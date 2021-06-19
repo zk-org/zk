@@ -45,6 +45,7 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			Created:    note.Created,
 			Modified:   note.Modified,
 			Checksum:   note.Checksum,
+			Env:        env,
 		})
 	}, nil
 }
