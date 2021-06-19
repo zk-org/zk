@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* [#16](https://github.com/mickael-menu/zk/issues/16) Links with section anchors, e.g. `[[filename#section]]`.
+
 
 ## 0.5.0
 

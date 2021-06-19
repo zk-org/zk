@@ -154,7 +154,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				},
 				{
 					Title: "Second is added",
-					Href:  "f39c8",
+					Href:  "f39c8#anchor",
 					Rels:  core.LinkRels("second"),
 				},
 				{
@@ -194,7 +194,7 @@ func TestNoteDAOAddWithLinks(t *testing.T) {
 				SourceId: id,
 				TargetId: idPointer(4),
 				Title:    "Second is added",
-				Href:     "f39c8",
+				Href:     "f39c8#anchor",
 				Rels:     "\x01second\x01",
 			},
 			{
