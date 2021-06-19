@@ -364,6 +364,8 @@ An https://inline-link.com and http://another-inline-link.com.
 
 A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].
 
+[[lien accentué]]
+
 It can contain [[esca]\]ped \[chara\\cters]].
 
 A [[[Folgezettel link]]] is surrounded by three brackets.
@@ -462,13 +464,22 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			SnippetEnd:   351,
 		},
 		{
+			Title:        "lien accentué",
+			Href:         "lien accentué",
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[[lien accentué]]",
+			SnippetStart: 353,
+			SnippetEnd:   371,
+		},
+		{
 			Title:        `esca]]ped [chara\cters`,
 			Href:         `esca]]ped [chara\cters`,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      `It can contain [[esca]\]ped \[chara\\cters]].`,
-			SnippetStart: 353,
-			SnippetEnd:   398,
+			SnippetStart: 373,
+			SnippetEnd:   418,
 		},
 		{
 			Title:        "Folgezettel link",
@@ -476,8 +487,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "A [[[Folgezettel link]]] is surrounded by three brackets.",
-			SnippetStart: 400,
-			SnippetEnd:   457,
+			SnippetStart: 420,
+			SnippetEnd:   477,
 		},
 		{
 			Title:        "trailing hash",
@@ -485,8 +496,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
-			SnippetStart: 459,
-			SnippetEnd:   523,
+			SnippetStart: 479,
+			SnippetEnd:   543,
 		},
 		{
 			Title:        "leading hash",
@@ -494,8 +505,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			IsExternal:   false,
 			Rels:         core.LinkRels("up"),
 			Snippet:      "A #[[leading hash]] is used for #uplinks.",
-			SnippetStart: 525,
-			SnippetEnd:   566,
+			SnippetStart: 545,
+			SnippetEnd:   586,
 		},
 		{
 			Title:        "Trailing link",
@@ -503,8 +514,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
-			SnippetStart: 568,
-			SnippetEnd:   650,
+			SnippetStart: 588,
+			SnippetEnd:   670,
 		},
 		{
 			Title:        "Leading link",
@@ -512,8 +523,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			IsExternal:   false,
 			Rels:         core.LinkRels("up"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
-			SnippetStart: 568,
-			SnippetEnd:   650,
+			SnippetStart: 588,
+			SnippetEnd:   670,
 		},
 		{
 			Title:        "External links",
@@ -521,8 +532,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			Rels:         []core.LinkRelation{},
 			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
-			SnippetStart: 652,
-			SnippetEnd:   724,
+			SnippetStart: 672,
+			SnippetEnd:   744,
 		},
 		{
 			Title:        "as such",
@@ -530,8 +541,8 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			Rels:         []core.LinkRelation{},
 			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
-			SnippetStart: 652,
-			SnippetEnd:   724,
+			SnippetStart: 672,
+			SnippetEnd:   744,
 		},
 	})
 }
