@@ -175,6 +175,10 @@ func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
 
 // FindByHref retrieves the first note matching the given link href.
 func (n *Notebook) FindByHref(href string) (*MinimalNote, error) {
+	// Remove any anchor at the end of the HREF, since it's most likely
+	// matching a sub-section in the note.
+	href = strings.SplitN(href, "#", 2)[0]
+
 	notes, err := n.FindMinimalNotes(NoteFindOpts{
 		IncludePaths: []string{href},
 		Limit:        1,

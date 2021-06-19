@@ -290,6 +290,10 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteID, error) {
 }
 
 func (d *NoteDAO) findIdByPathPrefix(path string) (core.NoteID, error) {
+	// Remove any anchor at the end of the HREF, since it's most likely
+	// matching a sub-section in the note.
+	path = strings.SplitN(path, "#", 2)[0]
+
 	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
 	if err != nil {
 		return 0, err

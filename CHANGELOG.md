@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+* [#16](https://github.com/mickael-menu/zk/issues/16) Links with section anchors, e.g. `[[filename#section]]`.
 * Unicode support in wiki links. If you use accents or ideograms, please run `zk index --force` after upgrading to fix your index.
 
 
