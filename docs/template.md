@@ -99,3 +99,17 @@ The `{{style}}` helper is mostly useful when formatting content for the command-
 {{#style 'underline'}}Another text{{/style}}
 ```
 
+### JSON helper
+
+The `{{json}}` helper serializes its argument to a JSON value. This is useful to generate valid JSON objects, for example:
+
+```
+{ "title": {{json title}}, "tags": {{json tags}} }
+->
+{ "title": "A \"quoted\" title", "tags": ["example", "json"] }
+```
+
+**Warning**: The template parser trips on `}}}`, so make sure to add an extra space before the third `}`.
+
+You can serialize the whole template context as a JSON object with `{{json .}}`, which is how `zk list --format json` produces its output.
+

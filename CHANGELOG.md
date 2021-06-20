@@ -10,8 +10,8 @@ All notable changes to this project will be documented in this file.
     * `--format json` prints a plain JSON array.
     * `--format jsonl` prints one JSON note object per line, according to [JSON Lines](https://jsonlines.org/).
 * The new `{{json}}` template helper serializes any template context variable into a valid JSON value, e.g.:
-    * `{{json title}}` prints `"An interesting note"`
-    * `{{json .}}` serializes the full template context.
+    * `{{json title}}` prints with quotes `"An interesting note"`
+    * `{{json .}}` serializes the full template context as a JSON object.
 * Use `--header` and `--footer` options with `zk list` to print arbitrary text at the start or end of the list.
 
 ### Fixed
