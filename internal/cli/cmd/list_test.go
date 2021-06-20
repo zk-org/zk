@@ -20,6 +20,8 @@ func TestListFormatPredefined(t *testing.T) {
 	}
 
 	// Known formats
+	test("json", `{{json .}}`)
+	test("jsonl", `{{json .}}`)
 	test("path", `{{path}}`)
 	test("link", `{{link}}`)
 

@@ -106,3 +106,12 @@ func TestInList(t *testing.T) {
 	test([]string{"one", "two"}, "one", true)
 	test([]string{"one", "two"}, "three", false)
 }
+
+func TestExpandWhitespaceLiterals(t *testing.T) {
+	test := func(s string, expected string) {
+		assert.Equal(t, ExpandWhitespaceLiterals(s), expected)
+	}
+
+	test(`nothing`, "nothing")
+	test(`newline\ntab\t`, "newline\ntab\t")
+}

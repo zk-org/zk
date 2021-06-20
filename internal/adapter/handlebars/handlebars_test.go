@@ -149,6 +149,28 @@ func TestJoinHelper(t *testing.T) {
 	test([]string{"Item 1", "Item 2", "Item 3"}, "Item 1-Item 2-Item 3")
 }
 
+type testJSONObject struct {
+	Foo     string
+	Missing string   `json:"missing,omitempty"`
+	List    []string `json:"stringList"`
+}
+
+func TestJSONHelper(t *testing.T) {
+	test := func(value interface{}, expected string) {
+		context := map[string]interface{}{"value": value}
+		testString(t, "{{json value}}", context, expected)
+	}
+
+	test(`foo"bar"`, `"foo\"bar\""`)
+	test([]string{"foo", "bar"}, `["foo","bar"]`)
+	test(map[string]string{"foo": "bar"}, `{"foo":"bar"}`)
+	test(map[string]string{"foo": "bar"}, `{"foo":"bar"}`)
+	test(testJSONObject{
+		Foo:  "baz",
+		List: []string{"foo", "bar"},
+	}, `{"Foo":"baz","stringList":["foo","bar"]}`)
+}
+
 func TestPrependHelper(t *testing.T) {
 	// inline
 	testString(t, "{{prepend '> ' 'A quote'}}", nil, "> A quote")
