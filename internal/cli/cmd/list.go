@@ -13,7 +13,7 @@ import (
 
 // List displays notes matching a set of criteria.
 type List struct {
-	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using the given format."`
+	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: oneline, short, medium, long, full, json, jsonl."`
 	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
 	Footer     string `group:format                                help:"Arbitrary text printed at the end of the list."`
 	Delimiter  string "group:format short:d default:\n             help:\"Print notes delimited by the given separator.\""
