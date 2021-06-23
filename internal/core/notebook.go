@@ -300,7 +300,7 @@ func (n *Notebook) NewNoteFormatter(templateString string) (NoteFormatter, error
 		return nil, err
 	}
 
-	return newNoteFormatter(n.Path, template, linkFormatter, n.fs)
+	return newNoteFormatter(n.Path, template, linkFormatter, n.osEnv(), n.fs)
 }
 
 // NewLinkFormatter returns a LinkFormatter used to generate internal links between notes.

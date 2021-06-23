@@ -202,6 +202,9 @@ func (t *formatTest) run(format string) (NoteFormatter, error) {
 			return t.templateLoader, nil
 		},
 		FS: t.fs,
+		OSEnv: func() map[string]string {
+			return map[string]string{}
+		},
 	})
 
 	return notebook.NewNoteFormatter(format)
