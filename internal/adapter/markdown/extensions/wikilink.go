@@ -51,7 +51,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		endPos          = 0     // Last position of the link in the line
 	)
 
-	appendChar := func(c byte) {
+	appendRune := func(c rune) {
 		if parsingLabel {
 			label += string(c)
 		} else {
@@ -59,7 +59,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		}
 	}
 
-	for i, char := range line {
+	for i, char := range string(line) {
 		endPos = i
 
 		if closed {
@@ -116,11 +116,11 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		// We add them to the HREF and reset the count.
 		if closerCharCount > 0 {
 			for i := 0; i < closerCharCount; i++ {
-				appendChar(']')
+				appendRune(']')
 			}
 			closerCharCount = 0
 		}
-		appendChar(char)
+		appendRune(char)
 	}
 
 	if !closed || len(href) == 0 {
