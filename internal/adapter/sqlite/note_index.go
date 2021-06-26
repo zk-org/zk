@@ -46,6 +46,15 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 	return
 }
 
+// FindLinksBetweenNotes implements core.NoteIndex.
+func (ni *NoteIndex) FindLinksBetweenNotes(ids []core.NoteID) (links []core.ResolvedLink, err error) {
+	err = ni.commit(func(dao *dao) error {
+		links, err = dao.notes.FindLinksBetweenNotes(ids)
+		return err
+	})
+	return
+}
+
 // FindCollections implements core.NoteIndex.
 func (ni *NoteIndex) FindCollections(kind core.CollectionKind) (collections []core.Collection, err error) {
 	err = ni.commit(func(dao *dao) error {

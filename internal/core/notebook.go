@@ -197,6 +197,11 @@ func (n *Notebook) FindByHref(href string) (*MinimalNote, error) {
 	}
 }
 
+// FindLinksBetweenNotes retrieves the links between the given notes.
+func (n *Notebook) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error) {
+	return n.index.FindLinksBetweenNotes(ids)
+}
+
 // FindCollections retrieves all the collections of the given kind.
 func (n *Notebook) FindCollections(kind CollectionKind) ([]Collection, error) {
 	return n.index.FindCollections(kind)

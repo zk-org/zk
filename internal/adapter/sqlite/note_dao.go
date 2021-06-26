@@ -902,3 +902,69 @@ func buildMentionQuery(title, metadataJSON string) string {
 type RowScanner interface {
 	Scan(dest ...interface{}) error
 }
+
+func (d *NoteDAO) FindLinksBetweenNotes(ids []core.NoteID) ([]core.ResolvedLink, error) {
+	links := make([]core.ResolvedLink, 0)
+
+	idsString := d.joinIds(ids, ",")
+	rows, err := d.tx.Query(fmt.Sprintf(`
+		SELECT id, source_id, source_path, target_id, target_path, title, href, external, rels, snippet, snippet_start, snippet_end
+		  FROM links_with_metadata
+		 WHERE source_id IN (%s) AND target_id IN (%s)
+	`, idsString, idsString))
+	if err != nil {
+		return links, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		link, err := d.scanLink(rows)
+		if err != nil {
+			d.logger.Err(err)
+			continue
+		}
+		if link != nil {
+			links = append(links, *link)
+		}
+	}
+
+	return links, nil
+}
+
+func (d *NoteDAO) scanLink(row RowScanner) (*core.ResolvedLink, error) {
+	var (
+		id, sourceID, targetID, snippetStart, snippetEnd int
+		sourcePath, targetPath, title, href, snippet     string
+		external                                         bool
+		rels                                             sql.NullString
+	)
+
+	err := row.Scan(
+		&id, &sourceID, &sourcePath, &targetID, &targetPath, &title, &href,
+		&external, &rels, &snippet, &snippetStart, &snippetEnd,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
+		return nil, err
+	default:
+		return &core.ResolvedLink{
+			SourceID:   core.NoteID(sourceID),
+			SourcePath: sourcePath,
+			TargetID:   core.NoteID(targetID),
+			TargetPath: targetPath,
+			Link: core.Link{
+				Title:      title,
+				Href:       href,
+				IsExternal: external,
+				Rels:       []core.LinkRelation{},
+				// FIXME
+				// Rels:         parseListFromNullString(rels),
+				Snippet:      snippet,
+				SnippetStart: snippetStart,
+				SnippetEnd:   snippetEnd,
+			},
+		}, nil
+	}
+}

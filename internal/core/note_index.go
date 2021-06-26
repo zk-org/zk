@@ -25,6 +25,9 @@ type NoteIndex interface {
 	// given filtering and sorting criteria.
 	FindMinimal(opts NoteFindOpts) ([]MinimalNote, error)
 
+	// FindLinksBetweenNotes retrieves the links between the given notes.
+	FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error)
+
 	// FindCollections retrieves all the collections of the given kind.
 	FindCollections(kind CollectionKind) ([]Collection, error)
 
