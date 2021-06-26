@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#16](https://github.com/mickael-menu/zk/issues/16) Links with section anchors, e.g. `[[filename#section]]`.
+* Unicode support in wiki links. If you use accents or ideograms, please run `zk index --force` after upgrading to fix your index.
 
 
 ## 0.5.0
@@ -26,7 +27,7 @@ All notable changes to this project will be documented in this file.
 * [Editor integration through LSP](https://github.com/mickael-menu/zk/issues/22):
     * New code actions to create a note using the current selection as title.
     * Custom commands to [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
-    * Diagnostics to [report dead links or wiki-link titles](docs/config-lsp.md).
+    * Diagnostics to [report dead links or wiki link titles](docs/config-lsp.md).
     * Auto-complete only the path of a Markdown link by typing `[custom title]((`.
 * Customize the format of `fzf`'s lines [with your own template](docs/tool-fzf.md).
     ```toml
@@ -51,7 +52,7 @@ All notable changes to this project will be documented in this file.
 
 * Interactive wizard for the `zk init` command.
 * An experimental Language Server for LSP-compatible editors:
-    * Auto-complete Markdown links with `[[` (setup wiki-links in the [note formats configuration](docs/note-format.md))
+    * Auto-complete Markdown links with `[[` (setup wiki links in the [note formats configuration](docs/note-format.md))
     * Auto-complete [hashtags and colon-separated tags](docs/tags.md).
     * Preview the content of a note when hovering a link.
     * Navigate in your notes by following internal links.
@@ -62,7 +63,7 @@ All notable changes to this project will be documented in this file.
 * Generating links to notes.
     * Use the `{{link}}` template variable when [formatting notes](docs/template-format.md) to print a link to the note, relative to the working directory.
     * Use the `{{format-link path title}}` template helper to render a custom link.
-    * Customize the link format from the [note formats settings](docs/note-format.md). You can for example choose regular Markdown links, Wiki-links or a custom format.
+    * Customize the link format from the [note formats settings](docs/note-format.md). You can for example choose regular Markdown links, wiki links or a custom format.
 
 ### Changed
 
