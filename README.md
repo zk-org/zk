@@ -54,16 +54,8 @@ $ chmod a+x go
 
 ```
 $ brew install icu4c
-$ ./go build
+$ make
 $ ./zk -h
-```
-
-##### Apple Silicon
-
-The build command needs additional environment variables on Apple Silicon:
-
-```
-$ GOARCH=arm64 CGO_CFLAGS="-I/opt/homebrew/opt/icu4c/include" CGO_LDFLAGS="-L/opt/homebrew/opt/icu4c/lib" ./go build
 ```
 
 #### On Linux
@@ -72,7 +64,7 @@ $ GOARCH=arm64 CGO_CFLAGS="-I/opt/homebrew/opt/icu4c/include" CGO_LDFLAGS="-L/op
 
 ```
 $ apt-install libicu-dev
-$ ./go build
+$ make
 $ ./zk -h
 ```
 
