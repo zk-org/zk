@@ -104,6 +104,12 @@ func NewServer(opts ServerOpts) *Server {
 			ResolveProvider:   boolPtr(true),
 		}
 
+		capabilities.ReferencesProvider = &protocol.ReferenceOptions{
+			WorkDoneProgressOptions: protocol.WorkDoneProgressOptions{
+				WorkDoneProgress: boolPtr(false),
+			},
+		}
+
 		return protocol.InitializeResult{
 			Capabilities: capabilities,
 			ServerInfo: &protocol.InitializeResultServerInfo{
@@ -387,6 +393,75 @@ func NewServer(opts ServerOpts) *Server {
 		addAction("", "New note in top directory")
 
 		return actions, nil
+	}
+
+	handler.TextDocumentReferences = func(context *glsp.Context, params *protocol.ReferenceParams) ([]protocol.Location, error) {
+		doc, ok := server.documents.Get(params.TextDocument.URI)
+		if !ok {
+			return nil, nil
+		}
+
+		link, err := doc.DocumentLinkAt(params.Position)
+		if link == nil || err != nil {
+			return nil, err
+		}
+
+		notebook, err := server.notebookOf(doc)
+		if err != nil {
+			return nil, err
+		}
+
+		target, err := server.noteForHref(link.Href, doc, notebook)
+		if link == nil || target == nil || err != nil {
+			return nil, err
+		}
+
+		opts := core.NoteFindOpts{}
+		p, err := notebook.RelPath(target.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		opts.LinkTo = &core.LinkFilter{
+			Paths:       []string{p},
+			Negate:      false,
+			Recursive:   true,
+			MaxDistance: 1,
+		}
+
+		notes, err := notebook.FindNotes(opts)
+		if err != nil {
+			return nil, err
+		}
+
+		var locations []protocol.Location
+
+		for _, note := range notes {
+			pos := strings.Index(note.RawContent, target.Path[0:len(target.Path)-3])
+			var line uint32 = 0
+			if pos < 0 {
+				line = 0
+			} else {
+				linePos := strings.Count(note.RawContent[0:pos], "\n")
+				line = uint32(linePos)
+			}
+
+			locations = append(locations, protocol.Location{
+				URI: "file://" + filepath.Join(notebook.Path, note.Path),
+				Range: protocol.Range{
+					Start: protocol.Position{
+						Line:      line,
+						Character: 0,
+					},
+					End: protocol.Position{
+						Line:      line,
+						Character: 0,
+					},
+				},
+			})
+		}
+
+		return locations, nil
 	}
 
 	return server
