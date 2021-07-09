@@ -439,7 +439,7 @@ func NewServer(opts ServerOpts) *Server {
 			}
 
 			locations = append(locations, protocol.Location{
-				URI: "file://" + filepath.Join(notebook.Path, note.Path),
+				URI: pathToURI(filepath.Join(notebook.Path, note.Path)),
 				Range: protocol.Range{
 					Start: protocol.Position{
 						Line:      line,
