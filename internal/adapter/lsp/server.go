@@ -104,11 +104,7 @@ func NewServer(opts ServerOpts) *Server {
 			ResolveProvider:   boolPtr(true),
 		}
 
-		capabilities.ReferencesProvider = &protocol.ReferenceOptions{
-			WorkDoneProgressOptions: protocol.WorkDoneProgressOptions{
-				WorkDoneProgress: boolPtr(false),
-			},
-		}
+		capabilities.ReferencesProvider = &protocol.ReferenceOptions{}
 
 		return protocol.InitializeResult{
 			Capabilities: capabilities,
@@ -416,17 +412,13 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		opts := core.NoteFindOpts{}
 		p, err := notebook.RelPath(target.Path)
 		if err != nil {
 			return nil, err
 		}
 
-		opts.LinkTo = &core.LinkFilter{
-			Paths:       []string{p},
-			Negate:      false,
-			Recursive:   true,
-			MaxDistance: 1,
+		opts := core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{Paths: []string{p}},
 		}
 
 		notes, err := notebook.FindNotes(opts)
