@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
@@ -35,6 +36,7 @@ func NewDefaultConfig() Config {
 				Length:  4,
 				Case:    CaseLower,
 			},
+			Ignore: []string{},
 		},
 		Groups: map[string]GroupConfig{},
 		Format: FormatConfig{
@@ -68,6 +70,16 @@ func (c Config) RootGroupConfig() GroupConfig {
 	}
 }
 
+// GroupConfigForPath returns the GroupConfig for the group matching the given
+// path relative to the notebook. Fallback on the root GroupConfig.
+func (c Config) GroupConfigForPath(path string) (GroupConfig, error) {
+	name, err := c.GroupNameForPath(path)
+	if err != nil {
+		return GroupConfig{}, err
+	}
+	return c.GroupConfigNamed(name)
+}
+
 // GroupConfigNamed returns the GroupConfig for the group with the given name.
 // An empty name matches the root GroupConfig.
 func (c Config) GroupConfigNamed(name string) (GroupConfig, error) {
@@ -91,6 +103,9 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 			if err != nil {
 				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
 			} else if matches {
+				return name, nil
+			}
+			if strings.HasPrefix(path, groupPath+"/") {
 				return name, nil
 			}
 		}
@@ -166,6 +181,8 @@ type NoteConfig struct {
 	DefaultTitle string
 	// Settings used when generating a random ID.
 	IDOptions IDOptions
+	// Path globs to ignore when indexing notes.
+	Ignore []string
 }
 
 // GroupConfig holds the user configuration for a given group of notes.
@@ -173,6 +190,22 @@ type GroupConfig struct {
 	Paths []string
 	Note  NoteConfig
 	Extra map[string]string
+}
+
+// IgnoreGlobs returns all the Note.Ignore path globs for the group paths,
+// relative to the root of the notebook.
+func (c GroupConfig) IgnoreGlobs() []string {
+	if len(c.Paths) == 0 {
+		return c.Note.Ignore
+	}
+
+	globs := []string{}
+	for _, p := range c.Paths {
+		for _, g := range c.Note.Ignore {
+			globs = append(globs, filepath.Join(p, g))
+		}
+	}
+	return globs
 }
 
 // Clone creates a copy of the GroupConfig receiver.
@@ -247,6 +280,9 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	}
 	if note.DefaultTitle != "" {
 		config.Note.DefaultTitle = note.DefaultTitle
+	}
+	for _, v := range note.Ignore {
+		config.Note.Ignore = append(config.Note.Ignore, v)
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
@@ -375,6 +411,9 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	if note.DefaultTitle != "" {
 		res.Note.DefaultTitle = note.DefaultTitle
 	}
+	for _, v := range note.Ignore {
+		res.Note.Ignore = append(res.Note.Ignore, v)
+	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
 			res.Extra[k] = v
@@ -400,11 +439,12 @@ type tomlNoteConfig struct {
 	Filename     string
 	Extension    string
 	Template     string
-	Lang         string `toml:"language"`
-	DefaultTitle string `toml:"default-title"`
-	IDCharset    string `toml:"id-charset"`
-	IDLength     int    `toml:"id-length"`
-	IDCase       string `toml:"id-case"`
+	Lang         string   `toml:"language"`
+	DefaultTitle string   `toml:"default-title"`
+	IDCharset    string   `toml:"id-charset"`
+	IDLength     int      `toml:"id-length"`
+	IDCase       string   `toml:"id-case"`
+	Ignore       []string `toml:"ignore"`
 }
 
 type tomlGroupConfig struct {

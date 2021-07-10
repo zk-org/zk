@@ -25,6 +25,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			},
 			DefaultTitle: "Untitled",
 			Lang:         "en",
+			Ignore:       []string{},
 		},
 		Groups: make(map[string]GroupConfig),
 		Format: FormatConfig{
@@ -73,6 +74,7 @@ func TestParseComplete(t *testing.T) {
 		id-charset = "alphanum"
 		id-length = 4
 		id-case = "lower"
+		ignore = ["ignored", ".git"]
 
 		[format.markdown]
 		hashtags = false
@@ -112,6 +114,7 @@ func TestParseComplete(t *testing.T) {
 		id-charset = "letters"
 		id-length = 8
 		id-case = "mixed"
+		ignore = ["new-ignored"]
 		
 		[group.log.extra]
 		log-ext = "value"
@@ -140,6 +143,7 @@ func TestParseComplete(t *testing.T) {
 			},
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
+			Ignore:       []string{"ignored", ".git"},
 		},
 		Groups: map[string]GroupConfig{
 			"log": {
@@ -155,6 +159,7 @@ func TestParseComplete(t *testing.T) {
 					},
 					Lang:         "de",
 					DefaultTitle: "Ohne Titel",
+					Ignore:       []string{"ignored", ".git", "new-ignored"},
 				},
 				Extra: map[string]string{
 					"hello":   "world",
@@ -175,6 +180,7 @@ func TestParseComplete(t *testing.T) {
 					},
 					Lang:         "fr",
 					DefaultTitle: "Sans titre",
+					Ignore:       []string{"ignored", ".git"},
 				},
 				Extra: map[string]string{
 					"hello": "world",
@@ -194,6 +200,7 @@ func TestParseComplete(t *testing.T) {
 					},
 					Lang:         "fr",
 					DefaultTitle: "Sans titre",
+					Ignore:       []string{"ignored", ".git"},
 				},
 				Extra: map[string]string{
 					"hello": "world",
@@ -249,6 +256,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		id-charset = "letters"
 		id-length = 42
 		id-case = "upper"
+		ignore = ["ignored", ".git"]
 
 		[extra]
 		hello = "world"
@@ -281,6 +289,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			},
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
+			Ignore:       []string{"ignored", ".git"},
 		},
 		Groups: map[string]GroupConfig{
 			"log": {
@@ -296,6 +305,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 					},
 					Lang:         "fr",
 					DefaultTitle: "Sans titre",
+					Ignore:       []string{"ignored", ".git"},
 				},
 				Extra: map[string]string{
 					"hello":   "override",
@@ -316,6 +326,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 					},
 					Lang:         "fr",
 					DefaultTitle: "Sans titre",
+					Ignore:       []string{"ignored", ".git"},
 				},
 				Extra: map[string]string{
 					"hello": "world",
@@ -451,6 +462,33 @@ func TestParseLSPDiagnosticsSeverity(t *testing.T) {
 	assert.Err(t, err, "foobar: unknown LSP diagnostic severity - may be none, hint, info, warning or error")
 }
 
+func TestGroupConfigIgnoreGlobs(t *testing.T) {
+	// empty globs
+	config := GroupConfig{
+		Paths: []string{"path"},
+		Note:  NoteConfig{Ignore: []string{}},
+	}
+	assert.Equal(t, config.IgnoreGlobs(), []string{})
+
+	// empty paths
+	config = GroupConfig{
+		Paths: []string{},
+		Note: NoteConfig{
+			Ignore: []string{"ignored", ".git"},
+		},
+	}
+	assert.Equal(t, config.IgnoreGlobs(), []string{"ignored", ".git"})
+
+	// several paths
+	config = GroupConfig{
+		Paths: []string{"log", "drafts"},
+		Note: NoteConfig{
+			Ignore: []string{"ignored", "*.git"},
+		},
+	}
+	assert.Equal(t, config.IgnoreGlobs(), []string{"log/ignored", "log/*.git", "drafts/ignored", "drafts/*.git"})
+}
+
 func TestGroupConfigClone(t *testing.T) {
 	original := GroupConfig{
 		Paths: []string{"original"},
@@ -465,6 +503,7 @@ func TestGroupConfigClone(t *testing.T) {
 			},
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
+			Ignore:       []string{"ignored", ".git"},
 		},
 		Extra: map[string]string{
 			"hello": "world",
@@ -484,6 +523,7 @@ func TestGroupConfigClone(t *testing.T) {
 	clone.Note.IDOptions.Case = CaseUpper
 	clone.Note.Lang = "de"
 	clone.Note.DefaultTitle = "Ohne Titel"
+	clone.Note.Ignore = []string{"other-ignored"}
 	clone.Extra["test"] = "modified"
 
 	// Check that we didn't modify the original
@@ -500,6 +540,7 @@ func TestGroupConfigClone(t *testing.T) {
 			},
 			Lang:         "fr",
 			DefaultTitle: "Sans titre",
+			Ignore:       []string{"ignored", ".git"},
 		},
 		Extra: map[string]string{
 			"hello": "world",

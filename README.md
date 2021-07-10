@@ -45,7 +45,6 @@ Make sure you have a working [Go installation](https://golang.org/), then clone 
 ```sh
 $ git clone https://github.com/mickael-menu/zk.git
 $ cd zk
-$ chmod a+x go
 ```
 
 #### On macOS

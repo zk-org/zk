@@ -15,7 +15,7 @@ import (
 type List struct {
 	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: oneline, short, medium, long, full, json, jsonl."`
 	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
-	Footer     string `group:format                                help:"Arbitrary text printed at the end of the list."`
+	Footer     string `group:format default:\n                     help:"Arbitrary text printed at the end of the list."`
 	Delimiter  string "group:format short:d default:\n             help:\"Print notes delimited by the given separator.\""
 	Delimiter0 bool   "group:format short:0 name:delimiter0        help:\"Print notes delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
 	NoPager    bool   `group:format short:P help:"Do not pipe output into a pager."`
@@ -35,7 +35,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		if cmd.Header != "" {
 			return errors.New("--footer and --delimiter0 can't be used together")
 		}
-		if cmd.Footer != "" {
+		if cmd.Footer != "\n" {
 			return errors.New("--footer and --delimiter0 can't be used together")
 		}
 
@@ -47,7 +47,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		if cmd.Header != "" {
 			return errors.New("--header can't be used with JSON format")
 		}
-		if cmd.Footer != "" {
+		if cmd.Footer != "\n" {
 			return errors.New("--footer can't be used with JSON format")
 		}
 		if cmd.Delimiter != "\n" {
@@ -129,7 +129,7 @@ func (cmd *List) Run(container *cli.Container) error {
 	}
 
 	if err == nil && !cmd.Quiet {
-		fmt.Fprintf(os.Stderr, "\n\nFound %d %s\n", count, strings.Pluralize("note", count))
+		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
 	return err

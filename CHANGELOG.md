@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+<!-- ## Unreleased -->
+
+## 0.6.0
 
 ### Added
 
@@ -13,6 +15,15 @@ All notable changes to this project will be documented in this file.
     * `{{json title}}` prints with quotes `"An interesting note"`
     * `{{json .}}` serializes the full template context as a JSON object.
 * Use `--header` and `--footer` options with `zk list` to print arbitrary text at the start or end of the list.
+* Support for LSP references to browse the backlinks of the link under the caret (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/58)).
+* New [`note.ignore`](docs/config-note.md) configuration option to ignore files matching the given path globs when indexing notes.
+    ```yaml
+    [note]
+    ignore = [
+        "log-*.md"
+        "drafts/*"
+    ]
+    ```
 
 ### Fixed
 
