@@ -23,7 +23,10 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			return "", err
 		}
 
-		fullPath := filepath.Join(basePath, note.Path)
+		fullPath, err := fs.Abs(filepath.Join(basePath, note.Path))
+		if err != nil {
+			return "", err
+		}
 
 		snippets := make([]string, 0)
 		for _, snippet := range note.Snippets {
