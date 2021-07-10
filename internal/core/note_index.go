@@ -95,8 +95,31 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 	force := t.force || needsReindexing
 
-	// FIXME: Use Extension defined in each DirConfig.
-	source := paths.Walk(t.notebook.Path, t.notebook.Config.Note.Extension, t.logger)
+	shouldIgnorePath := func(path string) (bool, error) {
+		group, err := t.notebook.Config.GroupConfigForPath(path)
+		if err != nil {
+			return true, err
+		}
+
+		if filepath.Ext(path) != "."+group.Note.Extension {
+			return true, nil
+		}
+
+		for _, ignoreGlob := range group.IgnoreGlobs() {
+			matches, err := filepath.Match(ignoreGlob, path)
+			if err != nil {
+				return true, errors.Wrapf(err, "failed to match ignore glob %s to %s", ignoreGlob, path)
+			}
+			if matches {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	}
+
+	source := paths.Walk(t.notebook.Path, t.logger, shouldIgnorePath)
+
 	target, err := t.index.IndexedPaths()
 	if err != nil {
 		return stats, wrap(err)
