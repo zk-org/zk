@@ -95,8 +95,17 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 	force := t.force || needsReindexing
 
-	// FIXME: Use Extension defined in each DirConfig.
-	source := paths.Walk(t.notebook.Path, t.notebook.Config.Note.Extension, t.logger)
+	shouldIgnorePath := func(path string) (bool, error) {
+		group, err := t.notebook.Config.GroupConfigForPath(path)
+		if err != nil {
+			return false, err
+		}
+
+		return filepath.Ext(path) != "."+group.Note.Extension, nil
+	}
+
+	source := paths.Walk(t.notebook.Path, t.logger, shouldIgnorePath)
+
 	target, err := t.index.IndexedPaths()
 	if err != nil {
 		return stats, wrap(err)

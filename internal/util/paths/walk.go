@@ -8,11 +8,9 @@ import (
 	"github.com/mickael-menu/zk/internal/util"
 )
 
-// Walk emits the metadata of each file stored in the directory with the given extension.
-// Hidden files and directories are ignored.
-func Walk(basePath string, extension string, logger util.Logger) <-chan Metadata {
-	extension = "." + extension
-
+// Walk emits the metadata of each file stored in the directory if they pass
+// the given shouldIgnorePath closure. Hidden files and directories are ignored.
+func Walk(basePath string, logger util.Logger, shouldIgnorePath func(string) (bool, error)) <-chan Metadata {
 	c := make(chan Metadata, 50)
 	go func() {
 		defer close(c)
@@ -31,13 +29,17 @@ func Walk(basePath string, extension string, logger util.Logger) <-chan Metadata
 				}
 
 			} else {
-				if isHidden || filepath.Ext(filename) != extension {
-					return nil
-				}
-
 				path, err := filepath.Rel(basePath, abs)
 				if err != nil {
 					logger.Println(err)
+					return nil
+				}
+				shouldIgnore, err := shouldIgnorePath(path)
+				if err != nil {
+					logger.Println(err)
+					return nil
+				}
+				if isHidden || shouldIgnore {
 					return nil
 				}
 

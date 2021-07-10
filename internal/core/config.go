@@ -68,6 +68,16 @@ func (c Config) RootGroupConfig() GroupConfig {
 	}
 }
 
+// GroupConfigForPath returns the GroupConfig for the group matching the given
+// path relative to the notebook. Fallback on the root GroupConfig.
+func (c Config) GroupConfigForPath(path string) (GroupConfig, error) {
+	name, err := c.GroupNameForPath(path)
+	if err != nil {
+		return GroupConfig{}, err
+	}
+	return c.GroupConfigNamed(name)
+}
+
 // GroupConfigNamed returns the GroupConfig for the group with the given name.
 // An empty name matches the root GroupConfig.
 func (c Config) GroupConfigNamed(name string) (GroupConfig, error) {

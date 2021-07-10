@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/mickael-menu/zk/internal/util"
@@ -11,8 +12,12 @@ import (
 func TestWalk(t *testing.T) {
 	var path = fixtures.Path("walk")
 
+	shouldIgnore := func(path string) (bool, error) {
+		return filepath.Ext(path) != ".md", nil
+	}
+
 	actual := make([]string, 0)
-	for m := range Walk(path, "md", &util.NullLogger) {
+	for m := range Walk(path, &util.NullLogger, shouldIgnore) {
 		assert.NotNil(t, m.Modified)
 		actual = append(actual, m.Path)
 	}
