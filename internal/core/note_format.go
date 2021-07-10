@@ -23,7 +23,7 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			return "", err
 		}
 
-		fullPath, err := fs.Abs(filepath.Join(basePath, note.Path))
+		absPath, err := fs.Abs(filepath.Join(basePath, note.Path))
 		if err != nil {
 			return "", err
 		}
@@ -34,9 +34,9 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 		}
 
 		return template.Render(noteFormatRenderContext{
-			Path:     path,
-			FullPath: fullPath,
-			Title:    note.Title,
+			Path:    path,
+			AbsPath: absPath,
+			Title:   note.Title,
 			Link: newLazyStringer(func() string {
 				link, _ := linkFormatter(path, note.Title)
 				return link
@@ -62,7 +62,7 @@ var noteTermRegex = regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
 // templates.
 type noteFormatRenderContext struct {
 	Path       string                 `json:"path"`
-	FullPath   string                 `json:"fullPath" handlebars:"full-path"`
+	AbsPath    string                 `json:"absPath" handlebars:"abs-path"`
 	Title      string                 `json:"title"`
 	Link       fmt.Stringer           `json:"link"`
 	Lead       string                 `json:"lead"`

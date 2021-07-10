@@ -5,7 +5,7 @@ The following variables are available in the templates used when formatting note
 | Variable      | Type     | Description                                                              |
 |---------------|----------|--------------------------------------------------------------------------|
 | `path`        | string   | File path to the note, relative to the current directory                 |
-| `full-path`   | string   | File path to the note, full path including the notebook directory        |
+| `abs-path`    | string   | File path to the note, absolute path including the notebook directory    |
 | `title`       | string   | Note title                                                               |
 | `link`        | string   | Markdown link to the note, relative to the current directory<sup>1</sup> |
 | `lead`        | string   | First paragraph extracted from the note content                          |
