@@ -98,10 +98,24 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	shouldIgnorePath := func(path string) (bool, error) {
 		group, err := t.notebook.Config.GroupConfigForPath(path)
 		if err != nil {
-			return false, err
+			return true, err
 		}
 
-		return filepath.Ext(path) != "."+group.Note.Extension, nil
+		if filepath.Ext(path) != "."+group.Note.Extension {
+			return true, nil
+		}
+
+		for _, ignoreGlob := range group.IgnoreGlobs() {
+			matches, err := filepath.Match(ignoreGlob, path)
+			if err != nil {
+				return true, errors.Wrapf(err, "failed to match ignore glob %s to %s", ignoreGlob, path)
+			}
+			if matches {
+				return true, nil
+			}
+		}
+
+		return false, nil
 	}
 
 	source := paths.Walk(t.notebook.Path, t.logger, shouldIgnorePath)
