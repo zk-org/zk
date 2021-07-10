@@ -14,6 +14,8 @@ The `[note]` section from the [configuration file](config.md) is used to set the
 * `template` (string)
     * Path to the [template](template.md) used to generate the note content.
     * Either an absolute path, or relative to `.zk/templates/`.
+* `ignore` (list of strings)
+    * List of [path globs](https://en.wikipedia.org/wiki/Glob_\(programming\)) ignored during note indexing.
 * `id-charset` (string)
     * Characters set used to [generate random IDs](note-id.md).
     * You can use:
