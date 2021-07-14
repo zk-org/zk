@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Added
+
+* Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/60)).
+
 
 ## 0.6.0
 

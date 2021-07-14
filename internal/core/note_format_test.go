@@ -6,6 +6,7 @@ import (
 
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
+
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
@@ -71,6 +72,7 @@ func TestNewNoteFormatter(t *testing.T) {
 	assert.Equal(t, test.template.Contexts, []interface{}{
 		noteFormatRenderContext{
 			Path:       "note1",
+			AbsPath:    "/notebook/note1",
 			Title:      "Note 1",
 			Link:       opt.NewString("[Note 1](note1)"),
 			Lead:       "Lead 1",
@@ -89,6 +91,7 @@ func TestNewNoteFormatter(t *testing.T) {
 		},
 		noteFormatRenderContext{
 			Path:       "dir/note2",
+			AbsPath:    "/notebook/dir/note2",
 			Title:      "Note 2",
 			Link:       opt.NewString("[Note 2](dir/note2)"),
 			Lead:       "Lead 2",
@@ -106,7 +109,7 @@ func TestNewNoteFormatter(t *testing.T) {
 }
 
 func TestNoteFormatterMakesPathRelative(t *testing.T) {
-	test := func(basePath, currentPath, path string, expected string) {
+	test := func(basePath, currentPath, path string, expected, expectedFull string) {
 		test := formatTest{
 			rootDir:    basePath,
 			workingDir: currentPath,
@@ -121,6 +124,7 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
 				Path:     expected,
+				AbsPath:  expectedFull,
 				Link:     opt.NewString("[](" + paths.DropExt(expected) + ")"),
 				Snippets: []string{},
 			},
@@ -128,14 +132,14 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 	}
 
 	// Check that the path is relative to the current directory.
-	test("", "", "note.md", "note.md")
-	test("", "", "dir/note.md", "dir/note.md")
-	test("/abs/zk", "/abs/zk", "note.md", "note.md")
-	test("/abs/zk", "/abs/zk", "dir/note.md", "dir/note.md")
-	test("/abs/zk", "/abs/zk/dir", "note.md", "../note.md")
-	test("/abs/zk", "/abs/zk/dir", "dir/note.md", "note.md")
-	test("/abs/zk", "/abs", "note.md", "zk/note.md")
-	test("/abs/zk", "/abs", "dir/note.md", "zk/dir/note.md")
+	test("", "", "note.md", "note.md", "/notebook/note.md")
+	test("", "", "dir/note.md", "dir/note.md", "/notebook/dir/note.md")
+	test("/abs/zk", "/abs/zk", "note.md", "note.md", "/abs/zk/note.md")
+	test("/abs/zk", "/abs/zk", "dir/note.md", "dir/note.md", "/abs/zk/dir/note.md")
+	test("/abs/zk", "/abs/zk/dir", "note.md", "../note.md", "/abs/zk/note.md")
+	test("/abs/zk", "/abs/zk/dir", "dir/note.md", "note.md", "/abs/zk/dir/note.md")
+	test("/abs/zk", "/abs", "note.md", "zk/note.md", "/abs/zk/note.md")
+	test("/abs/zk", "/abs", "dir/note.md", "zk/dir/note.md", "/abs/zk/dir/note.md")
 }
 
 func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
@@ -151,6 +155,7 @@ func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
 				Path:     ".",
+				AbsPath:  "/notebook",
 				Link:     opt.NewString("[]()"),
 				Snippets: []string{expected},
 			},
