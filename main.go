@@ -59,12 +59,14 @@ func (cmd *ShowHelp) Run(container *cli.Container) error {
 }
 
 func main() {
+	args := os.Args[1:]
+
 	// Create the dependency graph.
 	container, err := cli.NewContainer(Version)
 	fatalIfError(err)
 
 	// Open the notebook if there's any.
-	dirs, err := parseDirs()
+	dirs, args, err := parseDirs(args)
 	fatalIfError(err)
 	searchDirs, err := notebookSearchDirs(dirs)
 	fatalIfError(err)
@@ -72,10 +74,13 @@ func main() {
 	fatalIfError(err)
 
 	// Run the alias or command.
-	if isAlias, err := runAlias(container, os.Args[1:]); isAlias {
+	if isAlias, err := runAlias(container, args); isAlias {
 		fatalIfError(err)
 	} else {
-		ctx := kong.Parse(&root, options(container)...)
+		parser, err := kong.New(&root, options(container)...)
+		fatalIfError(err)
+		ctx, err := parser.Parse(args)
+		fatalIfError(err)
 
 		// Index the current notebook except if the user is running the `index`
 		// command, otherwise it would hide the stats.
@@ -86,7 +91,7 @@ func main() {
 			}
 		}
 
-		err := ctx.Run(container)
+		err = ctx.Run(container)
 		ctx.FatalIfErrorf(err)
 	}
 }
@@ -213,33 +218,39 @@ func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 //
 // We need to parse these flags before Kong, because we might need it to
 // resolve zk command aliases before parsing the CLI.
-func parseDirs() (cli.Dirs, error) {
+func parseDirs(args []string) (cli.Dirs, []string, error) {
 	var d cli.Dirs
 	var err error
 
-	findFlag := func(long string, short string) (string, error) {
+	findFlag := func(long string, short string, args []string) (string, []string, error) {
+		newArgs := []string{}
+
 		foundFlag := ""
-		for _, arg := range os.Args {
+		for i, arg := range args {
 			if arg == long || (short != "" && arg == short) {
 				foundFlag = arg
 			} else if foundFlag != "" {
-				return filepath.Abs(arg)
+				newArgs = append(newArgs, args[i+1:]...)
+				path, err := filepath.Abs(arg)
+				return path, newArgs, err
+			} else {
+				newArgs = append(newArgs, arg)
 			}
 		}
 		if foundFlag != "" {
-			return "", errors.New(foundFlag + " requires a path argument")
+			return "", newArgs, errors.New(foundFlag + " requires a path argument")
 		}
-		return "", nil
+		return "", newArgs, nil
 	}
 
-	d.NotebookDir, err = findFlag("--notebook-dir", "")
+	d.NotebookDir, args, err = findFlag("--notebook-dir", "", args)
 	if err != nil {
-		return d, err
+		return d, args, err
 	}
-	d.WorkingDir, err = findFlag("--working-dir", "-W")
+	d.WorkingDir, args, err = findFlag("--working-dir", "-W", args)
 	if err != nil {
-		return d, err
+		return d, args, err
 	}
 
-	return d, nil
+	return d, args, nil
 }
