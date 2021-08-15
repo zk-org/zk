@@ -241,7 +241,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if err != nil || target == nil {
 			return nil, err
 		}
@@ -284,7 +284,7 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.noteForHref(link.Href, doc, notebook)
+			target, err := server.noteForLink(link, doc, notebook)
 			if target == nil || err != nil {
 				continue
 			}
@@ -314,7 +314,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -602,8 +602,22 @@ func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 	return s.notebooks.Open(doc.Path)
 }
 
-// noteForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*Note, error) {
+// noteForLink returns the LSP documentUri for the note targeted by the given link.
+func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.Notebook) (*Note, error) {
+	note, err := s.noteForHref(link.Href, doc, notebook)
+	if note == nil && err == nil && link.IsWikiLink {
+		note, err = s.noteMatching(link.Href, notebook)
+	}
+	if note == nil || err != nil {
+		return nil, err
+	}
+
+	joined_path := filepath.Join(notebook.Path, note.Path)
+	return &Note{*note, pathToURI(joined_path)}, nil
+}
+
+// noteForHref returns the LSP documentUri for the note targeted by the given HREF.
+func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if strutil.IsURL(href) {
 		return nil, nil
 	}
@@ -616,14 +630,27 @@ func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook
 	note, err := notebook.FindByHref(path)
 	if err != nil {
 		s.logger.Printf("findByHref(%s): %s", href, err.Error())
-		return nil, err
 	}
-	if note == nil {
+	return note, err
+}
+
+// noteMatching returns the LSP documentUri for the note matching the given search terms.
+func (s *Server) noteMatching(terms string, notebook *core.Notebook) (*core.MinimalNote, error) {
+	if terms == "" {
 		return nil, nil
 	}
-	joined_path := filepath.Join(notebook.Path, note.Path)
 
-	return &Note{*note, pathToURI(joined_path)}, nil
+	note, err := notebook.FindMatching("path:(" + terms + ")")
+	if err != nil {
+		s.logger.Printf("findMatching(path: %s): %s", terms, err.Error())
+	}
+	if note == nil {
+		note, err = notebook.FindMatching("title:(" + terms + ")")
+	}
+	if err != nil {
+		s.logger.Printf("findMatching(title: %s): %s", terms, err.Error())
+	}
+	return note, err
 }
 
 type Note struct {
@@ -666,7 +693,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 			if strutil.IsURL(link.Href) {
 				continue
 			}
-			target, err := s.noteForHref(link.Href, doc, notebook)
+			target, err := s.noteForLink(link, doc, notebook)
 			if err != nil {
 				s.logger.Err(err)
 				continue

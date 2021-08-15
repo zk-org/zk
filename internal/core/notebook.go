@@ -197,6 +197,23 @@ func (n *Notebook) FindByHref(href string) (*MinimalNote, error) {
 	}
 }
 
+// FindMatching retrieves the first note matching the given search terms.
+func (n *Notebook) FindMatching(terms string) (*MinimalNote, error) {
+	notes, err := n.FindMinimalNotes(NoteFindOpts{
+		Match: opt.NewNotEmptyString(terms),
+		Limit: 1,
+	})
+
+	switch {
+	case err != nil:
+		return nil, err
+	case len(notes) == 0:
+		return nil, nil
+	default:
+		return &notes[0], nil
+	}
+}
+
 // FindCollections retrieves all the collections of the given kind.
 func (n *Notebook) FindCollections(kind CollectionKind) ([]Collection, error) {
 	return n.index.FindCollections(kind)
