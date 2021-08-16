@@ -19,6 +19,8 @@ type NoteFindOpts struct {
 	IncludePaths []string
 	// Filter excluding notes at the given paths.
 	ExcludePaths []string
+	// Indicates whether IncludePaths and ExcludePaths are using regexes.
+	EnablePathRegexes bool
 	// Filter excluding notes with the given IDs.
 	ExcludeIDs []NoteID
 	// Filter by tags found in the notes.

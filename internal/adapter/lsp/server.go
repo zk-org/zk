@@ -603,10 +603,19 @@ func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 }
 
 // noteForLink returns the LSP documentUri for the note targeted by the given link.
+//
+// Match by order of precedence:
+//  1. Prefix of relative path
+//  2. Find any occurrence of the href in a note path (substring)
+//  3. Match the href as a term in the note titles
 func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.Notebook) (*Note, error) {
 	note, err := s.noteForHref(link.Href, doc, notebook)
 	if note == nil && err == nil && link.IsWikiLink {
-		note, err = s.noteMatching(link.Href, notebook)
+		// Try to find a partial href match.
+		note, err = notebook.FindByHref(link.Href, true)
+		if note == nil && err == nil {
+			note, err = s.noteMatchingTitle(link.Href, notebook)
+		}
 	}
 	if note == nil || err != nil {
 		return nil, err
@@ -627,26 +636,20 @@ func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
 	}
-	note, err := notebook.FindByHref(path)
+	note, err := notebook.FindByHref(path, false)
 	if err != nil {
 		s.logger.Printf("findByHref(%s): %s", href, err.Error())
 	}
 	return note, err
 }
 
-// noteMatching returns the LSP documentUri for the note matching the given search terms.
-func (s *Server) noteMatching(terms string, notebook *core.Notebook) (*core.MinimalNote, error) {
+// noteMatchingTitle returns the LSP documentUri for the note matching the given search terms.
+func (s *Server) noteMatchingTitle(terms string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if terms == "" {
 		return nil, nil
 	}
 
-	note, err := notebook.FindMatching("path:(" + terms + ")")
-	if err != nil {
-		s.logger.Printf("findMatching(path: %s): %s", terms, err.Error())
-	}
-	if note == nil {
-		note, err = notebook.FindMatching("title:(" + terms + ")")
-	}
+	note, err := notebook.FindMatching("title:(" + terms + ")")
 	if err != nil {
 		s.logger.Printf("findMatching(title: %s): %s", terms, err.Error())
 	}

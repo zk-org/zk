@@ -598,7 +598,10 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, err
 		regexes := make([]string, 0)
 		for _, path := range opts.IncludePaths {
 			regexes = append(regexes, "n.path REGEXP ?")
-			args = append(args, pathRegex(path))
+			if !opts.EnablePathRegexes {
+				path = pathRegex(path)
+			}
+			args = append(args, path)
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
 	}
@@ -607,7 +610,10 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, err
 		regexes := make([]string, 0)
 		for _, path := range opts.ExcludePaths {
 			regexes = append(regexes, "n.path NOT REGEXP ?")
-			args = append(args, pathRegex(path))
+			if !opts.EnablePathRegexes {
+				path = pathRegex(path)
+			}
+			args = append(args, path)
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
 	}
