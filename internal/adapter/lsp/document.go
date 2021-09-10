@@ -29,7 +29,7 @@ func newDocumentStore(fs core.FileStorage, logger util.Logger) *documentStore {
 
 func (s *documentStore) DidOpen(params protocol.DidOpenTextDocumentParams, notify glsp.NotifyFunc) (*document, error) {
 	langID := params.TextDocument.LanguageID
-	if langID != "markdown" && langID != "vimwiki" {
+	if langID != "markdown" && langID != "vimwiki" && langID != "pandoc" {
 		return nil, nil
 	}
 
