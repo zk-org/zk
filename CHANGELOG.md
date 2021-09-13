@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * UTF-8 handling in the LSP server.
+* [#78](https://github.com/mickael-menu/zk/issues/78) Do not exclude notes containing broken links from the index.
 
 
 ## 0.6.0
