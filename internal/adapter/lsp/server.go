@@ -397,14 +397,21 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, nil
 		}
 
-		link, err := doc.DocumentLinkAt(params.Position)
-		if link == nil || err != nil {
-			return nil, err
-		}
-
 		notebook, err := server.notebookOf(doc)
 		if err != nil {
 			return nil, err
+		}
+
+		link, err := doc.DocumentLinkAt(params.Position)
+		if err != nil {
+			return nil, err
+		}
+		if link == nil {
+			href, err := notebook.RelPath(doc.Path)
+			if err != nil {
+				return nil, err
+			}
+			link = &documentLink{Href: href}
 		}
 
 		target, err := server.noteForHref(link.Href, doc, notebook)
