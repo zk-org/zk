@@ -89,7 +89,7 @@ func NewContainer(version string) (*Container, error) {
 
 				notebook := core.NewNotebook(path, config, core.NotebookPorts{
 					NoteIndex: sqlite.NewNoteIndex(db, logger),
-					NoteParser: markdown.NewParser(markdown.ParserOpts{
+					NoteContentParser: markdown.NewParser(markdown.ParserOpts{
 						HashtagEnabled:      config.Format.Markdown.Hashtags,
 						MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
 						ColontagEnabled:     config.Format.Markdown.ColonTags,

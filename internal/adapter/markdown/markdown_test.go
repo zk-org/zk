@@ -575,7 +575,7 @@ Paragraph
 	})
 }
 
-func parse(t *testing.T, source string) core.ParsedNote {
+func parse(t *testing.T, source string) core.NoteContent {
 	return parseWithOptions(t, source, ParserOpts{
 		HashtagEnabled:      true,
 		MultiWordTagEnabled: true,
@@ -583,8 +583,8 @@ func parse(t *testing.T, source string) core.ParsedNote {
 	})
 }
 
-func parseWithOptions(t *testing.T, source string, options ParserOpts) core.ParsedNote {
-	content, err := NewParser(options).Parse(source)
+func parseWithOptions(t *testing.T, source string, options ParserOpts) core.NoteContent {
+	content, err := NewParser(options).ParseNoteContent(source)
 	assert.Nil(t, err)
 	return *content
 }

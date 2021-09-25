@@ -241,7 +241,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if err != nil || target == nil {
 			return nil, err
 		}
@@ -284,7 +284,7 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.noteForHref(link.Href, doc, notebook)
+			target, err := server.noteForLink(link, doc, notebook)
 			if target == nil || err != nil {
 				continue
 			}
@@ -314,7 +314,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -414,7 +414,7 @@ func NewServer(opts ServerOpts) *Server {
 			link = &documentLink{Href: href}
 		}
 
-		target, err := server.noteForHref(link.Href, doc, notebook)
+		target, err := server.noteForLink(*link, doc, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -546,7 +546,7 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 		return nil, errors.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
 	}
 
-	path, err := notebook.NewNote(core.NewNoteOpts{
+	note, err := notebook.NewNote(core.NewNoteOpts{
 		Title:     opt.NewNotEmptyString(opts.Title),
 		Content:   opts.Content,
 		Directory: opt.NewNotEmptyString(opts.Dir),
@@ -560,11 +560,16 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 		if !errors.As(err, &noteExists) {
 			return nil, err
 		}
-		path = noteExists.Path
+		note, err = notebook.FindNote(core.NoteFindOpts{
+			IncludePaths: []string{noteExists.Name},
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
-
-	// Index the notebook to be able to navigate to the new note.
-	notebook.Index(false)
+	if note == nil {
+		return nil, errors.New("zk.new could not generate a new note")
+	}
 
 	if opts.InsertLinkAtLocation != nil {
 		doc, ok := s.documents.Get(opts.InsertLinkAtLocation.URI)
@@ -576,12 +581,13 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 			return nil, err
 		}
 
-		relPath, err := filepath.Rel(filepath.Dir(doc.Path), path)
+		currentDir := filepath.Dir(doc.Path)
+		linkFormatterContext, err := core.NewLinkFormatterContext(note.AsMinimalNote(), notebook.Path, currentDir)
 		if err != nil {
 			return nil, err
 		}
 
-		link, err := linkFormatter(relPath, opts.Title)
+		link, err := linkFormatter(linkFormatterContext)
 		if err != nil {
 			return nil, err
 		}
@@ -595,22 +601,47 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 		}, nil)
 	}
 
+	absPath := filepath.Join(notebook.Path, note.Path)
 	if opts.Edit {
 		go context.Call(protocol.ServerWindowShowDocument, protocol.ShowDocumentParams{
-			URI:       "file://" + path,
+			URI:       pathToURI(absPath),
 			TakeFocus: boolPtr(true),
 		}, nil)
 	}
 
-	return map[string]interface{}{"path": path}, nil
+	return map[string]interface{}{"path": absPath}, nil
 }
 
 func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 	return s.notebooks.Open(doc.Path)
 }
 
-// noteForHref returns the LSP documentUri for the note at the given HREF.
-func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*Note, error) {
+// noteForLink returns the LSP documentUri for the note targeted by the given link.
+//
+// Match by order of precedence:
+//  1. Prefix of relative path
+//  2. Find any occurrence of the href in a note path (substring)
+//  3. Match the href as a term in the note titles
+func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.Notebook) (*Note, error) {
+	note, err := s.noteForHref(link.Href, doc, notebook)
+	if note == nil && err == nil && link.IsWikiLink {
+		// Try to find a partial href match.
+		note, err = notebook.FindByHref(link.Href, true)
+		if note == nil && err == nil {
+			// Fallback on matching the note title.
+			note, err = s.noteMatchingTitle(link.Href, notebook)
+		}
+	}
+	if note == nil || err != nil {
+		return nil, err
+	}
+
+	joined_path := filepath.Join(notebook.Path, note.Path)
+	return &Note{*note, pathToURI(joined_path)}, nil
+}
+
+// noteForHref returns the LSP documentUri for the note targeted by the given HREF.
+func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if strutil.IsURL(href) {
 		return nil, nil
 	}
@@ -620,17 +651,24 @@ func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
 	}
-	note, err := notebook.FindByHref(path)
+	note, err := notebook.FindByHref(path, false)
 	if err != nil {
 		s.logger.Printf("findByHref(%s): %s", href, err.Error())
-		return nil, err
 	}
-	if note == nil {
+	return note, err
+}
+
+// noteMatchingTitle returns the LSP documentUri for the note matching the given search terms.
+func (s *Server) noteMatchingTitle(terms string, notebook *core.Notebook) (*core.MinimalNote, error) {
+	if terms == "" {
 		return nil, nil
 	}
-	joined_path := filepath.Join(notebook.Path, note.Path)
 
-	return &Note{*note, pathToURI(joined_path)}, nil
+	note, err := notebook.FindMatching("title:(" + terms + ")")
+	if err != nil {
+		s.logger.Printf("findMatching(title: %s): %s", terms, err.Error())
+	}
+	return note, err
 }
 
 type Note struct {
@@ -673,7 +711,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 			if strutil.IsURL(link.Href) {
 				continue
 			}
-			target, err := s.noteForHref(link.Href, doc, notebook)
+			target, err := s.noteForLink(link, doc, notebook)
 			if err != nil {
 				s.logger.Err(err)
 				continue
@@ -813,14 +851,12 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 }
 
 func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
-	path := filepath.Join(notebook.Path, note.Path)
-	path = s.fs.Canonical(path)
-	path, err := filepath.Rel(filepath.Dir(doc.Path), path)
+	currentDir := filepath.Dir(doc.Path)
+	context, err := core.NewLinkFormatterContext(note, notebook.Path, currentDir)
 	if err != nil {
-		path = note.Path
+		return nil, err
 	}
-
-	link, err := linkFormatter(path, note.Title)
+	link, err := linkFormatter(context)
 	if err != nil {
 		return nil, err
 	}

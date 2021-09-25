@@ -345,21 +345,27 @@ func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error
 
 func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
 	var (
-		id          int
-		path, title string
+		id                        int
+		path, title, metadataJSON string
 	)
 
-	err := row.Scan(&id, &path, &title)
+	err := row.Scan(&id, &path, &title, &metadataJSON)
 	switch {
 	case err == sql.ErrNoRows:
 		return nil, nil
 	case err != nil:
 		return nil, err
 	default:
+		metadata, err := unmarshalMetadata(metadataJSON)
+		if err != nil {
+			d.logger.Err(errors.Wrap(err, path))
+		}
+
 		return &core.MinimalNote{
-			ID:    core.NoteID(id),
-			Path:  path,
-			Title: title,
+			ID:       core.NoteID(id),
+			Path:     path,
+			Title:    title,
+			Metadata: metadata,
 		}, nil
 	}
 }
@@ -403,8 +409,8 @@ func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
 	)
 
 	err := row.Scan(
-		&id, &path, &title, &lead, &body, &rawContent, &wordCount,
-		&created, &modified, &metadataJSON, &checksum, &tags, &snippets,
+		&id, &path, &title, &metadataJSON, &lead, &body, &rawContent,
+		&wordCount, &created, &modified, &checksum, &tags, &snippets,
 	)
 	switch {
 	case err == sql.ErrNoRows:
@@ -598,7 +604,10 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, err
 		regexes := make([]string, 0)
 		for _, path := range opts.IncludePaths {
 			regexes = append(regexes, "n.path REGEXP ?")
-			args = append(args, pathRegex(path))
+			if !opts.EnablePathRegexes {
+				path = pathRegex(path)
+			}
+			args = append(args, path)
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
 	}
@@ -607,7 +616,10 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, err
 		regexes := make([]string, 0)
 		for _, path := range opts.ExcludePaths {
 			regexes = append(regexes, "n.path NOT REGEXP ?")
-			args = append(args, pathRegex(path))
+			if !opts.EnablePathRegexes {
+				path = pathRegex(path)
+			}
+			args = append(args, path)
 		}
 		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
 	}
@@ -771,9 +783,9 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		query += "\n)\n"
 	}
 
-	query += "SELECT n.id, n.path, n.title"
+	query += "SELECT n.id, n.path, n.title, n.metadata"
 	if !minimal {
-		query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.metadata, n.checksum, n.tags, %s AS snippet", snippetCol)
+		query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet", snippetCol)
 	}
 
 	query += "\nFROM notes_with_metadata n\n"

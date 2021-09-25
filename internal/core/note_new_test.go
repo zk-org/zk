@@ -7,6 +7,7 @@ import (
 
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/mickael-menu/zk/internal/util/paths"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
 
@@ -16,7 +17,7 @@ func TestNotebookNewNote(t *testing.T) {
 	}
 	test.setup()
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Title:   opt.NewString("Note title"),
 		Content: "Note content",
 		Extra: map[string]string{
@@ -25,11 +26,12 @@ func TestNotebookNewNote(t *testing.T) {
 		Date: now,
 	})
 
+	assert.NotNil(t, note)
 	assert.Nil(t, err)
-	assert.Equal(t, path, "/notebook/filename.ext")
+	assert.Equal(t, note.Path, "filename.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.files[path], "body")
+	assert.Equal(t, test.fs.files["/notebook/filename.ext"], "body")
 
 	assert.Equal(t, test.receivedLang, test.config.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, test.config.Note.IDOptions)
@@ -105,17 +107,17 @@ func TestNotebookNewNoteInDir(t *testing.T) {
 	}
 	test.setup()
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Title:     opt.NewString("Note title"),
 		Directory: opt.NewString("a-dir"),
 		Date:      now,
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, path, "/notebook/a-dir/filename.ext")
+	assert.Equal(t, note.Path, "a-dir/filename.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.files[path], "body")
+	assert.Equal(t, test.fs.files["/notebook/a-dir/filename.ext"], "body")
 
 	// Check that the templates received the proper render contexts.
 	assert.Equal(t, test.filenameTemplate.Contexts, []interface{}{
@@ -180,16 +182,15 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 	filenameTemplate := test.templateLoader.SpyString("group-filename.group-ext")
 	bodyTemplate := test.templateLoader.SpyFile("group-body", "group template body")
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Directory: opt.NewString("a-dir"),
 		Date:      now,
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, path, "/notebook/a-dir/group-filename.group-ext")
+	assert.Equal(t, note.Path, "a-dir/group-filename.group-ext")
 
-	// Check created note.
-	assert.Equal(t, test.fs.files[path], "group template body")
+	assert.Equal(t, test.fs.files["/notebook/a-dir/group-filename.group-ext"], "group template body")
 
 	assert.Equal(t, test.receivedLang, groupConfig.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, groupConfig.Note.IDOptions)
@@ -255,16 +256,16 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 	filenameTemplate := test.templateLoader.SpyString("group-filename.group-ext")
 	bodyTemplate := test.templateLoader.SpyFile("group-body", "group template body")
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Group: opt.NewString("group-a"),
 		Date:  now,
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, path, "/notebook/group-filename.group-ext")
+	assert.Equal(t, note.Path, "group-filename.group-ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.files[path], "group template body")
+	assert.Equal(t, test.fs.files["/notebook/group-filename.group-ext"], "group template body")
 
 	assert.Equal(t, test.receivedLang, groupConfig.Note.Lang)
 	assert.Equal(t, test.receivedIDOpts, groupConfig.Note.IDOptions)
@@ -319,13 +320,13 @@ func TestNotebookNewNoteWithCustomTemplate(t *testing.T) {
 	test.setup()
 	test.templateLoader.SpyFile("custom-body", "custom body template")
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Template: opt.NewString("custom-body"),
 		Date:     now,
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, test.fs.files[path], "custom body template")
+	assert.Equal(t, test.fs.files["/notebook/"+note.Path], "custom body template")
 }
 
 // Tries to generate a filename until one is free.
@@ -344,15 +345,15 @@ func TestNotebookNewNoteTriesUntilFreePath(t *testing.T) {
 	}
 	test.setup()
 
-	path, err := test.run(NewNoteOpts{
+	note, err := test.run(NewNoteOpts{
 		Date: now,
 	})
 
 	assert.Nil(t, err)
-	assert.Equal(t, path, "/notebook/filename4.ext")
+	assert.Equal(t, note.Path, "filename4.ext")
 
 	// Check created note.
-	assert.Equal(t, test.fs.files[path], "body")
+	assert.Equal(t, test.fs.files["/notebook/filename4.ext"], "body")
 }
 
 func TestNotebookNewNoteErrorWhenNoFreePath(t *testing.T) {
@@ -386,6 +387,8 @@ type newNoteTest struct {
 	files                  map[string]string
 	dirs                   []string
 	fs                     *fileStorageMock
+	index                  *noteIndexAddMock
+	parser                 *noteContentParserMock
 	config                 Config
 	groups                 map[string]GroupConfig
 	templateLoader         *templateLoaderMock
@@ -411,6 +414,9 @@ func (t *newNoteTest) setup() {
 	if t.files != nil {
 		t.fs.files = t.files
 	}
+
+	t.index = &noteIndexAddMock{ReturnedID: 42}
+	t.parser = newNoteContentParserMock(map[string]*NoteContent{})
 
 	t.templateLoader = newTemplateLoaderMock()
 	if t.filenameTemplateRender != nil {
@@ -459,7 +465,11 @@ func (t *newNoteTest) setup() {
 	}
 }
 
-func (t *newNoteTest) run(opts NewNoteOpts) (string, error) {
+func (t *newNoteTest) parseContentAsNote(content string, note *NoteContent) {
+	t.parser.results[content] = note
+}
+
+func (t *newNoteTest) run(opts NewNoteOpts) (*Note, error) {
 	notebook := NewNotebook(t.rootDir, t.config, NotebookPorts{
 		TemplateLoaderFactory: func(language string) (TemplateLoader, error) {
 			t.receivedLang = language
@@ -469,9 +479,11 @@ func (t *newNoteTest) run(opts NewNoteOpts) (string, error) {
 			t.receivedIDOpts = opts
 			return t.idGeneratorFactory(opts)
 		},
-		FS:     t.fs,
-		Logger: &util.NullLogger,
-		OSEnv:  func() map[string]string { return t.osEnv },
+		FS:                t.fs,
+		NoteIndex:         t.index,
+		NoteContentParser: t.parser,
+		Logger:            &util.NullLogger,
+		OSEnv:             func() map[string]string { return t.osEnv },
 	})
 
 	return notebook.NewNote(opts)
@@ -485,3 +497,20 @@ func incrementingID(opts IDOptions) func() string {
 		return fmt.Sprintf("%d", i)
 	}
 }
+
+type noteIndexAddMock struct {
+	ReturnedID NoteID
+}
+
+func (m *noteIndexAddMock) Find(opts NoteFindOpts) ([]ContextualNote, error)     { return nil, nil }
+func (m *noteIndexAddMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) { return nil, nil }
+func (m *noteIndexAddMock) FindCollections(kind CollectionKind) ([]Collection, error) {
+	return nil, nil
+}
+func (m *noteIndexAddMock) IndexedPaths() (<-chan paths.Metadata, error)       { return nil, nil }
+func (m *noteIndexAddMock) Add(note Note) (NoteID, error)                      { return m.ReturnedID, nil }
+func (m *noteIndexAddMock) Update(note Note) error                             { return nil }
+func (m *noteIndexAddMock) Remove(path string) error                           { return nil }
+func (m *noteIndexAddMock) Commit(transaction func(idx NoteIndex) error) error { return nil }
+func (m *noteIndexAddMock) NeedsReindexing() (bool, error)                     { return false, nil }
+func (m *noteIndexAddMock) SetNeedsReindexing(needsReindexing bool) error      { return nil }

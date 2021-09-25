@@ -12,6 +12,18 @@ func (id NoteID) IsValid() bool {
 	return id > 0
 }
 
+// MinimalNote holds a Note's title and path information, for display purposes.
+type MinimalNote struct {
+	// Unique ID of this note in a notebook.
+	ID NoteID
+	// Path relative to the root of the notebook.
+	Path string
+	// Title of the note.
+	Title string
+	// JSON dictionary of raw metadata extracted from the frontmatter.
+	Metadata map[string]interface{}
+}
+
 // Note holds the metadata and content of a single note.
 type Note struct {
 	// Unique ID of this note in a NoteRepository.
@@ -42,6 +54,15 @@ type Note struct {
 	Checksum string
 }
 
+func (n Note) AsMinimalNote() MinimalNote {
+	return MinimalNote{
+		ID:       n.ID,
+		Path:     n.Path,
+		Title:    n.Title,
+		Metadata: n.Metadata,
+	}
+}
+
 // ContextualNote holds a Note and context-sensitive content snippets.
 //
 // This is used for example:
@@ -51,14 +72,4 @@ type ContextualNote struct {
 	Note
 	// List of context-sensitive excerpts from the note.
 	Snippets []string
-}
-
-// MinimalNote holds a Note's title and path information, for display purposes.
-type MinimalNote struct {
-	// Unique ID of this note in a notebook.
-	ID NoteID
-	// Path relative to the root of the notebook.
-	Path string
-	// Title of the note.
-	Title string
 }

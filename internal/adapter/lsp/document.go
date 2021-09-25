@@ -195,7 +195,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
 
-		appendLink := func(href string, start, end int, hasTitle bool) {
+		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
 			if href == "" {
 				return
 			}
@@ -212,7 +212,8 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 						Character: protocol.UInteger(end),
 					},
 				},
-				HasTitle: hasTitle,
+				HasTitle:   hasTitle,
+				IsWikiLink: isWikiLink,
 			})
 		}
 
@@ -222,13 +223,13 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
-			appendLink(href, match[0], match[1], true)
+			appendLink(href, match[0], match[1], false, false)
 		}
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[2]:match[3]]
 			hasTitle := match[4] != -1
-			appendLink(href, match[0], match[1], hasTitle)
+			appendLink(href, match[0], match[1], hasTitle, true)
 		}
 	}
 
@@ -241,4 +242,7 @@ type documentLink struct {
 	// HasTitle indicates whether this link has a title information. For
 	// example [[filename]] doesn't but [[filename|title]] does.
 	HasTitle bool
+	// IsWikiLink indicates whether this link is a [[WikiLink]] instead of a
+	// regular Markdown link.
+	IsWikiLink bool
 }

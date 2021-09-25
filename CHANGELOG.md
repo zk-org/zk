@@ -6,9 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/60)).
-* Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
 * Support for LSP references to browse the backlinks of the current note, if the caret is not over a link.
+* New template variables are available when [generating custom Markdown links with `link-format`](docs/note-format.md).
+    * `filename`, `path`, `abs-path` and `rel-path` for many path flavors.
+    * `metadata` to use information (e.g. `id`) from the YAML frontmatter.
+* The LSP server is now matching wiki links to any part of a note's path or its title.
+    * Given the note `book/z5mj Information Graphics.md` with the title "Book Review of Information Graphics", the following wiki links would work from a note located under `journal/2020-09-25.md`:
+        ```markdown
+        [[../book/z5mj]]
+        [[book/z5mj]]
+        [[z5mj]]
+        [[book review information]]
+        [[Information Graphics]]
+        ```
+* Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/60)).
+* A new `{{substring s index length}}` template helper extracts a portion of a given string, e.g.:
+    * `{{substring 'A full quote' 2 4}}` outputs `full`
+    * `{{substring 'A full quote' -5 5}` outputs `quote`
+* Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
+
 
 ### Fixed
 
