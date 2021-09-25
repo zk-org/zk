@@ -200,7 +200,8 @@ func (t *indexTask) noteAt(path string) (Note, error) {
 			href := filepath.Join(filepath.Dir(absPath), link.Href)
 			link.Href, err = t.notebook.RelPath(href)
 			if err != nil {
-				return note, wrap(err)
+				t.logger.Err(err)
+				continue
 			}
 		}
 		note.Links = append(note.Links, link)
