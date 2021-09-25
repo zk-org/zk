@@ -60,8 +60,8 @@ func NewParser(options ParserOpts) *Parser {
 	}
 }
 
-// Parse implements core.NoteParser.
-func (p *Parser) Parse(content string) (*core.ParsedNote, error) {
+// ParseNoteContent implements core.NoteContentParser.
+func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	bytes := []byte(content)
 
 	context := parser.NewContext()
@@ -91,7 +91,7 @@ func (p *Parser) Parse(content string) (*core.ParsedNote, error) {
 		return nil, err
 	}
 
-	return &core.ParsedNote{
+	return &core.NoteContent{
 		Title:    title,
 		Body:     body,
 		Lead:     parseLead(body),

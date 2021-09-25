@@ -26,7 +26,7 @@ type LinkFormatterContext struct {
 	Metadata map[string]interface{}
 }
 
-func NewLinkFormatterContext(note Note, notebookDir string, currentDir string) (LinkFormatterContext, error) {
+func NewLinkFormatterContext(note MinimalNote, notebookDir string, currentDir string) (LinkFormatterContext, error) {
 	absPath := filepath.Join(notebookDir, note.Path)
 	relPath, err := filepath.Rel(currentDir, absPath)
 	if err != nil {

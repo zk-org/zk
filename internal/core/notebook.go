@@ -21,7 +21,7 @@ type Notebook struct {
 	Config Config
 
 	index                 NoteIndex
-	parser                NoteParser
+	parser                NoteContentParser
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
 	fs                    FileStorage
@@ -39,7 +39,7 @@ func NewNotebook(
 		Path:                  path,
 		Config:                config,
 		index:                 ports.NoteIndex,
-		parser:                ports.NoteParser,
+		parser:                ports.NoteContentParser,
 		templateLoaderFactory: ports.TemplateLoaderFactory,
 		idGeneratorFactory:    ports.IDGeneratorFactory,
 		fs:                    ports.FS,
@@ -50,7 +50,7 @@ func NewNotebook(
 
 type NotebookPorts struct {
 	NoteIndex             NoteIndex
-	NoteParser            NoteParser
+	NoteContentParser     NoteContentParser
 	TemplateLoaderFactory TemplateLoaderFactory
 	IDGeneratorFactory    IDGeneratorFactory
 	FS                    FileStorage
@@ -73,11 +73,12 @@ func (n *Notebook) Index(force bool) (stats NoteIndexingStats, err error) {
 
 	err = n.index.Commit(func(index NoteIndex) error {
 		task := indexTask{
-			notebook: n,
-			force:    force,
-			index:    index,
-			parser:   n.parser,
-			logger:   n.logger,
+			path:   n.Path,
+			config: n.Config,
+			force:  force,
+			index:  index,
+			parser: n,
+			logger: n.logger,
 		}
 		stats, err = task.execute(func(change paths.DiffChange) {
 			bar.Add(1)
@@ -120,20 +121,20 @@ func (e ErrNoteExists) Error() string {
 	return fmt.Sprintf("%s: note already exists", e.Path)
 }
 
-// NewNote generates a new note in the notebook and returns its path.
+// NewNote generates a new note in the notebook, index and returns it.
 //
 // Returns ErrNoteExists if no free filename can be generated for this note.
-func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
+func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 	wrap := errors.Wrapper("new note")
 
 	dir, err := n.RequireDirAt(opts.Directory.OrString(n.Path).Unwrap())
 	if err != nil {
-		return "", wrap(err)
+		return nil, wrap(err)
 	}
 
 	config, err := n.Config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
 	if err != nil {
-		return "", wrap(err)
+		return nil, wrap(err)
 	}
 
 	extra := config.Extra
@@ -143,7 +144,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 
 	templates, err := n.templateLoaderFactory(config.Note.Lang)
 	if err != nil {
-		return "", wrap(err)
+		return nil, wrap(err)
 	}
 
 	task := newNoteTask{
@@ -160,7 +161,22 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (string, error) {
 		genID:            n.idGeneratorFactory(config.Note.IDOptions),
 	}
 	path, err := task.execute()
-	return path, wrap(err)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	note, err := n.ParseNoteAt(path)
+	if note == nil || err != nil {
+		return nil, wrap(err)
+	}
+
+	id, err := n.index.Add(*note)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	note.ID = id
+	return note, nil
 }
 
 // FindNotes retrieves the notes matching the given filtering options.
@@ -168,10 +184,39 @@ func (n *Notebook) FindNotes(opts NoteFindOpts) ([]ContextualNote, error) {
 	return n.index.Find(opts)
 }
 
+// FindNote retrieves the first note matching the given filtering options.
+func (n *Notebook) FindNote(opts NoteFindOpts) (*Note, error) {
+	opts.Limit = 1
+	notes, err := n.FindNotes(opts)
+	switch {
+	case err != nil:
+		return nil, err
+	case len(notes) == 0:
+		return nil, nil
+	default:
+		return &notes[0].Note, nil
+	}
+}
+
 // FindMinimalNotes retrieves lightweight metadata for the notes matching
 // the given filtering options.
 func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
 	return n.index.FindMinimal(opts)
+}
+
+// FindMinimalNotes retrieves lightweight metadata for the first note matching
+// the given filtering options.
+func (n *Notebook) FindMinimalNote(opts NoteFindOpts) (*MinimalNote, error) {
+	opts.Limit = 1
+	notes, err := n.FindMinimalNotes(opts)
+	switch {
+	case err != nil:
+		return nil, err
+	case len(notes) == 0:
+		return nil, nil
+	default:
+		return &notes[0], nil
+	}
 }
 
 // FindByHref retrieves the first note matching the given link href.
@@ -185,40 +230,20 @@ func (n *Notebook) FindByHref(href string, allowPartialMatch bool) (*MinimalNote
 		href = "(.*)" + icu.EscapePattern(href) + "(.*)"
 	}
 
-	notes, err := n.FindMinimalNotes(NoteFindOpts{
+	return n.FindMinimalNote(NoteFindOpts{
 		IncludePaths:      []string{href},
 		EnablePathRegexes: allowPartialMatch,
-		Limit:             1,
 		// To find the best match possible, we sort by path length.
 		// See https://github.com/mickael-menu/zk/issues/23
 		Sorters: []NoteSorter{{Field: NoteSortPathLength, Ascending: true}},
 	})
-
-	switch {
-	case err != nil:
-		return nil, err
-	case len(notes) == 0:
-		return nil, nil
-	default:
-		return &notes[0], nil
-	}
 }
 
 // FindMatching retrieves the first note matching the given search terms.
 func (n *Notebook) FindMatching(terms string) (*MinimalNote, error) {
-	notes, err := n.FindMinimalNotes(NoteFindOpts{
+	return n.FindMinimalNote(NoteFindOpts{
 		Match: opt.NewNotEmptyString(terms),
-		Limit: 1,
 	})
-
-	switch {
-	case err != nil:
-		return nil, err
-	case len(notes) == 0:
-		return nil, nil
-	default:
-		return &notes[0], nil
-	}
 }
 
 // FindCollections retrieves all the collections of the given kind.

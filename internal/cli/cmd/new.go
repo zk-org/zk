@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/mickael-menu/zk/internal/cli"
@@ -32,7 +33,7 @@ func (cmd *New) Run(container *cli.Container) error {
 		return err
 	}
 
-	path, err := notebook.NewNote(core.NewNoteOpts{
+	note, err := notebook.NewNote(core.NewNoteOpts{
 		Title:     opt.NewNotEmptyString(cmd.Title),
 		Content:   content.Unwrap(),
 		Directory: opt.NewNotEmptyString(cmd.Directory),
@@ -41,19 +42,15 @@ func (cmd *New) Run(container *cli.Container) error {
 		Extra:     cmd.Extra,
 		Date:      time.Now(),
 	})
+	path := filepath.Join(notebook.Path, note.Path)
 	if err != nil {
 		var noteExists core.ErrNoteExists
 		if !errors.As(err, &noteExists) {
 			return err
 		}
 
-		relPath, err := notebook.RelPath(path)
-		if err != nil {
-			return err
-		}
-
 		if confirmed, _ := container.Terminal.Confirm(
-			fmt.Sprintf("%s already exists, do you want to edit this note instead?", relPath),
+			fmt.Sprintf("%s already exists, do you want to edit this note instead?", note.Path),
 			true,
 		); !confirmed {
 			// abort...

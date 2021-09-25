@@ -397,13 +397,19 @@ func TestNoteDAOFindMinimalAll(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.Equal(t, notes, []core.MinimalNote{
-			{ID: 5, Path: "ref/test/b.md", Title: "A nested note"},
-			{ID: 4, Path: "f39c8.md", Title: "An interesting note"},
-			{ID: 6, Path: "ref/test/a.md", Title: "Another nested note"},
-			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note"},
-			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021"},
-			{ID: 3, Path: "index.md", Title: "Index"},
-			{ID: 2, Path: "log/2021-01-04.md", Title: "January 4, 2021"},
+			{ID: 5, Path: "ref/test/b.md", Title: "A nested note", Metadata: map[string]interface{}{}},
+			{ID: 4, Path: "f39c8.md", Title: "An interesting note", Metadata: map[string]interface{}{}},
+			{ID: 6, Path: "ref/test/a.md", Title: "Another nested note", Metadata: map[string]interface{}{
+				"alias": "a.md",
+			}},
+			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note", Metadata: map[string]interface{}{
+				"author": "Dom",
+			}},
+			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021", Metadata: map[string]interface{}{}},
+			{ID: 3, Path: "index.md", Title: "Index", Metadata: map[string]interface{}{
+				"aliases": []interface{}{"First page"},
+			}},
+			{ID: 2, Path: "log/2021-01-04.md", Title: "January 4, 2021", Metadata: map[string]interface{}{}},
 		})
 	})
 }
@@ -418,9 +424,13 @@ func TestNoteDAOFindMinimalWithFilter(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.Equal(t, notes, []core.MinimalNote{
-			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note"},
-			{ID: 3, Path: "index.md", Title: "Index"},
-			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021"},
+			{ID: 1, Path: "log/2021-01-03.md", Title: "Daily note", Metadata: map[string]interface{}{
+				"author": "Dom",
+			}},
+			{ID: 3, Path: "index.md", Title: "Index", Metadata: map[string]interface{}{
+				"aliases": []interface{}{"First page"},
+			}},
+			{ID: 7, Path: "log/2021-02-04.md", Title: "February 4, 2021", Metadata: map[string]interface{}{}},
 		})
 	})
 }

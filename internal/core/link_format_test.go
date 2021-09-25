@@ -150,7 +150,7 @@ func TestCustomLinkFormatter(t *testing.T) {
 		RelPath:  "../path/to note.md",
 	})
 	test("", "", LinkFormatterContext{
-		Filename: "",
+		Filename: ".",
 		Path:     "",
 		AbsPath:  "/",
 		RelPath:  "../",

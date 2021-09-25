@@ -1,24 +1,18 @@
 package core
 
 import (
-	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
-	"github.com/relvacode/iso8601"
-	"gopkg.in/djherbis/times.v1"
 )
 
 // NoteIndex persists and grants access to indexed information about the notes.
 type NoteIndex interface {
-
 	// Find retrieves the notes matching the given filtering and sorting criteria.
 	Find(opts NoteFindOpts) ([]ContextualNote, error)
 	// FindMinimal retrieves lightweight metadata for the notes matching the
@@ -30,7 +24,7 @@ type NoteIndex interface {
 
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)
-	// Add indexes a new note from its metadata.
+	// Add indexes a new note.
 	Add(note Note) (NoteID, error)
 	// Update resets the metadata of an already indexed note.
 	Update(note Note) error
@@ -75,11 +69,12 @@ func (s NoteIndexingStats) String() string {
 
 // indexTask indexes the notes in the given directory with the NoteIndex.
 type indexTask struct {
-	notebook *Notebook
-	force    bool
-	index    NoteIndex
-	parser   NoteParser
-	logger   util.Logger
+	path   string
+	config Config
+	force  bool
+	index  NoteIndex
+	parser NoteParser
+	logger util.Logger
 }
 
 func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexingStats, error) {
@@ -96,7 +91,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	force := t.force || needsReindexing
 
 	shouldIgnorePath := func(path string) (bool, error) {
-		group, err := t.notebook.Config.GroupConfigForPath(path)
+		group, err := t.config.GroupConfigForPath(path)
 		if err != nil {
 			return true, err
 		}
@@ -118,7 +113,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		return false, nil
 	}
 
-	source := paths.Walk(t.notebook.Path, t.logger, shouldIgnorePath)
+	source := paths.Walk(t.path, t.logger, shouldIgnorePath)
 
 	target, err := t.index.IndexedPaths()
 	if err != nil {
@@ -128,21 +123,22 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	// FIXME: Use the FS?
 	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
 		callback(change)
+		absPath := filepath.Join(change.Path)
 
 		switch change.Kind {
 		case paths.DiffAdded:
 			stats.AddedCount += 1
-			note, err := t.noteAt(change.Path)
-			if err == nil {
-				_, err = t.index.Add(note)
+			note, err := t.parser.ParseNoteAt(absPath)
+			if note != nil {
+				_, err = t.index.Add(*note)
 			}
 			t.logger.Err(err)
 
 		case paths.DiffModified:
 			stats.ModifiedCount += 1
-			note, err := t.noteAt(change.Path)
-			if err == nil {
-				err = t.index.Update(note)
+			note, err := t.parser.ParseNoteAt(absPath)
+			if note != nil {
+				err = t.index.Update(*note)
 			}
 			t.logger.Err(err)
 
@@ -162,82 +158,4 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 
 	return stats, wrap(err)
-}
-
-// noteAt parses a Note at the given path.
-func (t *indexTask) noteAt(path string) (Note, error) {
-	wrap := errors.Wrapper(path)
-
-	note := Note{
-		Path:  path,
-		Links: []Link{},
-		Tags:  []string{},
-	}
-
-	absPath := filepath.Join(t.notebook.Path, path)
-	content, err := ioutil.ReadFile(absPath)
-	if err != nil {
-		return note, wrap(err)
-	}
-	contentStr := string(content)
-	contentParts, err := t.parser.Parse(contentStr)
-	if err != nil {
-		return note, wrap(err)
-	}
-	note.Title = contentParts.Title.String()
-	note.Lead = contentParts.Lead.String()
-	note.Body = contentParts.Body.String()
-	note.RawContent = contentStr
-	note.WordCount = len(strings.Fields(contentStr))
-	note.Links = make([]Link, 0)
-	note.Tags = contentParts.Tags
-	note.Metadata = contentParts.Metadata
-	note.Checksum = fmt.Sprintf("%x", sha256.Sum256(content))
-
-	for _, link := range contentParts.Links {
-		if !strutil.IsURL(link.Href) {
-			// Make the href relative to the notebook root.
-			href := filepath.Join(filepath.Dir(absPath), link.Href)
-			link.Href, err = t.notebook.RelPath(href)
-			if err != nil {
-				t.logger.Err(err)
-				continue
-			}
-		}
-		note.Links = append(note.Links, link)
-	}
-
-	times, err := times.Stat(absPath)
-	if err != nil {
-		return note, wrap(err)
-	}
-
-	note.Modified = times.ModTime().UTC()
-	note.Created = t.creationDateFrom(note.Metadata, times)
-
-	return note, nil
-}
-
-func (t *indexTask) creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
-	// Read the creation date from the YAML frontmatter `date` key.
-	if dateVal, ok := metadata["date"]; ok {
-		if dateStr, ok := dateVal.(string); ok {
-			if time, err := iso8601.ParseString(dateStr); err == nil {
-				return time
-			}
-			// Omitting the `T` is common
-			if time, err := time.Parse("2006-01-02 15:04:05", dateStr); err == nil {
-				return time
-			}
-			if time, err := time.Parse("2006-01-02 15:04", dateStr); err == nil {
-				return time
-			}
-		}
-	}
-
-	if times.HasBirthTime() {
-		return times.BirthTime().UTC()
-	}
-
-	return time.Now().UTC()
 }
