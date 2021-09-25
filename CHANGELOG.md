@@ -20,6 +20,9 @@ All notable changes to this project will be documented in this file.
         [[Information Graphics]]
         ```
 * Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/60)).
+* A new `{{substring s index length}}` template helper extracts a portion of a given string, e.g.:
+    * `{{substring 'A full quote' 2 4}}` outputs `full`
+    * `{{substring 'A full quote' -5 5}` outputs `quote`
 * Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
 
 

@@ -24,6 +24,20 @@ can generate (depending on the user config):
 
 The second parameter `title` is optional.
 
+### String helpers
+
+There are a couple of template helpers operating on strings.
+
+#### Concat helper
+
+The `{{concat s1 s2}}` helper concatenates two strings together. For example `{{concat '> ' 'A quote'}}` produces `> A quote`.
+
+#### Substring helper
+
+* The `{{substring s index length}}` helper extracts a portion of the given string. For example:
+    * `{{substring 'A full quote' 2 4}}` outputs `full`
+    * `{{substring 'A full quote' -5 5}` outputs `quote`
+
 ### Date helper
 
 The `{{date}}` helper formats the given date for display.

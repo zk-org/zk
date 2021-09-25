@@ -137,6 +137,14 @@ func TestConcatHelper(t *testing.T) {
 	testString(t, "{{concat '> ' 'A quote'}}", nil, "> A quote")
 }
 
+func TestSubstringHelper(t *testing.T) {
+	testString(t, "{{substring '' 2 4}}", nil, "")
+	testString(t, "{{substring 'A full quote' 2 4}}", nil, "full")
+	testString(t, "{{substring 'A full quote' 40 4}}", nil, "")
+	testString(t, "{{substring 'A full quote' -5 5}}", nil, "quote")
+	testString(t, "{{substring 'A full quote' -5 6}}", nil, "quote")
+}
+
 func TestJoinHelper(t *testing.T) {
 	test := func(items []string, expected string) {
 		context := map[string]interface{}{"items": items}
