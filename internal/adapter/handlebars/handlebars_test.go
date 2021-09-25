@@ -273,8 +273,8 @@ func testLoader(opts LoaderOpts) *Loader {
 	loader.RegisterHelper("style", helpers.NewStyleHelper(opts.Styler, &util.NullLogger))
 	loader.RegisterHelper("slug", helpers.NewSlugHelper("en", &util.NullLogger))
 
-	formatter := func(path, title string) (string, error) {
-		return path + " - " + title, nil
+	formatter := func(context core.LinkFormatterContext) (string, error) {
+		return context.Path + " - " + context.Title, nil
 	}
 	loader.RegisterHelper("format-link", helpers.NewLinkHelper(formatter, &util.NullLogger))
 

@@ -38,7 +38,13 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			AbsPath: absPath,
 			Title:   note.Title,
 			Link: newLazyStringer(func() string {
-				link, _ := linkFormatter(path, note.Title)
+				link, _ := linkFormatter(LinkFormatterContext{
+					Path:     note.Path,
+					RelPath:  path,
+					AbsPath:  absPath,
+					Title:    note.Title,
+					Metadata: note.Metadata,
+				})
 				return link
 			}),
 			Lead:       note.Lead,

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/mickael-menu/zk/internal/util/test/assert"
@@ -16,7 +17,13 @@ func TestMarkdownLinkFormatter(t *testing.T) {
 		assert.Nil(t, err)
 
 		return func(path, title, expected string) {
-			actual, err := formatter(path, title)
+			actual, err := formatter(LinkFormatterContext{
+				Filename: "filename",
+				Path:     "path",
+				RelPath:  path,
+				AbsPath:  "abs-path",
+				Title:    title,
+			})
 			assert.Nil(t, err)
 			assert.Equal(t, actual, expected)
 		}
@@ -46,7 +53,13 @@ func TestMarkdownLinkFormatterOnlyHref(t *testing.T) {
 		assert.Nil(t, err)
 
 		return func(path, expected string) {
-			actual, err := formatter(path, "")
+			actual, err := formatter(LinkFormatterContext{
+				Filename: "filename",
+				Path:     "path",
+				RelPath:  path,
+				AbsPath:  "abs-path",
+				Title:    "title",
+			})
 			assert.Nil(t, err)
 			assert.Equal(t, actual, expected)
 		}
@@ -76,7 +89,13 @@ func TestWikiLinkFormatter(t *testing.T) {
 		assert.Nil(t, err)
 
 		return func(path, title, expected string) {
-			actual, err := formatter(path, title)
+			actual, err := formatter(LinkFormatterContext{
+				Filename: "filename",
+				Path:     path,
+				RelPath:  "rel-path",
+				AbsPath:  "abs-path",
+				Title:    "title",
+			})
 			assert.Nil(t, err)
 			assert.Equal(t, actual, expected)
 		}
@@ -98,8 +117,8 @@ func TestWikiLinkFormatter(t *testing.T) {
 }
 
 func TestCustomLinkFormatter(t *testing.T) {
-	newTester := func(encodePath, dropExtension bool) func(path, title string, expected customLinkRenderContext) {
-		return func(path, title string, expected customLinkRenderContext) {
+	newTester := func(encodePath, dropExtension bool) func(path, title string, expected LinkFormatterContext) {
+		return func(path, title string, expected LinkFormatterContext) {
 			loader := newTemplateLoaderMock()
 			template := loader.SpyString("custom")
 
@@ -110,7 +129,13 @@ func TestCustomLinkFormatter(t *testing.T) {
 			}, loader)
 			assert.Nil(t, err)
 
-			actual, err := formatter(path, title)
+			actual, err := formatter(LinkFormatterContext{
+				Filename: filepath.Base(path),
+				Path:     path,
+				AbsPath:  "/" + path,
+				RelPath:  "../" + path,
+				Title:    title,
+			})
 			assert.Nil(t, err)
 			assert.Equal(t, actual, "custom")
 			assert.Equal(t, template.Contexts, []interface{}{expected})
@@ -118,29 +143,54 @@ func TestCustomLinkFormatter(t *testing.T) {
 	}
 
 	test := newTester(false, false)
-	test("path/to note.md", "", customLinkRenderContext{Path: "path/to note.md"})
-	test("", "", customLinkRenderContext{})
-	test("path/to note.md", "An interesting subject", customLinkRenderContext{
-		Title: "An interesting subject",
-		Path:  "path/to note.md",
+	test("path/to note.md", "", LinkFormatterContext{
+		Filename: "to note.md",
+		Path:     "path/to note.md",
+		AbsPath:  "/path/to note.md",
+		RelPath:  "../path/to note.md",
 	})
-	test(`path/(no\te).md`, `An [interesting] \subject`, customLinkRenderContext{
-		Title: `An [interesting] \subject`,
-		Path:  `path/(no\te).md`,
+	test("", "", LinkFormatterContext{
+		Filename: "",
+		Path:     "",
+		AbsPath:  "/",
+		RelPath:  "../",
+	})
+	test("path/to note.md", "An interesting subject", LinkFormatterContext{
+		Filename: "to note.md",
+		Path:     "path/to note.md",
+		AbsPath:  "/path/to note.md",
+		RelPath:  "../path/to note.md",
+		Title:    "An interesting subject",
+	})
+	test(`path/(no\te).md`, `An [interesting] \subject`, LinkFormatterContext{
+		Filename: `(no\te).md`,
+		Path:     `path/(no\te).md`,
+		AbsPath:  `/path/(no\te).md`,
+		RelPath:  `../path/(no\te).md`,
+		Title:    `An [interesting] \subject`,
 	})
 	test = newTester(true, false)
-	test("path/to note.md", "An interesting subject", customLinkRenderContext{
-		Title: "An interesting subject",
-		Path:  "path/to%20note.md",
+	test("path/to note.md", "An interesting subject", LinkFormatterContext{
+		Filename: "to%20note.md",
+		Path:     "path/to%20note.md",
+		AbsPath:  "/path/to%20note.md",
+		RelPath:  "../path/to%20note.md",
+		Title:    "An interesting subject",
 	})
 	test = newTester(false, true)
-	test("path/to note.md", "An interesting subject", customLinkRenderContext{
-		Title: "An interesting subject",
-		Path:  "path/to note",
+	test("path/to note.md", "An interesting subject", LinkFormatterContext{
+		Filename: "to note",
+		Path:     "path/to note",
+		AbsPath:  "/path/to note",
+		RelPath:  "../path/to note",
+		Title:    "An interesting subject",
 	})
 	test = newTester(true, true)
-	test("path/to note.md", "An interesting subject", customLinkRenderContext{
-		Title: "An interesting subject",
-		Path:  "path/to%20note",
+	test("path/to note.md", "An interesting subject", LinkFormatterContext{
+		Filename: "to%20note",
+		Path:     "path/to%20note",
+		AbsPath:  "/path/to%20note",
+		RelPath:  "../path/to%20note",
+		Title:    "An interesting subject",
 	})
 }
