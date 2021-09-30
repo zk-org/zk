@@ -42,15 +42,17 @@ func (cmd *New) Run(container *cli.Container) error {
 		Extra:     cmd.Extra,
 		Date:      time.Now(),
 	})
-	path := filepath.Join(notebook.Path, note.Path)
-	if err != nil {
+	var path string
+	if err == nil {
+		path = filepath.Join(notebook.Path, note.Path)
+	} else {
 		var noteExists core.ErrNoteExists
 		if !errors.As(err, &noteExists) {
 			return err
 		}
 
 		if confirmed, _ := container.Terminal.Confirm(
-			fmt.Sprintf("%s already exists, do you want to edit this note instead?", note.Path),
+			fmt.Sprintf("%s already exists, do you want to edit this note instead?", noteExists.Name),
 			true,
 		); !confirmed {
 			// abort...
