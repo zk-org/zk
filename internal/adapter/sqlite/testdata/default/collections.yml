@@ -16,3 +16,6 @@
 - id: 6
   kind: "tag"
   name: "empty"
+- id: 7
+  kind: "tag"
+  name: "science"

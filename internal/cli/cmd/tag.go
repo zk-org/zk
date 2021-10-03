@@ -84,7 +84,12 @@ func (cmd *TagList) Run(container *cli.Container) error {
 		return err
 	}
 
-	tags, err := notebook.FindCollections(core.CollectionKindTag)
+	sorters, err := core.CollectionSortersFromStrings(cmd.Sort)
+	if err != nil {
+		return err
+	}
+
+	tags, err := notebook.FindCollections(core.CollectionKindTag, sorters)
 	if err != nil {
 		return err
 	}

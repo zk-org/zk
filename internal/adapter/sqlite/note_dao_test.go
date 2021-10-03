@@ -673,7 +673,7 @@ func TestNoteDAOFindMentions(t *testing.T) {
 					RawContent: "# A nested note\nThis one is in a sub sub directory",
 					WordCount:  8,
 					Links:      []core.Link{},
-					Tags:       []string{"adventure", "history"},
+					Tags:       []string{"adventure", "history", "science"},
 					Metadata:   map[string]interface{}{},
 					Created:    time.Date(2019, 11, 20, 20, 32, 56, 0, time.UTC),
 					Modified:   time.Date(2019, 11, 20, 20, 34, 6, 0, time.UTC),

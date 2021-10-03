@@ -16,3 +16,12 @@
 - id: 6
   note_id: 5        # ref/test/b.md
   collection_id: 5  # tag:adventure
+- id: 7
+  note_id: 5        # ref/test/b.md
+  collection_id: 7  # tag:science
+- id: 8
+  note_id: 4        # f39c8.md
+  collection_id: 7  # tag:science
+- id: 9
+  note_id: 5        # ref/test/b.md
+  collection_id: 7  # tag:science

@@ -749,7 +749,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 }
 
 func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {
-	tags, err := notebook.FindCollections(core.CollectionKindTag)
+	tags, err := notebook.FindCollections(core.CollectionKindTag, nil)
 	if err != nil {
 		return nil, err
 	}

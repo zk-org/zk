@@ -504,7 +504,7 @@ type noteIndexAddMock struct {
 
 func (m *noteIndexAddMock) Find(opts NoteFindOpts) ([]ContextualNote, error)     { return nil, nil }
 func (m *noteIndexAddMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) { return nil, nil }
-func (m *noteIndexAddMock) FindCollections(kind CollectionKind) ([]Collection, error) {
+func (m *noteIndexAddMock) FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error) {
 	return nil, nil
 }
 func (m *noteIndexAddMock) IndexedPaths() (<-chan paths.Metadata, error)       { return nil, nil }

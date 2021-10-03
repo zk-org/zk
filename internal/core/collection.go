@@ -1,5 +1,11 @@
 package core
 
+import (
+	"fmt"
+	"strings"
+	"unicode/utf8"
+)
+
 // Collection represents a collection, such as a tag.
 type Collection struct {
 	// Unique ID of this collection in the Notebook.
@@ -43,8 +49,8 @@ type CollectionRepository interface {
 	FindOrCreateCollection(name string, kind CollectionKind) (CollectionID, error)
 
 	// FindCollections returns the list of all collections in the repository
-	// for the given kind.
-	FindCollections(kind CollectionKind) ([]Collection, error)
+	// for the given kind, ordered with the given sorters.
+	FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error)
 
 	// AssociateNoteCollection creates a new association between a note and a
 	// collection, if it does not already exist.
@@ -53,4 +59,66 @@ type CollectionRepository interface {
 	// RemoveNoteCollections deletes all collection associations with the given
 	// note.
 	RemoveNoteAssociations(noteId NoteID) error
+}
+
+// CollectionSorter represents an order term used to sort a list of collections.
+type CollectionSorter struct {
+	Field     CollectionSortField
+	Ascending bool
+}
+
+// CollectionSortField represents a collection field used to sort a list of collections.
+type CollectionSortField int
+
+const (
+	// Sort by the collection names.
+	CollectionSortName CollectionSortField = iota + 1
+	// Sort by the number of notes part of the collection.
+	CollectionSortNoteCount
+)
+
+// CollectionSortersFromStrings returns a list of CollectionSorter from their string
+// representation.
+func CollectionSortersFromStrings(strs []string) ([]CollectionSorter, error) {
+	sorters := make([]CollectionSorter, 0)
+
+	// Iterates in reverse order to be able to override sort criteria set in a
+	// config alias with a `--sort` flag.
+	for i := len(strs) - 1; i >= 0; i-- {
+		sorter, err := CollectionSorterFromString(strs[i])
+		if err != nil {
+			return sorters, err
+		}
+		sorters = append(sorters, sorter)
+	}
+	return sorters, nil
+}
+
+// CollectionSorterFromString returns a CollectionSorter from its string representation.
+//
+// If the input str has for suffix `+`, then the order will be ascending, while
+// descending for `-`. If no suffix is given, then the default order for the
+// sorting field will be used.
+func CollectionSorterFromString(str string) (CollectionSorter, error) {
+	orderSymbol, _ := utf8.DecodeLastRuneInString(str)
+	str = strings.TrimRight(str, "+-")
+
+	var sorter CollectionSorter
+	switch str {
+	case "name", "n":
+		sorter = CollectionSorter{Field: CollectionSortName, Ascending: true}
+	case "note-count", "nc":
+		sorter = CollectionSorter{Field: CollectionSortNoteCount, Ascending: false}
+	default:
+		return sorter, fmt.Errorf("%s: unknown sorting term\ntry name or note-count", str)
+	}
+
+	switch orderSymbol {
+	case '+':
+		sorter.Ascending = true
+	case '-':
+		sorter.Ascending = false
+	}
+
+	return sorter, nil
 }

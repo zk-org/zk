@@ -47,9 +47,9 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 }
 
 // FindCollections implements core.NoteIndex.
-func (ni *NoteIndex) FindCollections(kind core.CollectionKind) (collections []core.Collection, err error) {
+func (ni *NoteIndex) FindCollections(kind core.CollectionKind, sorters []core.CollectionSorter) (collections []core.Collection, err error) {
 	err = ni.commit(func(dao *dao) error {
-		collections, err = dao.collections.FindAll(kind)
+		collections, err = dao.collections.FindAll(kind, sorters)
 		return err
 	})
 	return

@@ -35,14 +35,47 @@ func TestCollectionDAOFindOrCreate(t *testing.T) {
 func TestCollectionDaoFindAll(t *testing.T) {
 	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
 		// Finds none
-		cs, err := dao.FindAll("missing")
+		cs, err := dao.FindAll("missing", nil)
 		assert.Nil(t, err)
 		assert.Equal(t, len(cs), 0)
 
 		// Finds existing
-		cs, err = dao.FindAll("tag")
+		cs, err = dao.FindAll("tag", nil)
 		assert.Nil(t, err)
 		assert.Equal(t, cs, []core.Collection{
+			{Kind: "tag", Name: "adventure", NoteCount: 2},
+			{Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{Kind: "tag", Name: "fiction", NoteCount: 1},
+			{Kind: "tag", Name: "history", NoteCount: 1},
+			{Kind: "tag", Name: "science", NoteCount: 3},
+		})
+	})
+}
+
+func TestCollectionDaoFindAllSortedByName(t *testing.T) {
+	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
+		cs, err := dao.FindAll("tag", []core.CollectionSorter{
+			{Field: core.CollectionSortName, Ascending: false},
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, cs, []core.Collection{
+			{Kind: "tag", Name: "science", NoteCount: 3},
+			{Kind: "tag", Name: "history", NoteCount: 1},
+			{Kind: "tag", Name: "fiction", NoteCount: 1},
+			{Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{Kind: "tag", Name: "adventure", NoteCount: 2},
+		})
+	})
+}
+
+func TestCollectionDaoFindAllSortedByNoteCount(t *testing.T) {
+	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
+		cs, err := dao.FindAll("tag", []core.CollectionSorter{
+			{Field: core.CollectionSortNoteCount, Ascending: false},
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, cs, []core.Collection{
+			{Kind: "tag", Name: "science", NoteCount: 3},
 			{Kind: "tag", Name: "adventure", NoteCount: 2},
 			{Kind: "tag", Name: "fantasy", NoteCount: 1},
 			{Kind: "tag", Name: "fiction", NoteCount: 1},
