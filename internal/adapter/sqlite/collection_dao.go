@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
@@ -17,7 +18,6 @@ type CollectionDAO struct {
 	// Prepared SQL statements
 	createCollectionStmt   *LazyStmt
 	findCollectionStmt     *LazyStmt
-	findAllCollectionsStmt *LazyStmt
 	findAssociationStmt    *LazyStmt
 	createAssociationStmt  *LazyStmt
 	removeAssociationsStmt *LazyStmt
@@ -40,16 +40,6 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 		findCollectionStmt: tx.PrepareLazy(`
 			SELECT id FROM collections
 			 WHERE kind = ? AND name = ?
-		`),
-
-		// Find all collections.
-		findAllCollectionsStmt: tx.PrepareLazy(`
-			SELECT c.name, COUNT(nc.id) as count
-			  FROM collections c
-			 INNER JOIN notes_collections nc ON nc.collection_id = c.id
-			 WHERE kind = ?
-			 GROUP BY c.id
-			 ORDER BY c.name
 		`),
 
 		// Returns whether a note and a collection are associated.
@@ -87,8 +77,25 @@ func (d *CollectionDAO) FindOrCreate(kind core.CollectionKind, name string) (cor
 	}
 }
 
-func (d *CollectionDAO) FindAll(kind core.CollectionKind) ([]core.Collection, error) {
-	rows, err := d.findAllCollectionsStmt.Query(kind)
+func (d *CollectionDAO) FindAll(kind core.CollectionKind, sorters []core.CollectionSorter) ([]core.Collection, error) {
+	query := `
+		SELECT c.name, COUNT(nc.id) as count
+		  FROM collections c
+		 INNER JOIN notes_collections nc ON nc.collection_id = c.id
+		 WHERE kind = ?
+		 GROUP BY c.id
+	`
+
+	orderTerms := []string{}
+	if sorters != nil {
+		for _, sorter := range sorters {
+			orderTerms = append(orderTerms, collectionOrderTerm(sorter))
+		}
+	}
+	orderTerms = append(orderTerms, `c.name ASC`)
+	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
+
+	rows, err := d.tx.Query(query, kind)
 	if err != nil {
 		return []core.Collection{}, err
 	}
@@ -112,6 +119,22 @@ func (d *CollectionDAO) FindAll(kind core.CollectionKind) ([]core.Collection, er
 	}
 
 	return collections, nil
+}
+
+func collectionOrderTerm(sorter core.CollectionSorter) string {
+	order := " ASC"
+	if !sorter.Ascending {
+		order = " DESC"
+	}
+
+	switch sorter.Field {
+	case core.CollectionSortName:
+		return "c.name COLLATE NOCASE" + order
+	case core.CollectionSortNoteCount:
+		return "count" + order
+	default:
+		panic(fmt.Sprintf("%v: unknown core.CollectionSortField", sorter.Field))
+	}
 }
 
 func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (core.CollectionID, error) {

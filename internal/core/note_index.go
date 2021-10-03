@@ -20,7 +20,7 @@ type NoteIndex interface {
 	FindMinimal(opts NoteFindOpts) ([]MinimalNote, error)
 
 	// FindCollections retrieves all the collections of the given kind.
-	FindCollections(kind CollectionKind) ([]Collection, error)
+	FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error)
 
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)

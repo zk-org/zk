@@ -247,8 +247,8 @@ func (n *Notebook) FindMatching(terms string) (*MinimalNote, error) {
 }
 
 // FindCollections retrieves all the collections of the given kind.
-func (n *Notebook) FindCollections(kind CollectionKind) ([]Collection, error) {
-	return n.index.FindCollections(kind)
+func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error) {
+	return n.index.FindCollections(kind, sorters)
 }
 
 // RelPath returns the path relative to the notebook root to the given path.
@@ -350,6 +350,20 @@ func (n *Notebook) NewNoteFormatter(templateString string) (NoteFormatter, error
 	}
 
 	return newNoteFormatter(n.Path, template, linkFormatter, n.osEnv(), n.fs)
+}
+
+// NewCollectionFormatter returns a CollectionFormatter used to format notes with the given template.
+func (n *Notebook) NewCollectionFormatter(templateString string) (CollectionFormatter, error) {
+	templates, err := n.templateLoaderFactory(n.Config.Note.Lang)
+	if err != nil {
+		return nil, err
+	}
+	template, err := templates.LoadTemplate(templateString)
+	if err != nil {
+		return nil, err
+	}
+
+	return newCollectionFormatter(template)
 }
 
 // NewLinkFormatter returns a LinkFormatter used to generate internal links between notes.
