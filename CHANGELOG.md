@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+* List the tags found in your notebook with `zk tag list`.
+    * Many options are available to customize the output, including JSON serialization. See `zk tag list --help`.
 * Support for LSP references to browse the backlinks of the current note, if the caret is not over a link.
 * New template variables are available when [generating custom Markdown links with `link-format`](docs/note-format.md).
     * `filename`, `path`, `abs-path` and `rel-path` for many path flavors.
@@ -23,13 +25,13 @@ All notable changes to this project will be documented in this file.
 * A new `{{substring s index length}}` template helper extracts a portion of a given string, e.g.:
     * `{{substring 'A full quote' 2 4}}` outputs `full`
     * `{{substring 'A full quote' -5 5}` outputs `quote`
-* Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
 
 
 ### Fixed
 
 * UTF-8 handling in the LSP server.
 * [#78](https://github.com/mickael-menu/zk/issues/78) Do not exclude notes containing broken links from the index.
+* Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
 
 
 ## 0.6.0
