@@ -18,6 +18,11 @@ var WikiLinkExt = &wikiLink{}
 
 type wikiLink struct{}
 
+// WikiLink represents a wiki link found in a Markdown document.
+type WikiLink struct {
+	ast.Link
+}
+
 func (w *wikiLink) Extend(m goldmark.Markdown) {
 	m.Parser().AddOptions(
 		parser.WithInlineParsers(
@@ -135,7 +140,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		label = href
 	}
 
-	link := ast.NewLink()
+	link := &WikiLink{Link: *ast.NewLink()}
 	link.Destination = []byte(href)
 	// Title will be parsed as the link's rel by the Markdown parser.
 	link.Title = []byte(rel)

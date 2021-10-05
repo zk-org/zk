@@ -3,11 +3,13 @@ package markdown
 import (
 	"bufio"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
 	"github.com/mickael-menu/zk/internal/adapter/markdown/extensions"
 	"github.com/mickael-menu/zk/internal/core"
+	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
 	"github.com/mickael-menu/zk/internal/util/yaml"
@@ -22,7 +24,8 @@ import (
 
 // Parser parses the content of Markdown notes.
 type Parser struct {
-	md goldmark.Markdown
+	md     goldmark.Markdown
+	logger util.Logger
 }
 
 type ParserOpts struct {
@@ -35,7 +38,7 @@ type ParserOpts struct {
 }
 
 // NewParser creates a new Markdown Parser.
-func NewParser(options ParserOpts) *Parser {
+func NewParser(options ParserOpts, logger util.Logger) *Parser {
 	return &Parser{
 		md: goldmark.New(
 			goldmark.WithExtensions(
@@ -57,6 +60,7 @@ func NewParser(options ParserOpts) *Parser {
 				},
 			),
 		),
+		logger: logger,
 	}
 }
 
@@ -70,7 +74,7 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 		parser.WithContext(context),
 	)
 
-	links, err := parseLinks(root, bytes)
+	links, err := p.parseLinks(root, bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -208,14 +212,15 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 }
 
 // parseLinks extracts outbound links from the note.
-func parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
+func (p *Parser) parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 	links := make([]core.Link, 0)
 
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
 			switch link := n.(type) {
 			case *ast.Link:
-				href := string(link.Destination)
+				href, err := url.PathUnescape(string(link.Destination))
+				p.logger.Err(err)
 				if href != "" {
 					snippet, snStart, snEnd := extractLines(n, source)
 					links = append(links, core.Link{
@@ -237,6 +242,21 @@ func parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 						Href:         href,
 						Rels:         []core.LinkRelation{},
 						IsExternal:   true,
+						Snippet:      snippet,
+						SnippetStart: snStart,
+						SnippetEnd:   snEnd,
+					})
+				}
+
+			case *extensions.WikiLink:
+				href := string(link.Destination)
+				if href != "" {
+					snippet, snStart, snEnd := extractLines(n, source)
+					links = append(links, core.Link{
+						Title:        string(link.Text(source)),
+						Href:         href,
+						Rels:         core.LinkRels(strings.Fields(string(link.Title))...),
+						IsExternal:   strutil.IsURL(href),
 						Snippet:      snippet,
 						SnippetStart: snStart,
 						SnippetEnd:   snEnd,
