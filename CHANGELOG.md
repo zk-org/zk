@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+<!--## Unreleased-->
+
+## 0.7.0
 
 ### Added
 
@@ -25,7 +27,6 @@ All notable changes to this project will be documented in this file.
 * A new `{{substring s index length}}` template helper extracts a portion of a given string, e.g.:
     * `{{substring 'A full quote' 2 4}}` outputs `full`
     * `{{substring 'A full quote' -5 5}` outputs `quote`
-
 
 ### Fixed
 
