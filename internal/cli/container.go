@@ -89,11 +89,14 @@ func NewContainer(version string) (*Container, error) {
 
 				notebook := core.NewNotebook(path, config, core.NotebookPorts{
 					NoteIndex: sqlite.NewNoteIndex(db, logger),
-					NoteContentParser: markdown.NewParser(markdown.ParserOpts{
-						HashtagEnabled:      config.Format.Markdown.Hashtags,
-						MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
-						ColontagEnabled:     config.Format.Markdown.ColonTags,
-					}),
+					NoteContentParser: markdown.NewParser(
+						markdown.ParserOpts{
+							HashtagEnabled:      config.Format.Markdown.Hashtags,
+							MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
+							ColontagEnabled:     config.Format.Markdown.ColonTags,
+						},
+						logger,
+					),
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
 						loader := handlebars.NewLoader(handlebars.LoaderOpts{
 							LookupPaths: []string{

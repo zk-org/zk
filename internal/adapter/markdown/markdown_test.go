@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mickael-menu/zk/internal/core"
+	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/test/assert"
 )
@@ -545,6 +546,31 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 			SnippetEnd:   744,
 		},
 	})
+
+	// Markdown links are decoded, but not WikiLinks.
+	// i.e. https://github.com/mickael-menu/zk/issues/86
+	test("[foo%20bar](202110031652%20foo%20bar)", []core.Link{
+		{
+			Title:        "foo%20bar",
+			Href:         "202110031652 foo bar",
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[foo%20bar](202110031652%20foo%20bar)",
+			SnippetStart: 0,
+			SnippetEnd:   37,
+		},
+	})
+	test("[[202110031652%20foo%20bar]]", []core.Link{
+		{
+			Title:        "202110031652%20foo%20bar",
+			Href:         "202110031652%20foo%20bar",
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[[202110031652%20foo%20bar]]",
+			SnippetStart: 0,
+			SnippetEnd:   28,
+		},
+	})
 }
 
 func TestParseMetadataFromFrontmatter(t *testing.T) {
@@ -584,7 +610,7 @@ func parse(t *testing.T, source string) core.NoteContent {
 }
 
 func parseWithOptions(t *testing.T, source string, options ParserOpts) core.NoteContent {
-	content, err := NewParser(options).ParseNoteContent(source)
+	content, err := NewParser(options, &util.NullLogger).ParseNoteContent(source)
 	assert.Nil(t, err)
 	return *content
 }
