@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 * UTF-8 handling in the LSP server.
 * [#78](https://github.com/mickael-menu/zk/issues/78) Do not exclude notes containing broken links from the index.
 * Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
+* [#86](https://github.com/mickael-menu/zk/issues/86) Index encoded Markdown links.
 
 
 ## 0.6.0
