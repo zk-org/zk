@@ -79,11 +79,7 @@ func (fs *FileStorage) FileExists(path string) (bool, error) {
 
 func (fs *FileStorage) DirExists(path string) (bool, error) {
 	fi, err := fs.fileInfo(path)
-	if err != nil {
-		return false, err
-	} else {
-		return fi != nil && (*fi).Mode().IsDir(), nil
-	}
+	return !os.IsNotExist(err) && fi != nil && (*fi).Mode().IsDir(), nil
 }
 
 func (fs *FileStorage) fileInfo(path string) (*os.FileInfo, error) {

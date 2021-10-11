@@ -46,7 +46,7 @@ func (e ErrNotebookNotFound) Error() string {
 // Open returns a new Notebook instance for the notebook containing the
 // given file path.
 func (ns *NotebookStore) Open(path string) (*Notebook, error) {
-	wrap := errors.Wrapper("open failed")
+	wrap := errors.Wrapper("failed to open notebook")
 
 	path = ns.fs.Canonical(path)
 	nb := ns.cachedNotebookAt(path)
