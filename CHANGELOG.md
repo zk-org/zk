@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* [#89](https://github.com/mickael-menu/zk/issues/89) Calling `zk index` from outside the notebook (contributed by [@adamreese](https://github.com/mickael-menu/zk/pull/90)).
+
 
 ## 0.7.0
 
