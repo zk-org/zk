@@ -123,7 +123,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	// FIXME: Use the FS?
 	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
 		callback(change)
-		absPath := filepath.Join(change.Path)
+		absPath := filepath.Join(t.path, change.Path)
 
 		switch change.Kind {
 		case paths.DiffAdded:
