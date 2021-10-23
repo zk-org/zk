@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New template variables `filename` and `filename-stem` when formatting notes (e.g. with `zk list --format`) and for the [`fzf-line`](docs/tool-fzf.md) config key.
+* Customize how LSP completion items appear in your editor when auto-completing links with the [`[lsp.completion]` configuration section](docs/config-lsp.md).
+    ```toml
+    [lsp.completion]
+    # Show the note title in the completion pop-up, or fallback on its path if empty.
+    note-label = "{{title-or-path}}"
+    # Filter out the completion pop-up using the note title or its path.
+    note-filter-text = "{{title}} {{path}}"
+    # Show the note filename without extension as detail.
+    note-detail = "{{filename-stem}}"
+    ```
 
 ### Fixed
 

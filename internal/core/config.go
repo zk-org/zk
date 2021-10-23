@@ -50,6 +50,13 @@ func NewDefaultConfig() Config {
 			},
 		},
 		LSP: LSPConfig{
+			Completion: LSPCompletionConfig{
+				Note: LSPCompletionTemplates{
+					Label:      opt.NullString,
+					FilterText: opt.NullString,
+					Detail:     opt.NullString,
+				},
+			},
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle: LSPDiagnosticNone,
 				DeadLink:  LSPDiagnosticError,
@@ -148,7 +155,21 @@ type ToolConfig struct {
 
 // LSPConfig holds the Language Server Protocol configuration.
 type LSPConfig struct {
+	Completion  LSPCompletionConfig
 	Diagnostics LSPDiagnosticConfig
+}
+
+// LSPCompletionConfig holds the LSP auto-completion configuration.
+type LSPCompletionConfig struct {
+	Note LSPCompletionTemplates
+}
+
+// LSPCompletionConfig holds the LSP completion templates for a particular
+// completion item type (e.g. note or tag).
+type LSPCompletionTemplates struct {
+	Label      opt.String
+	FilterText opt.String
+	Detail     opt.String
 }
 
 // LSPDiagnosticConfig holds the LSP diagnostics configuration.
@@ -341,7 +362,19 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
 	}
 
-	// LSP
+	// LSP completion
+	lspCompl := tomlConf.LSP.Completion
+	if lspCompl.NoteLabel != nil {
+		config.LSP.Completion.Note.Label = opt.NewNotEmptyString(*lspCompl.NoteLabel)
+	}
+	if lspCompl.NoteFilterText != nil {
+		config.LSP.Completion.Note.FilterText = opt.NewNotEmptyString(*lspCompl.NoteFilterText)
+	}
+	if lspCompl.NoteDetail != nil {
+		config.LSP.Completion.Note.Detail = opt.NewNotEmptyString(*lspCompl.NoteDetail)
+	}
+
+	// LSP diagnostics
 	lspDiags := tomlConf.LSP.Diagnostics
 	if lspDiags.WikiTitle != nil {
 		config.LSP.Diagnostics.WikiTitle, err = lspDiagnosticSeverityFromString(*lspDiags.WikiTitle)
@@ -474,6 +507,11 @@ type tomlToolConfig struct {
 }
 
 type tomlLSPConfig struct {
+	Completion struct {
+		NoteLabel      *string `toml:"note-label"`
+		NoteFilterText *string `toml:"note-filter-text"`
+		NoteDetail     *string `toml:"note-detail"`
+	}
 	Diagnostics struct {
 		WikiTitle *string `toml:"wiki-title"`
 		DeadLink  *string `toml:"dead-link"`

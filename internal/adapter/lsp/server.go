@@ -23,21 +23,23 @@ import (
 
 // Server holds the state of the Language Server.
 type Server struct {
-	server    *glspserv.Server
-	notebooks *core.NotebookStore
-	documents *documentStore
-	fs        core.FileStorage
-	logger    util.Logger
+	server         *glspserv.Server
+	notebooks      *core.NotebookStore
+	documents      *documentStore
+	templateLoader core.TemplateLoader
+	fs             core.FileStorage
+	logger         util.Logger
 }
 
 // ServerOpts holds the options to create a new Server.
 type ServerOpts struct {
-	Name      string
-	Version   string
-	LogFile   opt.String
-	Logger    *util.ProxyLogger
-	Notebooks *core.NotebookStore
-	FS        core.FileStorage
+	Name           string
+	Version        string
+	LogFile        opt.String
+	Logger         *util.ProxyLogger
+	Notebooks      *core.NotebookStore
+	TemplateLoader core.TemplateLoader
+	FS             core.FileStorage
 }
 
 // NewServer creates a new Server instance.
@@ -58,11 +60,12 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	server := &Server{
-		server:    glspServer,
-		notebooks: opts.Notebooks,
-		documents: newDocumentStore(fs, opts.Logger),
-		fs:        fs,
-		logger:    opts.Logger,
+		server:         glspServer,
+		notebooks:      opts.Notebooks,
+		documents:      newDocumentStore(fs, opts.Logger),
+		templateLoader: opts.TemplateLoader,
+		fs:             fs,
+		logger:         opts.Logger,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -788,6 +791,11 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 		return nil, err
 	}
 
+	templates, err := newCompletionTemplates(s.templateLoader, notebook.Config.LSP.Completion.Note)
+	if err != nil {
+		return nil, err
+	}
+
 	notes, err := notebook.FindMinimalNotes(core.NoteFindOpts{})
 	if err != nil {
 		return nil, err
@@ -795,7 +803,7 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
-		item, err := s.newCompletionItem(notebook, note, doc, params.Position, linkFormatter)
+		item, err := s.newCompletionItem(notebook, note, doc, params.Position, linkFormatter, templates)
 		if err != nil {
 			s.logger.Err(err)
 			continue
@@ -815,24 +823,55 @@ func newLinkFormatter(doc *document, notebook *core.Notebook, params *protocol.C
 	}
 }
 
-func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (item protocol.CompletionItem, err error) {
+func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter, templates completionTemplates) (protocol.CompletionItem, error) {
 	kind := protocol.CompletionItemKindReference
-	item.Kind = &kind
-	item.Data = filepath.Join(notebook.Path, note.Path)
+	item := protocol.CompletionItem{
+		Kind: &kind,
+		Data: filepath.Join(notebook.Path, note.Path),
+	}
 
-	if note.Title != "" {
-		item.Label = note.Title
+	templateContext, err := newCompletionItemRenderContext(note, notebook.Path, doc.Path)
+	if err != nil {
+		return item, err
+	}
+
+	if templates.Label != nil {
+		item.Label, err = templates.Label.Render(templateContext)
+		if err != nil {
+			return item, err
+		}
 	} else {
+		item.Label = note.Title
+	}
+	// Fallback on the note path to never have empty labels.
+	if item.Label == "" {
 		item.Label = note.Path
 	}
 
-	// Add the path to the filter text to be able to complete by it.
-	item.FilterText = stringPtr(item.Label + " " + note.Path)
+	if templates.FilterText != nil {
+		filterText, err := templates.FilterText.Render(templateContext)
+		if err != nil {
+			return item, err
+		}
+		item.FilterText = &filterText
+	}
+	if item.FilterText == nil || *item.FilterText == "" {
+		// Add the path to the filter text to be able to complete by it.
+		item.FilterText = stringPtr(item.Label + " " + note.Path)
+	}
+
+	if templates.Detail != nil {
+		detail, err := templates.Detail.Render(templateContext)
+		if err != nil {
+			return item, err
+		}
+		item.Detail = &detail
+	}
 
 	item.TextEdit, err = s.newTextEditForLink(notebook, note, doc, pos, linkFormatter)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path)
-		return
+		return item, err
 	}
 
 	addTextEdits := []protocol.TextEdit{}
