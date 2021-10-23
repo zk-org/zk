@@ -1,7 +1,10 @@
 package core
 
 import (
+	"path/filepath"
 	"time"
+
+	"github.com/mickael-menu/zk/internal/util/paths"
 )
 
 // NoteID represents the unique ID of a note collection relative to a given
@@ -61,6 +64,17 @@ func (n Note) AsMinimalNote() MinimalNote {
 		Title:    n.Title,
 		Metadata: n.Metadata,
 	}
+}
+
+// Filename returns the filename portion of the note path.
+func (n Note) Filename() string {
+	return filepath.Base(n.Path)
+}
+
+// FilenameStem returns the filename portion of the note path, excluding its
+// file extension.
+func (n Note) FilenameStem() string {
+	return paths.FilenameStem(n.Path)
 }
 
 // ContextualNote holds a Note and context-sensitive content snippets.

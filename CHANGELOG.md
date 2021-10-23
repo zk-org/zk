@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* New template variables `filename` and `filename-stem` when formatting notes (e.g. with `zk list --format`) and for the [`fzf-line`](docs/tool-fzf.md) config key.
+
 ### Fixed
 
 * [#89](https://github.com/mickael-menu/zk/issues/89) Calling `zk index` from outside the notebook (contributed by [@adamreese](https://github.com/mickael-menu/zk/pull/90)).
