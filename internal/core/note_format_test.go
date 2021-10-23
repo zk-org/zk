@@ -1,6 +1,7 @@
 package core
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -28,7 +29,7 @@ func TestNewNoteFormatter(t *testing.T) {
 	res, err := formatter(ContextualNote{
 		Note: Note{
 			ID:         1,
-			Path:       "note1",
+			Path:       "note1.md",
 			Title:      "Note 1",
 			Lead:       "Lead 1",
 			Body:       "Body 1",
@@ -51,7 +52,7 @@ func TestNewNoteFormatter(t *testing.T) {
 	res, err = formatter(ContextualNote{
 		Note: Note{
 			ID:         2,
-			Path:       "dir/note2",
+			Path:       "dir/note2.md",
 			Title:      "Note 2",
 			Lead:       "Lead 2",
 			Body:       "Body 2",
@@ -71,16 +72,18 @@ func TestNewNoteFormatter(t *testing.T) {
 	// Check that the template received the proper contexts
 	assert.Equal(t, test.template.Contexts, []interface{}{
 		noteFormatRenderContext{
-			Path:       "note1",
-			AbsPath:    "/notebook/note1",
-			Title:      "Note 1",
-			Link:       opt.NewString("[Note 1](note1)"),
-			Lead:       "Lead 1",
-			Body:       "Body 1",
-			Snippets:   []string{"snippet1", "snippet2"},
-			RawContent: "Content 1",
-			WordCount:  1,
-			Tags:       []string{"tag1", "tag2"},
+			Filename:     "note1.md",
+			FilenameStem: "note1",
+			Path:         "note1.md",
+			AbsPath:      "/notebook/note1.md",
+			Title:        "Note 1",
+			Link:         opt.NewString("[Note 1](note1)"),
+			Lead:         "Lead 1",
+			Body:         "Body 1",
+			Snippets:     []string{"snippet1", "snippet2"},
+			RawContent:   "Content 1",
+			WordCount:    1,
+			Tags:         []string{"tag1", "tag2"},
 			Metadata: map[string]interface{}{
 				"metadata1": "val1",
 				"metadata2": "val2",
@@ -90,20 +93,22 @@ func TestNewNoteFormatter(t *testing.T) {
 			Checksum: "checksum1",
 		},
 		noteFormatRenderContext{
-			Path:       "dir/note2",
-			AbsPath:    "/notebook/dir/note2",
-			Title:      "Note 2",
-			Link:       opt.NewString("[Note 2](dir/note2)"),
-			Lead:       "Lead 2",
-			Body:       "Body 2",
-			Snippets:   []string{},
-			RawContent: "Content 2",
-			WordCount:  2,
-			Tags:       []string{},
-			Metadata:   map[string]interface{}{},
-			Created:    date3,
-			Modified:   date4,
-			Checksum:   "checksum2",
+			Filename:     "note2.md",
+			FilenameStem: "note2",
+			Path:         "dir/note2.md",
+			AbsPath:      "/notebook/dir/note2.md",
+			Title:        "Note 2",
+			Link:         opt.NewString("[Note 2](dir/note2)"),
+			Lead:         "Lead 2",
+			Body:         "Body 2",
+			Snippets:     []string{},
+			RawContent:   "Content 2",
+			WordCount:    2,
+			Tags:         []string{},
+			Metadata:     map[string]interface{}{},
+			Created:      date3,
+			Modified:     date4,
+			Checksum:     "checksum2",
 		},
 	})
 }
@@ -123,10 +128,12 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
-				Path:     expected,
-				AbsPath:  expectedFull,
-				Link:     opt.NewString("[](" + paths.DropExt(expected) + ")"),
-				Snippets: []string{},
+				Filename:     filepath.Base(expected),
+				FilenameStem: paths.FilenameStem(expected),
+				Path:         expected,
+				AbsPath:      expectedFull,
+				Link:         opt.NewString("[](" + paths.DropExt(expected) + ")"),
+				Snippets:     []string{},
 			},
 		})
 	}
@@ -154,10 +161,12 @@ func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, test.template.Contexts, []interface{}{
 			noteFormatRenderContext{
-				Path:     ".",
-				AbsPath:  "/notebook",
-				Link:     opt.NewString("[]()"),
-				Snippets: []string{expected},
+				Filename:     ".",
+				FilenameStem: ".",
+				Path:         ".",
+				AbsPath:      "/notebook",
+				Link:         opt.NewString("[]()"),
+				Snippets:     []string{expected},
 			},
 		})
 	}

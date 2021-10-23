@@ -43,6 +43,8 @@ The following variables are available in the line template.
 
 | Variable        | Type     | Description                                                        |
 |-----------------|----------|--------------------------------------------------------------------|
+| `filename`      | string   | Filename of the note, including its extension                      |
+| `filename-stem` | string   | Filename of the note without the file extension                    |
 | `path`          | string   | File path to the note, relative to the notebook root               |
 | `abs-path`      | string   | Absolute file path to the note                                     |
 | `rel-path`      | string   | File path to the note, relative to the current directory           |

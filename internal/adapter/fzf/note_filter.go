@@ -108,19 +108,21 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 
 	for i, note := range notes {
 		context := lineRenderContext{
-			Path:        note.Path,
-			AbsPath:     absPaths[i],
-			RelPath:     relPaths[i],
-			Title:       note.Title,
-			TitleOrPath: note.Title,
-			Body:        stringsutil.JoinLines(note.Body),
-			RawContent:  stringsutil.JoinLines(note.RawContent),
-			WordCount:   note.WordCount,
-			Tags:        note.Tags,
-			Metadata:    note.Metadata,
-			Created:     note.Created,
-			Modified:    note.Modified,
-			Checksum:    note.Checksum,
+			Filename:     note.Filename(),
+			FilenameStem: note.FilenameStem(),
+			Path:         note.Path,
+			AbsPath:      absPaths[i],
+			RelPath:      relPaths[i],
+			Title:        note.Title,
+			TitleOrPath:  note.Title,
+			Body:         stringsutil.JoinLines(note.Body),
+			RawContent:   stringsutil.JoinLines(note.RawContent),
+			WordCount:    note.WordCount,
+			Tags:         note.Tags,
+			Metadata:     note.Metadata,
+			Created:      note.Created,
+			Modified:     note.Modified,
+			Checksum:     note.Checksum,
 		}
 		if context.TitleOrPath == "" {
 			context.TitleOrPath = note.Path
@@ -157,17 +159,19 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}}`
 
 type lineRenderContext struct {
-	Path        string
-	AbsPath     string `handlebars:"abs-path"`
-	RelPath     string `handlebars:"rel-path"`
-	Title       string
-	TitleOrPath string `handlebars:"title-or-path"`
-	Body        string
-	RawContent  string `handlebars:"raw-content"`
-	WordCount   int    `handlebars:"word-count"`
-	Tags        []string
-	Metadata    map[string]interface{}
-	Created     time.Time
-	Modified    time.Time
-	Checksum    string
+	Filename     string
+	FilenameStem string `handlebars:"filename-stem"`
+	Path         string
+	AbsPath      string `handlebars:"abs-path"`
+	RelPath      string `handlebars:"rel-path"`
+	Title        string
+	TitleOrPath  string `handlebars:"title-or-path"`
+	Body         string
+	RawContent   string `handlebars:"raw-content"`
+	WordCount    int    `handlebars:"word-count"`
+	Tags         []string
+	Metadata     map[string]interface{}
+	Created      time.Time
+	Modified     time.Time
+	Checksum     string
 }
