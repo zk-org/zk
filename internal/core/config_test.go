@@ -124,6 +124,11 @@ func TestParseComplete(t *testing.T) {
 
 		[group."without path"]
 		paths = []
+
+		[lsp.completion]
+		note-label = "notelabel"
+		note-filter-text = "notefiltertext"
+		note-detail = "notedetail"
 		
 		[lsp.diagnostics]
 		wiki-title = "hint"
@@ -225,6 +230,13 @@ func TestParseComplete(t *testing.T) {
 			FzfLine:    opt.NewString("{{title}}"),
 		},
 		LSP: LSPConfig{
+			Completion: LSPCompletionConfig{
+				Note: LSPCompletionTemplates{
+					Label:      opt.NewString("notelabel"),
+					FilterText: opt.NewString("notefiltertext"),
+					Detail:     opt.NewString("notedetail"),
+				},
+			},
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle: LSPDiagnosticHint,
 				DeadLink:  LSPDiagnosticNone,
@@ -345,6 +357,13 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			},
 		},
 		LSP: LSPConfig{
+			Completion: LSPCompletionConfig{
+				Note: LSPCompletionTemplates{
+					Label:      opt.NullString,
+					FilterText: opt.NullString,
+					Detail:     opt.NullString,
+				},
+			},
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle: LSPDiagnosticNone,
 				DeadLink:  LSPDiagnosticError,
