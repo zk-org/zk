@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
     # Show the note filename without extension as detail.
     note-detail = "{{filename-stem}}"
     ```
+* New `--dry-run` flag for `zk new` which prints out the path and content of the generated note instead of saving it to the file system.
 
 ### Fixed
 

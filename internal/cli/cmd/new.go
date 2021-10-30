@@ -3,13 +3,14 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/mickael-menu/zk/internal/cli"
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/os"
+	osutil "github.com/mickael-menu/zk/internal/util/os"
 )
 
 // New adds a new note to the notebook.
@@ -20,6 +21,7 @@ type New struct {
 	Extra     map[string]string `                            help:"Extra variables passed to the templates." mapsep:","`
 	Template  string            `          placeholder:PATH  help:"Custom template used to render the note."`
 	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
+	DryRun    bool              `short:n                     help:"Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."`
 }
 
 func (cmd *New) Run(container *cli.Container) error {
@@ -28,7 +30,7 @@ func (cmd *New) Run(container *cli.Container) error {
 		return err
 	}
 
-	content, err := os.ReadStdinPipe()
+	content, err := osutil.ReadStdinPipe()
 	if err != nil {
 		return err
 	}
@@ -41,7 +43,19 @@ func (cmd *New) Run(container *cli.Container) error {
 		Template:  opt.NewNotEmptyString(cmd.Template),
 		Extra:     cmd.Extra,
 		Date:      time.Now(),
+		DryRun:    cmd.DryRun,
 	})
+
+	if cmd.DryRun {
+		if err != nil {
+			return err
+		}
+		path := filepath.Join(notebook.Path, note.Path)
+		fmt.Fprintln(os.Stderr, path)
+		fmt.Print(note.RawContent)
+		return nil
+	}
+
 	var path string
 	if err == nil {
 		path = filepath.Join(notebook.Path, note.Path)

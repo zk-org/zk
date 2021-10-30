@@ -20,19 +20,20 @@ type newNoteTask struct {
 	bodyTemplatePath opt.String
 	templates        TemplateLoader
 	genID            IDGenerator
+	dryRun           bool
 }
 
-func (t *newNoteTask) execute() (string, error) {
+func (t *newNoteTask) execute() (string, string, error) {
 	filenameTemplate, err := t.templates.LoadTemplate(t.filenameTemplate)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var contentTemplate Template = NullTemplate
 	if templatePath := t.bodyTemplatePath.Unwrap(); templatePath != "" {
 		contentTemplate, err = t.templates.LoadTemplateAt(templatePath)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 
@@ -47,20 +48,22 @@ func (t *newNoteTask) execute() (string, error) {
 
 	path, context, err := t.generatePath(context, filenameTemplate)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	content, err := contentTemplate.Render(context)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	err = t.fs.Write(path, []byte(content))
-	if err != nil {
-		return "", err
+	if !t.dryRun {
+		err = t.fs.Write(path, []byte(content))
+		if err != nil {
+			return "", "", err
+		}
 	}
 
-	return path, nil
+	return path, content, nil
 }
 
 func (c *newNoteTask) generatePath(context newNoteTemplateContext, filenameTemplate Template) (string, newNoteTemplateContext, error) {

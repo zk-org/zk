@@ -108,6 +108,8 @@ type NewNoteOpts struct {
 	Extra map[string]string
 	// Creation date provided to the templates.
 	Date time.Time
+	// Don't save the generated note on the file system.
+	DryRun bool
 }
 
 // ErrNoteExists is an error returned when a note already exists with the
@@ -159,23 +161,26 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 		bodyTemplatePath: opts.Template.Or(config.Note.BodyTemplatePath),
 		templates:        templates,
 		genID:            n.idGeneratorFactory(config.Note.IDOptions),
+		dryRun:           opts.DryRun,
 	}
-	path, err := task.execute()
+	path, content, err := task.execute()
 	if err != nil {
 		return nil, wrap(err)
 	}
 
-	note, err := n.ParseNoteAt(path)
+	note, err := n.ParseNoteWithContent(path, []byte(content))
 	if note == nil || err != nil {
 		return nil, wrap(err)
 	}
 
-	id, err := n.index.Add(*note)
-	if err != nil {
-		return nil, wrap(err)
+	if !opts.DryRun {
+		id, err := n.index.Add(*note)
+		if err != nil {
+			return nil, wrap(err)
+		}
+		note.ID = id
 	}
 
-	note.ID = id
 	return note, nil
 }
 
