@@ -44,15 +44,22 @@ type NoteContent struct {
 func (n *Notebook) ParseNoteAt(absPath string) (*Note, error) {
 	wrap := errors.Wrapper(absPath)
 
+	content, err := n.fs.Read(absPath)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
+	return n.ParseNoteWithContent(absPath, content)
+}
+
+func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, error) {
+	wrap := errors.Wrapper(absPath)
+
 	relPath, err := n.RelPath(absPath)
 	if err != nil {
 		return nil, wrap(err)
 	}
 
-	content, err := n.fs.Read(absPath)
-	if err != nil {
-		return nil, wrap(err)
-	}
 	contentStr := string(content)
 	contentParts, err := n.parser.ParseNoteContent(contentStr)
 	if err != nil {
@@ -86,9 +93,7 @@ func (n *Notebook) ParseNoteAt(absPath string) (*Note, error) {
 	}
 
 	times, err := times.Stat(absPath)
-	if err != nil {
-		n.logger.Err(err)
-	} else {
+	if err == nil {
 		note.Modified = times.ModTime().UTC()
 		note.Created = creationDateFrom(note.Metadata, times)
 	}
