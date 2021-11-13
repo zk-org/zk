@@ -171,7 +171,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		_, err = notebook.Index(false)
+		_, err = notebook.Index(core.NoteIndexOpts{})
 		server.logger.Err(err)
 		return nil
 	}
@@ -485,14 +485,17 @@ func (s *Server) executeCommandIndex(args []interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
 	}
 
-	force := false
+	opts := core.NoteIndexOpts{}
 	if len(args) == 2 {
 		options, ok := args[1].(map[string]interface{})
 		if !ok {
 			return nil, fmt.Errorf("zk.index expects a dictionary of options as second argument, got: %v", args[1])
 		}
 		if forceOption, ok := options["force"]; ok {
-			force = toBool(forceOption)
+			opts.Force = toBool(forceOption)
+		}
+		if verboseOption, ok := options["verbose"]; ok {
+			opts.Verbose = toBool(verboseOption)
 		}
 	}
 
@@ -501,7 +504,7 @@ func (s *Server) executeCommandIndex(args []interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	return notebook.Index(force)
+	return notebook.Index(opts)
 }
 
 const cmdNew = "zk.new"

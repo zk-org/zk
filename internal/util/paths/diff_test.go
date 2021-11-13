@@ -35,7 +35,11 @@ func TestNoDiff(t *testing.T) {
 		},
 	}
 
-	test(t, files, files, false, []DiffChange{})
+	test(t, files, files, false, []DiffChange{
+		{Path: "a/1", Kind: DiffUnchanged},
+		{Path: "a/2", Kind: DiffUnchanged},
+		{Path: "b/1", Kind: DiffUnchanged},
+	})
 }
 
 func TestDiff(t *testing.T) {
@@ -85,6 +89,10 @@ func TestDiff(t *testing.T) {
 		{
 			Path: "a/3",
 			Kind: DiffRemoved,
+		},
+		{
+			Path: "b/1",
+			Kind: DiffUnchanged,
 		},
 	})
 }
@@ -166,6 +174,10 @@ func TestDiffWithMoreInSource(t *testing.T) {
 
 	test(t, source, target, false, []DiffChange{
 		{
+			Path: "a/1",
+			Kind: DiffUnchanged,
+		},
+		{
 			Path: "a/2",
 			Kind: DiffAdded,
 		},
@@ -192,6 +204,10 @@ func TestDiffWithMoreInTarget(t *testing.T) {
 	}
 
 	test(t, source, target, false, []DiffChange{
+		{
+			Path: "a/1",
+			Kind: DiffUnchanged,
+		},
 		{
 			Path: "a/2",
 			Kind: DiffRemoved,

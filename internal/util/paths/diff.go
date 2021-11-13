@@ -20,10 +20,27 @@ const (
 	DiffAdded DiffKind = iota + 1
 	DiffModified
 	DiffRemoved
+	DiffUnchanged
 )
 
 // String implements Stringer.
 func (k DiffKind) String() string {
+	switch k {
+	case DiffAdded:
+		return "added"
+	case DiffModified:
+		return "modified"
+	case DiffRemoved:
+		return "removed"
+	case DiffUnchanged:
+		return "unchanged"
+	default:
+		panic(fmt.Sprintf("%d: unknown DiffKind", int(k)))
+	}
+}
+
+// Symbol returns a single character symbol representing this change.
+func (k DiffKind) Symbol() string {
 	switch k {
 	case DiffAdded:
 		return "+"
@@ -31,6 +48,8 @@ func (k DiffKind) String() string {
 		return "~"
 	case DiffRemoved:
 		return "-"
+	case DiffUnchanged:
+		return "/"
 	default:
 		panic(fmt.Sprintf("%d: unknown DiffKind", int(k)))
 	}
@@ -102,6 +121,8 @@ func (p *diffPair) diff(forceModified bool) *DiffChange {
 	case p.source.Path == p.target.Path: // Same files, compare their modification date.
 		if forceModified || p.source.Modified != p.target.Modified {
 			change = &DiffChange{p.source.Path, DiffModified}
+		} else {
+			change = &DiffChange{p.source.Path, DiffUnchanged}
 		}
 		p.source = nil
 		p.target = nil

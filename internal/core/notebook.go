@@ -62,8 +62,7 @@ type NotebookPorts struct {
 type NotebookFactory func(path string, config Config) (*Notebook, error)
 
 // Index indexes the content of the notebook to be searchable.
-// If force is true, existing notes will be reindexed.
-func (n *Notebook) Index(force bool) (stats NoteIndexingStats, err error) {
+func (n *Notebook) Index(opts NoteIndexOpts) (stats NoteIndexingStats, err error) {
 	// FIXME: Move out of Core
 	bar := progressbar.NewOptions(-1,
 		progressbar.OptionSetWriter(os.Stderr),
@@ -73,12 +72,13 @@ func (n *Notebook) Index(force bool) (stats NoteIndexingStats, err error) {
 
 	err = n.index.Commit(func(index NoteIndex) error {
 		task := indexTask{
-			path:   n.Path,
-			config: n.Config,
-			force:  force,
-			index:  index,
-			parser: n,
-			logger: n.logger,
+			path:    n.Path,
+			config:  n.Config,
+			force:   opts.Force,
+			verbose: opts.Verbose,
+			index:   index,
+			parser:  n,
+			logger:  n.logger,
 		}
 		stats, err = task.execute(func(change paths.DiffChange) {
 			bar.Add(1)
