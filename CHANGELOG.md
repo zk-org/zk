@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
     note-detail = "{{filename-stem}}"
     ```
 * New `--dry-run` flag for `zk new` which prints out the path and content of the generated note instead of saving it to the file system.
+* New `--verbose` flag for `zk index` which prints detailed information about the indexing process.
 
 ### Fixed
 

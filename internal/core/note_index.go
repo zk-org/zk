@@ -98,7 +98,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 	print := func(message string) {
 		if t.verbose {
-			fmt.Print(message + "\n")
+			fmt.Println(message)
 		}
 	}
 
@@ -155,26 +155,11 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		print("- " + change.Kind.String() + " " + change.Path)
 		absPath := filepath.Join(t.path, change.Path)
 
-		printNote := func(note *Note) {
-			print("  title: " + note.Title)
-
-			if len(note.Links) > 0 {
-				print("  links: [")
-				for _, link := range note.Links {
-					print("    title: \"" + link.Title + "\", href: \"" + link.Href + "\"")
-				}
-				print("  ]")
-			} else {
-				print("  links: []")
-			}
-		}
-
 		switch change.Kind {
 		case paths.DiffAdded:
 			stats.AddedCount += 1
 			note, err := t.parser.ParseNoteAt(absPath)
 			if note != nil {
-				printNote(note)
 				_, err = t.index.Add(*note)
 			}
 			t.logger.Err(err)
@@ -183,7 +168,6 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			stats.ModifiedCount += 1
 			note, err := t.parser.ParseNoteAt(absPath)
 			if note != nil {
-				printNote(note)
 				err = t.index.Update(*note)
 			}
 			t.logger.Err(err)
@@ -194,12 +178,11 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			t.logger.Err(err)
 		}
 
-		print("")
 		return nil
 	})
 
 	for _, ignored := range ignoredFiles {
-		print("- ignored " + ignored.Path + "\n  " + ignored.Reason + "\n")
+		print("- ignored " + ignored.Path + ": " + ignored.Reason)
 	}
 
 	stats.SourceCount = count
