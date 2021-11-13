@@ -67,14 +67,22 @@ func (s NoteIndexingStats) String() string {
 	)
 }
 
+// NoteIndexOpts holds the options for the indexing process.
+type NoteIndexOpts struct {
+	// When true, existing notes will be reindexed.
+	Force   bool
+	Verbose bool
+}
+
 // indexTask indexes the notes in the given directory with the NoteIndex.
 type indexTask struct {
-	path   string
-	config Config
-	force  bool
-	index  NoteIndex
-	parser NoteParser
-	logger util.Logger
+	path    string
+	config  Config
+	force   bool
+	verbose bool
+	index   NoteIndex
+	parser  NoteParser
+	logger  util.Logger
 }
 
 func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexingStats, error) {
@@ -88,15 +96,35 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		return stats, wrap(err)
 	}
 
+	print := func(message string) {
+		if t.verbose {
+			fmt.Print(message + "\n")
+		}
+	}
+
 	force := t.force || needsReindexing
 
+	type IgnoredFile struct {
+		Path   string
+		Reason string
+	}
+	ignoredFiles := []IgnoredFile{}
+
 	shouldIgnorePath := func(path string) (bool, error) {
+		notifyIgnored := func(reason string) {
+			ignoredFiles = append(ignoredFiles, IgnoredFile{
+				Path:   path,
+				Reason: reason,
+			})
+		}
+
 		group, err := t.config.GroupConfigForPath(path)
 		if err != nil {
 			return true, err
 		}
 
 		if filepath.Ext(path) != "."+group.Note.Extension {
+			notifyIgnored("expected extension \"" + group.Note.Extension + "\"")
 			return true, nil
 		}
 
@@ -106,6 +134,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 				return true, errors.Wrapf(err, "failed to match ignore glob %s to %s", ignoreGlob, path)
 			}
 			if matches {
+				notifyIgnored("matched ignore glob \"" + ignoreGlob + "\"")
 				return true, nil
 			}
 		}
@@ -123,13 +152,29 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	// FIXME: Use the FS?
 	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
 		callback(change)
+		print("- " + change.Kind.String() + " " + change.Path)
 		absPath := filepath.Join(t.path, change.Path)
+
+		printNote := func(note *Note) {
+			print("  title: " + note.Title)
+
+			if len(note.Links) > 0 {
+				print("  links: [")
+				for _, link := range note.Links {
+					print("    title: \"" + link.Title + "\", href: \"" + link.Href + "\"")
+				}
+				print("  ]")
+			} else {
+				print("  links: []")
+			}
+		}
 
 		switch change.Kind {
 		case paths.DiffAdded:
 			stats.AddedCount += 1
 			note, err := t.parser.ParseNoteAt(absPath)
 			if note != nil {
+				printNote(note)
 				_, err = t.index.Add(*note)
 			}
 			t.logger.Err(err)
@@ -138,6 +183,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			stats.ModifiedCount += 1
 			note, err := t.parser.ParseNoteAt(absPath)
 			if note != nil {
+				printNote(note)
 				err = t.index.Update(*note)
 			}
 			t.logger.Err(err)
@@ -147,8 +193,14 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			err := t.index.Remove(change.Path)
 			t.logger.Err(err)
 		}
+
+		print("")
 		return nil
 	})
+
+	for _, ignored := range ignoredFiles {
+		print("- ignored " + ignored.Path + "\n  " + ignored.Reason + "\n")
+	}
 
 	stats.SourceCount = count
 	stats.Duration = time.Since(startTime)
@@ -157,5 +209,6 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		err = t.index.SetNeedsReindexing(false)
 	}
 
+	print("")
 	return stats, wrap(err)
 }

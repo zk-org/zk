@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/mickael-menu/zk/internal/cli"
+	"github.com/mickael-menu/zk/internal/core"
 )
 
 // Index indexes the content of all the notes in the notebook.
 type Index struct {
-	Force bool `short:"f" help:"Force indexing all the notes."`
-	Quiet bool `short:"q" help:"Do not print statistics nor progress."`
+	Force   bool `short:"f" help:"Force indexing all the notes."`
+	Verbose bool `short:"v" help:"Print detailed information about the indexing process."`
+	Quiet   bool `short:"q" help:"Do not print statistics nor progress."`
 }
 
 func (cmd *Index) Help() string {
@@ -22,7 +24,10 @@ func (cmd *Index) Run(container *cli.Container) error {
 		return err
 	}
 
-	stats, err := notebook.Index(cmd.Force)
+	stats, err := notebook.Index(core.NoteIndexOpts{
+		Force:   cmd.Force,
+		Verbose: cmd.Verbose,
+	})
 	if err != nil {
 		return err
 	}
