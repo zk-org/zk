@@ -382,6 +382,7 @@ Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link
 		{
 			Title:        "link",
 			Href:         "heading",
+			Type:         core.LinkTypeMarkdown,
 			Rels:         []core.LinkRelation{},
 			IsExternal:   false,
 			Snippet:      "Heading with a [link](heading)",
@@ -391,6 +392,7 @@ Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link
 		{
 			Title:      "multiple links",
 			Href:       "stripped-formatting",
+			Type:       core.LinkTypeMarkdown,
 			Rels:       []core.LinkRelation{},
 			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
@@ -401,6 +403,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:      "relative",
 			Href:       "../other",
+			Type:       core.LinkTypeMarkdown,
 			Rels:       []core.LinkRelation{},
 			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
@@ -411,6 +414,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:      "one relation",
 			Href:       "one",
+			Type:       core.LinkTypeMarkdown,
 			Rels:       core.LinkRels("rel-1"),
 			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
@@ -421,6 +425,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:      "several relations",
 			Href:       "several",
+			Type:       core.LinkTypeMarkdown,
 			Rels:       core.LinkRels("rel-1", "rel-2"),
 			IsExternal: false,
 			Snippet: `Paragraph containing [multiple **links**](stripped-formatting), here's one [relative](../other).
@@ -431,6 +436,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "https://inline-link.com",
 			Href:         "https://inline-link.com",
+			Type:         core.LinkTypeImplicit,
 			IsExternal:   true,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
@@ -440,6 +446,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "http://another-inline-link.com",
 			Href:         "http://another-inline-link.com",
+			Type:         core.LinkTypeImplicit,
 			IsExternal:   true,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "An https://inline-link.com and http://another-inline-link.com.",
@@ -449,6 +456,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Wiki link",
 			Href:         "Wiki link",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
@@ -458,6 +466,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "two brackets",
 			Href:         "2-brackets",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "A [[Wiki link]] is surrounded by [[2-brackets | two brackets]].",
@@ -467,6 +476,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "lien accentué",
 			Href:         "lien accentué",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "[[lien accentué]]",
@@ -476,6 +486,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        `esca]]ped [chara\cters`,
 			Href:         `esca]]ped [chara\cters`,
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      `It can contain [[esca]\]ped \[chara\\cters]].`,
@@ -485,6 +496,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Folgezettel link",
 			Href:         "Folgezettel link",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "A [[[Folgezettel link]]] is surrounded by three brackets.",
@@ -494,6 +506,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "trailing hash",
 			Href:         "trailing hash",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron also supports a [[trailing hash]]# for Folgezettel links.",
@@ -503,6 +516,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "leading hash",
 			Href:         "leading hash",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         core.LinkRels("up"),
 			Snippet:      "A #[[leading hash]] is used for #uplinks.",
@@ -512,6 +526,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Trailing link",
 			Href:         "trailing",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         core.LinkRels("down"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
@@ -521,6 +536,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "Leading link",
 			Href:         "leading",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         core.LinkRels("up"),
 			Snippet:      "Neuron links with titles: [[trailing|Trailing link]]# #[[leading |  Leading link]]",
@@ -530,6 +546,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "External links",
 			Href:         "http://example.com",
+			Type:         core.LinkTypeMarkdown,
 			Rels:         []core.LinkRelation{},
 			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
@@ -539,6 +556,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "as such",
 			Href:         "ftp://domain",
+			Type:         core.LinkTypeMarkdown,
 			Rels:         []core.LinkRelation{},
 			IsExternal:   true,
 			Snippet:      `[External links](http://example.com) are marked [as such](ftp://domain).`,
@@ -553,6 +571,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "foo%20bar",
 			Href:         "202110031652 foo bar",
+			Type:         core.LinkTypeMarkdown,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "[foo%20bar](202110031652%20foo%20bar)",
@@ -564,6 +583,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 		{
 			Title:        "202110031652%20foo%20bar",
 			Href:         "202110031652%20foo%20bar",
+			Type:         core.LinkTypeWikiLink,
 			IsExternal:   false,
 			Rels:         []core.LinkRelation{},
 			Snippet:      "[[202110031652%20foo%20bar]]",

@@ -6,6 +6,8 @@ type Link struct {
 	Title string
 	// Destination URI of the link.
 	Href string
+	// Type of link, e.g. wiki link.
+	Type LinkType
 	// Indicates whether the target is a remote (e.g. HTTP) resource.
 	IsExternal bool
 	// Relationships between the note and the linked target.
@@ -17,6 +19,15 @@ type Link struct {
 	// End byte offset of the snippet in the note content.
 	SnippetEnd int
 }
+
+// LinkType represents the kind of link, e.g. wiki link.
+type LinkType string
+
+const (
+	LinkTypeImplicit LinkType = "implicit" // No markup, e.g. http://example.com
+	LinkTypeMarkdown LinkType = "markdown"
+	LinkTypeWikiLink LinkType = "wiki-link"
+)
 
 // LinkRelation defines the relationship between a link's source and target.
 type LinkRelation string
