@@ -315,6 +315,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				{
 					Title:      "A new link",
 					Href:       "index",
+					Type:       core.LinkTypeWikiLink,
 					IsExternal: false,
 					Rels:       core.LinkRels("rel"),
 					Snippet:    "[[A new link]]",
@@ -322,6 +323,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				{
 					Title:      "An external link",
 					Href:       "https://domain.com",
+					Type:       core.LinkTypeMarkdown,
 					IsExternal: true,
 					Snippet:    "[[An external link]]",
 				},
@@ -336,6 +338,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				TargetId: idPointer(3),
 				Title:    "A new link",
 				Href:     "index",
+				Type:     "wiki-link",
 				Rels:     "\x01rel\x01",
 				Snippet:  "[[A new link]]",
 			},
@@ -344,6 +347,7 @@ func TestNoteDAOUpdateWithLinks(t *testing.T) {
 				TargetId:   nil,
 				Title:      "An external link",
 				Href:       "https://domain.com",
+				Type:       "markdown",
 				IsExternal: true,
 				Snippet:    "[[An external link]]",
 			},
@@ -1157,18 +1161,18 @@ func queryNoteRow(tx Transaction, where string) (noteRow, error) {
 }
 
 type linkRow struct {
-	SourceId                   core.NoteID
-	TargetId                   *core.NoteID
-	Href, Title, Rels, Snippet string
-	SnippetStart, SnippetEnd   int
-	IsExternal                 bool
+	SourceId                         core.NoteID
+	TargetId                         *core.NoteID
+	Href, Type, Title, Rels, Snippet string
+	SnippetStart, SnippetEnd         int
+	IsExternal                       bool
 }
 
 func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 	links := make([]linkRow, 0)
 
 	rows, err := tx.Query(fmt.Sprintf(`
-		SELECT source_id, target_id, title, href, external, rels, snippet, snippet_start, snippet_end
+		SELECT source_id, target_id, title, href, type, external, rels, snippet, snippet_start, snippet_end
 		  FROM links
 		 WHERE %v
 		 ORDER BY id
@@ -1179,7 +1183,7 @@ func queryLinkRows(t *testing.T, tx Transaction, where string) []linkRow {
 		var row linkRow
 		var sourceId int64
 		var targetId *int64
-		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.IsExternal, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
+		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.Type, &row.IsExternal, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
 		row.SourceId = core.NoteID(sourceId)
 		if targetId != nil {
