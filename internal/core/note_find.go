@@ -6,6 +6,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/mickael-menu/zk/internal/util/icu"
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
@@ -49,6 +50,28 @@ type NoteFindOpts struct {
 	Limit int
 	// Sorting criteria
 	Sorters []NoteSorter
+}
+
+// NewNoteFindOptsByHref creates a new set of filtering options to find a note
+// from a link href.
+// If allowPartialMatch is true, the href can match any unique sub portion of a note path.
+func NewNoteFindOptsByHref(href string, allowPartialMatch bool) NoteFindOpts {
+	// Remove any anchor at the end of the HREF, since it's most likely
+	// matching a sub-section in the note.
+	href = strings.SplitN(href, "#", 2)[0]
+
+	if allowPartialMatch {
+		href = "(.*)" + icu.EscapePattern(href) + "(.*)"
+	}
+
+	return NoteFindOpts{
+		IncludePaths:      []string{href},
+		EnablePathRegexes: allowPartialMatch,
+		// To find the best match possible, we sort by path length.
+		// See https://github.com/mickael-menu/zk/issues/23
+		Sorters: []NoteSorter{{Field: NoteSortPathLength, Ascending: true}},
+		Limit:   1,
+	}
 }
 
 // ExcludingID creates a new FinderOpts after adding the given ID to the list

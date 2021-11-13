@@ -9,7 +9,6 @@ import (
 
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/icu"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	"github.com/schollz/progressbar/v3"
@@ -227,21 +226,7 @@ func (n *Notebook) FindMinimalNote(opts NoteFindOpts) (*MinimalNote, error) {
 // FindByHref retrieves the first note matching the given link href.
 // If allowPartialMatch is true, the href can match any unique sub portion of a note path.
 func (n *Notebook) FindByHref(href string, allowPartialMatch bool) (*MinimalNote, error) {
-	// Remove any anchor at the end of the HREF, since it's most likely
-	// matching a sub-section in the note.
-	href = strings.SplitN(href, "#", 2)[0]
-
-	if allowPartialMatch {
-		href = "(.*)" + icu.EscapePattern(href) + "(.*)"
-	}
-
-	return n.FindMinimalNote(NoteFindOpts{
-		IncludePaths:      []string{href},
-		EnablePathRegexes: allowPartialMatch,
-		// To find the best match possible, we sort by path length.
-		// See https://github.com/mickael-menu/zk/issues/23
-		Sorters: []NoteSorter{{Field: NoteSortPathLength, Ascending: true}},
-	})
+	return n.FindMinimalNote(NewNoteFindOptsByHref(href, allowPartialMatch))
 }
 
 // FindMatching retrieves the first note matching the given search terms.

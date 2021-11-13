@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#89](https://github.com/mickael-menu/zk/issues/89) Calling `zk index` from outside the notebook (contributed by [@adamreese](https://github.com/mickael-menu/zk/pull/90)).
+* [#98](https://github.com/mickael-menu/zk/issues/98) Index wiki links using partial paths for `--linked-by` and `--link-to`.
 
 
 ## 0.7.0
