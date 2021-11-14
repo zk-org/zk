@@ -196,6 +196,17 @@ func (db *DB) migrate() error {
 				},
 				NeedsReindexing: true,
 			},
+
+			{ // 6
+				SQL: []string{
+					// View of links with the source and target notes metadata, for simpler queries.
+					`CREATE VIEW resolved_links AS
+					 SELECT l.*, s.path AS source_path, s.title AS source_title, t.path AS target_path, t.title AS target_title
+					   FROM links l
+					   LEFT JOIN notes s ON l.source_id = s.id
+					   LEFT JOIN notes t ON l.target_id = t.id`,
+				},
+			},
 		}
 
 		needsReindexing := false
