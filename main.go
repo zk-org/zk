@@ -105,9 +105,10 @@ func options(container *cli.Container) []kong.Option {
 		kong.Name("zk"),
 		kong.UsageOnError(),
 		kong.HelpOptions{
-			Compact:        true,
-			FlagsLast:      true,
-			WrapUpperBound: 100,
+			Compact:             true,
+			FlagsLast:           true,
+			WrapUpperBound:      100,
+			NoExpandSubcommands: true,
 		},
 		kong.Vars{
 			"version": "zk " + strings.TrimPrefix(Version, "v"),

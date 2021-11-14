@@ -95,7 +95,7 @@ func (d *LinkDAO) FindBetweenNotes(ids []core.NoteID) ([]core.ResolvedLink, erro
 
 	idsString := joinNoteIDs(ids, ",")
 	rows, err := d.tx.Query(fmt.Sprintf(`
-		SELECT id, source_id, source_path, target_id, target_path, title, href, external, rels, snippet, snippet_start, snippet_end
+		SELECT id, source_id, source_path, target_id, target_path, title, href, type, external, rels, snippet, snippet_start, snippet_end
 		  FROM resolved_links
 		 WHERE source_id IN (%s) AND target_id IN (%s)
 	`, idsString, idsString))
@@ -120,15 +120,15 @@ func (d *LinkDAO) FindBetweenNotes(ids []core.NoteID) ([]core.ResolvedLink, erro
 
 func (d *LinkDAO) scanLink(row RowScanner) (*core.ResolvedLink, error) {
 	var (
-		id, sourceID, targetID, snippetStart, snippetEnd int
-		sourcePath, targetPath, title, href, snippet     string
-		external                                         bool
-		rels                                             sql.NullString
+		id, sourceID, targetID, snippetStart, snippetEnd       int
+		sourcePath, targetPath, title, href, linkType, snippet string
+		external                                               bool
+		rels                                                   sql.NullString
 	)
 
 	err := row.Scan(
 		&id, &sourceID, &sourcePath, &targetID, &targetPath, &title, &href,
-		&external, &rels, &snippet, &snippetStart, &snippetEnd,
+		&linkType, &external, &rels, &snippet, &snippetStart, &snippetEnd,
 	)
 	switch {
 	case err == sql.ErrNoRows:
@@ -142,12 +142,11 @@ func (d *LinkDAO) scanLink(row RowScanner) (*core.ResolvedLink, error) {
 			TargetID:   core.NoteID(targetID),
 			TargetPath: targetPath,
 			Link: core.Link{
-				Title:      title,
-				Href:       href,
-				IsExternal: external,
-				Rels:       []core.LinkRelation{},
-				// FIXME
-				// Rels:         parseListFromNullString(rels),
+				Title:        title,
+				Href:         href,
+				Type:         core.LinkType(linkType),
+				IsExternal:   external,
+				Rels:         core.LinkRels(parseListFromNullString(rels)...),
 				Snippet:      snippet,
 				SnippetStart: snippetStart,
 				SnippetEnd:   snippetEnd,

@@ -312,6 +312,7 @@ func parseListFromNullString(str sql.NullString) []string {
 	if str.Valid && str.String != "" {
 		list = strings.Split(str.String, "\x01")
 		list = strutil.RemoveDuplicates(list)
+		list = strutil.RemoveBlank(list)
 	}
 	return list
 }
