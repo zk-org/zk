@@ -226,6 +226,7 @@ func (p *Parser) parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 					links = append(links, core.Link{
 						Title:        string(link.Text(source)),
 						Href:         href,
+						Type:         core.LinkTypeMarkdown,
 						Rels:         core.LinkRels(strings.Fields(string(link.Title))...),
 						IsExternal:   strutil.IsURL(href),
 						Snippet:      snippet,
@@ -240,6 +241,7 @@ func (p *Parser) parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 					links = append(links, core.Link{
 						Title:        string(link.Label(source)),
 						Href:         href,
+						Type:         core.LinkTypeImplicit,
 						Rels:         []core.LinkRelation{},
 						IsExternal:   true,
 						Snippet:      snippet,
@@ -255,6 +257,7 @@ func (p *Parser) parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 					links = append(links, core.Link{
 						Title:        string(link.Text(source)),
 						Href:         href,
+						Type:         core.LinkTypeWikiLink,
 						Rels:         core.LinkRels(strings.Fields(string(link.Title))...),
 						IsExternal:   strutil.IsURL(href),
 						Snippet:      snippet,

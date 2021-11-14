@@ -25,16 +25,15 @@ type NoteDAO struct {
 	logger util.Logger
 
 	// Prepared SQL statements
-	indexedStmt            *LazyStmt
-	addStmt                *LazyStmt
-	updateStmt             *LazyStmt
-	removeStmt             *LazyStmt
-	findIdByPathStmt       *LazyStmt
-	findIdByPathPrefixStmt *LazyStmt
-	findByIdStmt           *LazyStmt
-	addLinkStmt            *LazyStmt
-	setLinksTargetStmt     *LazyStmt
-	removeLinksStmt        *LazyStmt
+	indexedStmt        *LazyStmt
+	addStmt            *LazyStmt
+	updateStmt         *LazyStmt
+	removeStmt         *LazyStmt
+	findIdByPathStmt   *LazyStmt
+	findByIdStmt       *LazyStmt
+	addLinkStmt        *LazyStmt
+	setLinksTargetStmt *LazyStmt
+	removeLinksStmt    *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -75,13 +74,6 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 			 WHERE path = ?
 		`),
 
-		// Find a note ID from a prefix of its path.
-		findIdByPathPrefixStmt: tx.PrepareLazy(`
-			SELECT id FROM notes
-			 WHERE path LIKE ? || '%'
-			 ORDER BY LENGTH(path) ASC
-		`),
-
 		// Find a note from its ID.
 		findByIdStmt: tx.PrepareLazy(`
 			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
@@ -91,8 +83,8 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 
 		// Add a new link.
 		addLinkStmt: tx.PrepareLazy(`
-			INSERT INTO links (source_id, target_id, title, href, external, rels, snippet, snippet_start, snippet_end)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO links (source_id, target_id, title, href, type, external, rels, snippet, snippet_start, snippet_end)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Set links matching a given href and missing a target ID to the given
@@ -220,12 +212,14 @@ func (d *NoteDAO) metadataToJSON(note core.Note) string {
 // addLinks inserts all the outbound links of the given note.
 func (d *NoteDAO) addLinks(id core.NoteID, note core.Note) error {
 	for _, link := range note.Links {
-		targetId, err := d.findIdByPathPrefix(link.Href)
+		allowPartialMatch := (link.Type == core.LinkTypeWikiLink)
+		targetId, err := d.findIdByHref(link.Href, allowPartialMatch)
+
 		if err != nil {
 			return err
 		}
 
-		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.IsExternal, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
+		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.Type, link.IsExternal, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
 		if err != nil {
 			return err
 		}
@@ -271,10 +265,10 @@ func (d *NoteDAO) findIdByPath(path string) (core.NoteID, error) {
 	return idForRow(row)
 }
 
-func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteID, error) {
+func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialMatch bool) ([]core.NoteID, error) {
 	ids := make([]core.NoteID, 0)
-	for _, path := range paths {
-		id, err := d.findIdByPathPrefix(path)
+	for _, href := range hrefs {
+		id, err := d.findIdByHref(href, allowPartialMatch)
 		if err != nil {
 			return ids, err
 		}
@@ -284,21 +278,31 @@ func (d *NoteDAO) findIdsByPathPrefixes(paths []string) ([]core.NoteID, error) {
 	}
 
 	if len(ids) == 0 {
-		return ids, fmt.Errorf("could not find notes at: " + strings.Join(paths, ", "))
+		return ids, fmt.Errorf("could not find notes at: " + strings.Join(hrefs, ", "))
 	}
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdByPathPrefix(path string) (core.NoteID, error) {
-	// Remove any anchor at the end of the HREF, since it's most likely
-	// matching a sub-section in the note.
-	path = strings.SplitN(path, "#", 2)[0]
+func (d *NoteDAO) findIdByHref(href string, allowPartialMatch bool) (core.NoteID, error) {
+	if allowPartialMatch {
+		id, err := d.findIdByHref(href, false)
+		if id.IsValid() || err != nil {
+			return id, err
+		}
+	}
 
-	row, err := d.findIdByPathPrefixStmt.QueryRow(path)
+	opts := core.NewNoteFindOptsByHref(href, allowPartialMatch)
+
+	rows, err := d.findRows(opts, noteSelectionID)
 	if err != nil {
 		return 0, err
 	}
-	return idForRow(row)
+	defer rows.Close()
+
+	for rows.Next() {
+		return d.scanNoteID(rows)
+	}
+	return 0, nil
 }
 
 func idForRow(row *sql.Row) (core.NoteID, error) {
@@ -323,7 +327,7 @@ func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error
 		return notes, err
 	}
 
-	rows, err := d.findRows(opts, true)
+	rows, err := d.findRows(opts, noteSelectionMinimal)
 	if err != nil {
 		return notes, err
 	}
@@ -343,33 +347,6 @@ func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error
 	return notes, nil
 }
 
-func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
-	var (
-		id                        int
-		path, title, metadataJSON string
-	)
-
-	err := row.Scan(&id, &path, &title, &metadataJSON)
-	switch {
-	case err == sql.ErrNoRows:
-		return nil, nil
-	case err != nil:
-		return nil, err
-	default:
-		metadata, err := unmarshalMetadata(metadataJSON)
-		if err != nil {
-			d.logger.Err(errors.Wrap(err, path))
-		}
-
-		return &core.MinimalNote{
-			ID:       core.NoteID(id),
-			Path:     path,
-			Title:    title,
-			Metadata: metadata,
-		}, nil
-	}
-}
-
 // Find returns all the notes matching the given criteria.
 func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
 	notes := make([]core.ContextualNote, 0)
@@ -379,7 +356,7 @@ func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
 		return notes, err
 	}
 
-	rows, err := d.findRows(opts, false)
+	rows, err := d.findRows(opts, noteSelectionFull)
 	if err != nil {
 		return notes, err
 	}
@@ -397,51 +374,6 @@ func (d *NoteDAO) Find(opts core.NoteFindOpts) ([]core.ContextualNote, error) {
 	}
 
 	return notes, nil
-}
-
-func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
-	var (
-		id, wordCount                 int
-		title, lead, body, rawContent string
-		snippets, tags                sql.NullString
-		path, metadataJSON, checksum  string
-		created, modified             time.Time
-	)
-
-	err := row.Scan(
-		&id, &path, &title, &metadataJSON, &lead, &body, &rawContent,
-		&wordCount, &created, &modified, &checksum, &tags, &snippets,
-	)
-	switch {
-	case err == sql.ErrNoRows:
-		return nil, nil
-	case err != nil:
-		return nil, err
-	default:
-		metadata, err := unmarshalMetadata(metadataJSON)
-		if err != nil {
-			d.logger.Err(errors.Wrap(err, path))
-		}
-
-		return &core.ContextualNote{
-			Snippets: parseListFromNullString(snippets),
-			Note: core.Note{
-				ID:         core.NoteID(id),
-				Path:       path,
-				Title:      title,
-				Lead:       lead,
-				Body:       body,
-				RawContent: rawContent,
-				WordCount:  wordCount,
-				Links:      []core.Link{},
-				Tags:       parseListFromNullString(tags),
-				Metadata:   metadata,
-				Created:    created,
-				Modified:   modified,
-				Checksum:   checksum,
-			},
-		}, nil
-	}
 }
 
 // parseListFromNullString splits a 0-separated string.
@@ -465,7 +397,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Find the IDs for the mentioned paths.
-	ids, err := d.findIdsByPathPrefixes(opts.Mention)
+	ids, err := d.findIdsByHrefs(opts.Mention, true /* allowPartialMatch */)
 	if err != nil {
 		return opts, err
 	}
@@ -507,7 +439,16 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	return opts, nil
 }
 
-func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, error) {
+// noteSelection represents the amount of column selected with findRows.
+type noteSelection int
+
+const (
+	noteSelectionID noteSelection = iota + 1
+	noteSelectionMinimal
+	noteSelectionFull
+)
+
+func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sql.Rows, error) {
 	snippetCol := `n.lead`
 	joinClauses := []string{}
 	whereExprs := []string{}
@@ -518,8 +459,8 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, minimal bool) (*sql.Rows, err
 	transitiveClosure := false
 	maxDistance := 0
 
-	setupLinkFilter := func(paths []string, direction int, negate, recursive bool) error {
-		ids, err := d.findIdsByPathPrefixes(paths)
+	setupLinkFilter := func(hrefs []string, direction int, negate, recursive bool) error {
+		ids, err := d.findIdsByHrefs(hrefs, true /* allowPartialMatch */)
 		if err != nil {
 			return err
 		}
@@ -673,7 +614,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.MentionedBy != nil {
-		ids, err := d.findIdsByPathPrefixes(opts.MentionedBy)
+		ids, err := d.findIdsByHrefs(opts.MentionedBy, true /* allowPartialMatch */)
 		if err != nil {
 			return nil, err
 		}
@@ -783,9 +724,12 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		query += "\n)\n"
 	}
 
-	query += "SELECT n.id, n.path, n.title, n.metadata"
-	if !minimal {
-		query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet", snippetCol)
+	query += "SELECT n.id"
+	if selection != noteSelectionID {
+		query += ", n.path, n.title, n.metadata"
+		if selection != noteSelectionMinimal {
+			query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet", snippetCol)
+		}
 	}
 
 	query += "\nFROM notes_with_metadata n\n"
@@ -812,6 +756,91 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	// d.logger.Println(args)
 
 	return d.tx.Query(query, args...)
+}
+
+func (d *NoteDAO) scanNoteID(row RowScanner) (core.NoteID, error) {
+	var id int
+	err := row.Scan(&id)
+	switch {
+	case err == sql.ErrNoRows:
+		return 0, nil
+	case err != nil:
+		return 0, err
+	default:
+		return core.NoteID(id), nil
+	}
+}
+
+func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
+	var (
+		id                        int
+		path, title, metadataJSON string
+	)
+
+	err := row.Scan(&id, &path, &title, &metadataJSON)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
+		return nil, err
+	default:
+		metadata, err := unmarshalMetadata(metadataJSON)
+		if err != nil {
+			d.logger.Err(errors.Wrap(err, path))
+		}
+
+		return &core.MinimalNote{
+			ID:       core.NoteID(id),
+			Path:     path,
+			Title:    title,
+			Metadata: metadata,
+		}, nil
+	}
+}
+
+func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
+	var (
+		id, wordCount                 int
+		title, lead, body, rawContent string
+		snippets, tags                sql.NullString
+		path, metadataJSON, checksum  string
+		created, modified             time.Time
+	)
+
+	err := row.Scan(
+		&id, &path, &title, &metadataJSON, &lead, &body, &rawContent,
+		&wordCount, &created, &modified, &checksum, &tags, &snippets,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
+		return nil, err
+	default:
+		metadata, err := unmarshalMetadata(metadataJSON)
+		if err != nil {
+			d.logger.Err(errors.Wrap(err, path))
+		}
+
+		return &core.ContextualNote{
+			Snippets: parseListFromNullString(snippets),
+			Note: core.Note{
+				ID:         core.NoteID(id),
+				Path:       path,
+				Title:      title,
+				Lead:       lead,
+				Body:       body,
+				RawContent: rawContent,
+				WordCount:  wordCount,
+				Links:      []core.Link{},
+				Tags:       parseListFromNullString(tags),
+				Metadata:   metadata,
+				Created:    created,
+				Modified:   modified,
+				Checksum:   checksum,
+			},
+		}, nil
+	}
 }
 
 func orderTerm(sorter core.NoteSorter) string {

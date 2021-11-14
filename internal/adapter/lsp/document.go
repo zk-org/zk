@@ -167,7 +167,7 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 	return line[charIdx:(charIdx + length)]
 }
 
-var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?:\|(.+?))?\]\]`)
+var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
 var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
 
 // DocumentLinkAt returns the internal or external link found in the document

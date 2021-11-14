@@ -732,7 +732,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 				severity = protocol.DiagnosticSeverity(diagConfig.DeadLink)
 				message = "not found"
 			} else {
-				if link.HasTitle || diagConfig.WikiTitle == core.LSPDiagnosticNone {
+				if diagConfig.WikiTitle == core.LSPDiagnosticNone {
 					continue
 				}
 				severity = protocol.DiagnosticSeverity(diagConfig.WikiTitle)
