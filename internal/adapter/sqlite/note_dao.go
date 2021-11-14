@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -25,15 +24,12 @@ type NoteDAO struct {
 	logger util.Logger
 
 	// Prepared SQL statements
-	indexedStmt        *LazyStmt
-	addStmt            *LazyStmt
-	updateStmt         *LazyStmt
-	removeStmt         *LazyStmt
-	findIdByPathStmt   *LazyStmt
-	findByIdStmt       *LazyStmt
-	addLinkStmt        *LazyStmt
-	setLinksTargetStmt *LazyStmt
-	removeLinksStmt    *LazyStmt
+	indexedStmt      *LazyStmt
+	addStmt          *LazyStmt
+	updateStmt       *LazyStmt
+	removeStmt       *LazyStmt
+	findIdByPathStmt *LazyStmt
+	findByIdStmt     *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -79,26 +75,6 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
 			  FROM notes_with_metadata
 			 WHERE id = ?
-		`),
-
-		// Add a new link.
-		addLinkStmt: tx.PrepareLazy(`
-			INSERT INTO links (source_id, target_id, title, href, type, external, rels, snippet, snippet_start, snippet_end)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`),
-
-		// Set links matching a given href and missing a target ID to the given
-		// target ID.
-		setLinksTargetStmt: tx.PrepareLazy(`
-			UPDATE links
-			   SET target_id = ?
-			 WHERE target_id IS NULL AND external = 0 AND ? LIKE href || '%'
-		`),
-
-		// Remove all the outbound links of a note.
-		removeLinksStmt: tx.PrepareLazy(`
-			DELETE FROM links
-			 WHERE source_id = ?
 		`),
 	}
 }
@@ -165,14 +141,12 @@ func (d *NoteDAO) Add(note core.Note) (core.NoteID, error) {
 		return 0, err
 	}
 
-	id := core.NoteID(lastId)
-	err = d.addLinks(id, note)
-	return id, err
+	return core.NoteID(lastId), err
 }
 
 // Update modifies an existing note.
 func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
-	id, err := d.findIdByPath(note.Path)
+	id, err := d.FindIdByPath(note.Path)
 	if err != nil {
 		return 0, err
 	}
@@ -185,16 +159,6 @@ func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
 		note.Title, note.Lead, note.Body, note.RawContent, note.WordCount,
 		metadata, note.Checksum, note.Modified, note.Path,
 	)
-	if err != nil {
-		return id, err
-	}
-
-	_, err = d.removeLinksStmt.Exec(d.idToSql(id))
-	if err != nil {
-		return id, err
-	}
-
-	err = d.addLinks(id, note)
 	return id, err
 }
 
@@ -209,43 +173,9 @@ func (d *NoteDAO) metadataToJSON(note core.Note) string {
 	return string(json)
 }
 
-// addLinks inserts all the outbound links of the given note.
-func (d *NoteDAO) addLinks(id core.NoteID, note core.Note) error {
-	for _, link := range note.Links {
-		allowPartialMatch := (link.Type == core.LinkTypeWikiLink)
-		targetId, err := d.findIdByHref(link.Href, allowPartialMatch)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = d.addLinkStmt.Exec(id, d.idToSql(targetId), link.Title, link.Href, link.Type, link.IsExternal, joinLinkRels(link.Rels), link.Snippet, link.SnippetStart, link.SnippetEnd)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err := d.setLinksTargetStmt.Exec(int64(id), note.Path)
-	return err
-}
-
-// joinLinkRels will concatenate a list of rels into a SQLite ready string.
-// Each rel is delimited by \x01 for easy matching in queries.
-func joinLinkRels(rels []core.LinkRelation) string {
-	if len(rels) == 0 {
-		return ""
-	}
-	delimiter := "\x01"
-	res := delimiter
-	for _, rel := range rels {
-		res += string(rel) + delimiter
-	}
-	return res
-}
-
 // Remove deletes the note with the given path from the index.
 func (d *NoteDAO) Remove(path string) error {
-	id, err := d.findIdByPath(path)
+	id, err := d.FindIdByPath(path)
 	if err != nil {
 		return err
 	}
@@ -257,7 +187,7 @@ func (d *NoteDAO) Remove(path string) error {
 	return err
 }
 
-func (d *NoteDAO) findIdByPath(path string) (core.NoteID, error) {
+func (d *NoteDAO) FindIdByPath(path string) (core.NoteID, error) {
 	row, err := d.findIdByPathStmt.QueryRow(path)
 	if err != nil {
 		return core.NoteID(0), err
@@ -265,10 +195,10 @@ func (d *NoteDAO) findIdByPath(path string) (core.NoteID, error) {
 	return idForRow(row)
 }
 
-func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialMatch bool) ([]core.NoteID, error) {
+func (d *NoteDAO) FindIdsByHrefs(hrefs []string, allowPartialMatch bool) ([]core.NoteID, error) {
 	ids := make([]core.NoteID, 0)
 	for _, href := range hrefs {
-		id, err := d.findIdByHref(href, allowPartialMatch)
+		id, err := d.FindIdByHref(href, allowPartialMatch)
 		if err != nil {
 			return ids, err
 		}
@@ -283,9 +213,9 @@ func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialMatch bool) ([]core
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdByHref(href string, allowPartialMatch bool) (core.NoteID, error) {
+func (d *NoteDAO) FindIdByHref(href string, allowPartialMatch bool) (core.NoteID, error) {
 	if allowPartialMatch {
-		id, err := d.findIdByHref(href, false)
+		id, err := d.FindIdByHref(href, false)
 		if id.IsValid() || err != nil {
 			return id, err
 		}
@@ -382,6 +312,7 @@ func parseListFromNullString(str sql.NullString) []string {
 	if str.Valid && str.String != "" {
 		list = strings.Split(str.String, "\x01")
 		list = strutil.RemoveDuplicates(list)
+		list = strutil.RemoveBlank(list)
 	}
 	return list
 }
@@ -397,7 +328,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Find the IDs for the mentioned paths.
-	ids, err := d.findIdsByHrefs(opts.Mention, true /* allowPartialMatch */)
+	ids, err := d.FindIdsByHrefs(opts.Mention, true /* allowPartialMatch */)
 	if err != nil {
 		return opts, err
 	}
@@ -408,7 +339,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Find their titles.
-	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + d.joinIds(ids, ",") + ")"
+	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + joinNoteIDs(ids, ",") + ")"
 	rows, err := d.tx.Query(titlesQuery)
 	if err != nil {
 		return opts, err
@@ -460,14 +391,14 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	maxDistance := 0
 
 	setupLinkFilter := func(hrefs []string, direction int, negate, recursive bool) error {
-		ids, err := d.findIdsByHrefs(hrefs, true /* allowPartialMatch */)
+		ids, err := d.FindIdsByHrefs(hrefs, true /* allowPartialMatch */)
 		if err != nil {
 			return err
 		}
 		if len(ids) == 0 {
 			return nil
 		}
-		idsList := "(" + d.joinIds(ids, ",") + ")"
+		idsList := "(" + joinNoteIDs(ids, ",") + ")"
 
 		linksSrc := "links"
 
@@ -614,7 +545,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.MentionedBy != nil {
-		ids, err := d.findIdsByHrefs(opts.MentionedBy, true /* allowPartialMatch */)
+		ids, err := d.FindIdsByHrefs(opts.MentionedBy, true /* allowPartialMatch */)
 		if err != nil {
 			return nil, err
 		}
@@ -625,7 +556,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		}
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
-		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+d.joinIds(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
+		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+joinNoteIDs(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
 	}
 
 	if opts.LinkedBy != nil {
@@ -682,7 +613,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.ExcludeIDs != nil {
-		whereExprs = append(whereExprs, "n.id NOT IN ("+d.joinIds(opts.ExcludeIDs, ",")+")")
+		whereExprs = append(whereExprs, "n.id NOT IN ("+joinNoteIDs(opts.ExcludeIDs, ",")+")")
 	}
 
 	orderTerms := []string{}
@@ -876,28 +807,6 @@ func pathRegex(path string) string {
 	return path + "[^/]*|" + path + "/.+"
 }
 
-func (d *NoteDAO) idToSql(id core.NoteID) sql.NullInt64 {
-	if id.IsValid() {
-		return sql.NullInt64{Int64: int64(id), Valid: true}
-	} else {
-		return sql.NullInt64{}
-	}
-}
-
-func (d *NoteDAO) joinIds(ids []core.NoteID, delimiter string) string {
-	strs := make([]string, 0)
-	for _, i := range ids {
-		strs = append(strs, strconv.FormatInt(int64(i), 10))
-	}
-	return strings.Join(strs, delimiter)
-}
-
-func unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
-	err = json.Unmarshal([]byte(metadataJSON), &metadata)
-	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
-	return
-}
-
 // buildMentionQuery creates an FTS5 predicate to match the given note's title
 // (or aliases from the metadata) in the content of another note.
 //
@@ -938,8 +847,4 @@ func buildMentionQuery(title, metadataJSON string) string {
 	}
 
 	return "(" + strings.Join(titles, " OR ") + ")"
-}
-
-type RowScanner interface {
-	Scan(dest ...interface{}) error
 }

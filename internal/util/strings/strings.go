@@ -92,6 +92,22 @@ func RemoveDuplicates(strings []string) []string {
 	return res
 }
 
+// RemoveBlank keeps only non-empty strings in the source.
+func RemoveBlank(strs []string) []string {
+	if strs == nil {
+		return nil
+	}
+
+	res := make([]string, 0)
+	for _, val := range strs {
+		if strings.TrimSpace(val) != "" {
+			res = append(res, val)
+		}
+	}
+
+	return res
+}
+
 // InList returns whether the string is part of the given list of strings.
 func InList(strings []string, s string) bool {
 	for _, c := range strings {

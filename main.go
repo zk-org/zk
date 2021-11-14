@@ -22,10 +22,11 @@ var root struct {
 	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
 	Index cmd.Index `cmd group:"zk" help:"Index the notes to be searchable."`
 
-	New  cmd.New  `cmd group:"notes" help:"Create a new note in the given notebook directory."`
-	List cmd.List `cmd group:"notes" help:"List notes matching the given criteria."`
-	Edit cmd.Edit `cmd group:"notes" help:"Edit notes matching the given criteria."`
-	Tag  cmd.Tag  `cmd group:"notes" help:"Manage the note tags."`
+	New   cmd.New   `cmd group:"notes" help:"Create a new note in the given notebook directory."`
+	List  cmd.List  `cmd group:"notes" help:"List notes matching the given criteria."`
+	Graph cmd.Graph `cmd group:"notes" help:"Produce a graph of the notes matching the given criteria."`
+	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
+	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
 
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
 	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
@@ -104,9 +105,10 @@ func options(container *cli.Container) []kong.Option {
 		kong.Name("zk"),
 		kong.UsageOnError(),
 		kong.HelpOptions{
-			Compact:        true,
-			FlagsLast:      true,
-			WrapUpperBound: 100,
+			Compact:             true,
+			FlagsLast:           true,
+			WrapUpperBound:      100,
+			NoExpandSubcommands: true,
 		},
 		kong.Vars{
 			"version": "zk " + strings.TrimPrefix(Version, "v"),

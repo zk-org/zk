@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+* New `zk graph --format json` command which produces a JSON graph of the notes matching the given criteria.
 * New template variables `filename` and `filename-stem` when formatting notes (e.g. with `zk list --format`) and for the [`fzf-line`](docs/tool-fzf.md) config key.
 * Customize how LSP completion items appear in your editor when auto-completing links with the [`[lsp.completion]` configuration section](docs/config-lsp.md).
     ```toml
