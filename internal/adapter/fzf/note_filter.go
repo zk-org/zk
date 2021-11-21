@@ -156,7 +156,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	return selectedNotes, nil
 }
 
-var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}}`
+var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`
 
 type lineRenderContext struct {
 	Filename     string
