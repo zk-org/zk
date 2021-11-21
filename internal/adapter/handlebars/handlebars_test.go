@@ -238,7 +238,7 @@ func TestDateHelper(t *testing.T) {
 	testString(t, "{{date now 'timestamp'}}", context, "200911172034")
 	testString(t, "{{date now 'timestamp-unix'}}", context, "1258490098")
 	testString(t, "{{date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
-	testString(t, "{{date now 'elapsed'}}", context, "12 years ago")
+	testString(t, "{{date now 'elapsed'}}", context, "13 years ago")
 }
 
 func TestShellHelper(t *testing.T) {
