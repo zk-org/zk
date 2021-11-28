@@ -224,9 +224,12 @@ func (n *Notebook) FindMinimalNote(opts NoteFindOpts) (*MinimalNote, error) {
 }
 
 // FindByHref retrieves the first note matching the given link href.
-// If allowPartialMatch is true, the href can match any unique sub portion of a note path.
-func (n *Notebook) FindByHref(href string, allowPartialMatch bool) (*MinimalNote, error) {
-	return n.FindMinimalNote(NewNoteFindOptsByHref(href, allowPartialMatch))
+// If allowPartialHref is true, the href can match any unique sub portion of a note path.
+func (n *Notebook) FindByHref(href string, allowPartialHref bool) (*MinimalNote, error) {
+	return n.FindMinimalNote(NoteFindOpts{
+		IncludeHrefs:      []string{href},
+		AllowPartialHrefs: allowPartialHref,
+	})
 }
 
 // FindMatching retrieves the first note matching the given search terms.

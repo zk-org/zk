@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* [#111](https://github.com/mickael-menu/zk/issues/111) Filenames take precedence over folders when matching a sub-path with wiki links.
+
 
 ## 0.8.0
 

@@ -428,7 +428,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		opts := core.NoteFindOpts{
-			LinkTo: &core.LinkFilter{Paths: []string{p}},
+			LinkTo: &core.LinkFilter{Hrefs: []string{p}},
 		}
 
 		notes, err := notebook.FindNotes(opts)
@@ -567,7 +567,7 @@ func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (i
 			return nil, err
 		}
 		note, err = notebook.FindNote(core.NoteFindOpts{
-			IncludePaths: []string{noteExists.Name},
+			IncludeHrefs: []string{noteExists.Name},
 		})
 		if err != nil {
 			return nil, err

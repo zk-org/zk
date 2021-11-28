@@ -6,7 +6,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/mickael-menu/zk/internal/util/icu"
 	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
@@ -16,12 +15,15 @@ type NoteFindOpts struct {
 	Match opt.String
 	// Search for exact occurrences of the Match string.
 	ExactMatch bool
-	// Filter by note paths.
-	IncludePaths []string
-	// Filter excluding notes at the given paths.
-	ExcludePaths []string
-	// Indicates whether IncludePaths and ExcludePaths are using regexes.
-	EnablePathRegexes bool
+	// Filter by note hrefs.
+	IncludeHrefs []string
+	// Filter excluding notes at the given hrefs.
+	ExcludeHrefs []string
+	// Indicates whether href options can match any portion of a path.
+	// This is used for wiki links.
+	AllowPartialHrefs bool
+	// Filter including notes with the given IDs.
+	IncludeIDs []NoteID
 	// Filter excluding notes with the given IDs.
 	ExcludeIDs []NoteID
 	// Filter by tags found in the notes.
@@ -34,7 +36,7 @@ type NoteFindOpts struct {
 	LinkedBy *LinkFilter
 	// Filter to select notes linking to another one.
 	LinkTo *LinkFilter
-	// Filter to select notes which could might be related to the given notes paths.
+	// Filter to select notes which could might be related to the given notes hrefs.
 	Related []string
 	// Filter to select notes having no other notes linking to them.
 	Orphan bool
@@ -52,28 +54,6 @@ type NoteFindOpts struct {
 	Sorters []NoteSorter
 }
 
-// NewNoteFindOptsByHref creates a new set of filtering options to find a note
-// from a link href.
-// If allowPartialMatch is true, the href can match any unique sub portion of a note path.
-func NewNoteFindOptsByHref(href string, allowPartialMatch bool) NoteFindOpts {
-	// Remove any anchor at the end of the HREF, since it's most likely
-	// matching a sub-section in the note.
-	href = strings.SplitN(href, "#", 2)[0]
-
-	if allowPartialMatch {
-		href = "(.*)" + icu.EscapePattern(href) + "(.*)"
-	}
-
-	return NoteFindOpts{
-		IncludePaths:      []string{href},
-		EnablePathRegexes: allowPartialMatch,
-		// To find the best match possible, we sort by path length.
-		// See https://github.com/mickael-menu/zk/issues/23
-		Sorters: []NoteSorter{{Field: NoteSortPathLength, Ascending: true}},
-		Limit:   1,
-	}
-}
-
 // ExcludingID creates a new FinderOpts after adding the given ID to the list
 // of excluded note IDs.
 func (o NoteFindOpts) ExcludingID(id NoteID) NoteFindOpts {
@@ -87,7 +67,7 @@ func (o NoteFindOpts) ExcludingID(id NoteID) NoteFindOpts {
 
 // LinkFilter is a note filter used to select notes linking to other ones.
 type LinkFilter struct {
-	Paths       []string
+	Hrefs       []string
 	Negate      bool
 	Recursive   bool
 	MaxDistance int
@@ -115,10 +95,6 @@ const (
 	NoteSortTitle
 	// Sort by the number of words in the note bodies.
 	NoteSortWordCount
-	// Sort by the length of the note path.
-	// This is not accessible to the user but used for technical reasons, to
-	// find the best match when searching a path prefix.
-	NoteSortPathLength
 )
 
 // NoteSortersFromStrings returns a list of NoteSorter from their string
