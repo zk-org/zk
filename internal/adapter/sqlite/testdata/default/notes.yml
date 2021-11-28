@@ -88,3 +88,16 @@
   created: "2020-11-29T08:20:18Z"
   modified: "2020-11-10T08:20:18Z"
   metadata: "{}"
+
+- id: 8
+  path: "ref/test/ref.md"
+  sortable_path: "ref/ref.md"
+  title: ""
+  lead: ""
+  body: ""
+  raw_content: ""
+  word_count: 5
+  checksum: "ientrs"
+  created: "2019-11-20T20:32:56Z"
+  modified: "2019-11-20T20:34:06Z"
+  metadata: '{}'

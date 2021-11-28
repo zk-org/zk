@@ -24,12 +24,13 @@ type NoteDAO struct {
 	logger util.Logger
 
 	// Prepared SQL statements
-	indexedStmt      *LazyStmt
-	addStmt          *LazyStmt
-	updateStmt       *LazyStmt
-	removeStmt       *LazyStmt
-	findIdByPathStmt *LazyStmt
-	findByIdStmt     *LazyStmt
+	indexedStmt            *LazyStmt
+	addStmt                *LazyStmt
+	updateStmt             *LazyStmt
+	removeStmt             *LazyStmt
+	findIdByPathStmt       *LazyStmt
+	findIdsByPathRegexStmt *LazyStmt
+	findByIdStmt           *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -68,6 +69,15 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		findIdByPathStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE path = ?
+		`),
+
+		// Find note IDs from a regex matching their path.
+		findIdsByPathRegexStmt: tx.PrepareLazy(`
+			SELECT id FROM notes
+			 WHERE path REGEXP ?
+				-- To find the best match possible, we sort by path length.
+				-- See https://github.com/mickael-menu/zk/issues/23
+			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find a note from its ID.
@@ -195,46 +205,6 @@ func (d *NoteDAO) FindIdByPath(path string) (core.NoteID, error) {
 	return idForRow(row)
 }
 
-func (d *NoteDAO) FindIdsByHrefs(hrefs []string, allowPartialMatch bool) ([]core.NoteID, error) {
-	ids := make([]core.NoteID, 0)
-	for _, href := range hrefs {
-		id, err := d.FindIdByHref(href, allowPartialMatch)
-		if err != nil {
-			return ids, err
-		}
-		if id.IsValid() {
-			ids = append(ids, id)
-		}
-	}
-
-	if len(ids) == 0 {
-		return ids, fmt.Errorf("could not find notes at: " + strings.Join(hrefs, ", "))
-	}
-	return ids, nil
-}
-
-func (d *NoteDAO) FindIdByHref(href string, allowPartialMatch bool) (core.NoteID, error) {
-	if allowPartialMatch {
-		id, err := d.FindIdByHref(href, false)
-		if id.IsValid() || err != nil {
-			return id, err
-		}
-	}
-
-	opts := core.NewNoteFindOptsByHref(href, allowPartialMatch)
-
-	rows, err := d.findRows(opts, noteSelectionID)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		return d.scanNoteID(rows)
-	}
-	return 0, nil
-}
-
 func idForRow(row *sql.Row) (core.NoteID, error) {
 	var id sql.NullInt64
 	err := row.Scan(&id)
@@ -247,6 +217,93 @@ func idForRow(row *sql.Row) (core.NoteID, error) {
 	default:
 		return core.NoteID(id.Int64), nil
 	}
+}
+
+func (d *NoteDAO) findIdsByPathRegex(regex string) ([]core.NoteID, error) {
+	ids := []core.NoteID{}
+	rows, err := d.findIdsByPathRegexStmt.Query(regex)
+	if err != nil {
+		return ids, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id sql.NullInt64
+		err := rows.Scan(&id)
+		if err != nil {
+			return ids, err
+		}
+
+		ids = append(ids, core.NoteID(id.Int64))
+	}
+
+	return ids, nil
+}
+
+func (d *NoteDAO) findIdWithStmt(stmt *LazyStmt, args ...interface{}) (core.NoteID, error) {
+	row, err := stmt.QueryRow(args...)
+	if err != nil {
+		return core.NoteID(0), err
+	}
+
+	var id sql.NullInt64
+	err = row.Scan(&id)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return 0, nil
+	case err != nil:
+		return 0, err
+	default:
+		return core.NoteID(id.Int64), nil
+	}
+}
+
+func (d *NoteDAO) FindIdByHref(href string, allowPartialHref bool) (core.NoteID, error) {
+	ids, err := d.FindIdsByHref(href, allowPartialHref)
+	if len(ids) == 0 || err != nil {
+		return 0, err
+	}
+	return ids[0], nil
+}
+
+func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core.NoteID, error) {
+	ids := make([]core.NoteID, 0)
+	for _, href := range hrefs {
+		cids, err := d.FindIdsByHref(href, allowPartialHrefs)
+		if err != nil {
+			return ids, err
+		}
+		ids = append(ids, cids...)
+	}
+	return ids, nil
+}
+
+func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.NoteID, error) {
+	// Remove any anchor at the end of the HREF, since it's most likely
+	// matching a sub-section in the note.
+	href = strings.SplitN(href, "#", 2)[0]
+
+	href = icu.EscapePattern(href)
+
+	if allowPartialHref {
+		ids, err := d.findIdsByPathRegex("^(.*/)?[^/]*" + href + "[^/]*$")
+		if len(ids) > 0 || err != nil {
+			return ids, err
+		}
+
+		ids, err = d.findIdsByPathRegex(".*" + href + ".*")
+		if len(ids) > 0 || err != nil {
+			return ids, err
+		}
+	}
+
+	ids, err := d.findIdsByPathRegex(href + "[^/]*|" + href + "/.+")
+	if len(ids) > 0 || err != nil {
+		return ids, err
+	}
+
+	return []core.NoteID{}, nil
 }
 
 func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error) {
@@ -328,15 +385,16 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Find the IDs for the mentioned paths.
-	ids, err := d.FindIdsByHrefs(opts.Mention, true /* allowPartialMatch */)
+	ids, err := d.findIdsByHrefs(opts.Mention, true /* allowPartialHrefs */)
 	if err != nil {
 		return opts, err
 	}
+	if len(ids) == 0 {
+		return opts, fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ", "))
+	}
 
 	// Exclude the mentioned notes from the results.
-	for _, id := range ids {
-		opts = opts.ExcludingID(id)
-	}
+	opts = opts.ExcludingIDs(ids)
 
 	// Find their titles.
 	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + joinNoteIDs(ids, ",") + ")"
@@ -391,7 +449,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	maxDistance := 0
 
 	setupLinkFilter := func(hrefs []string, direction int, negate, recursive bool) error {
-		ids, err := d.FindIdsByHrefs(hrefs, true /* allowPartialMatch */)
+		ids, err := d.findIdsByHrefs(hrefs, true /* allowPartialHrefs */)
 		if err != nil {
 			return err
 		}
@@ -472,28 +530,20 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		}
 	}
 
-	if opts.IncludePaths != nil {
-		regexes := make([]string, 0)
-		for _, path := range opts.IncludePaths {
-			regexes = append(regexes, "n.path REGEXP ?")
-			if !opts.EnablePathRegexes {
-				path = pathRegex(path)
-			}
-			args = append(args, path)
+	if opts.IncludeHrefs != nil {
+		ids, err := d.findIdsByHrefs(opts.IncludeHrefs, opts.AllowPartialHrefs)
+		if err != nil {
+			return nil, err
 		}
-		whereExprs = append(whereExprs, strings.Join(regexes, " OR "))
+		opts = opts.IncludingIDs(ids)
 	}
 
-	if opts.ExcludePaths != nil {
-		regexes := make([]string, 0)
-		for _, path := range opts.ExcludePaths {
-			regexes = append(regexes, "n.path NOT REGEXP ?")
-			if !opts.EnablePathRegexes {
-				path = pathRegex(path)
-			}
-			args = append(args, path)
+	if opts.ExcludeHrefs != nil {
+		ids, err := d.findIdsByHrefs(opts.ExcludeHrefs, opts.AllowPartialHrefs)
+		if err != nil {
+			return nil, err
 		}
-		whereExprs = append(whereExprs, strings.Join(regexes, " AND "))
+		opts = opts.ExcludingIDs(ids)
 	}
 
 	if opts.Tags != nil {
@@ -545,15 +595,16 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.MentionedBy != nil {
-		ids, err := d.FindIdsByHrefs(opts.MentionedBy, true /* allowPartialMatch */)
+		ids, err := d.findIdsByHrefs(opts.MentionedBy, true /* allowPartialHrefs */)
 		if err != nil {
 			return nil, err
 		}
+		if len(ids) == 0 {
+			return nil, fmt.Errorf("could not find notes at: " + strings.Join(opts.MentionedBy, ", "))
+		}
 
 		// Exclude the mentioning notes from the results.
-		for _, id := range ids {
-			opts = opts.ExcludingID(id)
-		}
+		opts = opts.ExcludingIDs(ids)
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+joinNoteIDs(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")
@@ -562,7 +613,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.LinkedBy != nil {
 		filter := opts.LinkedBy
 		maxDistance = filter.MaxDistance
-		err := setupLinkFilter(filter.Paths, -1, filter.Negate, filter.Recursive)
+		err := setupLinkFilter(filter.Hrefs, -1, filter.Negate, filter.Recursive)
 		if err != nil {
 			return nil, err
 		}
@@ -571,7 +622,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.LinkTo != nil {
 		filter := opts.LinkTo
 		maxDistance = filter.MaxDistance
-		err := setupLinkFilter(filter.Paths, 1, filter.Negate, filter.Recursive)
+		err := setupLinkFilter(filter.Hrefs, 1, filter.Negate, filter.Recursive)
 		if err != nil {
 			return nil, err
 		}
@@ -610,6 +661,10 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.ModifiedEnd != nil {
 		whereExprs = append(whereExprs, "modified < ?")
 		args = append(args, opts.ModifiedEnd)
+	}
+
+	if opts.IncludeIDs != nil {
+		whereExprs = append(whereExprs, "n.id IN ("+joinNoteIDs(opts.IncludeIDs, ",")+")")
 	}
 
 	if opts.ExcludeIDs != nil {
@@ -793,18 +848,9 @@ func orderTerm(sorter core.NoteSorter) string {
 		return "n.title" + order
 	case core.NoteSortWordCount:
 		return "n.word_count" + order
-	case core.NoteSortPathLength:
-		return "LENGTH(path)" + order
 	default:
 		panic(fmt.Sprintf("%v: unknown core.NoteSortField", sorter.Field))
 	}
-}
-
-// pathRegex returns an ICU regex to match the files in the folder at given
-// `path`, or any file having `path` for prefix.
-func pathRegex(path string) string {
-	path = icu.EscapePattern(path)
-	return path + "[^/]*|" + path + "/.+"
 }
 
 // buildMentionQuery creates an FTS5 predicate to match the given note's title

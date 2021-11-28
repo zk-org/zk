@@ -226,12 +226,72 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 	})
 }
 
+func TestNoteDAOFindIdsByHref(t *testing.T) {
+	test := func(href string, allowPartialHref bool, expected []core.NoteID) {
+		testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+			actual, err := dao.FindIdsByHref(href, allowPartialHref)
+			assert.Nil(t, err)
+			assert.Equal(t, actual, expected)
+		})
+	}
+
+	test("test", false, []core.NoteID{})
+	test("test", true, []core.NoteID{6, 5, 8})
+
+	// Filename takes precedence over the rest of the path.
+	// See https://github.com/mickael-menu/zk/issues/111
+	test("ref", true, []core.NoteID{8})
+}
+
+func TestNoteDAOFindIncludingHrefs(t *testing.T) {
+	test := func(href string, allowPartialHref bool, expected []string) {
+		testNoteDAOFindPaths(t,
+			core.NoteFindOpts{
+				IncludeHrefs:      []string{href},
+				AllowPartialHrefs: allowPartialHref,
+			},
+			expected,
+		)
+	}
+
+	test("test", false, []string{})
+	test("test", true, []string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md"})
+
+	// Filename takes precedence over the rest of the path.
+	// See https://github.com/mickael-menu/zk/issues/111
+	test("ref", true, []string{"ref/test/ref.md"})
+}
+
+func TestNoteDAOFindExcludingHrefs(t *testing.T) {
+	test := func(href string, allowPartialHref bool, expected []string) {
+		testNoteDAOFindPaths(t,
+			core.NoteFindOpts{
+				ExcludeHrefs:      []string{href},
+				AllowPartialHrefs: allowPartialHref,
+			},
+			expected,
+		)
+	}
+
+	test("test", false, []string{"ref/test/ref.md", "ref/test/b.md",
+		"f39c8.md", "ref/test/a.md", "log/2021-01-03.md", "log/2021-02-04.md",
+		"index.md", "log/2021-01-04.md"})
+	test("test", true, []string{"f39c8.md", "log/2021-01-03.md",
+		"log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+
+	// Filename takes precedence over the rest of the path.
+	// See https://github.com/mickael-menu/zk/issues/111
+	test("ref", true, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md",
+		"log/2021-01-03.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+}
+
 func TestNoteDAOFindMinimalAll(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		notes, err := dao.FindMinimal(core.NoteFindOpts{})
 		assert.Nil(t, err)
 
 		assert.Equal(t, notes, []core.MinimalNote{
+			{ID: 8, Path: "ref/test/ref.md", Title: "", Metadata: map[string]interface{}{}},
 			{ID: 5, Path: "ref/test/b.md", Title: "A nested note", Metadata: map[string]interface{}{}},
 			{ID: 4, Path: "f39c8.md", Title: "An interesting note", Metadata: map[string]interface{}{}},
 			{ID: 6, Path: "ref/test/a.md", Title: "Another nested note", Metadata: map[string]interface{}{
@@ -272,13 +332,14 @@ func TestNoteDAOFindMinimalWithFilter(t *testing.T) {
 
 func TestNoteDAOFindAll(t *testing.T) {
 	testNoteDAOFindPaths(t, core.NoteFindOpts{}, []string{
-		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
+		"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
 		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
 }
 
 func TestNoteDAOFindLimit(t *testing.T) {
-	testNoteDAOFindPaths(t, core.NoteFindOpts{Limit: 2}, []string{
+	testNoteDAOFindPaths(t, core.NoteFindOpts{Limit: 3}, []string{
+		"ref/test/ref.md",
 		"ref/test/b.md",
 		"f39c8.md",
 	})
@@ -298,9 +359,9 @@ func TestNoteDAOFindTag(t *testing.T) {
 	test([]string{"fiction | adventure | fantasy"}, []string{"ref/test/b.md", "f39c8.md", "log/2021-01-03.md"})
 	test([]string{"fiction | history", "adventure"}, []string{"ref/test/b.md", "log/2021-01-03.md"})
 	test([]string{"fiction", "unknown"}, []string{})
-	test([]string{"-fiction"}, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
-	test([]string{"NOT   fiction"}, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
-	test([]string{"NOTfiction"}, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+	test([]string{"-fiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+	test([]string{"NOT   fiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+	test([]string{"NOTfiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
 }
 
 func TestNoteDAOFindMatch(t *testing.T) {
@@ -434,7 +495,7 @@ func TestNoteDAOFindExactMatchCannotBeUsedWithMention(t *testing.T) {
 func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			IncludePaths: []string{"log/2021-01-03.md"},
+			IncludeHrefs: []string{"log/2021-01-03.md"},
 		},
 		[]string{"log/2021-01-03.md"},
 	)
@@ -444,7 +505,7 @@ func TestNoteDAOFindInPathAbsoluteFile(t *testing.T) {
 func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			IncludePaths: []string{"log/2021-01"},
+			IncludeHrefs: []string{"log/2021-01"},
 		},
 		[]string{"log/2021-01-03.md", "log/2021-01-04.md"},
 	)
@@ -454,13 +515,15 @@ func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			IncludePaths: []string{"lo"},
+			IncludeHrefs:      []string{"lo"},
+			AllowPartialHrefs: false,
 		},
 		[]string{},
 	)
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			IncludePaths: []string{"log"},
+			IncludeHrefs:      []string{"log"},
+			AllowPartialHrefs: false,
 		},
 		[]string{"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md"},
 	)
@@ -470,25 +533,25 @@ func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
 func TestNoteDAOFindInMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			IncludePaths: []string{"ref", "index.md"},
+			IncludeHrefs: []string{"ref", "index.md"},
 		},
-		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "index.md"},
 	)
 }
 
 func TestNoteDAOFindExcludingPath(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			ExcludePaths: []string{"log"},
+			ExcludeHrefs: []string{"log"},
 		},
-		[]string{"ref/test/b.md", "f39c8.md", "ref/test/a.md", "index.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "index.md"},
 	)
 }
 
 func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			ExcludePaths: []string{"ref", "log/2021-01"},
+			ExcludeHrefs: []string{"ref", "log/2021-01"},
 		},
 		[]string{"f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
@@ -562,7 +625,7 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 		core.NoteFindOpts{
 			Mention: []string{"log/2021-01-03.md", "index.md"},
 			LinkTo: &core.LinkFilter{
-				Paths:  []string{"log/2021-01-03.md", "index.md"},
+				Hrefs:  []string{"log/2021-01-03.md", "index.md"},
 				Negate: true,
 			},
 		},
@@ -626,7 +689,7 @@ func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 		core.NoteFindOpts{
 			MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"},
 			LinkedBy: &core.LinkFilter{
-				Paths:  []string{"ref/test/b.md", "log/2021-01-04.md"},
+				Hrefs:  []string{"ref/test/b.md", "log/2021-01-04.md"},
 				Negate: true,
 			},
 		},
@@ -638,7 +701,7 @@ func TestNoteDAOFindLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkedBy: &core.LinkFilter{
-				Paths:     []string{"f39c8.md", "log/2021-01-03"},
+				Hrefs:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    false,
 				Recursive: false,
 			},
@@ -651,7 +714,7 @@ func TestNoteDAOFindLinkedByRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkedBy: &core.LinkFilter{
-				Paths:     []string{"log/2021-01-04.md"},
+				Hrefs:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
 			},
@@ -664,7 +727,7 @@ func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkedBy: &core.LinkFilter{
-				Paths:       []string{"log/2021-01-04.md"},
+				Hrefs:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
 				MaxDistance: 2,
@@ -677,7 +740,7 @@ func TestNoteDAOFindLinkedByRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	testNoteDAOFind(t,
 		core.NoteFindOpts{
-			LinkedBy: &core.LinkFilter{Paths: []string{"f39c8.md"}},
+			LinkedBy: &core.LinkFilter{Hrefs: []string{"f39c8.md"}},
 		},
 		[]core.ContextualNote{
 			{
@@ -733,12 +796,12 @@ func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkedBy: &core.LinkFilter{
-				Paths:     []string{"f39c8.md", "log/2021-01-03"},
+				Hrefs:     []string{"f39c8.md", "log/2021-01-03"},
 				Negate:    true,
 				Recursive: false,
 			},
 		},
-		[]string{"ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "log/2021-02-04.md", "index.md"},
 	)
 }
 
@@ -746,7 +809,7 @@ func TestNoteDAOFindLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkTo: &core.LinkFilter{
-				Paths:     []string{"log/2021-01-04", "ref/test/a.md"},
+				Hrefs:     []string{"log/2021-01-04", "ref/test/a.md"},
 				Negate:    false,
 				Recursive: false,
 			},
@@ -759,7 +822,7 @@ func TestNoteDAOFindLinkToRecursive(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkTo: &core.LinkFilter{
-				Paths:     []string{"log/2021-01-04.md"},
+				Hrefs:     []string{"log/2021-01-04.md"},
 				Negate:    false,
 				Recursive: true,
 			},
@@ -772,7 +835,7 @@ func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			LinkTo: &core.LinkFilter{
-				Paths:       []string{"log/2021-01-04.md"},
+				Hrefs:       []string{"log/2021-01-04.md"},
 				Negate:      false,
 				Recursive:   true,
 				MaxDistance: 2,
@@ -785,9 +848,9 @@ func TestNoteDAOFindLinkToRecursiveWithMaxDistance(t *testing.T) {
 func TestNoteDAOFindNotLinkTo(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			LinkTo: &core.LinkFilter{Paths: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
+			LinkTo: &core.LinkFilter{Hrefs: []string{"log/2021-01-04", "ref/test/a.md"}, Negate: true},
 		},
-		[]string{"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
 }
 
@@ -810,7 +873,7 @@ func TestNoteDAOFindRelated(t *testing.T) {
 func TestNoteDAOFindOrphan(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{Orphan: true},
-		[]string{"ref/test/b.md", "log/2021-02-04.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "log/2021-02-04.md"},
 	)
 }
 
@@ -832,7 +895,7 @@ func TestNoteDAOFindCreatedBefore(t *testing.T) {
 		core.NoteFindOpts{
 			CreatedEnd: &end,
 		},
-		[]string{"ref/test/b.md", "ref/test/a.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md"},
 	)
 }
 
@@ -864,7 +927,7 @@ func TestNoteDAOFindModifiedBefore(t *testing.T) {
 		core.NoteFindOpts{
 			ModifiedEnd: &end,
 		},
-		[]string{"ref/test/b.md", "ref/test/a.md", "index.md"},
+		[]string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "index.md"},
 	)
 }
 
@@ -880,55 +943,55 @@ func TestNoteDAOFindModifiedAfter(t *testing.T) {
 
 func TestNoteDAOFindSortCreated(t *testing.T) {
 	testNoteDAOFindSort(t, core.NoteSortCreated, true, []string{
-		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
+		"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
 		"log/2021-01-03.md", "log/2021-02-04.md", "log/2021-01-04.md",
 	})
 	testNoteDAOFindSort(t, core.NoteSortCreated, false, []string{
 		"log/2021-02-04.md", "log/2021-01-04.md", "log/2021-01-03.md",
-		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
+		"f39c8.md", "index.md", "ref/test/ref.md", "ref/test/b.md", "ref/test/a.md",
 	})
 }
 
 func TestNoteDAOFindSortModified(t *testing.T) {
 	testNoteDAOFindSort(t, core.NoteSortModified, true, []string{
-		"ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
+		"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "index.md", "f39c8.md",
 		"log/2021-02-04.md", "log/2021-01-03.md", "log/2021-01-04.md",
 	})
 	testNoteDAOFindSort(t, core.NoteSortModified, false, []string{
 		"log/2021-01-04.md", "log/2021-01-03.md", "log/2021-02-04.md",
-		"f39c8.md", "index.md", "ref/test/b.md", "ref/test/a.md",
+		"f39c8.md", "index.md", "ref/test/ref.md", "ref/test/b.md", "ref/test/a.md",
 	})
 }
 
 func TestNoteDAOFindSortPath(t *testing.T) {
 	testNoteDAOFindSort(t, core.NoteSortPath, true, []string{
 		"f39c8.md", "index.md", "log/2021-01-03.md", "log/2021-01-04.md",
-		"log/2021-02-04.md", "ref/test/a.md", "ref/test/b.md",
+		"log/2021-02-04.md", "ref/test/a.md", "ref/test/b.md", "ref/test/ref.md",
 	})
 	testNoteDAOFindSort(t, core.NoteSortPath, false, []string{
-		"ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md",
+		"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md",
 		"log/2021-01-04.md", "log/2021-01-03.md", "index.md", "f39c8.md",
 	})
 }
 
 func TestNoteDAOFindSortTitle(t *testing.T) {
 	testNoteDAOFindSort(t, core.NoteSortTitle, true, []string{
-		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
+		"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-01-03.md",
 		"log/2021-02-04.md", "index.md", "log/2021-01-04.md",
 	})
 	testNoteDAOFindSort(t, core.NoteSortTitle, false, []string{
 		"log/2021-01-04.md", "index.md", "log/2021-02-04.md",
-		"log/2021-01-03.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md",
+		"log/2021-01-03.md", "ref/test/a.md", "f39c8.md", "ref/test/b.md", "ref/test/ref.md",
 	})
 }
 
 func TestNoteDAOFindSortWordCount(t *testing.T) {
 	testNoteDAOFindSort(t, core.NoteSortWordCount, true, []string{
 		"log/2021-01-03.md", "log/2021-02-04.md", "index.md",
-		"log/2021-01-04.md", "f39c8.md", "ref/test/a.md", "ref/test/b.md",
+		"log/2021-01-04.md", "ref/test/ref.md", "f39c8.md", "ref/test/a.md", "ref/test/b.md",
 	})
 	testNoteDAOFindSort(t, core.NoteSortWordCount, false, []string{
-		"ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
+		"ref/test/b.md", "ref/test/ref.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md",
 		"index.md", "log/2021-01-04.md", "log/2021-01-03.md",
 	})
 }

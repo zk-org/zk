@@ -142,11 +142,11 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 	opts.ExactMatch = f.ExactMatch
 
 	if paths, ok := relPaths(notebook, f.Path); ok {
-		opts.IncludePaths = paths
+		opts.IncludeHrefs = paths
 	}
 
 	if paths, ok := relPaths(notebook, f.Exclude); ok {
-		opts.ExcludePaths = paths
+		opts.ExcludeHrefs = paths
 	}
 
 	if len(f.Tag) > 0 {
@@ -163,28 +163,28 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 
 	if paths, ok := relPaths(notebook, f.LinkedBy); ok {
 		opts.LinkedBy = &core.LinkFilter{
-			Paths:       paths,
+			Hrefs:       paths,
 			Negate:      false,
 			Recursive:   f.Recursive,
 			MaxDistance: f.MaxDistance,
 		}
 	} else if paths, ok := relPaths(notebook, f.NoLinkedBy); ok {
 		opts.LinkedBy = &core.LinkFilter{
-			Paths:  paths,
+			Hrefs:  paths,
 			Negate: true,
 		}
 	}
 
 	if paths, ok := relPaths(notebook, f.LinkTo); ok {
 		opts.LinkTo = &core.LinkFilter{
-			Paths:       paths,
+			Hrefs:       paths,
 			Negate:      false,
 			Recursive:   f.Recursive,
 			MaxDistance: f.MaxDistance,
 		}
 	} else if paths, ok := relPaths(notebook, f.NoLinkTo); ok {
 		opts.LinkTo = &core.LinkFilter{
-			Paths:  paths,
+			Hrefs:  paths,
 			Negate: true,
 		}
 	}
