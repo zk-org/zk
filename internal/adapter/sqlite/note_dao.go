@@ -276,10 +276,6 @@ func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core
 		}
 		ids = append(ids, cids...)
 	}
-
-	if len(ids) == 0 {
-		return ids, fmt.Errorf("could not find notes at: " + strings.Join(hrefs, ", "))
-	}
 	return ids, nil
 }
 
@@ -393,11 +389,12 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	if err != nil {
 		return opts, err
 	}
+	if len(ids) == 0 {
+		return opts, fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ", "))
+	}
 
 	// Exclude the mentioned notes from the results.
-	for _, id := range ids {
-		opts = opts.ExcludingID(id)
-	}
+	opts = opts.ExcludingIDs(ids)
 
 	// Find their titles.
 	titlesQuery := "SELECT title, metadata FROM notes WHERE id IN (" + joinNoteIDs(ids, ",") + ")"
@@ -538,7 +535,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		if err != nil {
 			return nil, err
 		}
-		opts.IncludeIDs = append(opts.IncludeIDs, ids...)
+		opts = opts.IncludingIDs(ids)
 	}
 
 	if opts.ExcludeHrefs != nil {
@@ -546,7 +543,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		if err != nil {
 			return nil, err
 		}
-		opts.ExcludeIDs = append(opts.ExcludeIDs, ids...)
+		opts = opts.ExcludingIDs(ids)
 	}
 
 	if opts.Tags != nil {
@@ -602,11 +599,12 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		if err != nil {
 			return nil, err
 		}
+		if len(ids) == 0 {
+			return nil, fmt.Errorf("could not find notes at: " + strings.Join(opts.MentionedBy, ", "))
+		}
 
 		// Exclude the mentioning notes from the results.
-		for _, id := range ids {
-			opts = opts.ExcludingID(id)
-		}
+		opts = opts.ExcludingIDs(ids)
 
 		snippetCol = `snippet(nsrc.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 		joinClauses = append(joinClauses, "JOIN notes_fts nsrc ON nsrc.rowid IN ("+joinNoteIDs(ids, ",")+") AND nsrc.notes_fts MATCH mention_query(n.title, n.metadata)")

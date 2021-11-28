@@ -54,14 +54,25 @@ type NoteFindOpts struct {
 	Sorters []NoteSorter
 }
 
-// ExcludingID creates a new FinderOpts after adding the given ID to the list
+// IncludingIDs creates a new FinderOpts after adding the given IDs to the list
 // of excluded note IDs.
-func (o NoteFindOpts) ExcludingID(id NoteID) NoteFindOpts {
+func (o NoteFindOpts) IncludingIDs(ids []NoteID) NoteFindOpts {
+	if o.IncludeIDs == nil {
+		o.IncludeIDs = []NoteID{}
+	}
+
+	o.IncludeIDs = append(o.IncludeIDs, ids...)
+	return o
+}
+
+// ExcludingIDs creates a new FinderOpts after adding the given IDs to the list
+// of excluded note IDs.
+func (o NoteFindOpts) ExcludingIDs(ids []NoteID) NoteFindOpts {
 	if o.ExcludeIDs == nil {
 		o.ExcludeIDs = []NoteID{}
 	}
 
-	o.ExcludeIDs = append(o.ExcludeIDs, id)
+	o.ExcludeIDs = append(o.ExcludeIDs, ids...)
 	return o
 }
 

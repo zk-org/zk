@@ -243,6 +243,48 @@ func TestNoteDAOFindIdsByHref(t *testing.T) {
 	test("ref", true, []core.NoteID{8})
 }
 
+func TestNoteDAOFindIncludingHrefs(t *testing.T) {
+	test := func(href string, allowPartialHref bool, expected []string) {
+		testNoteDAOFindPaths(t,
+			core.NoteFindOpts{
+				IncludeHrefs:      []string{href},
+				AllowPartialHrefs: allowPartialHref,
+			},
+			expected,
+		)
+	}
+
+	test("test", false, []string{})
+	test("test", true, []string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md"})
+
+	// Filename takes precedence over the rest of the path.
+	// See https://github.com/mickael-menu/zk/issues/111
+	test("ref", true, []string{"ref/test/ref.md"})
+}
+
+func TestNoteDAOFindExcludingHrefs(t *testing.T) {
+	test := func(href string, allowPartialHref bool, expected []string) {
+		testNoteDAOFindPaths(t,
+			core.NoteFindOpts{
+				ExcludeHrefs:      []string{href},
+				AllowPartialHrefs: allowPartialHref,
+			},
+			expected,
+		)
+	}
+
+	test("test", false, []string{"ref/test/ref.md", "ref/test/b.md",
+		"f39c8.md", "ref/test/a.md", "log/2021-01-03.md", "log/2021-02-04.md",
+		"index.md", "log/2021-01-04.md"})
+	test("test", true, []string{"f39c8.md", "log/2021-01-03.md",
+		"log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+
+	// Filename takes precedence over the rest of the path.
+	// See https://github.com/mickael-menu/zk/issues/111
+	test("ref", true, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md",
+		"log/2021-01-03.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+}
+
 func TestNoteDAOFindMinimalAll(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		notes, err := dao.FindMinimal(core.NoteFindOpts{})
@@ -471,13 +513,13 @@ func TestNoteDAOFindInPathWithFilePrefix(t *testing.T) {
 
 // For directory, only complete names work, no prefixes.
 func TestNoteDAOFindInPathRequiresCompleteDirName(t *testing.T) {
-	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
-		_, err := dao.Find(core.NoteFindOpts{
+	testNoteDAOFindPaths(t,
+		core.NoteFindOpts{
 			IncludeHrefs:      []string{"lo"},
 			AllowPartialHrefs: false,
-		})
-		assert.Err(t, err, "could not find notes at: lo")
-	})
+		},
+		[]string{},
+	)
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
 			IncludeHrefs:      []string{"log"},
