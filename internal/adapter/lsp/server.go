@@ -10,7 +10,6 @@ import (
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
-	dateutil "github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -100,6 +99,8 @@ func NewServer(opts ServerOpts) *Server {
 			Commands: []string{
 				cmdIndex,
 				cmdNew,
+				cmdList,
+				cmdTagList,
 			},
 		}
 		capabilities.CompletionProvider = &protocol.CompletionOptions{
@@ -337,11 +338,49 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
+
+		openNotebook := func() (*core.Notebook, error) {
+			args := params.Arguments
+			if len(args) == 0 {
+				return nil, fmt.Errorf("%s expects a notebook path as first argument", params.Command)
+			}
+			path, ok := args[0].(string)
+			if !ok {
+				return nil, fmt.Errorf("%s expects a notebook path as first argument, got: %v", params.Command, args[0])
+			}
+
+			return server.notebooks.Open(path)
+		}
+
 		switch params.Command {
 		case cmdIndex:
-			return server.executeCommandIndex(params.Arguments)
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandIndex(nb, params.Arguments)
+
 		case cmdNew:
-			return server.executeCommandNew(context, params.Arguments)
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandNew(nb, server.documents, context, params.Arguments)
+
+		case cmdList:
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandList(server.logger, nb, params.Arguments)
+
+		case cmdTagList:
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandTagList(server.logger, nb, params.Arguments)
+
 		default:
 			return nil, fmt.Errorf("unknown zk LSP command: %s", params.Command)
 		}
@@ -472,150 +511,6 @@ func NewServer(opts ServerOpts) *Server {
 // Run starts the Language Server in stdio mode.
 func (s *Server) Run() error {
 	return errors.Wrap(s.server.RunStdio(), "lsp")
-}
-
-const cmdIndex = "zk.index"
-
-func (s *Server) executeCommandIndex(args []interface{}) (interface{}, error) {
-	if len(args) == 0 {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument")
-	}
-	path, ok := args[0].(string)
-	if !ok {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
-	}
-
-	opts := core.NoteIndexOpts{}
-	if len(args) == 2 {
-		options, ok := args[1].(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("zk.index expects a dictionary of options as second argument, got: %v", args[1])
-		}
-		if forceOption, ok := options["force"]; ok {
-			opts.Force = toBool(forceOption)
-		}
-		if verboseOption, ok := options["verbose"]; ok {
-			opts.Verbose = toBool(verboseOption)
-		}
-	}
-
-	notebook, err := s.notebooks.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return notebook.Index(opts)
-}
-
-const cmdNew = "zk.new"
-
-type cmdNewOpts struct {
-	Title                string             `json:"title,omitempty"`
-	Content              string             `json:"content,omitempty"`
-	Dir                  string             `json:"dir,omitempty"`
-	Group                string             `json:"group,omitempty"`
-	Template             string             `json:"template,omitempty"`
-	Extra                map[string]string  `json:"extra,omitempty"`
-	Date                 string             `json:"date,omitempty"`
-	Edit                 jsonBoolean        `json:"edit,omitempty"`
-	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation,omitempty"`
-}
-
-func (s *Server) executeCommandNew(context *glsp.Context, args []interface{}) (interface{}, error) {
-	if len(args) == 0 {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument")
-	}
-	wd, ok := args[0].(string)
-	if !ok {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
-	}
-
-	var opts cmdNewOpts
-	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("zk.new expects a dictionary of options as second argument, got: %v", args[1])
-		}
-		err := unmarshalJSON(arg, &opts)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse zk.new args, got: %v", arg)
-		}
-	}
-
-	notebook, err := s.notebooks.Open(wd)
-	if err != nil {
-		return nil, err
-	}
-
-	date, err := dateutil.TimeFromNatural(opts.Date)
-	if err != nil {
-		return nil, errors.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
-	}
-
-	note, err := notebook.NewNote(core.NewNoteOpts{
-		Title:     opt.NewNotEmptyString(opts.Title),
-		Content:   opts.Content,
-		Directory: opt.NewNotEmptyString(opts.Dir),
-		Group:     opt.NewNotEmptyString(opts.Group),
-		Template:  opt.NewNotEmptyString(opts.Template),
-		Extra:     opts.Extra,
-		Date:      date,
-	})
-	if err != nil {
-		var noteExists core.ErrNoteExists
-		if !errors.As(err, &noteExists) {
-			return nil, err
-		}
-		note, err = notebook.FindNote(core.NoteFindOpts{
-			IncludeHrefs: []string{noteExists.Name},
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	if note == nil {
-		return nil, errors.New("zk.new could not generate a new note")
-	}
-
-	if opts.InsertLinkAtLocation != nil {
-		doc, ok := s.documents.Get(opts.InsertLinkAtLocation.URI)
-		if !ok {
-			return nil, fmt.Errorf("can't insert link in %s", opts.InsertLinkAtLocation.URI)
-		}
-		linkFormatter, err := notebook.NewLinkFormatter()
-		if err != nil {
-			return nil, err
-		}
-
-		currentDir := filepath.Dir(doc.Path)
-		linkFormatterContext, err := core.NewLinkFormatterContext(note.AsMinimalNote(), notebook.Path, currentDir)
-		if err != nil {
-			return nil, err
-		}
-
-		link, err := linkFormatter(linkFormatterContext)
-		if err != nil {
-			return nil, err
-		}
-
-		go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
-			Edit: protocol.WorkspaceEdit{
-				Changes: map[string][]protocol.TextEdit{
-					opts.InsertLinkAtLocation.URI: {{Range: opts.InsertLinkAtLocation.Range, NewText: link}},
-				},
-			},
-		}, nil)
-	}
-
-	absPath := filepath.Join(notebook.Path, note.Path)
-	if opts.Edit {
-		go context.Call(protocol.ServerWindowShowDocument, protocol.ShowDocumentParams{
-			URI:       pathToURI(absPath),
-			TakeFocus: boolPtr(true),
-		}, nil)
-	}
-
-	return map[string]interface{}{"path": absPath}, nil
 }
 
 func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {

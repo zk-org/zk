@@ -150,17 +150,17 @@ This LSP command calls `zk new` to create a new note. It can be useful to quickl
 1. A path to any file or directory in the notebook, to locate it.
 2. <details><summary>(Optional) A dictionary of additional options (click to expand)</summary>
     
-    | Key                    | Type       | Description                                                                               |
-    |------------------------|------------|-------------------------------------------------------------------------------------------|
-    | `title`                | string     | Title of the new note                                                                     |
-    | `content`              | string     | Initial content of the note                                                               |
-    | `dir`                  | string     | Parent directory, relative to the root of the notebook                                    |
-    | `group`                | string     | [Note configuration group](config-group.md)                                               |
-    | `template`             | string     | [Custom template used to render the note](template-creation.md)                           |
-    | `extra`                | dictionary | A dictionary of extra variables to expand in the template                                 |
-    | `date`                 | string     | A date of creation for the note in natural language, e.g. "tomorrow"                      |
-    | `edit`                 | boolean    | When true, the editor will open the newly created note (**not supported by all editors**) |
-    | `insertLinkAtLocation` | location   | A location in another note where a link to the new note will be inserted                  |
+    | Key                    | Type                 | Description                                                                               |
+    |------------------------|----------------------|-------------------------------------------------------------------------------------------|
+    | `title`                | string               | Title of the new note                                                                     |
+    | `content`              | string               | Initial content of the note                                                               |
+    | `dir`                  | string               | Parent directory, relative to the root of the notebook                                    |
+    | `group`                | string               | [Note configuration group](config-group.md)                                               |
+    | `template`             | string               | [Custom template used to render the note](template-creation.md)                           |
+    | `extra`                | dictionary           | A dictionary of extra variables to expand in the template                                 |
+    | `date`                 | string               | A date of creation for the note in natural language, e.g. "tomorrow"                      |
+    | `edit`                 | boolean              | When true, the editor will open the newly created note (**not supported by all editors**) |
+    | `insertLinkAtLocation` | location<sup>1</sup> | A location in another note where a link to the new note will be inserted                  |
 
     The `location` type is an [LSP Location object](https://microsoft.github.io/language-server-protocol/specification#location), for example:
 
@@ -176,3 +176,58 @@ This LSP command calls `zk new` to create a new note. It can be useful to quickl
     </details>
 
 `zk.new` returns a dictionary with the key `path` containing the absolute path to the newly created file.
+
+#### `zk.list`
+
+This LSP command calls `zk list` to search a notebook. It takes two arguments:
+
+1. A path to any file or directory in the notebook, to locate it.
+2. <details><summary>A dictionary of additional options (click to expand)</summary>
+    
+    | Key              | Type         | Required? | Description                                                             |
+    |------------------|--------------|-----------|-------------------------------------------------------------------------|
+    | `select`         | string array | Yes       | List of note fields to return<sup>1</sup>                               |
+    | `hrefs`          | string array | No        | Find notes matching the given path, including its descendants           |
+	| `limit`          | integer      | No        | Limit the number of notes found                                         |
+	| `match`          | string       | No        | Terms to search for in the notes                                        |
+	| `exactMatch`     | boolean      | No        | Search for exact occurrences of the `match` argument (case insensitive) |
+	| `excludeHrefs`   | string array | No        | Ignore notes matching the given path, including its descendants         |
+	| `tags`           | string array | No        | Find notes tagged with the given tags                                   |
+	| `mention`        | string array | No        | Find notes mentioning the title of the given ones                       |
+	| `mentionedBy`    | string array | No        | Find notes whose title is mentioned in the given ones                   |
+	| `linkTo`         | string array | No        | Find notes which are linking to the given ones                          |
+	| `linkedBy`       | string array | No        | Find notes which are linked by the given ones                           |
+	| `orphan`         | boolean      | No        | Find notes which are not linked by any other note                       |
+	| `related`        | string array | No        | Find notes which might be related to the given ones                     |
+	| `maxDistance`    | integer      | No        | Maximum distance between two linked notes                               |
+	| `recursive`      | boolean      | No        | Follow links recursively                                                |
+	| `created`        | string       | No        | Find notes created on the given date                                    |
+	| `createdBefore`  | string       | No        | Find notes created before the given date                                |
+	| `createdAfter`   | string       | No        | Find notes created after the given date                                 |
+	| `modified`       | string       | No        | Find notes modified on the given date                                   |
+	| `modifiedBefore` | string       | No        | Find notes modified before the given date                               |
+	| `modifiedAfter`  | string       | No        | Find notes modified after the given date                                |
+	| `sort`           | string array | No        | Order the notes by the given criterion                                  |
+
+    1. As the output of this command might be very verbose and put a heavy load on the LSP client, you need to explicitly set which note fields you want to receive with the `select` option. The following fields are available: `filename`, `filenameStem`, `path`, `absPath`, `title`, `lead`, `body`, `snippets`, `rawContent`, `wordCount`, `tags`, `metadata`, `created`, `modified` and `checksum`.
+
+    </details>
+
+`zk.list` returns the found notes as a JSON array.
+
+#### `zk.tag.list`
+
+This LSP command calls `zk tag list` to return the list of tags in a notebook. It takes two arguments:
+
+1. A path to any file or directory in the notebook, to locate it.
+2. <details><summary>(Optional) A dictionary of additional options (click to expand)</summary>
+    
+    | Key    | Type         | Required? | Description                                      |
+    |--------|--------------|-----------|--------------------------------------------------|
+	| `sort` | string array | No        | Order the tags by the given criteria<sup>1</sup> |
+
+    1. The available sort criteria are `name` and `note-count`. You can change the order by appending `-` or `+` to the criterion.
+
+    </details>
+
+`zk.tag.list` returns the tags as a JSON array.

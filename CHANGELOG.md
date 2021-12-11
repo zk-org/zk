@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* New LSP commands:
+    * [`zk.list`](docs/editors-integration.md#zklist) to search for notes.
+    * [`zk.tag.list`](docs/editors-integration.md#zktaglist) to retrieve the list of tags.
+
 ### Fixed
 
 * [#111](https://github.com/mickael-menu/zk/issues/111) Filenames take precedence over folders when matching a sub-path with wiki links.
