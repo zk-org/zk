@@ -15,7 +15,7 @@ import (
 
 // Filtering holds filtering options to select notes.
 type Filtering struct {
-	Path []string `kong:"group:filter arg optional placeholder:PATH help:'Find notes matching the given path, including its descendants.'" json:"hrefs"`
+	Path []string `kong:"group='filter',arg,optional,placeholder='PATH',help='Find notes matching the given path, including its descendants.'" json:"hrefs"`
 
 	Interactive    bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
 	Limit          int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
