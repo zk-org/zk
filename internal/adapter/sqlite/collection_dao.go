@@ -79,7 +79,7 @@ func (d *CollectionDAO) FindOrCreate(kind core.CollectionKind, name string) (cor
 
 func (d *CollectionDAO) FindAll(kind core.CollectionKind, sorters []core.CollectionSorter) ([]core.Collection, error) {
 	query := `
-		SELECT c.name, COUNT(nc.id) as count
+		SELECT c.id, c.name, COUNT(nc.id) as count
 		  FROM collections c
 		 INNER JOIN notes_collections nc ON nc.collection_id = c.id
 		 WHERE kind = ?
@@ -104,14 +104,16 @@ func (d *CollectionDAO) FindAll(kind core.CollectionKind, sorters []core.Collect
 	collections := []core.Collection{}
 
 	for rows.Next() {
+		var id sql.NullInt64
 		var name string
 		var count int
-		err := rows.Scan(&name, &count)
+		err := rows.Scan(&id, &name, &count)
 		if err != nil {
 			return collections, err
 		}
 
 		collections = append(collections, core.Collection{
+			ID:        core.CollectionID(id.Int64),
 			Kind:      kind,
 			Name:      name,
 			NoteCount: count,

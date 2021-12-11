@@ -9,13 +9,13 @@ import (
 // Collection represents a collection, such as a tag.
 type Collection struct {
 	// Unique ID of this collection in the Notebook.
-	ID CollectionID
+	ID CollectionID `json:"id"`
 	// Kind of this note collection, such as a tag.
-	Kind CollectionKind
+	Kind CollectionKind `json:"kind"`
 	// Name of this collection.
-	Name string
+	Name string `json:"name"`
 	// Number of notes associated with this collection.
-	NoteCount int
+	NoteCount int `json:"note_count"`
 }
 
 // CollectionID represents the unique ID of a collection relative to a given

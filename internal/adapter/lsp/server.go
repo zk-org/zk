@@ -99,6 +99,7 @@ func NewServer(opts ServerOpts) *Server {
 			Commands: []string{
 				cmdIndex,
 				cmdNew,
+				cmdTagList,
 			},
 		}
 		capabilities.CompletionProvider = &protocol.CompletionOptions{
@@ -336,11 +337,42 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
+
+		openNotebook := func() (*core.Notebook, error) {
+			args := params.Arguments
+			if len(args) == 0 {
+				return nil, fmt.Errorf("%s expects a notebook path as first argument", params.Command)
+			}
+			path, ok := args[0].(string)
+			if !ok {
+				return nil, fmt.Errorf("%s expects a notebook path as first argument, got: %v", params.Command, args[0])
+			}
+
+			return server.notebooks.Open(path)
+		}
+
 		switch params.Command {
 		case cmdIndex:
-			return executeCommandIndex(server.notebooks, params.Arguments)
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandIndex(nb, params.Arguments)
+
 		case cmdNew:
-			return executeCommandNew(server.notebooks, server.documents, context, params.Arguments)
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandNew(nb, server.documents, context, params.Arguments)
+
+		case cmdTagList:
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandTagList(server.logger, nb, params.Arguments)
+
 		default:
 			return nil, fmt.Errorf("unknown zk LSP command: %s", params.Command)
 		}

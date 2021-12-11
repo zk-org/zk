@@ -26,30 +26,17 @@ type cmdNewOpts struct {
 	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation,omitempty"`
 }
 
-func executeCommandNew(notebooks *core.NotebookStore, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
-	if len(args) == 0 {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument")
-	}
-	wd, ok := args[0].(string)
-	if !ok {
-		return nil, fmt.Errorf("zk.index expects a notebook path as first argument, got: %v", args[0])
-	}
-
+func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
 	var opts cmdNewOpts
 	if len(args) > 1 {
 		arg, ok := args[1].(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("zk.new expects a dictionary of options as second argument, got: %v", args[1])
+			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdNew, args[1])
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse zk.new args, got: %v", arg)
+			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdNew, arg)
 		}
-	}
-
-	notebook, err := notebooks.Open(wd)
-	if err != nil {
-		return nil, err
 	}
 
 	date, err := dateutil.TimeFromNatural(opts.Date)

@@ -43,11 +43,11 @@ func TestCollectionDaoFindAll(t *testing.T) {
 		cs, err = dao.FindAll("tag", nil)
 		assert.Nil(t, err)
 		assert.Equal(t, cs, []core.Collection{
-			{Kind: "tag", Name: "adventure", NoteCount: 2},
-			{Kind: "tag", Name: "fantasy", NoteCount: 1},
-			{Kind: "tag", Name: "fiction", NoteCount: 1},
-			{Kind: "tag", Name: "history", NoteCount: 1},
-			{Kind: "tag", Name: "science", NoteCount: 3},
+			{ID: 2, Kind: "tag", Name: "adventure", NoteCount: 2},
+			{ID: 4, Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{ID: 1, Kind: "tag", Name: "fiction", NoteCount: 1},
+			{ID: 5, Kind: "tag", Name: "history", NoteCount: 1},
+			{ID: 7, Kind: "tag", Name: "science", NoteCount: 3},
 		})
 	})
 }
@@ -59,11 +59,11 @@ func TestCollectionDaoFindAllSortedByName(t *testing.T) {
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, cs, []core.Collection{
-			{Kind: "tag", Name: "science", NoteCount: 3},
-			{Kind: "tag", Name: "history", NoteCount: 1},
-			{Kind: "tag", Name: "fiction", NoteCount: 1},
-			{Kind: "tag", Name: "fantasy", NoteCount: 1},
-			{Kind: "tag", Name: "adventure", NoteCount: 2},
+			{ID: 7, Kind: "tag", Name: "science", NoteCount: 3},
+			{ID: 5, Kind: "tag", Name: "history", NoteCount: 1},
+			{ID: 1, Kind: "tag", Name: "fiction", NoteCount: 1},
+			{ID: 4, Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{ID: 2, Kind: "tag", Name: "adventure", NoteCount: 2},
 		})
 	})
 }
@@ -75,11 +75,11 @@ func TestCollectionDaoFindAllSortedByNoteCount(t *testing.T) {
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, cs, []core.Collection{
-			{Kind: "tag", Name: "science", NoteCount: 3},
-			{Kind: "tag", Name: "adventure", NoteCount: 2},
-			{Kind: "tag", Name: "fantasy", NoteCount: 1},
-			{Kind: "tag", Name: "fiction", NoteCount: 1},
-			{Kind: "tag", Name: "history", NoteCount: 1},
+			{ID: 7, Kind: "tag", Name: "science", NoteCount: 3},
+			{ID: 2, Kind: "tag", Name: "adventure", NoteCount: 2},
+			{ID: 4, Kind: "tag", Name: "fantasy", NoteCount: 1},
+			{ID: 1, Kind: "tag", Name: "fiction", NoteCount: 1},
+			{ID: 5, Kind: "tag", Name: "history", NoteCount: 1},
 		})
 	})
 }
