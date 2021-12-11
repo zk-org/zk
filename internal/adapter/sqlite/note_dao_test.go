@@ -633,6 +633,16 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindMentionUnknown(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		opts := core.NoteFindOpts{
+			Mention: []string{"will-not-be-found"},
+		}
+		_, err := dao.Find(opts)
+		assert.Err(t, err, "could not find notes at: will-not-be-found")
+	})
+}
+
 func TestNoteDAOFindMentionedBy(t *testing.T) {
 	testNoteDAOFind(t,
 		core.NoteFindOpts{MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"}},
@@ -695,6 +705,16 @@ func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 		},
 		[]string{"log/2021-01-03.md"},
 	)
+}
+
+func TestNoteDAOFindMentionedByUnknown(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		opts := core.NoteFindOpts{
+			MentionedBy: []string{"will-not-be-found"},
+		}
+		_, err := dao.Find(opts)
+		assert.Err(t, err, "could not find notes at: will-not-be-found")
+	})
 }
 
 func TestNoteDAOFindLinkedBy(t *testing.T) {
@@ -792,6 +812,18 @@ func TestNoteDAOFindLinkedByWithSnippets(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindLinkedByUnknown(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		opts := core.NoteFindOpts{
+			LinkedBy: &core.LinkFilter{
+				Hrefs: []string{"will-not-be-found"},
+			},
+		}
+		_, err := dao.Find(opts)
+		assert.Err(t, err, "could not find notes at: will-not-be-found")
+	})
+}
+
 func TestNoteDAOFindNotLinkedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
@@ -852,6 +884,18 @@ func TestNoteDAOFindNotLinkTo(t *testing.T) {
 		},
 		[]string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"},
 	)
+}
+
+func TestNoteDAOFindLinkToUnknown(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		opts := core.NoteFindOpts{
+			LinkTo: &core.LinkFilter{
+				Hrefs: []string{"will-not-be-found"},
+			},
+		}
+		_, err := dao.Find(opts)
+		assert.Err(t, err, "could not find notes at: will-not-be-found")
+	})
 }
 
 func TestNoteDAOFindRelated(t *testing.T) {

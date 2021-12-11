@@ -454,7 +454,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 			return err
 		}
 		if len(ids) == 0 {
-			return nil
+			return fmt.Errorf("could not find notes at: " + strings.Join(hrefs, ", "))
 		}
 		idsList := "(" + joinNoteIDs(ids, ",") + ")"
 
