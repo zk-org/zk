@@ -15,32 +15,32 @@ import (
 
 // Filtering holds filtering options to select notes.
 type Filtering struct {
-	Path []string `group:filter arg optional placeholder:PATH help:"Find notes matching the given path, including its descendants."`
+	Path []string `kong:"group:filter arg optional placeholder:PATH help:'Find notes matching the given path, including its descendants.'" json:"hrefs"`
 
-	Interactive    bool     `group:filter short:i                     help:"Select notes interactively with fzf."`
-	Limit          int      `group:filter short:n   placeholder:COUNT help:"Limit the number of notes found."`
-	Match          string   `group:filter short:m   placeholder:QUERY help:"Terms to search for in the notes."`
-	ExactMatch     bool     `group:filter short:e                     help:"Search for exact occurrences of the --match argument (case insensitive)."`
-	Exclude        []string `group:filter short:x   placeholder:PATH  help:"Ignore notes matching the given path, including its descendants."`
-	Tag            []string `group:filter short:t                     help:"Find notes tagged with the given tags."`
-	Mention        []string `group:filter           placeholder:PATH  help:"Find notes mentioning the title of the given ones."`
-	MentionedBy    []string `group:filter           placeholder:PATH  help:"Find notes whose title is mentioned in the given ones."`
-	LinkTo         []string `group:filter short:l   placeholder:PATH  help:"Find notes which are linking to the given ones."`
-	NoLinkTo       []string `group:filter           placeholder:PATH  help:"Find notes which are not linking to the given notes."`
-	LinkedBy       []string `group:filter short:L   placeholder:PATH  help:"Find notes which are linked by the given ones."`
-	NoLinkedBy     []string `group:filter           placeholder:PATH  help:"Find notes which are not linked by the given ones."`
-	Orphan         bool     `group:filter                             help:"Find notes which are not linked by any other note."`
-	Related        []string `group:filter           placeholder:PATH  help:"Find notes which might be related to the given ones."`
-	MaxDistance    int      `group:filter           placeholder:COUNT help:"Maximum distance between two linked notes."`
-	Recursive      bool     `group:filter short:r                     help:"Follow links recursively."`
-	Created        string   `group:filter           placeholder:DATE  help:"Find notes created on the given date."`
-	CreatedBefore  string   `group:filter           placeholder:DATE  help:"Find notes created before the given date."`
-	CreatedAfter   string   `group:filter           placeholder:DATE  help:"Find notes created after the given date."`
-	Modified       string   `group:filter           placeholder:DATE  help:"Find notes modified on the given date."`
-	ModifiedBefore string   `group:filter           placeholder:DATE  help:"Find notes modified before the given date."`
-	ModifiedAfter  string   `group:filter           placeholder:DATE  help:"Find notes modified after the given date."`
+	Interactive    bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
+	Limit          int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
+	Match          string   `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
+	ExactMatch     bool     `kong:"group='filter',short='e',help='Search for exact occurrences of the --match argument (case insensitive).'" json:"exactMatch"`
+	Exclude        []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
+	Tag            []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
+	Mention        []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
+	MentionedBy    []string `kong:"group='filter',placeholder='PATH',help='Find notes whose title is mentioned in the given ones.'" json:"mentionedBy"`
+	LinkTo         []string `kong:"group='filter',short='l',placeholder='PATH',help='Find notes which are linking to the given ones.'" json:"linkTo"`
+	NoLinkTo       []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linking to the given notes.'" json:"-"`
+	LinkedBy       []string `kong:"group='filter',short='L',placeholder='PATH',help='Find notes which are linked by the given ones.'" json:"linkedBy"`
+	NoLinkedBy     []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linked by the given ones.'" json:"-"`
+	Orphan         bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
+	Related        []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
+	MaxDistance    int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
+	Recursive      bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
+	Created        string   `kong:"group='filter',placeholder='DATE',help:'Find notes created on the given date.'" json:"created"`
+	CreatedBefore  string   `kong:"group='filter',placeholder='DATE',help='Find notes created before the given date.'" json:"createdBefore"`
+	CreatedAfter   string   `kong:"group='filter',placeholder='DATE',help='Find notes created after the given date.'" json:"createdAfter"`
+	Modified       string   `kong:"group='filter',placeholder='DATE',help='Find notes modified on the given date.'" json:"modified"`
+	ModifiedBefore string   `kong:"group='filter',placeholder='DATE',help='Find notes modified before the given date.'" json:"modifiedBefore"`
+	ModifiedAfter  string   `kong:"group='filter',placeholder='DATE',help='Find notes modified after the given date.'" json:"modifiedAfter"`
 
-	Sort []string `group:sort short:s placeholder:TERM help:"Order the notes by the given criterion."`
+	Sort []string `kong:"group='sort',short='s',placeholder='TERM',help='Order the notes by the given criterion.'" json:"sort"`
 }
 
 // ExpandNamedFilters expands recursively any named filter found in the Path field.

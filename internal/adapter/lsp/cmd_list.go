@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/mickael-menu/zk/internal/cli"
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
@@ -14,28 +15,8 @@ import (
 const cmdList = "zk.list"
 
 type cmdListOpts struct {
-	Select         []string `json:"select"`
-	Href           []string `json:"hrefs"`
-	Limit          int      `json:"limit"`
-	Match          string   `json:"match"`
-	ExactMatch     bool     `json:"exactMatch"`
-	Exclude        []string `json:"excludeHrefs"`
-	Tag            []string `json:"tags"`
-	Mention        []string `json:"mention"`
-	MentionedBy    []string `json:"mentionedBy"`
-	LinkTo         []string `json:"linkTo"`
-	LinkedBy       []string `json:"linkedBy"`
-	Orphan         bool     `json:"orphan"`
-	Related        []string `json:"related"`
-	MaxDistance    int      `json:"maxDistance"`
-	Recursive      bool     `json:"recursive"`
-	Created        string   `json:"created"`
-	CreatedBefore  string   `json:"createdBefore"`
-	CreatedAfter   string   `json:"createdAfter"`
-	Modified       string   `json:"modified"`
-	ModifiedBefore string   `json:"modifiedBefore"`
-	ModifiedAfter  string   `json:"modifiedAfter"`
-	Sort           []string `json:"sort"`
+	Select []string `json:"select"`
+	cli.Filtering
 }
 
 func executeCommandList(logger util.Logger, notebook *core.Notebook, args []interface{}) (interface{}, error) {
@@ -56,7 +37,11 @@ func executeCommandList(logger util.Logger, notebook *core.Notebook, args []inte
 	}
 	var selection = newListSelection(opts.Select)
 
-	var findOpts core.NoteFindOpts
+	findOpts, err := opts.NewNoteFindOpts(notebook)
+	if err != nil {
+		return nil, err
+	}
+
 	notes, err := notebook.FindNotes(findOpts)
 	if err != nil {
 		return nil, err
