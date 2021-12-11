@@ -99,6 +99,7 @@ func NewServer(opts ServerOpts) *Server {
 			Commands: []string{
 				cmdIndex,
 				cmdNew,
+				cmdList,
 				cmdTagList,
 			},
 		}
@@ -365,6 +366,13 @@ func NewServer(opts ServerOpts) *Server {
 				return nil, err
 			}
 			return executeCommandNew(nb, server.documents, context, params.Arguments)
+
+		case cmdList:
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandList(server.logger, nb, params.Arguments)
 
 		case cmdTagList:
 			nb, err := openNotebook()

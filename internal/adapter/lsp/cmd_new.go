@@ -15,15 +15,15 @@ import (
 const cmdNew = "zk.new"
 
 type cmdNewOpts struct {
-	Title                string             `json:"title,omitempty"`
-	Content              string             `json:"content,omitempty"`
-	Dir                  string             `json:"dir,omitempty"`
-	Group                string             `json:"group,omitempty"`
-	Template             string             `json:"template,omitempty"`
-	Extra                map[string]string  `json:"extra,omitempty"`
-	Date                 string             `json:"date,omitempty"`
-	Edit                 jsonBoolean        `json:"edit,omitempty"`
-	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation,omitempty"`
+	Title                string             `json:"title"`
+	Content              string             `json:"content"`
+	Dir                  string             `json:"dir"`
+	Group                string             `json:"group"`
+	Template             string             `json:"template"`
+	Extra                map[string]string  `json:"extra"`
+	Date                 string             `json:"date"`
+	Edit                 jsonBoolean        `json:"edit"`
+	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation"`
 }
 
 func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {

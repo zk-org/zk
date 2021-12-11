@@ -11,7 +11,7 @@ import (
 const cmdTagList = "zk.tag.list"
 
 type cmdTagListOpts struct {
-	Sort []string `json:"sort,omitempty"`
+	Sort []string `json:"sort"`
 }
 
 func executeCommandTagList(logger util.Logger, notebook *core.Notebook, args []interface{}) (interface{}, error) {
@@ -35,6 +35,5 @@ func executeCommandTagList(logger util.Logger, notebook *core.Notebook, args []i
 			return nil, err
 		}
 	}
-	logger.Printf("sorters: %+v\n", sorters)
 	return notebook.FindCollections(core.CollectionKindTag, sorters)
 }

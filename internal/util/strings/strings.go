@@ -125,3 +125,14 @@ func ExpandWhitespaceLiterals(s string) string {
 	s = strings.ReplaceAll(s, `\t`, "\t")
 	return s
 }
+
+// Contains returns whether the given slice of strings contains the given
+// string.
+func Contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
