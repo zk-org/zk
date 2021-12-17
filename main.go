@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -31,6 +33,7 @@ var root struct {
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
 	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
+	Debug       bool    `default:"0" help:"Print a debug stacktrace on SIGINT."`
 
 	ShowHelp ShowHelp         `cmd hidden default:"1"`
 	LSP      cmd.LSP          `cmd hidden`
@@ -84,6 +87,10 @@ func main() {
 		ctx, err := parser.Parse(args)
 		fatalIfError(err)
 
+		if root.Debug {
+			setupDebugMode()
+		}
+
 		// Index the current notebook except if the user is running the `index`
 		// command, otherwise it would hide the stats.
 		if ctx.Command() != "index" {
@@ -129,6 +136,19 @@ func fatalIfError(err error) {
 		fmt.Fprintf(os.Stderr, "zk: error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func setupDebugMode() {
+	c := make(chan os.Signal)
+	go func() {
+		stacktrace := make([]byte, 8192)
+		for _ = range c {
+			length := runtime.Stack(stacktrace, true)
+			fmt.Fprintf(os.Stderr, "%s\n", string(stacktrace[:length]))
+			os.Exit(1)
+		}
+	}()
+	signal.Notify(c, os.Interrupt)
 }
 
 // runAlias will execute a user alias if the command is one of them.

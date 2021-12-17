@@ -9,10 +9,12 @@ All notable changes to this project will be documented in this file.
 * New LSP commands:
     * [`zk.list`](docs/editors-integration.md#zklist) to search for notes.
     * [`zk.tag.list`](docs/editors-integration.md#zktaglist) to retrieve the list of tags.
+* `--debug` mode which prints a stacktrace on `SIGINT`.
 
 ### Fixed
 
 * [#111](https://github.com/mickael-menu/zk/issues/111) Filenames take precedence over folders when matching a sub-path with wiki links.
+* [#118](https://github.com/mickael-menu/zk/issues/118) Fix infinite loop when parsing a single-character hashtag.
 
 
 ## 0.8.0

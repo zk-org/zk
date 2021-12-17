@@ -106,7 +106,11 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 		}
 	}
 
-	for i, char := range string(line[1:]) {
+	for i, char := range string(line) {
+		if i == 0 {
+			// Skip the first character, as it is #
+			continue
+		}
 		if parsingMultiWordTag {
 			multiWordTagEndPos = i
 		} else {
