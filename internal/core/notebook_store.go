@@ -102,6 +102,16 @@ type InitOpts struct {
 	MultiwordTags bool
 }
 
+// NewDefaultInitOpts creates a new instance of InitOpts with the default values.
+func NewDefaultInitOpts() InitOpts {
+	return InitOpts{
+		WikiLinks:     true,
+		Hashtags:      true,
+		ColonTags:     false,
+		MultiwordTags: false,
+	}
+}
+
 // Init creates a new notebook at the given file path.
 func (ns *NotebookStore) Init(path string, options InitOpts) (*Notebook, error) {
 	wrap := errors.Wrapper("init")
