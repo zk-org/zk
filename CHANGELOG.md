@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * New LSP commands:
     * [`zk.list`](docs/editors-integration.md#zklist) to search for notes.
     * [`zk.tag.list`](docs/editors-integration.md#zktaglist) to retrieve the list of tags.
+* `--debug` mode which prints a stacktrace on `SIGINT`.
 
 ### Fixed
 
