@@ -188,6 +188,10 @@ func TestParseHashtags(t *testing.T) {
 	test("##invalid also#invalid", []string{})
 	// Bear's multi multi-word tags are disabled
 	test("#multi word# end", []string{"multi"})
+
+	// Single character
+	// See https://github.com/mickael-menu/zk/issues/118
+	test("#a", []string{"a"})
 }
 
 func TestParseWordtags(t *testing.T) {
