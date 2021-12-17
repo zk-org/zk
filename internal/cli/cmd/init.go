@@ -17,7 +17,7 @@ type Init struct {
 }
 
 func (cmd *Init) Run(container *cli.Container) error {
-	opts, err := startInitWizard()
+	opts, err := newInitOpts(container)
 	if err != nil {
 		if err == terminal.InterruptErr {
 			return nil
@@ -44,6 +44,14 @@ func (cmd *Init) Run(container *cli.Container) error {
 
 	fmt.Printf("Initialized a notebook in %v\n", path)
 	return nil
+}
+
+func newInitOpts(container *cli.Container) (core.InitOpts, error) {
+	if container.Terminal.NoInput {
+		return core.NewDefaultInitOpts(), nil
+	} else {
+		return startInitWizard()
+	}
 }
 
 func startInitWizard() (core.InitOpts, error) {
