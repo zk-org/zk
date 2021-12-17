@@ -44,5 +44,8 @@ func TimeFromNatural(date string) (time.Time, error) {
 	if i, err := strconv.ParseInt(date, 10, 0); err == nil && i >= 1000 && i < 5000 {
 		return time.Date(int(i), time.January, 0, 0, 0, 0, 0, time.UTC), nil
 	}
+	if t, err := time.Parse(time.RFC3339, date); err == nil {
+		return t, nil
+	}
 	return naturaldate.Parse(date, time.Now().UTC(), naturaldate.WithDirection(naturaldate.Past))
 }
