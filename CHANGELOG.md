@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Fixed
+
+* [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.
+
 
 ## 0.9.0
 
