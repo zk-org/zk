@@ -218,6 +218,11 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 		}
 
 		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+			// Ignore embedded image, e.g. ![title](href.png)
+			if match[0] > 0 && line[match[0]-1] == '!' {
+				continue
+			}
+
 			href := line[match[4]:match[5]]
 			// Valid Markdown links are percent-encoded.
 			if decodedHref, err := url.PathUnescape(href); err == nil {
