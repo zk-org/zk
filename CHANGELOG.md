@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+<!-- ## Unreleased -->
+
+## 0.9.0
 
 ### Added
 
@@ -219,3 +221,4 @@ All notable changes to this project will be documented in this file.
 
 * Renamed `--linking-to` filtering option to `--link-to`.
 * Multiple `--extra` variables are now separated by `,` instead of `;`.
+
