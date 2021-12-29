@@ -10,6 +10,14 @@ install:
 test:
 	$(call go,test,./...)
 
+# Run end-to-end tests.
+tesh: build
+	@PATH=$(shell pwd):$(PATH) tesh tests tests
+
+# Update end-to-end tests.
+tesh-update: build
+	PATH=$(shell pwd):$(PATH) tesh -u tests tests
+
 # Produce a release bundle for all platforms.
 dist: dist-macos dist-linux
 	rm -f zk
