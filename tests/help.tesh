@@ -270,3 +270,9 @@ $ zk tag list --help
 >Sorting
 >  -s, --sort=TERM,...    Order the tags by the given criterion.
 
+# Short flags
+$ zk -h | head -n1
+>Usage: zk <command>
+$ zk list -h | head -n1
+>Usage: zk list [<path> ...]
+

@@ -3,17 +3,17 @@
 2>zk: error: failed to open notebook: no notebook found in {{working-dir}} or a parent directory
 
 # Provide the notebook directory with `--notebook-dir`.
-$ zk index -q --notebook-dir nb1
+$ zk index -q --notebook-dir paths
 
 # Provide the notebook directory with the `ZK_NOTEBOOK_DIR` env variable.
-$ ZK_NOTEBOOK_DIR={{working-dir}}/nb1 zk index -q
+$ ZK_NOTEBOOK_DIR={{working-dir}}/paths zk index -q
 
-$ cd nb1
+$ cd paths
 
 # Notebook found in the current directory.
 $ zk index -q
 
-$ cd foo
+$ cd brown
 
 # Notebook found in a parent directory.
 $ zk index -q
