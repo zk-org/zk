@@ -1,0 +1,52 @@
+$ cd edit
+
+# Editor resolution
+
+# Checks that no editor is set in the current environment.
+$ echo $VISUAL $EDITOR $ZK_EDITOR
+>
+
+# No editor set
+1$ zk edit blue.md
+2>zk: error: no editor set in config
+
+# Use the EDITOR env variable.
+$ EDITOR=echo zk edit blue.md
+>{{working-dir}}/blue.md
+
+# VISUAL takes precedence over EDITOR.
+$ EDITOR=vim VISUAL=echo zk edit blue.md
+>{{working-dir}}/blue.md
+
+# The tool/editor config takes precedence over EDITOR and VISUAL.
+$ echo "[tool]\neditor = 'echo'" > .zk/config.toml
+
+$ EDITOR=vim VISUAL=vim zk edit blue.md
+>{{working-dir}}/blue.md
+
+# ZK_EDITOR takes precedence over everything else.
+$ echo "[tool]\neditor = 'vim'" > .zk/config.toml
+
+$ EDITOR=vim VISUAL=vim ZK_EDITOR=echo zk edit blue.md
+>{{working-dir}}/blue.md
+
+# Filtering options
+
+# Sort by title descending
+$ ZK_EDITOR=echo zk edit --sort title-
+>{{working-dir}}/yellow.md {{working-dir}}/red.md {{working-dir}}/purple.md {{working-dir}}/green.md {{working-dir}}/blue.md
+
+# Edit confirmation
+
+# Opens without confirmation up to 5 notes at the same time.
+$ ZK_EDITOR=echo zk edit
+>{{working-dir}}/blue.md {{working-dir}}/green.md {{working-dir}}/purple.md {{working-dir}}/red.md {{working-dir}}/yellow.md
+
+# Requires confirmation for more than 5 notes.
+$ touch orange.md
+1$ ZK_EDITOR=echo zk edit
+2>zk: error: too many notes to be opened in the editor, aborting…
+
+# Force confirmation.
+$ ZK_EDITOR=echo zk edit --force
+>{{working-dir}}/orange.md {{working-dir}}/blue.md {{working-dir}}/green.md {{working-dir}}/purple.md {{working-dir}}/red.md {{working-dir}}/yellow.md
