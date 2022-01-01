@@ -1,6 +1,6 @@
 $ cd tags
 
-# Print help for `zk tag`
+# Print help for `zk tag`.
 $ zk tag --help
 >Usage: zk tag <command>
 >
@@ -17,4 +17,22 @@ $ zk tag --help
 >                             current working directory.
 >      --no-input             Never prompt or ask for confirmation.
 >      --debug                Print a debug stacktrace on SIGINT.
+
+# The default command is `tag list`.
+$ zk tag
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
 
