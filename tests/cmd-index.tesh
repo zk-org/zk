@@ -1,5 +1,28 @@
 $ cd index
 
+# Print help for `zk index`
+$ zk index --help
+>Usage: zk index
+>
+>Index the notes to be searchable.
+>
+>You usually do not need to run `zk index` manually, as notes are indexed
+>automatically when needed.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>      --debug                Print a debug stacktrace on SIGINT.
+>
+>  -f, --force                Force indexing all the notes.
+>  -v, --verbose              Print detailed information about the indexing
+>                             process.
+>  -q, --quiet                Do not print statistics nor progress.
+
 # Index initial notes.
 $ zk index
 >Indexed 3 notes in 0s

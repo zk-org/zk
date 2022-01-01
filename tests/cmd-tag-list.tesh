@@ -1,0 +1,30 @@
+$ cd tags
+
+# Print help for `zk tag list`
+$ zk tag list --help
+>Usage: zk tag list
+>
+>List all the note tags.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>      --debug                Print a debug stacktrace on SIGINT.
+>
+>Formatting
+>  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
+>                           of the predefined formats: name, full, json, jsonl.
+>      --header=STRING      Arbitrary text printed at the start of the list.
+>      --footer="\\n"       Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print tags delimited by the given separator.
+>  -0, --delimiter0         Print tags delimited by ASCII NUL characters. This is
+>                           useful when used in conjunction with `xargs -0`.
+>  -P, --no-pager           Do not pipe output into a pager.
+>  -q, --quiet              Do not print the total number of tags found.
+>
+>Sorting
+>  -s, --sort=TERM,...    Order the tags by the given criterion.

@@ -1,0 +1,29 @@
+# Print help for `zk new`
+$ zk new --help
+>Usage: zk new [<directory>]
+>
+>Create a new note in the given notebook directory.
+>
+>Arguments:
+>  [<directory>]    Directory in which to create the note.
+>
+>Flags:
+>  -h, --help                   Show context-sensitive help.
+>      --notebook-dir=PATH      Turn off notebook auto-discovery and set manually
+>                               the notebook where commands are run.
+>  -W, --working-dir=PATH       Run as if zk was started in <PATH> instead of the
+>                               current working directory.
+>      --no-input               Never prompt or ask for confirmation.
+>      --debug                  Print a debug stacktrace on SIGINT.
+>
+>  -t, --title=TITLE            Title of the new note.
+>  -g, --group=NAME             Name of the config group this note belongs to.
+>                               Takes precedence over the config of the
+>                               directory.
+>      --extra=KEY=VALUE,...    Extra variables passed to the templates.
+>      --template=PATH          Custom template used to render the note.
+>  -p, --print-path             Print the path of the created note instead of
+>                               editing it.
+>  -n, --dry-run                Don't actually create the note. Instead, prints
+>                               its content on stdout and the generated path on
+>                               stderr.

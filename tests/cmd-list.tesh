@@ -1,0 +1,64 @@
+# Print help for `zk list`
+$ zk list --help
+>Usage: zk list [<path> ...]
+>
+>List notes matching the given criteria.
+>
+>Arguments:
+>  [<path> ...]    Find notes matching the given path, including its descendants.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>      --debug                Print a debug stacktrace on SIGINT.
+>
+>Formatting
+>  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
+>                           of the predefined formats: oneline, short, medium,
+>                           long, full, json, jsonl.
+>      --header=STRING      Arbitrary text printed at the start of the list.
+>      --footer="\\n"       Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print notes delimited by the given separator.
+>  -0, --delimiter0         Print notes delimited by ASCII NUL characters. This
+>                           is useful when used in conjunction with `xargs -0`.
+>  -P, --no-pager           Do not pipe output into a pager.
+>  -q, --quiet              Do not print the total number of notes found.
+>
+>Filtering
+>  -i, --interactive              Select notes interactively with fzf.
+>  -n, --limit=COUNT              Limit the number of notes found.
+>  -m, --match=QUERY              Terms to search for in the notes.
+>  -e, --exact-match              Search for exact occurrences of the --match
+>                                 argument (case insensitive).
+>  -x, --exclude=PATH,...         Ignore notes matching the given path, including
+>                                 its descendants.
+>  -t, --tag=TAG,...              Find notes tagged with the given tags.
+>      --mention=PATH,...         Find notes mentioning the title of the given
+>                                 ones.
+>      --mentioned-by=PATH,...    Find notes whose title is mentioned in the
+>                                 given ones.
+>  -l, --link-to=PATH,...         Find notes which are linking to the given ones.
+>      --no-link-to=PATH,...      Find notes which are not linking to the given
+>                                 notes.
+>  -L, --linked-by=PATH,...       Find notes which are linked by the given ones.
+>      --no-linked-by=PATH,...    Find notes which are not linked by the given
+>                                 ones.
+>      --orphan                   Find notes which are not linked by any other
+>                                 note.
+>      --related=PATH,...         Find notes which might be related to the given
+>                                 ones.
+>      --max-distance=COUNT       Maximum distance between two linked notes.
+>  -r, --recursive                Follow links recursively.
+>      --created=DATE
+>      --created-before=DATE      Find notes created before the given date.
+>      --created-after=DATE       Find notes created after the given date.
+>      --modified=DATE            Find notes modified on the given date.
+>      --modified-before=DATE     Find notes modified before the given date.
+>      --modified-after=DATE      Find notes modified after the given date.
+>
+>Sorting
+>  -s, --sort=TERM,...    Order the notes by the given criterion.
