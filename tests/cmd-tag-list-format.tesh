@@ -18,7 +18,7 @@ $ zk tag list
 2>
 2>Found 13 tags
 
-# Full format (+long flag)
+# Full format (+long flag).
 $ zk tag list --format full
 >biography (1)
 >biology (2)
@@ -78,7 +78,7 @@ $ zk tag list -fjsonl
 2>
 2>Found 13 tags
 
-# Custom format
+# Custom format.
 $ zk tag list -f"name: \{{name}}, count: \{{note-count}}, kind: \{{kind}}"
 >name: biography, count: 1, kind: tag
 >name: biology, count: 2, kind: tag

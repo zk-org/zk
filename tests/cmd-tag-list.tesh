@@ -28,3 +28,58 @@ $ zk tag list --help
 >
 >Sorting
 >  -s, --sort=TERM,...    Order the tags by the given criterion.
+
+# List all tags.
+$ zk tag list
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Remove some tags.
+$ rm the*
+$ zk tag list
+>book (6)
+>dystopia (2)
+>fiction (5)
+>non-fiction (1)
+>physics (1)
+>romance (2)
+>science (1)
+>science-fiction (1)
+2>
+2>Found 8 tags
+
+# Add new tags.
+$ echo "#tag1 #tag2 #science" > ulysses.md
+$ zk tag list
+>book (5)
+>dystopia (2)
+>fiction (4)
+>non-fiction (1)
+>physics (1)
+>romance (2)
+>science (2)
+>science-fiction (1)
+>tag1 (1)
+>tag2 (1)
+2>
+2>Found 10 tags
+
+# Remove all tags.
+$ rm *
+$ zk tag list
+2>
+2>Found 0 tag
+
