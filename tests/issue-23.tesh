@@ -1,0 +1,8 @@
+# Link hrefs are not finding the best match
+# https://github.com/mickael-menu/zk/issues/23
+
+$ cd issue-23
+
+$ zk list -qfpath --linked-by index.md
+>template.md
+

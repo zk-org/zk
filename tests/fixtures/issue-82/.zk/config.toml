@@ -1,0 +1,6 @@
+[group.quest]
+paths = ["Quests"]
+
+[group.quest.note]
+filename = "{{date now}}"
+template = "quest.md"
