@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* New `--date` flag for `zk new` to set the current date manually.
+
 ### Fixed
 
 * [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.

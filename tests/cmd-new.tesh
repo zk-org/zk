@@ -18,6 +18,7 @@ $ zk new --help
 >      --no-input               Never prompt or ask for confirmation.
 >
 >  -t, --title=TITLE            Title of the new note.
+>      --date=DATE              Set the current date.
 >  -g, --group=NAME             Name of the config group this note belongs to.
 >                               Takes precedence over the config of the
 >                               directory.
