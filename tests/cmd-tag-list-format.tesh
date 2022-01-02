@@ -95,3 +95,80 @@ $ zk tag list -f"name: \{{name}}, count: \{{note-count}}, kind: \{{kind}}"
 >name: science-fiction, count: 1, kind: tag
 2>
 2>Found 13 tags
+
+# Header.
+$ zk tag list -qfname --header "HEADER"
+>HEADERbiography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fiction
+
+# Footer.
+$ zk tag list -qfname --footer "FOOTER\n"
+>biography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fictionFOOTER
+
+# Delimiter.
+$ zk tag list -qfname --delimiter ";"
+>biography;biology;book;dystopia;feminism;fiction;history;non-fiction;philosophy;physics;romance;science;science-fiction
+
+# Delimiter (short flag).
+$ zk tag list -qfname -d,
+>biography,biology,book,dystopia,feminism,fiction,history,non-fiction,philosophy,physics,romance,science,science-fiction
+
+# Can't mix --delimiter0 and --delimiter
+1$ zk tag list --delimiter0 --delimiter ","
+2>zk: error: --delimiter and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --header
+1$ zk tag list --delimiter0 --header "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --footer
+1$ zk tag list --delimiter0 --footer "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --format json and --header
+1$ zk tag list --format json --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format json and --footer
+1$ zk tag list --format json --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format json and --delimiter
+1$ zk tag list --format json --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+
+# Can't mix --format jsonl and --header
+1$ zk tag list --format jsonl --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format jsonl and --footer
+1$ zk tag list --format jsonl --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format jsonl and --delimiter
+1$ zk tag list --format jsonl --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+
