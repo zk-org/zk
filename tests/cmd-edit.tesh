@@ -44,6 +44,10 @@ $ ZK_EDITOR=echo zk edit
 
 # Requires confirmation for more than 5 notes.
 $ touch orange.md
+
+$ ZK_EDITOR=echo zk edit --force-input n
+>? Are you sure you want to open 6 notes in the editor? (y/N)
+
 1$ ZK_EDITOR=echo zk edit
 2>zk: error: too many notes to be opened in the editor, aborting…
 

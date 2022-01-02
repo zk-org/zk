@@ -33,7 +33,9 @@ var root struct {
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
 	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
-	Debug       bool    `default:"0" help:"Print a debug stacktrace on SIGINT."`
+	// ForceInput is a debugging flag overriding the default value of interaction prompts.
+	ForceInput string `hidden xor:"input"`
+	Debug      bool   `default:"0" hidden help:"Print a debug stacktrace on SIGINT."`
 
 	ShowHelp ShowHelp         `cmd hidden default:"1"`
 	LSP      cmd.LSP          `cmd hidden`
@@ -90,6 +92,8 @@ func main() {
 		if root.Debug {
 			setupDebugMode()
 		}
+
+		container.Terminal.ForceInput = root.ForceInput
 
 		// Index the current notebook except if the user is running the `index`
 		// command, otherwise it would hide the stats.

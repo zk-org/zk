@@ -26,7 +26,6 @@ $ zk --help
 >  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
 >                             current working directory.
 >      --no-input             Never prompt or ask for confirmation.
->      --debug                Print a debug stacktrace on SIGINT.
 >
 >Run "zk <command> --help" for more information on a command.
 
