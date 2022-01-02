@@ -1,3 +1,5 @@
+$ cd new
+
 # Print help for `zk new`
 $ zk new --help
 >Usage: zk new [<directory>]
@@ -14,7 +16,6 @@ $ zk new --help
 >  -W, --working-dir=PATH       Run as if zk was started in <PATH> instead of the
 >                               current working directory.
 >      --no-input               Never prompt or ask for confirmation.
->      --debug                  Print a debug stacktrace on SIGINT.
 >
 >  -t, --title=TITLE            Title of the new note.
 >  -g, --group=NAME             Name of the config group this note belongs to.
@@ -27,3 +28,69 @@ $ zk new --help
 >  -n, --dry-run                Don't actually create the note. Instead, prints
 >                               its content on stdout and the generated path on
 >                               stderr.
+
+# Default note title.
+$ zk new --print-path
+>{{working-dir}}/untitled.md
+
+$ cat untitled.md
+># Untitled
+>
+>
+
+# Provide a custom title.
+$ zk new --title "Custom title" --print-path
+>{{working-dir}}/custom-title.md
+
+$ cat custom-title.md
+># Custom title
+>
+>
+
+# Provide a custom title (short flag).
+$ zk new -t "Another custom title" -p
+>{{working-dir}}/another-custom-title.md
+
+# Opens the editor after creating a new note.
+$ EDITOR="echo 'edit'" zk new --title "Edit"
+>edit {{working-dir}}/edit.md
+
+# Prints the path of newly created note instead of editing it.
+$ EDITOR="echo 'edit'" zk new --title "Print path" --print-path
+>{{working-dir}}/print-path.md
+
+# Dry run doesn't write the note.
+$ zk new --dry-run --title "Dry run"
+># Dry run
+>
+>
+2>{{working-dir}}/dry-run.md
+
+1$ cat dry-run.md
+2>cat: dry-run.md: No such file or directory
+
+# Dry run (short flag).
+$ zk new -n --title "Dry run"
+># Dry run
+>
+>
+2>{{working-dir}}/dry-run.md
+
+# Pipe content in a new note.
+$ echo "Content of the note" | EDITOR=cat zk new --title "Piped note"
+># Piped note
+>
+>Content of the note
+>
+
+# Existing notes are not overwritten, but can be edited.
+$ zk new --force-input n --title "Piped note"
+>? piped-note.md already exists, do you want to edit this note instead? (y/N)
+
+# Check that the content was not overwritten
+$ cat piped-note.md
+># Piped note
+>
+>Content of the note
+>
+
