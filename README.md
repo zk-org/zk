@@ -47,6 +47,14 @@ A [Homebrew tap](https://github.com/mhanberg/homebrew-zk) is maintained by [@mha
 brew install [--build-from-source] mhanberg/zk/zk
 ```
 
+### Arch Linux
+
+You can install [the zk package](https://archlinux.org/packages/community/x86_64/zk/) from the official repos.
+
+```sh
+sudo pacman -S zk
+```
+
 ### Build from scratch
 
 Make sure you have a working [Go installation](https://golang.org/), then clone the repository:
