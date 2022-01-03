@@ -2,5 +2,5 @@
 paths = ["Quests"]
 
 [group.quest.note]
-filename = "{{date now}}"
+filename = "{{slug title}}"
 template = "quest.md"

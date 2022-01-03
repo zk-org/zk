@@ -5,11 +5,11 @@ $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{4}"}}.md
 
 # Set a custom filename.
-$ echo "[note]\n filename = '\{{slug title}} - \{{date now \"timestamp\"}}'" > .zk/config.toml
-$ zk new --title "A new note" --date "Jan 02" --dry-run
-2>{{working-dir}}/a-new-note - 202201020200.md
+$ echo "[note]\n filename = '\{{slug title}} - \{{date now \"%m-%d\"}}'" > .zk/config.toml
+$ zk new --title "A new note" --date "January 5th" --dry-run
+2>{{working-dir}}/a-new-note - 01-05.md
 
 # Set a custom extension.
 $ echo "extension = 'markdown'" >> .zk/config.toml
-$ zk new --title "A new note" --date "Jan 02" --dry-run
-2>{{working-dir}}/a-new-note - 202201020200.markdown
+$ zk new --title "A new note" --date "January 5th" --dry-run
+2>{{working-dir}}/a-new-note - 01-05.markdown

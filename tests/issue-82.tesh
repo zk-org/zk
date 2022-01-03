@@ -3,8 +3,8 @@
 $ cd issue-82
 
 $ zk new --group quest --print-path
->{{working-dir}}/2022-01-02.md
+>{{working-dir}}/untitled.md
 
 $ EDITOR=echo zk new --group quest
->{{working-dir}}/2022-01-02.md
+>{{working-dir}}/untitled.md
 

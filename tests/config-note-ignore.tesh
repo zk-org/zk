@@ -1,0 +1,49 @@
+$ cd blank
+
+$ mkdir dir
+$ mkdir dir/subdir
+$ touch banana.md
+$ touch orange.md
+$ touch dir/orange.md
+$ touch dir/subdir/apple.md
+
+# Ignore a file in the root directory.
+$ echo "[note]\n ignore = ['orange.md']" > .zk/config.toml
+$ zk index -v
+>- added banana.md
+>- added dir/orange.md
+>- added dir/subdir/apple.md
+>- ignored orange.md: matched ignore glob "orange.md"
+>
+>Indexed 3 notes in 0s
+>  + 3 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Ignore with wildcards.
+$ echo "[note]\n ignore = ['*rang*', 'dir/*']" > .zk/config.toml
+$ zk index -v
+>- unchanged banana.md
+>- removed dir/orange.md
+>- unchanged dir/subdir/apple.md
+>- ignored dir/orange.md: matched ignore glob "dir/*"
+>- ignored orange.md: matched ignore glob "*rang*"
+>
+>Indexed 2 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 1 removed
+
+# Unignore all files.
+$ echo "" > .zk/config.toml
+$ zk index -v
+>- unchanged banana.md
+>- added dir/orange.md
+>- unchanged dir/subdir/apple.md
+>- added orange.md
+>
+>Indexed 4 notes in 0s
+>  + 2 added
+>  ~ 0 modified
+>  - 0 removed
+
