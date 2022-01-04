@@ -1,0 +1,14 @@
+$ cd group
+
+$ zk new --title "Red" --dry-run
+># Red
+>
+>Default content
+2>{{working-dir}}/red.md
+
+$ zk new journal --title "Green" --date "January 2nd" --dry-run
+># Journal: Green
+>
+>What did you do today?
+2>{{working-dir}}/journal/02-01.md
+

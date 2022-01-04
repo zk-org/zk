@@ -1,0 +1,29 @@
+$ cd group-paths
+
+# No group.
+$ zk new --title "Orange" --dry-run
+2>{{working-dir}}/orange.md
+
+# Implicit group.
+$ zk new implicit --title "Green" --dry-run
+2>{{working-dir}}/implicit/implicit-green.md
+
+# Implicit group in subdirectory.
+$ zk new dir/implicit\ subdir --title "Blue" --dry-run
+2>{{working-dir}}/dir/implicit subdir/implicit-subdir-blue.md
+
+# Explicit paths.
+$ zk new daily --title "Red" --dry-run
+2>{{working-dir}}/daily/journal-red.md
+$ zk new weekly --title "Yellow" --dry-run
+2>{{working-dir}}/weekly/journal-yellow.md
+
+# Explicit paths with globs.
+$ zk new journal/a --title "Black" --dry-run
+2>{{working-dir}}/journal/a/journal-black.md
+$ zk new journal/b --title "White" --dry-run
+2>{{working-dir}}/journal/b/journal-white.md
+
+# Won't work in the root.
+$ zk new journal --title "Purple" --dry-run
+2>{{working-dir}}/journal/purple.md
