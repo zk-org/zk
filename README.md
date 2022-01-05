@@ -44,7 +44,7 @@
 A [Homebrew tap](https://github.com/mhanberg/homebrew-zk) is maintained by [@mhanberg](https://github.com/mhanberg).
 
 ```sh
-brew install [--build-from-source] mhanberg/zk/zk
+brew install --build-from-source mhanberg/zk/zk
 ```
 
 ### Arch Linux
