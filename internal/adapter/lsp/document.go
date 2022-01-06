@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
@@ -112,6 +113,25 @@ func (d *document) WordAt(pos protocol.Position) string {
 	}
 
 	return ""
+}
+
+func (d *document) PrefixAt(pos protocol.Position, logger util.Logger) string {
+	line, ok := d.GetLine(int(pos.Line))
+	if !ok {
+		return ""
+	}
+	runes := []rune(line)
+
+	prefix := ""
+	charIdx := int(pos.Character)
+	for i := charIdx - 1; i >= 0; i-- {
+		char := runes[i]
+		if unicode.IsSpace(char) {
+			return prefix
+		}
+		prefix += string(char)
+	}
+	return prefix
 }
 
 // ContentAtRange returns the document text at given range.
