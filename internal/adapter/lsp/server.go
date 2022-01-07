@@ -22,23 +22,25 @@ import (
 
 // Server holds the state of the Language Server.
 type Server struct {
-	server         *glspserv.Server
-	notebooks      *core.NotebookStore
-	documents      *documentStore
-	templateLoader core.TemplateLoader
-	fs             core.FileStorage
-	logger         util.Logger
+	server            *glspserv.Server
+	notebooks         *core.NotebookStore
+	documents         *documentStore
+	noteContentParser core.NoteContentParser
+	templateLoader    core.TemplateLoader
+	fs                core.FileStorage
+	logger            util.Logger
 }
 
 // ServerOpts holds the options to create a new Server.
 type ServerOpts struct {
-	Name           string
-	Version        string
-	LogFile        opt.String
-	Logger         *util.ProxyLogger
-	Notebooks      *core.NotebookStore
-	TemplateLoader core.TemplateLoader
-	FS             core.FileStorage
+	Name              string
+	Version           string
+	LogFile           opt.String
+	Logger            *util.ProxyLogger
+	Notebooks         *core.NotebookStore
+	NoteContentParser core.NoteContentParser
+	TemplateLoader    core.TemplateLoader
+	FS                core.FileStorage
 }
 
 // NewServer creates a new Server instance.
@@ -59,12 +61,13 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	server := &Server{
-		server:         glspServer,
-		notebooks:      opts.Notebooks,
-		documents:      newDocumentStore(fs, opts.Logger),
-		templateLoader: opts.TemplateLoader,
-		fs:             fs,
-		logger:         opts.Logger,
+		server:            glspServer,
+		notebooks:         opts.Notebooks,
+		documents:         newDocumentStore(fs, opts.Logger),
+		noteContentParser: opts.NoteContentParser,
+		templateLoader:    opts.TemplateLoader,
+		fs:                fs,
+		logger:            opts.Logger,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -633,8 +636,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 // buildInvokedCompletionList builds the completion item response for a
 // completion started automatically when typing an identifier, or manually.
 func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
-	line, ok := doc.GetLine(int(position.Line))
-	if !ok || !strings.HasPrefix(line, "tags:") {
+	if !doc.IsTagPosition(position, s.noteContentParser) {
 		return nil, nil
 	}
 	return s.buildTagCompletionList(notebook, doc.WordAt(position))

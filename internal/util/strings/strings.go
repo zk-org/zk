@@ -3,6 +3,7 @@ package strings
 import (
 	"bufio"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -108,16 +109,6 @@ func RemoveBlank(strs []string) []string {
 	return res
 }
 
-// InList returns whether the string is part of the given list of strings.
-func InList(strings []string, s string) bool {
-	for _, c := range strings {
-		if c == s {
-			return true
-		}
-	}
-	return false
-}
-
 // Expand literal escaped whitespace characters in the given string to their
 // actual character.
 func ExpandWhitespaceLiterals(s string) string {
@@ -135,4 +126,25 @@ func Contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+// WordAt returns the word found at the given character position.
+// Credit https://github.com/aca/neuron-language-server/blob/450a7cff71c14e291ee85ff8a0614fa9d4dd5145/utils.go#L13
+func WordAt(str string, index int) string {
+	wordIdxs := wordRegex.FindAllStringIndex(str, -1)
+	for _, wordIdx := range wordIdxs {
+		if wordIdx[0] <= index && index <= wordIdx[1] {
+			return str[wordIdx[0]:wordIdx[1]]
+		}
+	}
+
+	return ""
+}
+
+var wordRegex = regexp.MustCompile(`[^ \t\n\f\r,;\[\]\"\']+`)
+
+func CopyList(list []string) []string {
+	out := make([]string, len(list))
+	copy(out, list)
+	return out
 }
