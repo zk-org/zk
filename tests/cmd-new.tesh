@@ -60,6 +60,12 @@ $ EDITOR="echo 'edit'" zk new --title "Edit"
 $ EDITOR="echo 'edit'" zk new --title "Print path" --print-path
 >{{working-dir}}/print-path.md
 
+# Set explicitely today's date.
+$ zk new --group date --date "January 2nd" --dry-run
+2>{{working-dir}}/02-01.md
+$ zk new --group date --date "December 24th" --dry-run
+2>{{working-dir}}/24-12.md
+
 # Dry run doesn't write the note.
 $ zk new --dry-run --title "Dry run"
 ># Dry run
