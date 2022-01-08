@@ -1,0 +1,10 @@
+[note]
+template = "default.md"
+filename = "{{extra.visibility}}-{{slug title}}"
+
+[extra]
+color = "red"
+visibility = "public"
+
+[group.journal.extra]
+visibility = "private" # overrides

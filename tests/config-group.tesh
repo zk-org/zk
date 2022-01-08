@@ -1,14 +1,23 @@
 $ cd group
 
+# Default group.
 $ zk new --title "Red" --dry-run
 ># Red
 >
 >Default content
 2>{{working-dir}}/red.md
 
+# Group associated with a path.
 $ zk new journal --title "Green" --date "January 2nd" --dry-run
 ># Journal: Green
 >
 >What did you do today?
 2>{{working-dir}}/journal/02-01.md
+
+# Overridden group from the CLI.
+$ zk new --group journal --title "Blue" --date "January 2nd" --dry-run
+># Journal: Blue
+>
+>What did you do today?
+2>{{working-dir}}/02-01.md
 
