@@ -22,23 +22,25 @@ import (
 
 // Server holds the state of the Language Server.
 type Server struct {
-	server         *glspserv.Server
-	notebooks      *core.NotebookStore
-	documents      *documentStore
-	templateLoader core.TemplateLoader
-	fs             core.FileStorage
-	logger         util.Logger
+	server            *glspserv.Server
+	notebooks         *core.NotebookStore
+	documents         *documentStore
+	noteContentParser core.NoteContentParser
+	templateLoader    core.TemplateLoader
+	fs                core.FileStorage
+	logger            util.Logger
 }
 
 // ServerOpts holds the options to create a new Server.
 type ServerOpts struct {
-	Name           string
-	Version        string
-	LogFile        opt.String
-	Logger         *util.ProxyLogger
-	Notebooks      *core.NotebookStore
-	TemplateLoader core.TemplateLoader
-	FS             core.FileStorage
+	Name              string
+	Version           string
+	LogFile           opt.String
+	Logger            *util.ProxyLogger
+	Notebooks         *core.NotebookStore
+	NoteContentParser core.NoteContentParser
+	TemplateLoader    core.TemplateLoader
+	FS                core.FileStorage
 }
 
 // NewServer creates a new Server instance.
@@ -59,12 +61,13 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	server := &Server{
-		server:         glspServer,
-		notebooks:      opts.Notebooks,
-		documents:      newDocumentStore(fs, opts.Logger),
-		templateLoader: opts.TemplateLoader,
-		fs:             fs,
-		logger:         opts.Logger,
+		server:            glspServer,
+		notebooks:         opts.Notebooks,
+		documents:         newDocumentStore(fs, opts.Logger),
+		noteContentParser: opts.NoteContentParser,
+		templateLoader:    opts.TemplateLoader,
+		fs:                fs,
+		logger:            opts.Logger,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -178,8 +181,6 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
-		// We don't use the context because clients might not send it. Instead,
-		// we'll look for trigger patterns in the document.
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -190,28 +191,11 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		switch doc.LookBehind(params.Position, 3) {
-		case "]((":
-			return server.buildLinkCompletionList(doc, notebook, params)
+		if params.Context != nil && params.Context.TriggerKind == protocol.CompletionTriggerKindInvoked {
+			return server.buildInvokedCompletionList(notebook, doc, params.Position)
+		} else {
+			return server.buildTriggerCompletionList(notebook, doc, params.Position)
 		}
-
-		switch doc.LookBehind(params.Position, 2) {
-		case "[[":
-			return server.buildLinkCompletionList(doc, notebook, params)
-		}
-
-		switch doc.LookBehind(params.Position, 1) {
-		case "#":
-			if notebook.Config.Format.Markdown.Hashtags {
-				return server.buildTagCompletionList(notebook, "#")
-			}
-		case ":":
-			if notebook.Config.Format.Markdown.ColonTags {
-				return server.buildTagCompletionList(notebook, ":")
-			}
-		}
-
-		return nil, nil
 	}
 
 	handler.CompletionItemResolve = func(context *glsp.Context, params *protocol.CompletionItem) (*protocol.CompletionItem, error) {
@@ -649,7 +633,45 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 	}()
 }
 
-func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar string) ([]protocol.CompletionItem, error) {
+// buildInvokedCompletionList builds the completion item response for a
+// completion started automatically when typing an identifier, or manually.
+func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
+	if !doc.IsTagPosition(position, s.noteContentParser) {
+		return nil, nil
+	}
+	return s.buildTagCompletionList(notebook, doc.WordAt(position))
+}
+
+// buildTriggerCompletionList builds the completion item response for a
+// completion started with a trigger character.
+func (s *Server) buildTriggerCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
+	// We don't use the context because clients might not send it. Instead,
+	// we'll look for trigger patterns in the document.
+	switch doc.LookBehind(position, 3) {
+	case "]((":
+		return s.buildLinkCompletionList(notebook, doc, position)
+	}
+
+	switch doc.LookBehind(position, 2) {
+	case "[[":
+		return s.buildLinkCompletionList(notebook, doc, position)
+	}
+
+	switch doc.LookBehind(position, 1) {
+	case "#":
+		if notebook.Config.Format.Markdown.Hashtags {
+			return s.buildTagCompletionList(notebook, "#")
+		}
+	case ":":
+		if notebook.Config.Format.Markdown.ColonTags {
+			return s.buildTagCompletionList(notebook, ":")
+		}
+	}
+
+	return nil, nil
+}
+
+func (s *Server) buildTagCompletionList(notebook *core.Notebook, prefix string) ([]protocol.CompletionItem, error) {
 	tags, err := notebook.FindCollections(core.CollectionKindTag, nil)
 	if err != nil {
 		return nil, err
@@ -659,7 +681,7 @@ func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar str
 	for _, tag := range tags {
 		items = append(items, protocol.CompletionItem{
 			Label:      tag.Name,
-			InsertText: s.buildInsertForTag(tag.Name, triggerChar, notebook.Config),
+			InsertText: s.buildInsertForTag(tag.Name, prefix, notebook.Config),
 			Detail:     stringPtr(fmt.Sprintf("%d %s", tag.NoteCount, strutil.Pluralize("note", tag.NoteCount))),
 		})
 	}
@@ -667,8 +689,8 @@ func (s *Server) buildTagCompletionList(notebook *core.Notebook, triggerChar str
 	return items, nil
 }
 
-func (s *Server) buildInsertForTag(name string, triggerChar string, config core.Config) *string {
-	switch triggerChar {
+func (s *Server) buildInsertForTag(name string, prefix string, config core.Config) *string {
+	switch prefix {
 	case ":":
 		name += ":"
 	case "#":
@@ -683,8 +705,8 @@ func (s *Server) buildInsertForTag(name string, triggerChar string, config core.
 	return &name
 }
 
-func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
-	linkFormatter, err := newLinkFormatter(doc, notebook, params)
+func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
+	linkFormatter, err := newLinkFormatter(notebook, doc, position)
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +723,7 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
-		item, err := s.newCompletionItem(notebook, note, doc, params.Position, linkFormatter, templates)
+		item, err := s.newCompletionItem(notebook, note, doc, position, linkFormatter, templates)
 		if err != nil {
 			s.logger.Err(err)
 			continue
@@ -713,8 +735,8 @@ func (s *Server) buildLinkCompletionList(doc *document, notebook *core.Notebook,
 	return items, nil
 }
 
-func newLinkFormatter(doc *document, notebook *core.Notebook, params *protocol.CompletionParams) (core.LinkFormatter, error) {
-	if doc.LookBehind(params.Position, 3) == "]((" {
+func newLinkFormatter(notebook *core.Notebook, doc *document, position protocol.Position) (core.LinkFormatter, error) {
+	if doc.LookBehind(position, 3) == "]((" {
 		return core.NewMarkdownLinkFormatter(notebook.Config.Format.Markdown, true)
 	} else {
 		return notebook.NewLinkFormatter()

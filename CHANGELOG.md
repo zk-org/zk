@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* [#144](https://github.com/mickael-menu/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
+
 ### Fixed
 
 * [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.

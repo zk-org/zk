@@ -13,13 +13,14 @@ type LSP struct {
 
 func (cmd *LSP) Run(container *cli.Container) error {
 	server := lsp.NewServer(lsp.ServerOpts{
-		Name:           "zk",
-		Version:        container.Version,
-		Logger:         container.Logger,
-		LogFile:        opt.NewNotEmptyString(cmd.Log),
-		Notebooks:      container.Notebooks,
-		TemplateLoader: container.TemplateLoader,
-		FS:             container.FS,
+		Name:              "zk",
+		Version:           container.Version,
+		Logger:            container.Logger,
+		LogFile:           opt.NewNotEmptyString(cmd.Log),
+		Notebooks:         container.Notebooks,
+		NoteContentParser: container.NoteContentParser,
+		TemplateLoader:    container.TemplateLoader,
+		FS:                container.FS,
 	})
 
 	return server.Run()
