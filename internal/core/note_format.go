@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"time"
 )
@@ -18,12 +17,12 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 	}
 
 	return func(note ContextualNote) (string, error) {
-		path, err := fs.Rel(filepath.Join(basePath, note.Path))
-		if err != nil {
-			return "", err
+		path := NotebookPath{
+			Path:       note.Path,
+			BasePath:   basePath,
+			WorkingDir: fs.WorkingDir(),
 		}
-
-		absPath, err := fs.Abs(filepath.Join(basePath, note.Path))
+		relPath, err := path.PathRelToWorkingDir()
 		if err != nil {
 			return "", err
 		}
@@ -36,17 +35,15 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 		return template.Render(noteFormatRenderContext{
 			Filename:     note.Filename(),
 			FilenameStem: note.FilenameStem(),
-			Path:         path,
-			AbsPath:      absPath,
+			Path:         relPath,
+			AbsPath:      path.AbsPath(),
 			Title:        note.Title,
 			Link: newLazyStringer(func() string {
-				link, _ := linkFormatter(LinkFormatterContext{
-					Path:     note.Path,
-					RelPath:  path,
-					AbsPath:  absPath,
-					Title:    note.Title,
-					Metadata: note.Metadata,
-				})
+				context, err := NewLinkFormatterContext(path, note.Title, note.Metadata)
+				if err != nil {
+					return ""
+				}
+				link, _ := linkFormatter(context)
 				return link
 			}),
 			Lead:       note.Lead,

@@ -788,8 +788,12 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 }
 
 func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
-	currentDir := filepath.Dir(doc.Path)
-	context, err := core.NewLinkFormatterContext(note, notebook.Path, currentDir)
+	path := core.NotebookPath{
+		Path:       note.Path,
+		BasePath:   notebook.Path,
+		WorkingDir: filepath.Dir(doc.Path),
+	}
+	context, err := core.NewLinkFormatterContext(path, note.Title, note.Metadata)
 	if err != nil {
 		return nil, err
 	}
