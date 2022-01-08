@@ -13,3 +13,14 @@ $ zk new --title "A new note" --date "January 5th" --dry-run
 $ echo "extension = 'markdown'" >> .zk/config.toml
 $ zk new --title "A new note" --date "January 5th" --dry-run
 2>{{working-dir}}/a-new-note - 01-05.markdown
+
+# Test the filename Handlebars variables.
+$ mkdir "a dir"
+$ echo "[note]\n filename = '\{{title}},\{{content}},\{{date now \"%m-%d\"}},\{{json extra}}'" > .zk/config.toml
+$ echo "Piped content" | zk new --title "A new note" --date "January 5th" --extra key=value --dry-run
+2>{{working-dir}}/A new note,Piped content
+2>,01-05,{"key":"value"}.md
+$ echo "[note]\n filename = '\{{id}},\{{dir}},\{{json extra}},\{{env.ZK_NOTEBOOK_DIR}}'" > .zk/config.toml
+$ echo "Piped content" | zk new --title "A new note" --date "January 5th" --dry-run "a dir"
+2>{{working-dir}}/a dir/{{match "[a-z0-9]{4}"}},a dir,{},{{working-dir}}.md
+
