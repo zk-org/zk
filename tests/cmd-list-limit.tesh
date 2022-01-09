@@ -1,0 +1,90 @@
+$ cd full-sample
+
+# No limit.
+$ zk list -fpath
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>inbox/akwm.md
+>2cl7.md
+>fa2k.md
+>inbox/my59.md
+>k9bm.md
+>4yib.md
+>4oma.md
+>inbox/er4k.md
+>ref/eg7k.md
+>88el.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>inbox/dld4.md
+>zbon.md
+>18is.md
+2>
+2>Found 27 notes
+
+# Limit.
+$ zk list -fpath --limit 5
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+2>
+2>Found 5 notes
+
+# Limit with short flag.
+$ zk list -fpath -n5
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+2>
+2>Found 5 notes
+
+# Invalid limit.
+1$ zk list -fpath --limit a
+2>zk: error: --limit: expected a valid 64 bit int but got "a"
+
+# Limit to 0 means no limit.
+$ zk list -fpath --limit 0
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>inbox/akwm.md
+>2cl7.md
+>fa2k.md
+>inbox/my59.md
+>k9bm.md
+>4yib.md
+>4oma.md
+>inbox/er4k.md
+>ref/eg7k.md
+>88el.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>inbox/dld4.md
+>zbon.md
+>18is.md
+2>
+2>Found 27 notes
+

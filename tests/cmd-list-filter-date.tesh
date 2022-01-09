@@ -1,0 +1,98 @@
+$ cd full-sample
+
+# List a note created on a given day.
+$ zk list -qf\{{title}} --created 2011-05-16T09:58:57Z
+>When to prefer PUT over POST HTTP method?
+
+# List notes created today.
+$ zk list -qf\{{title}} --created today
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
+# List notes created before a given date.
+$ zk list -qf\{{title}} --created-before "2 weeks ago"
+>When to prefer PUT over POST HTTP method?
+
+# List notes created after a given date.
+$ zk list -qf\{{title}} --created-after "2 weeks ago"
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
+# List notes modified today.
+$ zk list -qf\{{title}} --modified today
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+

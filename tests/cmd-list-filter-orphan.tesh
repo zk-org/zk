@@ -1,0 +1,15 @@
+$ cd full-sample
+
+# List notes without any backlinks.
+$ zk list -qf"\{{path}} \{{title}}" --orphan
+>g7qa.md Concurrency in Rust
+>3403.md Data race error
+>inbox/akwm.md Errors should be handled differently in an application versus a library
+>ref/eg7k.md Null references: the billion dollar mistake
+>oumc.md Strings are a complicated data structure
+>hkvy.md The borrow checker
+>wtz9.md Use small Hashable items with diffable data sources
+>inbox/dld4.md When to prefer PUT over POST HTTP method?
+>zbon.md Zero-cost abstractions in Rust
+>18is.md §How to invest in the stock markets?
+
