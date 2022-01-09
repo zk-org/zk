@@ -1,0 +1,50 @@
+$ cd full-sample
+
+# List notes mentioning "Channels" (main title).
+$ zk list -q --debug-style --mention fwsj.md
+><title>Message passing</title> <path>4oma.md</path> (just now)
+>
+>  - *   A popular approach for safe concurrency is to use *message passing* instead of shared state.
+>    *   <term>Channels</term> are an example of…
+>
+><title>Mutex</title> <path>inbox/er4k.md</path> (just now)
+>
+>  - …with a *locking system*.
+>    *   Managing mutexes is tricky, using [<term>channels</term>](../fwsj) is an easier alternative.
+>        *   The main risk is to…
+>
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
+>
+>  - …a number of constructs for sharing data between threads:
+>        *   [<term>Channel</term>](fwsj) for a safe [message passing](4oma) approach.
+>        *   [Mutex](inbox/er4k…
+>
+
+# List notes mentioning "Dangling pointers" (using alias from the metadata).
+$ zk list -q --debug-style --mention 3cut.md
+><title>The borrow checker</title> <path>hkvy.md</path> (just now)
+>
+>  - …to the scope of the owned data to prevent <term>dangling references</term>. It also makes sure that the relationship between *lifetimes…
+>
+
+# List notes mentioned by "Message passing" (using the main title)
+$ zk list -q --debug-style --mentioned-by 4oma.md
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - *   A popular approach for safe concurrency is to use *message passing* instead of shared state.
+>    *   <term>Channels</term> are an example of…
+>
+><title>Do not communicate by sharing memory; instead, share memory by communicating</title> <path>ref/7fto.md</path> (just now)
+>
+>  - …advocating for this approach with their slogan: "[<term>Do not communicate by sharing memory; instead, share memory by communicating</term>](ref/7fto)".
+>    
+>    :programming:
+>
+
+# List notes mentioned by "The borrow checker" (using alias from the metadata)
+$ zk list -q --debug-style --mentioned-by hkvy.md
+><title>Dangling pointers</title> <path>3cut.md</path> (just now)
+>
+>  - …to the scope of the owned data to prevent <term>dangling references</term>. It also makes sure that the relationship between *lifetimes…
+>
+

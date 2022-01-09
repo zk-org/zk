@@ -197,8 +197,8 @@ $ zk list -qf"\{{word-count}} \{{title}}" --sort title-,word-count
 >37 Do not communicate by sharing memory; instead, share memory by communicating
 >44 Financial markets are random
 >44 Fearless concurrency
->45 Dangling pointers
 >49 Use small Hashable items with diffable data sources
+>50 Dangling pointers
 >53 Message passing
 >60 Zero-cost abstractions in Rust
 >66 When to prefer PUT over POST HTTP method?
@@ -227,8 +227,8 @@ $ zk list -qf"\{{word-count}} \{{title}}" -st-,wc
 >37 Do not communicate by sharing memory; instead, share memory by communicating
 >44 Financial markets are random
 >44 Fearless concurrency
->45 Dangling pointers
 >49 Use small Hashable items with diffable data sources
+>50 Dangling pointers
 >53 Message passing
 >60 Zero-cost abstractions in Rust
 >66 When to prefer PUT over POST HTTP method?

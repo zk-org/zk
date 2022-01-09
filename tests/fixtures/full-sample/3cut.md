@@ -1,3 +1,7 @@
+---
+aliases: [dangling reference]
+---
+
 # Dangling pointers
 
 A *dangling pointer* is a reference that is kept to freed data. With C, reading it causes a *segmentation fault*.
