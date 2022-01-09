@@ -38,13 +38,13 @@ Created: {{date created "short"}}
 
 	test("long", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
-Modified: {{date created "short"}}
+Modified: {{date modified "short"}}
 
 {{list snippets}}`)
 
 	test("full", `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
-Modified: {{date created "short"}}
+Modified: {{date modified "short"}}
 Tags: {{join tags ", "}}
 
 {{prepend "  " body}}
