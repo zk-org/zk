@@ -36,6 +36,7 @@ var root struct {
 	// ForceInput is a debugging flag overriding the default value of interaction prompts.
 	ForceInput string `hidden xor:"input"`
 	Debug      bool   `default:"0" hidden help:"Print a debug stacktrace on SIGINT."`
+	DebugStyle bool   `default:"0" hidden help:"Force styling output as XML tags."`
 
 	ShowHelp ShowHelp         `cmd hidden default:"1"`
 	LSP      cmd.LSP          `cmd hidden`
@@ -91,6 +92,9 @@ func main() {
 
 		if root.Debug {
 			setupDebugMode()
+		}
+		if root.DebugStyle {
+			container.Styler.Styler = core.TagStyler
 		}
 
 		container.Terminal.ForceInput = root.ForceInput

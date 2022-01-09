@@ -1,53 +1,53 @@
 $ cd full-sample
 
 # The default format is `short`.
-$ zk list -q inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md ({{match '[0-9]+'}} years ago)
+$ zk list --debug-style -q inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path> ({{match '[0-9]+'}} years ago)
 >
 >  - `PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
 >
 
 # `path` format.
-$ zk list -qfpath inbox/dld4.md
+$ zk list --debug-style -qfpath inbox/dld4.md
 >inbox/dld4.md
 
 # `link` format.
-$ zk list -qflink inbox/dld4.md
+$ zk list --debug-style -qflink inbox/dld4.md
 >[When to prefer PUT over POST HTTP method?](inbox/dld4)
 
 # `oneline` format.
-$ zk list -qfoneline inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md ({{match '[0-9]+'}} years ago)
+$ zk list --debug-style -qfoneline inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path> ({{match '[0-9]+'}} years ago)
 
 # `short` format.
-$ zk list -qfshort inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md ({{match '[0-9]+'}} years ago)
+$ zk list --debug-style -qfshort inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path> ({{match '[0-9]+'}} years ago)
 >
 >  - `PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
 >
 
 # `medium` format.
-$ zk list -qfmedium inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md
+$ zk list --debug-style -qfmedium inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path>
 >Created: 05/16/2011
 >
 >  - `PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
 >
 
 # `long` format.
-$ zk list -qflong inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md
+$ zk list --debug-style -qflong inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path>
 >Created: 05/16/2011
->Modified: 01/09/2022
+>Modified: {{match '[/0-9]+'}}
 >
 >  - `PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
 >
 
 # `full` format.
-$ zk list -qffull inbox/dld4.md
->When to prefer PUT over POST HTTP method? inbox/dld4.md
+$ zk list --debug-style -qffull inbox/dld4.md
+><title>When to prefer PUT over POST HTTP method?</title> <path>inbox/dld4.md</path>
 >Created: 05/16/2011
->Modified: {{match '[0-9/]+'}}
+>Modified: {{match '[/0-9]+'}}
 >Tags: programming, http
 >
 >  `PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
