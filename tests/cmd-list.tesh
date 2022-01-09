@@ -1,3 +1,5 @@
+$ cd full-sample
+
 # Print help for `zk list`
 $ zk list --help
 >Usage: zk list [<path> ...]
@@ -61,3 +63,34 @@ $ zk list --help
 >
 >Sorting
 >  -s, --sort=TERM,...    Order the notes by the given criterion.
+
+# List all notes.
+$ zk list -qf"\{{path}} \{{title}}"
+>uxjt.md Buy low, sell high
+>fwsj.md Channel
+>smdc.md Compound interests make you rich
+>g7qa.md Concurrency in Rust
+>3cut.md Dangling pointers
+>3403.md Data race error
+>aqfd.md Diversify your portfolio
+>ref/7fto.md Do not communicate by sharing memory; instead, share memory by communicating
+>pywo.md Don't speculate
+>inbox/akwm.md Errors should be handled differently in an application versus a library
+>2cl7.md Fearless concurrency
+>fa2k.md Financial markets are random
+>inbox/my59.md Green threads
+>k9bm.md How to choose a broker?
+>4yib.md Investment business is a scam
+>4oma.md Message passing
+>inbox/er4k.md Mutex
+>ref/eg7k.md Null references: the billion dollar mistake
+>88el.md Ownership in Rust
+>uok6.md Stick to your portfolio strategy
+>oumc.md Strings are a complicated data structure
+>tdrj.md The Stack and the Heap
+>hkvy.md The borrow checker
+>wtz9.md Use small Hashable items with diffable data sources
+>inbox/dld4.md When to prefer PUT over POST HTTP method?
+>zbon.md Zero-cost abstractions in Rust
+>18is.md §How to invest in the stock markets?
+

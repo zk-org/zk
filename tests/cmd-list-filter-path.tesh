@@ -1,0 +1,160 @@
+$ cd full-sample
+
+# Select several notes.
+$ zk list -qfpath g7qa.md inbox/akwm.md 3cut.md
+>g7qa.md
+>3cut.md
+>inbox/akwm.md
+
+# Select notes with a path prefix `u`.
+$ zk list -qfpath u 4oma.md
+>uxjt.md
+>4oma.md
+>uok6.md
+
+# Select a folder.
+$ zk list -qfpath inbox
+>inbox/akwm.md
+>inbox/my59.md
+>inbox/er4k.md
+>inbox/dld4.md
+
+# We must select a folder with its full name, not only a prefix.
+$ zk list -fpath inb
+2>
+2>Found 0 note
+
+# Exclude several notes.
+# Test combination with , or two flags.
+$ zk list -qfpath --exclude g7qa.md,inbox/akwm.md --exclude 3cut.md
+>uxjt.md
+>fwsj.md
+>smdc.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>2cl7.md
+>fa2k.md
+>inbox/my59.md
+>k9bm.md
+>4yib.md
+>4oma.md
+>inbox/er4k.md
+>ref/eg7k.md
+>88el.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>inbox/dld4.md
+>zbon.md
+>18is.md
+
+# Exclude with short flag.
+$ zk list -qfpath -x inbox,ref,1,2,3,4,5,6,7,8,a,b,c,d,e,f
+>uxjt.md
+>smdc.md
+>g7qa.md
+>pywo.md
+>k9bm.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>zbon.md
+
+# Exclude is not recursive.
+$ zk list -qfpath --exclude .
+>ref/7fto.md
+>inbox/akwm.md
+>inbox/my59.md
+>inbox/er4k.md
+>ref/eg7k.md
+>inbox/dld4.md
+
+# Exclude notes with a path prefix `u`.
+$ zk list -qfpath --exclude u,4oma.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>inbox/akwm.md
+>2cl7.md
+>fa2k.md
+>inbox/my59.md
+>k9bm.md
+>4yib.md
+>inbox/er4k.md
+>ref/eg7k.md
+>88el.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>inbox/dld4.md
+>zbon.md
+>18is.md
+
+# Exclude a folder.
+$ zk list -qfpath --exclude inbox
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>2cl7.md
+>fa2k.md
+>k9bm.md
+>4yib.md
+>4oma.md
+>ref/eg7k.md
+>88el.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>zbon.md
+>18is.md
+
+# We must exclude a folder with its full name, not only a prefix.
+$ zk list -qfpath --exclude inb
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+>3cut.md
+>3403.md
+>aqfd.md
+>ref/7fto.md
+>pywo.md
+>inbox/akwm.md
+>2cl7.md
+>fa2k.md
+>inbox/my59.md
+>k9bm.md
+>4yib.md
+>4oma.md
+>inbox/er4k.md
+>ref/eg7k.md
+>88el.md
+>uok6.md
+>oumc.md
+>tdrj.md
+>hkvy.md
+>wtz9.md
+>inbox/dld4.md
+>zbon.md
+>18is.md
+

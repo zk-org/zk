@@ -146,24 +146,24 @@ $ zk list -qf"\{{word-count}} \{{title}}" -n4 --sort word-count-
 
 # Sort by creation date (default descending).
 $ zk list -qf\{{title}} -n4 --sort created
->Do not communicate by sharing memory; instead, share memory by communicating
->§How to invest in the stock markets?
 >Zero-cost abstractions in Rust
 >Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
 
 # Sort by creation date (shortcut).
 $ zk list -qf\{{title}} -n4 -sc
->Do not communicate by sharing memory; instead, share memory by communicating
->§How to invest in the stock markets?
 >Zero-cost abstractions in Rust
 >Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
 
 # Sort by creation date ascending.
 $ zk list -qf\{{title}} -n4 --sort created+
 >When to prefer PUT over POST HTTP method?
->Buy low, sell high
->Channel
->Compound interests make you rich
+>§How to invest in the stock markets?
+>Fearless concurrency
+>Data race error
 
 # Sort by modification date (default descending).
 $ zk list -qf\{{title}} -n4 --sort modified
