@@ -12,11 +12,11 @@ test:
 
 # Run end-to-end tests.
 tesh: build
-	@PATH=$(shell pwd):$(PATH) tesh tests tests
+	@PATH=".:$(shell pwd):$(PATH)" tesh tests tests/fixtures
 
 # Update end-to-end tests.
 tesh-update: build
-	PATH=$(shell pwd):$(PATH) tesh -u tests tests
+	PATH=".:$(shell pwd):$(PATH)" tesh -u tests tests/fixtures
 
 # Produce a release bundle for all platforms.
 dist: dist-macos dist-linux
