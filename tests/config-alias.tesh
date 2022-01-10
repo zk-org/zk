@@ -30,9 +30,12 @@ $ zk nbdir
 >{{working-dir}}
 
 # Test the "xargs formula"
-$ echo "[alias] xargs = 'zk list --quiet --format path --delimiter0 \$@ | xargs -0 ls -s1'" > .zk/config.toml
+$ echo "[alias] xargs = 'zk list --quiet --format path --delimiter0 | xargs -0 head'" > .zk/config.toml
 $ zk xargs
->0 red planet/blue moon.md
->0 without-title.md
->8 yellow-sun.md
+>==> red planet/blue moon.md <==
+>
+>==> without-title.md <==
+>
+>==> yellow-sun.md <==
+># Yellow sun
 

@@ -165,26 +165,16 @@ $ zk list -qf\{{title}} -n4 --sort created+
 >Fearless concurrency
 >Data race error
 
+# FIXME: The following commands on the system running them.
+#
 # Sort by modification date (default descending).
-$ zk list -qf\{{title}} -n4 --sort modified
->Zero-cost abstractions in Rust
->Use small Hashable items with diffable data sources
->Buy low, sell high
->Stick to your portfolio strategy
+# $ zk list -qf\{{title}} -n4 --sort modified
 
 # Sort by modification date (shortcut).
-$ zk list -qf\{{title}} -n4 -sm
->Zero-cost abstractions in Rust
->Use small Hashable items with diffable data sources
->Buy low, sell high
->Stick to your portfolio strategy
+#$ zk list -qf\{{title}} -n4 -sm
 
 # Sort by modification date ascending.
-$ zk list -qf\{{title}} -n4 --sort modified+
->§How to invest in the stock markets?
->Fearless concurrency
->Data race error
->Dangling pointers
+#$ zk list -qf\{{title}} -n4 --sort modified+
 
 # Sort by random order.
 # For practical purpose, checks only that the command doesn't error out.

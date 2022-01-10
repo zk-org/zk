@@ -56,25 +56,25 @@ $ zk tag list -fname
 
 # JSON format.
 $ zk tag list -fjson
->[{"id":7,"kind":"tag","name":"biography","noteCount":1},{"id":8,"kind":"tag","name":"biology","noteCount":2},{"id":14,"kind":"tag","name":"book","noteCount":12},{"id":13,"kind":"tag","name":"dystopia","noteCount":2},{"id":9,"kind":"tag","name":"feminism","noteCount":1},{"id":10,"kind":"tag","name":"fiction","noteCount":6},{"id":6,"kind":"tag","name":"history","noteCount":2},{"id":2,"kind":"tag","name":"non-fiction","noteCount":6},{"id":5,"kind":"tag","name":"philosophy","noteCount":3},{"id":3,"kind":"tag","name":"physics","noteCount":1},{"id":11,"kind":"tag","name":"romance","noteCount":3},{"id":1,"kind":"tag","name":"science","noteCount":3},{"id":12,"kind":"tag","name":"science-fiction","noteCount":1}]
+>[{"id":11,"kind":"tag","name":"biography","noteCount":1},{"id":12,"kind":"tag","name":"biology","noteCount":2},{"id":1,"kind":"tag","name":"book","noteCount":12},{"id":3,"kind":"tag","name":"dystopia","noteCount":2},{"id":13,"kind":"tag","name":"feminism","noteCount":1},{"id":2,"kind":"tag","name":"fiction","noteCount":6},{"id":10,"kind":"tag","name":"history","noteCount":2},{"id":5,"kind":"tag","name":"non-fiction","noteCount":6},{"id":9,"kind":"tag","name":"philosophy","noteCount":3},{"id":6,"kind":"tag","name":"physics","noteCount":1},{"id":7,"kind":"tag","name":"romance","noteCount":3},{"id":4,"kind":"tag","name":"science","noteCount":3},{"id":8,"kind":"tag","name":"science-fiction","noteCount":1}]
 2>
 2>Found 13 tags
 
 # JSON Lines format.
 $ zk tag list -fjsonl
->{"id":7,"kind":"tag","name":"biography","noteCount":1}
->{"id":8,"kind":"tag","name":"biology","noteCount":2}
->{"id":14,"kind":"tag","name":"book","noteCount":12}
->{"id":13,"kind":"tag","name":"dystopia","noteCount":2}
->{"id":9,"kind":"tag","name":"feminism","noteCount":1}
->{"id":10,"kind":"tag","name":"fiction","noteCount":6}
->{"id":6,"kind":"tag","name":"history","noteCount":2}
->{"id":2,"kind":"tag","name":"non-fiction","noteCount":6}
->{"id":5,"kind":"tag","name":"philosophy","noteCount":3}
->{"id":3,"kind":"tag","name":"physics","noteCount":1}
->{"id":11,"kind":"tag","name":"romance","noteCount":3}
->{"id":1,"kind":"tag","name":"science","noteCount":3}
->{"id":12,"kind":"tag","name":"science-fiction","noteCount":1}
+>{"id":11,"kind":"tag","name":"biography","noteCount":1}
+>{"id":12,"kind":"tag","name":"biology","noteCount":2}
+>{"id":1,"kind":"tag","name":"book","noteCount":12}
+>{"id":3,"kind":"tag","name":"dystopia","noteCount":2}
+>{"id":13,"kind":"tag","name":"feminism","noteCount":1}
+>{"id":2,"kind":"tag","name":"fiction","noteCount":6}
+>{"id":10,"kind":"tag","name":"history","noteCount":2}
+>{"id":5,"kind":"tag","name":"non-fiction","noteCount":6}
+>{"id":9,"kind":"tag","name":"philosophy","noteCount":3}
+>{"id":6,"kind":"tag","name":"physics","noteCount":1}
+>{"id":7,"kind":"tag","name":"romance","noteCount":3}
+>{"id":4,"kind":"tag","name":"science","noteCount":3}
+>{"id":8,"kind":"tag","name":"science-fiction","noteCount":1}
 2>
 2>Found 13 tags
 

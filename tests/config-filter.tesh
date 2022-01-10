@@ -1,27 +1,28 @@
-$ cd blank
-
-$ touch banana.md
-$ touch orange.md
-$ mkdir dir
-$ touch dir/orange.md
-$ touch dir/apple.md
-$ touch dir/pear.md
+$ cd full-sample
 
 # Use a custom filter with `zk list`.
-$ echo "[filter] recents = '--sort created- --limit 2'" > .zk/config.toml
-$ zk list -qfpath recents
->dir/pear.md
->dir/apple.md
+$ echo "[filter] short = '--sort word-count --exclude ref'" > .zk/config.toml
+
+$ zk list -qf"\{{word-count}} \{{path}} \{{title}}" short --limit 5
+>21 fwsj.md Channel
+>37 88el.md Ownership in Rust
+>44 2cl7.md Fearless concurrency
+>44 fa2k.md Financial markets are random
+>49 wtz9.md Use small Hashable items with diffable data sources
 
 # Filter named after a directory to override the default filtering options.
-$ echo "[filter] dir = 'dir --sort path-'" > .zk/config.toml
-$ zk list -qfpath dir
->dir/pear.md
->dir/orange.md
->dir/apple.md
+$ echo "[filter] inbox = 'inbox --sort path-'" > .zk/config.toml
+
+$ zk list -qfpath inbox
+>inbox/my59.md
+>inbox/er4k.md
+>inbox/dld4.md
+>inbox/akwm.md
 
 # Nested filters.
-$ echo "nested = 'dir --limit 2'" >> .zk/config.toml
+$ echo "nested = 'inbox --limit 2'" >> .zk/config.toml
+
 $ zk list -qfpath nested
->dir/pear.md
->dir/orange.md
+>inbox/my59.md
+>inbox/er4k.md
+

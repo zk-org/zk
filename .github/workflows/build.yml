@@ -20,9 +20,18 @@ jobs:
       with:
         go-version: 1.16
 
+    - name: Install dependencies
+      run: |
+        go install github.com/mickael-menu/tesh@latest
+
     - name: Build
       run: make build
 
     - name: Test
       run: make test
+
+    - name: Tesh
+      # See https://github.com/actions/runner/issues/241#issuecomment-924327172
+      shell: script --return --quiet --command "bash {0}"
+      run: make tesh
 
