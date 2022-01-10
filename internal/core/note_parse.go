@@ -61,7 +61,7 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	}
 
 	contentStr := string(content)
-	contentParts, err := n.parser.ParseNoteContent(contentStr)
+	contentParts, err := n.Parser.ParseNoteContent(contentStr)
 	if err != nil {
 		return nil, wrap(err)
 	}

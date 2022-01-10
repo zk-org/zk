@@ -1,0 +1,10 @@
+# Crash when `zk new` fails.
+# https://github.com/mickael-menu/zk/issues/82
+$ cd issue-82
+
+$ zk new --group quest --print-path
+>{{working-dir}}/untitled.md
+
+$ EDITOR=echo zk new --group quest
+>{{working-dir}}/untitled.md
+

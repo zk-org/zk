@@ -1,0 +1,174 @@
+$ cd tags
+
+# Default format is `full`.
+$ zk tag list
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Full format (+long flag).
+$ zk tag list --format full
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Name format.
+$ zk tag list -fname
+>biography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fiction
+2>
+2>Found 13 tags
+
+# JSON format.
+$ zk tag list -fjson
+>[{"id":7,"kind":"tag","name":"biography","noteCount":1},{"id":8,"kind":"tag","name":"biology","noteCount":2},{"id":14,"kind":"tag","name":"book","noteCount":12},{"id":13,"kind":"tag","name":"dystopia","noteCount":2},{"id":9,"kind":"tag","name":"feminism","noteCount":1},{"id":10,"kind":"tag","name":"fiction","noteCount":6},{"id":6,"kind":"tag","name":"history","noteCount":2},{"id":2,"kind":"tag","name":"non-fiction","noteCount":6},{"id":5,"kind":"tag","name":"philosophy","noteCount":3},{"id":3,"kind":"tag","name":"physics","noteCount":1},{"id":11,"kind":"tag","name":"romance","noteCount":3},{"id":1,"kind":"tag","name":"science","noteCount":3},{"id":12,"kind":"tag","name":"science-fiction","noteCount":1}]
+2>
+2>Found 13 tags
+
+# JSON Lines format.
+$ zk tag list -fjsonl
+>{"id":7,"kind":"tag","name":"biography","noteCount":1}
+>{"id":8,"kind":"tag","name":"biology","noteCount":2}
+>{"id":14,"kind":"tag","name":"book","noteCount":12}
+>{"id":13,"kind":"tag","name":"dystopia","noteCount":2}
+>{"id":9,"kind":"tag","name":"feminism","noteCount":1}
+>{"id":10,"kind":"tag","name":"fiction","noteCount":6}
+>{"id":6,"kind":"tag","name":"history","noteCount":2}
+>{"id":2,"kind":"tag","name":"non-fiction","noteCount":6}
+>{"id":5,"kind":"tag","name":"philosophy","noteCount":3}
+>{"id":3,"kind":"tag","name":"physics","noteCount":1}
+>{"id":11,"kind":"tag","name":"romance","noteCount":3}
+>{"id":1,"kind":"tag","name":"science","noteCount":3}
+>{"id":12,"kind":"tag","name":"science-fiction","noteCount":1}
+2>
+2>Found 13 tags
+
+# Custom format.
+$ zk tag list -f"name: \{{name}}, count: \{{note-count}}, kind: \{{kind}}"
+>name: biography, count: 1, kind: tag
+>name: biology, count: 2, kind: tag
+>name: book, count: 12, kind: tag
+>name: dystopia, count: 2, kind: tag
+>name: feminism, count: 1, kind: tag
+>name: fiction, count: 6, kind: tag
+>name: history, count: 2, kind: tag
+>name: non-fiction, count: 6, kind: tag
+>name: philosophy, count: 3, kind: tag
+>name: physics, count: 1, kind: tag
+>name: romance, count: 3, kind: tag
+>name: science, count: 3, kind: tag
+>name: science-fiction, count: 1, kind: tag
+2>
+2>Found 13 tags
+
+# Header.
+$ zk tag list -qfname --header "HEADER"
+>HEADERbiography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fiction
+
+# Footer.
+$ zk tag list -qfname --footer "FOOTER\n"
+>biography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fictionFOOTER
+
+# Delimiter.
+$ zk tag list -qfname --delimiter ";"
+>biography;biology;book;dystopia;feminism;fiction;history;non-fiction;philosophy;physics;romance;science;science-fiction
+
+# Delimiter (short flag).
+$ zk tag list -qfname -d,
+>biography,biology,book,dystopia,feminism,fiction,history,non-fiction,philosophy,physics,romance,science,science-fiction
+
+# Can't mix --delimiter0 and --delimiter
+1$ zk tag list --delimiter0 --delimiter ","
+2>zk: error: --delimiter and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --header
+1$ zk tag list --delimiter0 --header "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --footer
+1$ zk tag list --delimiter0 --footer "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --format json and --header
+1$ zk tag list --format json --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format json and --footer
+1$ zk tag list --format json --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format json and --delimiter
+1$ zk tag list --format json --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+
+# Can't mix --format jsonl and --header
+1$ zk tag list --format jsonl --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format jsonl and --footer
+1$ zk tag list --format jsonl --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format jsonl and --delimiter
+1$ zk tag list --format jsonl --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+

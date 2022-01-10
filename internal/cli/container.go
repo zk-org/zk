@@ -31,10 +31,10 @@ type Container struct {
 	Version            string
 	Config             core.Config
 	Logger             *util.ProxyLogger
+	Styler             *core.ProxyStyler
 	Terminal           *term.Terminal
 	FS                 *fs.FileStorage
 	TemplateLoader     core.TemplateLoader
-	NoteContentParser  core.NoteContentParser
 	WorkingDir         string
 	Notebooks          *core.NotebookStore
 	currentNotebook    *core.Notebook
@@ -45,7 +45,7 @@ func NewContainer(version string) (*Container, error) {
 	wrap := errors.Wrapper("initialization")
 
 	term := term.New()
-	styler := term
+	styler := core.NewProxyStyler(term)
 	logger := util.NewProxyLogger(util.NewStdLogger("zk: ", 0))
 	fs, err := fs.NewFileStorage("", logger)
 	config := core.NewDefaultConfig()
@@ -71,23 +71,14 @@ func NewContainer(version string) (*Container, error) {
 		}
 	}
 
-	noteContentParser := markdown.NewParser(
-		markdown.ParserOpts{
-			HashtagEnabled:      config.Format.Markdown.Hashtags,
-			MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
-			ColontagEnabled:     config.Format.Markdown.ColonTags,
-		},
-		logger,
-	)
-
 	return &Container{
-		Version:           version,
-		Config:            config,
-		Logger:            logger,
-		Terminal:          term,
-		FS:                fs,
-		TemplateLoader:    templateLoader,
-		NoteContentParser: noteContentParser,
+		Version:        version,
+		Config:         config,
+		Logger:         logger,
+		Styler:         styler,
+		Terminal:       term,
+		FS:             fs,
+		TemplateLoader: templateLoader,
 		Notebooks: core.NewNotebookStore(config, core.NotebookStorePorts{
 			FS:             fs,
 			TemplateLoader: templateLoader,
@@ -99,8 +90,15 @@ func NewContainer(version string) (*Container, error) {
 				}
 
 				notebook := core.NewNotebook(path, config, core.NotebookPorts{
-					NoteIndex:         sqlite.NewNoteIndex(db, logger),
-					NoteContentParser: noteContentParser,
+					NoteIndex: sqlite.NewNoteIndex(db, logger),
+					NoteContentParser: markdown.NewParser(
+						markdown.ParserOpts{
+							HashtagEnabled:      config.Format.Markdown.Hashtags,
+							MultiWordTagEnabled: config.Format.Markdown.MultiwordTags,
+							ColontagEnabled:     config.Format.Markdown.ColonTags,
+						},
+						logger,
+					),
 					TemplateLoaderFactory: func(language string) (core.TemplateLoader, error) {
 						loader := handlebars.NewLoader(handlebars.LoaderOpts{
 							LookupPaths: []string{

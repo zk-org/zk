@@ -1,0 +1,21 @@
+[note]
+filename = "{{slug title}}"
+
+# Path derived from the group name.
+[group.implicit.note]
+filename = "implicit-{{slug title}}"
+
+# Path derived from the group name, in a sub-directory.
+[group."dir/implicit subdir".note]
+filename = "implicit-subdir-{{slug title}}"
+
+# Group with explicit paths.
+[group.journal]
+paths = [
+    "daily",
+    "weekly",
+    "journal/*"
+]
+[group.journal.note]
+filename = "journal-{{slug title}}"
+

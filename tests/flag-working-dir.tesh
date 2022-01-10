@@ -1,0 +1,27 @@
+# The notebook directory is derived from the working directory.
+$ zk list -qfpath --working-dir paths
+>paper.md
+>brown/wood.md
+
+# Short flag.
+$ zk list -qfpath -W paths
+>paper.md
+>brown/wood.md
+
+# The note paths and links are relative to the provided working directory
+$ zk list -qf"\{{path}} \{{link}}" --working-dir paths/brown
+>../paper.md [Paper](../paper)
+>wood.md [Wood](wood)
+
+# Creating a new note in the given working directory.
+$ zk new --print-path --title "Stone" --working-dir paths
+>{{working-dir}}/paths/stone.md
+
+# Creating a new note in the given working directory.
+$ zk new --print-path --title "Glass" --working-dir paths/brown
+>{{working-dir}}/paths/brown/glass.md
+
+# Creating a new note relative to the given working directory.
+$ zk new --print-path --title "Iron" --working-dir paths/brown ..
+>{{working-dir}}/paths/iron.md
+

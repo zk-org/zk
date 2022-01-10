@@ -1,0 +1,13 @@
+# Encoded Markdown links are not properly indexed.
+# https://github.com/mickael-menu/zk/issues/86
+$ cd issue-86
+
+$ zk list -qfpath --link-to 202110031652
+>202110031653 baz.md
+
+$ zk list -qfpath --link-to "202110031652 foo bar"
+>202110031653 baz.md
+
+$ zk list -qfpath --link-to "foo bar"
+>202110031653 baz.md
+

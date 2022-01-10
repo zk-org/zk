@@ -1,0 +1,252 @@
+$ cd full-sample
+
+# The default sort order is by title.
+$ zk list -qf\{{title}} --sort title
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
+# Sort by unknown order.
+1$ zk list -q --sort unknown
+2>zk: error: incorrect criteria: unknown: unknown sorting term
+2>           try created, modified, path, title, random or word-count
+
+# Sort by title (default ascending).
+$ zk list -qf\{{title}} --sort title
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
+# Sort by title (shortcut).
+$ zk list -qf\{{title}} -st -n4
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+
+# Sort by title descending.
+$ zk list -qf\{{title}} --sort title-
+>§How to invest in the stock markets?
+>Zero-cost abstractions in Rust
+>When to prefer PUT over POST HTTP method?
+>Use small Hashable items with diffable data sources
+>The borrow checker
+>The Stack and the Heap
+>Strings are a complicated data structure
+>Stick to your portfolio strategy
+>Ownership in Rust
+>Null references: the billion dollar mistake
+>Mutex
+>Message passing
+>Investment business is a scam
+>How to choose a broker?
+>Green threads
+>Financial markets are random
+>Fearless concurrency
+>Errors should be handled differently in an application versus a library
+>Don't speculate
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Diversify your portfolio
+>Data race error
+>Dangling pointers
+>Concurrency in Rust
+>Compound interests make you rich
+>Channel
+>Buy low, sell high
+
+# Sort by path (default ascending).
+$ zk list -qfpath -n4 --sort path
+>18is.md
+>2cl7.md
+>3403.md
+>3cut.md
+
+# Sort by path (shortcut).
+$ zk list -qfpath -n4 -sp
+>18is.md
+>2cl7.md
+>3403.md
+>3cut.md
+
+# Sort by path descending.
+$ zk list -qfpath -n4 --sort path-
+>zbon.md
+>wtz9.md
+>uxjt.md
+>uok6.md
+
+# Sort by word count (default ascending).
+$ zk list -qf"\{{word-count}} \{{title}}" -n4 --sort word-count
+>21 Channel
+>37 Do not communicate by sharing memory; instead, share memory by communicating
+>37 Ownership in Rust
+>44 Fearless concurrency
+
+# Sort by word count (shortcut).
+$ zk list -qf"\{{word-count}} \{{title}}" -n4 -swc
+>21 Channel
+>37 Do not communicate by sharing memory; instead, share memory by communicating
+>37 Ownership in Rust
+>44 Fearless concurrency
+
+# Sort by word count descending.
+$ zk list -qf"\{{word-count}} \{{title}}" -n4 --sort word-count-
+>196 The Stack and the Heap
+>124 Green threads
+>120 Stick to your portfolio strategy
+>116 Compound interests make you rich
+
+# Sort by creation date (default descending).
+$ zk list -qf\{{title}} -n4 --sort created
+>Zero-cost abstractions in Rust
+>Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
+
+# Sort by creation date (shortcut).
+$ zk list -qf\{{title}} -n4 -sc
+>Zero-cost abstractions in Rust
+>Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
+
+# Sort by creation date ascending.
+$ zk list -qf\{{title}} -n4 --sort created+
+>When to prefer PUT over POST HTTP method?
+>§How to invest in the stock markets?
+>Fearless concurrency
+>Data race error
+
+# Sort by modification date (default descending).
+$ zk list -qf\{{title}} -n4 --sort modified
+>Zero-cost abstractions in Rust
+>Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
+
+# Sort by modification date (shortcut).
+$ zk list -qf\{{title}} -n4 -sm
+>Zero-cost abstractions in Rust
+>Use small Hashable items with diffable data sources
+>Buy low, sell high
+>Stick to your portfolio strategy
+
+# Sort by modification date ascending.
+$ zk list -qf\{{title}} -n4 --sort modified+
+>§How to invest in the stock markets?
+>Fearless concurrency
+>Data race error
+>Dangling pointers
+
+# Sort by random order.
+# For practical purpose, checks only that the command doesn't error out.
+$ zk list -q --sort random > /dev/null
+
+# Sort by multiple orders.
+$ zk list -qf"\{{word-count}} \{{title}}" --sort title-,word-count
+>21 Channel
+>37 Ownership in Rust
+>37 Do not communicate by sharing memory; instead, share memory by communicating
+>44 Financial markets are random
+>44 Fearless concurrency
+>49 Use small Hashable items with diffable data sources
+>50 Dangling pointers
+>53 Message passing
+>60 Zero-cost abstractions in Rust
+>66 When to prefer PUT over POST HTTP method?
+>67 Errors should be handled differently in an application versus a library
+>71 §How to invest in the stock markets?
+>76 Mutex
+>80 The borrow checker
+>80 Data race error
+>81 Concurrency in Rust
+>95 Strings are a complicated data structure
+>98 How to choose a broker?
+>98 Diversify your portfolio
+>103 Buy low, sell high
+>106 Investment business is a scam
+>107 Don't speculate
+>109 Null references: the billion dollar mistake
+>116 Compound interests make you rich
+>120 Stick to your portfolio strategy
+>124 Green threads
+>196 The Stack and the Heap
+
+# Sort by multiple orders (shortcut)
+$ zk list -qf"\{{word-count}} \{{title}}" -st-,wc
+>21 Channel
+>37 Ownership in Rust
+>37 Do not communicate by sharing memory; instead, share memory by communicating
+>44 Financial markets are random
+>44 Fearless concurrency
+>49 Use small Hashable items with diffable data sources
+>50 Dangling pointers
+>53 Message passing
+>60 Zero-cost abstractions in Rust
+>66 When to prefer PUT over POST HTTP method?
+>67 Errors should be handled differently in an application versus a library
+>71 §How to invest in the stock markets?
+>76 Mutex
+>80 The borrow checker
+>80 Data race error
+>81 Concurrency in Rust
+>95 Strings are a complicated data structure
+>98 How to choose a broker?
+>98 Diversify your portfolio
+>103 Buy low, sell high
+>106 Investment business is a scam
+>107 Don't speculate
+>109 Null references: the billion dollar mistake
+>116 Compound interests make you rich
+>120 Stick to your portfolio strategy
+>124 Green threads
+>196 The Stack and the Heap
+

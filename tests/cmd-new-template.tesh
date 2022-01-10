@@ -1,0 +1,18 @@
+$ cd new
+
+$ mkdir "a dir"
+
+# Test Handlebars template variables.
+$ echo "Piped content" | zk new --group handlebars --title "Note title" --date "January 2nd" --dry-run "a dir"
+>id: {{match "[a-z0-9]{4}"}}
+>title: Note title
+>content: Piped content
+>
+>dir: a dir
+>extra: {"key":"value","visibility":"public"}
+>now: 02-01
+>env: {{working-dir}}
+>filename: note-title.md
+>filename-stem: note-title
+2>{{working-dir}}/a dir/note-title.md
+

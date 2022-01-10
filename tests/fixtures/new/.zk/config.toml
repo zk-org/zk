@@ -1,0 +1,14 @@
+[note]
+template = "default.md"
+filename = "{{slug title}}"
+
+[group.date.note]
+template = "empty.md"
+filename = "{{date now '%d-%m'}}"
+
+[group.handlebars.note]
+template = "handlebars.md"
+
+[group.handlebars.extra]
+key = "value"
+visibility = "public"

@@ -1,0 +1,49 @@
+$ cd yaml-frontmatter
+
+# The YAML frontmatter is available in the `metadata` Handlebars variable.
+$ zk list -q --format "\{{path}}: \{{json metadata}}"
+>keywords.md: {"keywords":["writing","essay","practice"]}
+>empty.md: {}
+>full.md: {"aliases":["Structure of essay","Rewrite"],"colors":{"sky":"blue","sun":"yellow"},"date":"2011-05-16 09:58:57","tags":["writing","essay","practice"],"title":"Improve the structure of essays by rewriting"}
+>minimal.md: {"title":"Only one metadata"}
+>tag-list.md: {"tags":["writing","essay, practice"],"title":"Tags using a full YAML list"}
+>case.md: {"colors":{"sky":"blue","sun":"yellow"},"date":"2011-05-16 09:58:57","tags":["writing","essay","practice"],"title":"Test that keys are normalized to lowercase."}
+
+# Title extracted from the frontmatter.
+$ zk list -q --format "\{{path}}: \{{title}}"
+>keywords.md: Alias of tags
+>empty.md: Empty frontmatter
+>full.md: Improve the structure of essays by rewriting
+>minimal.md: Only one metadata
+>tag-list.md: Tags using a full YAML list
+>case.md: Test that keys are normalized to lowercase.
+
+# Tags extracted from the frontmatter.
+$ zk list -q --format "\{{path}}: \{{json tags}}"
+>keywords.md: ["writing","essay","practice"]
+>empty.md: []
+>full.md: ["writing","essay","practice"]
+>minimal.md: []
+>tag-list.md: ["writing","essay, practice"]
+>case.md: ["writing","essay","practice"]
+
+# Creation date extracted from the frontmatter.
+$ zk list -q --format "\{{path}}: \{{date created 'full'}}"
+>keywords.md: {{match '.*'}}
+>empty.md: {{match '.*'}}
+>full.md: Monday, May 16, 2011
+>minimal.md: {{match '.*'}}
+>tag-list.md: Monday, May 16, 2011
+>case.md: Monday, May 16, 2011
+
+# `--mention` uses the aliases from the frontmatter.
+$ zk list -q --format "\{{path}}: \{{json snippets}}" --mention full.md
+>minimal.md: ["Here's a mention of rewriting."]
+>empty.md: ["This is a mention of structure of essay."]
+
+$ zk list -q --format "\{{path}}: \{{json snippets}}" --mentioned-by minimal.md
+>full.md: ["Here's a mention of rewriting."]
+
+$ zk list -q --format "\{{path}}: \{{json snippets}}" --mentioned-by empty.md
+>full.md: ["This is a mention of structure of essay."]
+

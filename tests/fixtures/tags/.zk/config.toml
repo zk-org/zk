@@ -1,0 +1,8 @@
+[note]
+filename = "{{slug title}}"
+template = "default.md"
+
+# [format.markdown]
+# hashtags = false
+# colon-tags = false
+# multiword-tags = false

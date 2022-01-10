@@ -1,6 +1,7 @@
 package term
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -10,7 +11,8 @@ import (
 
 // Terminal offers utilities to interact with the terminal.
 type Terminal struct {
-	NoInput bool
+	NoInput    bool
+	ForceInput string
 }
 
 func New() *Terminal {
@@ -38,7 +40,14 @@ func (t *Terminal) SupportsUTF8() bool {
 // Confirm is a shortcut to prompt a yes/no question to the user.
 func (t *Terminal) Confirm(msg string, defaultAnswer bool) (confirmed, skipped bool) {
 	if !t.IsInteractive() {
-		return defaultAnswer, true
+		switch strings.ToLower(t.ForceInput) {
+		case "y":
+			return t.forceConfirm(msg, true)
+		case "n":
+			return t.forceConfirm(msg, false)
+		default:
+			return defaultAnswer, true
+		}
 	}
 
 	confirmed = false
@@ -48,4 +57,17 @@ func (t *Terminal) Confirm(msg string, defaultAnswer bool) (confirmed, skipped b
 	}
 	survey.AskOne(prompt, &confirmed)
 	return confirmed, false
+}
+
+func (t *Terminal) forceConfirm(msg string, answer bool) (confirmed, skipped bool) {
+	msg = "? " + msg + " ("
+	if answer {
+		msg += "Y/n"
+	} else {
+		msg += "y/N"
+	}
+	msg += ")"
+	fmt.Println(msg)
+
+	return answer, false
 }

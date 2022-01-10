@@ -1,0 +1,128 @@
+$ cd index
+
+# Print help for `zk index`
+$ zk index --help
+>Usage: zk index
+>
+>Index the notes to be searchable.
+>
+>You usually do not need to run `zk index` manually, as notes are indexed
+>automatically when needed.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>
+>  -f, --force                Force indexing all the notes.
+>  -v, --verbose              Print detailed information about the indexing
+>                             process.
+>  -q, --quiet                Do not print statistics nor progress.
+
+# Index initial notes.
+$ zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 3 modified
+>  - 1 removed
+
+# No changes.
+$ zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Add a new note.
+$ touch eggplant/apple.md && zk index
+>Indexed 4 notes in 0s
+>  + 1 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Modify an existing note.
+$ echo "More" >> banana.md && zk index
+>Indexed 4 notes in 0s
+>  + 0 added
+>  ~ 1 modified
+>  - 0 removed
+
+# Delete a note.
+$ rm banana.md
+
+$ zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 1 removed
+
+# Ignore path patterns.
+$ touch carrot-ignored/ananas.md && zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Ignore unknown extensions.
+$ touch orange.markdown && zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Force re-indexing all notes.
+$ zk index --force
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 3 modified
+>  - 0 removed
+
+# Force re-indexing all notes (short flag).
+$ zk index -f
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 3 modified
+>  - 0 removed
+
+# Quiet mode.
+$ zk index --quiet
+
+# Quiet mode (short flag).
+$ zk index -q
+
+# Verbose mode.
+$ touch banana.md && echo "More" >> litchee.md && rm eggplant/apple.md && zk index --verbose
+>- added banana.md
+>- removed eggplant/apple.md
+>- unchanged eggplant/clementine.md
+>- modified litchee.md
+>- ignored carrot-ignored/ananas.md: matched ignore glob "carrot-ignored/*"
+>- ignored carrot-ignored/tomato.md: matched ignore glob "carrot-ignored/*"
+>- ignored orange.markdown: expected extension "md"
+>
+>Indexed 3 notes in 0s
+>  + 1 added
+>  ~ 1 modified
+>  - 1 removed
+
+# Verbose mode (short flag).
+$ zk index -v
+>- unchanged banana.md
+>- unchanged eggplant/clementine.md
+>- unchanged litchee.md
+>- ignored carrot-ignored/ananas.md: matched ignore glob "carrot-ignored/*"
+>- ignored carrot-ignored/tomato.md: matched ignore glob "carrot-ignored/*"
+>- ignored orange.markdown: expected extension "md"
+>
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Verbose and quiet can't be used together.
+1$ zk index --verbose --quiet
+2>zk: error: --verbose and --quiet can't be used together
+

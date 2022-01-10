@@ -1,0 +1,27 @@
+$ cd blank
+
+$ touch banana.md
+$ touch orange.md
+$ mkdir dir
+$ touch dir/orange.md
+$ touch dir/apple.md
+$ touch dir/pear.md
+
+# Use a custom filter with `zk list`.
+$ echo "[filter] recents = '--sort created- --limit 2'" > .zk/config.toml
+$ zk list -qfpath recents
+>dir/pear.md
+>dir/apple.md
+
+# Filter named after a directory to override the default filtering options.
+$ echo "[filter] dir = 'dir --sort path-'" > .zk/config.toml
+$ zk list -qfpath dir
+>dir/pear.md
+>dir/orange.md
+>dir/apple.md
+
+# Nested filters.
+$ echo "nested = 'dir --limit 2'" >> .zk/config.toml
+$ zk list -qfpath nested
+>dir/pear.md
+>dir/orange.md

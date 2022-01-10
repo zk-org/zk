@@ -1,0 +1,151 @@
+$ cd tags
+
+# Default sort order is by name.
+$ zk tag list
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Sort by name ascending (+ long flag).
+$ zk tag list --sort name
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Sort by name descending.
+$ zk tag list -sname-
+>science-fiction (1)
+>science (3)
+>romance (3)
+>physics (1)
+>philosophy (3)
+>non-fiction (6)
+>history (2)
+>fiction (6)
+>feminism (1)
+>dystopia (2)
+>book (12)
+>biology (2)
+>biography (1)
+2>
+2>Found 13 tags
+
+# Sort by note count ascending.
+$ zk tag list -snote-count+
+>biography (1)
+>feminism (1)
+>physics (1)
+>science-fiction (1)
+>biology (2)
+>dystopia (2)
+>history (2)
+>philosophy (3)
+>romance (3)
+>science (3)
+>fiction (6)
+>non-fiction (6)
+>book (12)
+2>
+2>Found 13 tags
+
+# Sort by note count descending.
+$ zk tag list -snote-count-
+>book (12)
+>fiction (6)
+>non-fiction (6)
+>philosophy (3)
+>romance (3)
+>science (3)
+>biology (2)
+>dystopia (2)
+>history (2)
+>biography (1)
+>feminism (1)
+>physics (1)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Name shortcut.
+$ zk tag list -sn
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Note count shortcut.
+$ zk tag list -snc
+>book (12)
+>fiction (6)
+>non-fiction (6)
+>philosophy (3)
+>romance (3)
+>science (3)
+>biology (2)
+>dystopia (2)
+>history (2)
+>biography (1)
+>feminism (1)
+>physics (1)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Sort by several terms.
+$ zk tag list -sn-,nc
+>book (12)
+>non-fiction (6)
+>fiction (6)
+>science (3)
+>romance (3)
+>philosophy (3)
+>history (2)
+>dystopia (2)
+>biology (2)
+>science-fiction (1)
+>physics (1)
+>feminism (1)
+>biography (1)
+2>
+2>Found 13 tags
+
+# Unknown sort order.
+1$ zk tag list -sfoobar
+2>zk: error: foobar: unknown sorting term
+2>           try name or note-count
+

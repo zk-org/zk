@@ -1,0 +1,16 @@
+# Notes containing broken links are not indexed.
+# https://github.com/mickael-menu/zk/issues/78
+
+$ cd blank
+
+$ echo "[This is a link](my-note.md)" > index.md
+
+$ zk index
+>Indexed 1 note in 0s
+>  + 1 added
+>  ~ 0 modified
+>  - 0 removed
+
+$ zk list -qfpath
+>index.md
+

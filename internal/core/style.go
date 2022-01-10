@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 // Style is a key representing a single styling rule.
 type Style string
 
@@ -73,6 +75,26 @@ type Styler interface {
 	MustStyle(text string, rules ...Style) string
 }
 
+// ProxyStyler is a styler delegating to an underlying styler.
+// Can be used to change the active styler during runtime.
+type ProxyStyler struct {
+	Styler Styler
+}
+
+func NewProxyStyler(styler Styler) *ProxyStyler {
+	return &ProxyStyler{styler}
+}
+
+// Style implements Styler.
+func (s ProxyStyler) Style(text string, rule ...Style) (string, error) {
+	return s.Styler.Style(text, rule...)
+}
+
+// MustStyle implements Styler.
+func (s ProxyStyler) MustStyle(text string, rule ...Style) string {
+	return s.Styler.MustStyle(text, rule...)
+}
+
 // NullStyler is a Styler with no styling rules.
 var NullStyler = nullStyler{}
 
@@ -85,5 +107,23 @@ func (s nullStyler) Style(text string, rule ...Style) (string, error) {
 
 // MustStyle implements Styler.
 func (s nullStyler) MustStyle(text string, rule ...Style) string {
+	return text
+}
+
+// TagStyler is a Styler which outputs XML tags.
+var TagStyler = tagStyler{}
+
+type tagStyler struct{}
+
+// Style implements Styler.
+func (s tagStyler) Style(text string, rules ...Style) (string, error) {
+	return s.MustStyle(text, rules...), nil
+}
+
+// MustStyle implements Styler.
+func (s tagStyler) MustStyle(text string, rules ...Style) string {
+	for _, rule := range rules {
+		text = fmt.Sprintf("<%s>%s</%s>", rule, text, rule)
+	}
 	return text
 }
