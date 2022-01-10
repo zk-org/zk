@@ -28,6 +28,8 @@ jobs:
       run: make build
 
     - name: Test
+      # Enable TTY use https://github.com/actions/runner/issues/241#issuecomment-924327172
+      shell: script --return --quiet --command "bash {0}"
       run: make test
 
     - name: Tesh
