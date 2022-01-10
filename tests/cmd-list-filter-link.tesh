@@ -1,0 +1,152 @@
+$ cd full-sample
+
+# Find notes linking to "Message passing".
+$ zk list --debug-style -q --link-to 4oma.md
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
+>
+>  - [Channel](fwsj) for a safe [<term>message passing</term>](4oma) approach.
+>
+
+# Follow backlinks of "Message passing" recursively.
+# FIXME: The snippets don't seem right.
+$ zk list --debug-style -q --link-to 4oma.md --recursive
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>  - [Channel](fwsj) for a safe [<term>message passing</term>](4oma) approach.
+>
+><title>Mutex</title> <path>inbox/er4k.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+
+# Follow backlinks of "Message passing" recursively, limiting to 1 level of indirection.
+$ zk list --debug-style -q --link-to 4oma.md --recursive --max-distance 1
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
+>
+>  - [Channel](fwsj) for a safe [<term>message passing</term>](4oma) approach.
+>
+
+# Find notes linked by "Mutex".
+# The snippet is an extract from the Mutex note.
+$ zk list --debug-style -q --linked-by inbox/er4k.m
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - Managing mutexes is tricky, using [<term>channels</term>](../fwsj) is an easier alternative.
+>
+><title>Ownership in Rust</title> <path>88el.md</path> (just now)
+>
+>  - Thanks to its [<term>Ownership</term>](../88el) pattern, Rust makes sure we can't mess up when using locks.
+>
+
+# Find notes linked by "Mutex" recursively.
+$ zk list --debug-style -q --linked-by inbox/er4k.m --recursive
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - Managing mutexes is tricky, using [<term>channels</term>](../fwsj) is an easier alternative.
+>
+><title>Ownership in Rust</title> <path>88el.md</path> (just now)
+>
+>  - Thanks to its [<term>Ownership</term>](../88el) pattern, Rust makes sure we can't mess up when using locks.
+>
+><title>Message passing</title> <path>4oma.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>The Stack and the Heap</title> <path>tdrj.md</path> (just now)
+>
+>  - The Ownership is a method to manage data on the Heap ([<term>The Stack and the Heap</term>](tdrj)).
+>
+><title>Do not communicate by sharing memory; instead, share memory by communicating</title> <path>ref/7fto.md</path> (just now)
+>
+>  - The Go language is advocating for this approach with their slogan: "[<term>Do not communicate by sharing memory; instead, share memory by communicating</term>](ref/7fto)".
+>
+
+# Find notes linked by "Mutex" recursively, limiting to 2 levels.
+$ zk list --debug-style -q --linked-by inbox/er4k.m --recursive --max-distance 2
+><title>Channel</title> <path>fwsj.md</path> (just now)
+>
+>  - Managing mutexes is tricky, using [<term>channels</term>](../fwsj) is an easier alternative.
+>
+><title>Ownership in Rust</title> <path>88el.md</path> (just now)
+>
+>  - Thanks to its [<term>Ownership</term>](../88el) pattern, Rust makes sure we can't mess up when using locks.
+>
+><title>Message passing</title> <path>4oma.md</path> (just now)
+>
+>  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>The Stack and the Heap</title> <path>tdrj.md</path> (just now)
+>
+>  - The Ownership is a method to manage data on the Heap ([<term>The Stack and the Heap</term>](tdrj)).
+>
+
+# Find notes not linking to "Channel".
+$ zk list -qf\{{title}} --no-link-to fwsj.md
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Message passing
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
+# Find notes not linked by "Channel".
+$ zk list -qf\{{title}} --no-linked-by fwsj.md
+>Buy low, sell high
+>Channel
+>Compound interests make you rich
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Diversify your portfolio
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Don't speculate
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Financial markets are random
+>Green threads
+>How to choose a broker?
+>Investment business is a scam
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Stick to your portfolio strategy
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+>§How to invest in the stock markets?
+
