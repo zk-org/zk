@@ -33,7 +33,7 @@ $ zk list -q --format "\{{path}}: \{{date created 'full'}}"
 >empty.md: {{match '.*'}}
 >full.md: Monday, May 16, 2011
 >minimal.md: {{match '.*'}}
->tag-list.md: Monday, May 16, 2011
+>tag-list.md: {{match '.*'}}
 >case.md: Monday, May 16, 2011
 
 # `--mention` uses the aliases from the frontmatter.

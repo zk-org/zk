@@ -25,9 +25,9 @@ $ zk index --help
 # Index initial notes.
 $ zk index
 >Indexed 3 notes in 0s
->  + 0 added
->  ~ 3 modified
->  - 1 removed
+>  + 3 added
+>  ~ 0 modified
+>  - 0 removed
 
 # No changes.
 $ zk index
