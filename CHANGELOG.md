@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New `--date` flag for `zk new` to set the current date manually.
+* [#144](https://github.com/mickael-menu/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
 
 ### Fixed
 

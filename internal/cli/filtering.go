@@ -48,7 +48,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 	actualPaths := []string{}
 
 	for _, path := range f.Path {
-		if filter, ok := filters[path]; ok && !strings.InList(expandedFilters, path) {
+		if filter, ok := filters[path]; ok && !strings.Contains(expandedFilters, path) {
 			wrap := errors.Wrapperf("failed to expand named filter `%v`", path)
 
 			var parsedFilter Filtering

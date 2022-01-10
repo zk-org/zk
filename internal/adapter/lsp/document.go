@@ -8,6 +8,7 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	strutil "github.com/mickael-menu/zk/internal/util/strings"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
@@ -93,25 +94,13 @@ func (d *document) ApplyChanges(changes []interface{}) {
 	d.lines = nil
 }
 
-var nonEmptyString = regexp.MustCompile(`\S+`)
-
 // WordAt returns the word found at the given location.
-// Credit https://github.com/aca/neuron-language-server/blob/450a7cff71c14e291ee85ff8a0614fa9d4dd5145/utils.go#L13
 func (d *document) WordAt(pos protocol.Position) string {
 	line, ok := d.GetLine(int(pos.Line))
 	if !ok {
 		return ""
 	}
-
-	charIdx := int(pos.Character)
-	wordIdxs := nonEmptyString.FindAllStringIndex(line, -1)
-	for _, wordIdx := range wordIdxs {
-		if wordIdx[0] <= charIdx && charIdx <= wordIdx[1] {
-			return line[wordIdx[0]:wordIdx[1]]
-		}
-	}
-
-	return ""
+	return strutil.WordAt(line, int(pos.Character))
 }
 
 // ContentAtRange returns the document text at given range.
@@ -239,6 +228,28 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	}
 
 	return links, nil
+}
+
+// IsTagPosition returns whether the given caret position is inside a tag (YAML frontmatter, #hashtag, etc.).
+func (d *document) IsTagPosition(position protocol.Position, noteContentParser core.NoteContentParser) bool {
+	lines := strutil.CopyList(d.GetLines())
+	lineIdx := int(position.Line)
+	charIdx := int(position.Character)
+	line := lines[lineIdx]
+	// https://github.com/mickael-menu/zk/issues/144#issuecomment-1006108485
+	line = line[:charIdx] + "ZK_PLACEHOLDER" + line[charIdx:]
+	lines[lineIdx] = line
+	targetWord := strutil.WordAt(line, charIdx)
+	if targetWord == "" {
+		return false
+	}
+
+	content := strings.Join(lines, "\n")
+	note, err := noteContentParser.ParseNoteContent(content)
+	if err != nil {
+		return false
+	}
+	return strutil.Contains(note.Tags, targetWord)
 }
 
 type documentLink struct {

@@ -44,7 +44,21 @@
 A [Homebrew tap](https://github.com/mhanberg/homebrew-zk) is maintained by [@mhanberg](https://github.com/mhanberg).
 
 ```sh
-brew install [--build-from-source] mhanberg/zk/zk
+brew install mhanberg/zk/zk
+```
+
+Or, if you want to build from the source directly:
+
+```sh
+brew install --build-from-source mhanberg/zk/zk
+```
+
+### Arch Linux
+
+You can install [the zk package](https://archlinux.org/packages/community/x86_64/zk/) from the official repos.
+
+```sh
+sudo pacman -S zk
 ```
 
 ### Build from scratch

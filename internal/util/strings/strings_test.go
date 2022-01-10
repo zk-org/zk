@@ -107,9 +107,18 @@ func TestRemoveBlank(t *testing.T) {
 	test([]string{"One", "Two", "	  "}, []string{"One", "Two"})
 }
 
-func TestInList(t *testing.T) {
+func TestExpandWhitespaceLiterals(t *testing.T) {
+	test := func(s string, expected string) {
+		assert.Equal(t, ExpandWhitespaceLiterals(s), expected)
+	}
+
+	test(`nothing`, "nothing")
+	test(`newline\ntab\t`, "newline\ntab\t")
+}
+
+func TestContains(t *testing.T) {
 	test := func(items []string, s string, expected bool) {
-		assert.Equal(t, InList(items, s), expected)
+		assert.Equal(t, Contains(items, s), expected)
 	}
 
 	test([]string{}, "", false)
@@ -120,11 +129,25 @@ func TestInList(t *testing.T) {
 	test([]string{"one", "two"}, "three", false)
 }
 
-func TestExpandWhitespaceLiterals(t *testing.T) {
-	test := func(s string, expected string) {
-		assert.Equal(t, ExpandWhitespaceLiterals(s), expected)
+func TestWordAt(t *testing.T) {
+	test := func(s string, pos int, expected string) {
+		assert.Equal(t, WordAt(s, pos), expected)
 	}
 
-	test(`nothing`, "nothing")
-	test(`newline\ntab\t`, "newline\ntab\t")
+	test("", 0, "")
+	test("		  ", 2, "")
+	test("word", 2, "word")
+	test("		word	", 4, "word")
+	test("one two three", 4, "two")
+	test("one two three", 5, "two")
+	test("one two three", 7, "two")
+	test("one two-third three", 5, "two-third")
+	test("one two,three", 5, "two")
+	test("one two;three", 5, "two")
+	test("one [two] three", 5, "two")
+	test("one \"two\" three", 5, "two")
+	test("one 'two' three", 5, "two")
+	test("one\ntwo\nthree", 5, "two")
+	test("one\ttwo\tthree", 5, "two")
+	test("one @:~two three", 5, "@:~two")
 }

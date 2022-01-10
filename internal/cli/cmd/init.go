@@ -89,9 +89,9 @@ func startInitWizard() (core.InitOpts, error) {
 
 	opts.WikiLinks = answers.WikiLink
 
-	opts.Hashtags = strings.InList(answers.Tags, hashtag)
-	opts.MultiwordTags = strings.InList(answers.Tags, multiwordTag)
-	opts.ColonTags = strings.InList(answers.Tags, colonTag)
+	opts.Hashtags = strings.Contains(answers.Tags, hashtag)
+	opts.MultiwordTags = strings.Contains(answers.Tags, multiwordTag)
+	opts.ColonTags = strings.Contains(answers.Tags, colonTag)
 
 	return opts, nil
 }
