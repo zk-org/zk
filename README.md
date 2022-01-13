@@ -41,16 +41,14 @@
 
 ### Homebrew
 
-A [Homebrew tap](https://github.com/mhanberg/homebrew-zk) is maintained by [@mhanberg](https://github.com/mhanberg).
-
 ```sh
-brew install mhanberg/zk/zk
+brew install zk
 ```
 
-Or, if you want to build from the source directly:
+Or, if you want to the latest changes:
 
 ```sh
-brew install --build-from-source mhanberg/zk/zk
+brew install --HEAD zk
 ```
 
 ### Arch Linux
