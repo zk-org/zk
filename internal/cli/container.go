@@ -208,6 +208,7 @@ func (c *Container) CurrentNotebook() (*core.Notebook, error) {
 func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
 	opts.PreviewCmd = c.Config.Tool.FzfPreview
 	opts.LineTemplate = c.Config.Tool.FzfLine
+	opts.AdditionalArgs = c.Config.Tool.FzfAdditionalArgs
 	return fzf.NewNoteFilter(opts, c.FS, c.Terminal, c.TemplateLoader)
 }
 

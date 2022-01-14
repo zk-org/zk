@@ -26,6 +26,8 @@ var (
 type Opts struct {
 	// Preview command executed by fzf when hovering a line.
 	PreviewCmd opt.String
+	// Optionally preovide additional arguments, taken from the config `fzf-additional-args` property.
+	AdditionalArgs opt.String
 	// Amount of space between two non-empty fields.
 	Padding int
 	// Delimiter used by fzf between fields.
@@ -72,6 +74,8 @@ func New(opts Opts) (*Fzf, error) {
 		opts.Delimiter = "\x01"
 	}
 
+    defaultFzfArgs := strings.Split(os.Getenv("FZF_DEFAULT_OPTS"), " ")
+
 	args := []string{
 		"--delimiter", opts.Delimiter,
 		"--tiebreak", "begin",
@@ -87,6 +91,9 @@ func New(opts Opts) (*Fzf, error) {
 		"--color", "hl:-1,hl+:-1",
 		"--preview-window", "wrap",
 	}
+
+    args = append(defaultFzfArgs, args...)
+    args = append(args, strings.Split(opts.AdditionalArgs.String(), " ")...)
 
 	header := ""
 	binds := []string{}

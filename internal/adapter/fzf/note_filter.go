@@ -32,6 +32,8 @@ type NoteFilterOpts struct {
 	AlwaysFilter bool
 	// Format for a single line, taken from the config `fzf-line` property.
 	LineTemplate opt.String
+	// Optionally preovide additional arguments, taken from the config `fzf-additional-args` property.
+	AdditionalArgs opt.String
 	// Preview command to run when selecting a note.
 	PreviewCmd opt.String
 	// When non null, a "create new note from query" binding will be added to
@@ -98,6 +100,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
 
 	fzf, err := New(Opts{
+		AdditionalArgs: f.opts.AdditionalArgs,
 		PreviewCmd: opt.NewNotEmptyString(previewCmd),
 		Padding:    2,
 		Bindings:   bindings,
