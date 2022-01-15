@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  homebrew:
+    runs-on: macos-latest
+    needs:
+      - release
+    steps:
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
+          formula: zk
