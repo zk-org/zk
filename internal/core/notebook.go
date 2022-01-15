@@ -18,9 +18,9 @@ import (
 type Notebook struct {
 	Path   string
 	Config Config
+	Parser NoteContentParser
 
 	index                 NoteIndex
-	parser                NoteContentParser
 	templateLoaderFactory TemplateLoaderFactory
 	idGeneratorFactory    IDGeneratorFactory
 	fs                    FileStorage
@@ -37,8 +37,8 @@ func NewNotebook(
 	return &Notebook{
 		Path:                  path,
 		Config:                config,
+		Parser:                ports.NoteContentParser,
 		index:                 ports.NoteIndex,
-		parser:                ports.NoteContentParser,
 		templateLoaderFactory: ports.TemplateLoaderFactory,
 		idGeneratorFactory:    ports.IDGeneratorFactory,
 		fs:                    ports.FS,

@@ -1,0 +1,16 @@
+$ cd full-sample
+
+# List notes related to "Buy low, sell high" but not linked by it.
+$ zk list -qf"\{{title}}" --related uxjt
+>Investment business is a scam
+>Stick to your portfolio strategy
+
+# List notes related to "Fearless concurrency" but not linked by it.
+$ zk list -qf"\{{title}}" --related 2cl7.md
+>The Stack and the Heap
+
+# List notes related to "Null references"
+$ zk list -f"\{{title}}" --related ref/eg7k.md
+2>
+2>Found 0 note
+

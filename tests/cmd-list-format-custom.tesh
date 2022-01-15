@@ -1,0 +1,74 @@
+$ cd full-sample
+
+# Test custom format template.
+
+# JSON output of the template context.
+$ zk list -qf "\{{json .}}" inbox/dld4.md
+>{"filename":"dld4.md","filenameStem":"dld4","path":"inbox/dld4.md","absPath":"{{working-dir}}/inbox/dld4.md","title":"When to prefer PUT over POST HTTP method?","link":"[When to prefer PUT over POST HTTP method?](inbox/dld4)","lead":"`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.","body":"`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.\n\nA way to see it is:\n\n* `PUT` = SQL `UPDATE`\n* `POST` = SQL `INSERT`","snippets":["`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again."],"rawContent":"---\ndate: 2011-05-16 09:58:57\nkeywords: [programming, http]\ncategory: \"Best practice\"\n---\n\n# When to prefer PUT over POST HTTP method?\n\n`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.\n\nA way to see it is:\n\n* `PUT` = SQL `UPDATE`\n* `POST` = SQL `INSERT`\n","wordCount":66,"tags":["programming","http"],"metadata":{"category":"Best practice","date":"2011-05-16 09:58:57","keywords":["programming","http"]},"created":"2011-05-16T09:58:57Z","modified":"{{match '[\-T\.\:0-9]+'}}Z","checksum":"8cef4e35473a5ebf29d72b5d0e1bca4471dcf496f4971980840aafe4bf3d2298"}
+
+# Individual Handlebars template variables.
+
+$ zk list -qf "\{{filename}}" inbox/dld4.md
+>dld4.md
+
+$ zk list -qf "\{{filename-stem}}" inbox/dld4.md
+>dld4
+
+$ zk list -qf "\{{path}}" inbox/dld4.md
+>inbox/dld4.md
+
+$ zk list -qf "\{{abs-path}}" inbox/dld4.md
+>{{working-dir}}/inbox/dld4.md
+
+$ zk list -qf "\{{title}}" inbox/dld4.md
+>When to prefer PUT over POST HTTP method?
+
+$ zk list -qf "\{{link}}" inbox/dld4.md
+>[When to prefer PUT over POST HTTP method?](inbox/dld4)
+
+$ zk list -qf "\{{lead}}" inbox/dld4.md
+>`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
+
+$ zk list -qf "\{{body}}" inbox/dld4.md
+>`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
+>
+>A way to see it is:
+>
+>* `PUT` = SQL `UPDATE`
+>* `POST` = SQL `INSERT`
+
+$ zk list -qf "\{{snippets}}" inbox/dld4.md
+>`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
+
+$ zk list -qf "\{{raw-content}}" inbox/dld4.md
+>---
+>date: 2011-05-16 09:58:57
+>keywords: [programming, http]
+>category: "Best practice"
+>---
+>
+># When to prefer PUT over POST HTTP method?
+>
+>`PUT` should be idempotent. This means that it's harmless to call a `PUT` request many times. On the contrary, calling `POST` requests repeatedly might change data on the server again.
+>
+>A way to see it is:
+>
+>* `PUT` = SQL `UPDATE`
+>* `POST` = SQL `INSERT`
+>
+
+$ zk list -qf "\{{word-count}}" inbox/dld4.md
+>66
+
+$ zk list -qf "\{{json tags}}" inbox/dld4.md
+>["programming","http"]
+
+$ zk list -qf "\{{json metadata}}" inbox/dld4.md
+>{"category":"Best practice","date":"2011-05-16 09:58:57","keywords":["programming","http"]}
+
+$ zk list -qf "\{{created}}" inbox/dld4.md
+>2011-05-16 09:58:57 +0000 UTC
+
+$ zk list -qf "\{{checksum}}" inbox/dld4.md
+>8cef4e35473a5ebf29d72b5d0e1bca4471dcf496f4971980840aafe4bf3d2298
+

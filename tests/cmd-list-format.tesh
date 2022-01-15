@@ -1,0 +1,60 @@
+$ cd full-sample
+
+# Header.
+$ zk list -n4 -qfpath --header "HEADER"
+>HEADERuxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.md
+
+# Footer.
+$ zk list -n4 -qfpath --footer "FOOTER\n"
+>uxjt.md
+>fwsj.md
+>smdc.md
+>g7qa.mdFOOTER
+
+# Delimiter.
+$ zk list -n4 -qfpath --delimiter ";"
+>uxjt.md;fwsj.md;smdc.md;g7qa.md
+
+# Delimiter (short flag).
+$ zk list -n4 -qfpath -d,
+>uxjt.md,fwsj.md,smdc.md,g7qa.md
+
+# Can't mix --delimiter0 and --delimiter
+1$ zk list --delimiter0 --delimiter ","
+2>zk: error: --delimiter and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --header
+1$ zk list --delimiter0 --header "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --delimiter0 and --footer
+1$ zk list --delimiter0 --footer "-"
+2>zk: error: --footer and --delimiter0 can't be used together
+
+# Can't mix --format json and --header
+1$ zk list --format json --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format json and --footer
+1$ zk list --format json --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format json and --delimiter
+1$ zk list --format json --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+
+# Can't mix --format jsonl and --header
+1$ zk list --format jsonl --header "-"
+2>zk: error: --header can't be used with JSON format
+
+# Can't mix --format jsonl and --footer
+1$ zk list --format jsonl --footer "-"
+2>zk: error: --footer can't be used with JSON format
+
+# Can't mix --format jsonl and --delimiter
+1$ zk list --format jsonl --delimiter "-"
+2>zk: error: --delimiter can't be used with JSON format
+

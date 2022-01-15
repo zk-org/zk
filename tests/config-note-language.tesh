@@ -1,0 +1,15 @@
+$ cd blank
+
+$ echo "[note]\n filename = '\{{slug title}} - \{{date now \"%B\"}}'" > .zk/config.toml
+
+# The default language is `en`.
+# Note the & converted to `and` in the slug.
+$ zk new --title "Foo \& Bar" --date "January 2nd" --dry-run
+2>{{working-dir}}/foo-and-bar - January.md
+
+# Set a custom language.
+# Note the & converted to `et` in the slug.
+$ echo "language = 'fr'" >> .zk/config.toml
+$ zk new --title "Ceci \& cela" --date "January 2nd" --dry-run
+2>{{working-dir}}/ceci-et-cela - January.md
+

@@ -1,0 +1,43 @@
+$ cd blank
+
+$ echo "#hashtag\n#multi-word tag#\n:colon-tag:" > note.md
+
+# By default, only hashtags are enabled.
+$ echo "" > .zk/config.toml
+$ zk tag list
+>hashtag (1)
+>multi-word (1)
+2>
+2>Found 2 tags
+
+# Disable hashtags.
+$ echo "[format.markdown] hashtags = false" > .zk/config.toml
+$ zk index -fq
+$ zk tag list
+2>
+2>Found 0 tag
+
+# Enable colon tags.
+$ echo "[format.markdown] hashtags = false\n colon-tags = true" > .zk/config.toml
+$ zk index -fq
+$ zk tag list
+>colon-tag (1)
+2>
+2>Found 1 tag
+
+# Enable Bear multi-word tags.
+$ echo "[format.markdown] multiword-tags = true" > .zk/config.toml
+$ zk index -fq
+$ zk tag list
+>hashtag (1)
+>multi-word tag (1)
+2>
+2>Found 2 tags
+
+# Bear multi-word tags require hashtags to be enabled
+$ echo "[format.markdown] hashtags = false\n multiword-tags = true" > .zk/config.toml
+$ zk index -fq
+$ zk tag list
+2>
+2>Found 0 tag
+

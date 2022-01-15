@@ -1,0 +1,30 @@
+$ cd extra
+
+# Test usage of `extra` in templates.
+$ zk new --dry-run --title "Test"
+># Test
+>
+>Visibility: public
+>Color: red
+>Extra: {"color":"red","visibility":"public"}
+2>{{working-dir}}/public-test.md
+
+# Overridden extra in groups.
+$ zk new journal --dry-run --title "Test"
+># Test
+>
+>Visibility: private
+>Color: red
+>Extra: {"color":"red","visibility":"private"}
+2>{{working-dir}}/journal/private-test.md
+
+# Overridden extra on the CLI.
+$ zk new journal --dry-run --title "Test" --extra visibility=protected,show-header=1
+># Test
+>Behold, the mighty dynamic header!
+>
+>Visibility: protected
+>Color: red
+>Extra: {"color":"red","show-header":"1","visibility":"protected"}
+2>{{working-dir}}/journal/protected-test.md
+

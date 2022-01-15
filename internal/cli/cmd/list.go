@@ -168,13 +168,13 @@ Created: {{date created "short"}}
 
 	"long": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
-Modified: {{date created "short"}}
+Modified: {{date modified "short"}}
 
 {{list snippets}}`,
 
 	"full": `{{style "title" title}} {{style "path" path}}
 Created: {{date created "short"}}
-Modified: {{date created "short"}}
+Modified: {{date modified "short"}}
 Tags: {{join tags ", "}}
 
 {{prepend "  " body}}

@@ -1,0 +1,8 @@
+# A single-character hashtag freezes the indexing step.
+# https://github.com/mickael-menu/zk/issues/118
+
+$ cd blank
+$ echo "#A" > test.md
+$ zk tag list -qfname
+>A
+

@@ -1,0 +1,3 @@
+# Journal: {{title}}
+
+{{extra.content}}

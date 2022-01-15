@@ -1,0 +1,11 @@
+# Links containing accents are not matching the target note
+# https://github.com/mickael-menu/zk/issues/47
+
+$ cd issue-47
+
+$ zk list -qfpath --orphan
+>202102241246 §1 Zettelkasten.md
+
+$ zk list -qfpath --link-to 202102251018
+>202102241246 §1 Zettelkasten.md
+

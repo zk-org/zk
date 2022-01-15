@@ -1,0 +1,51 @@
+$ cd full-sample
+
+# Filter by a tag.
+$ zk list -qf\{{title}} --tag programming
+>Channel
+>Concurrency in Rust
+>Dangling pointers
+>Data race error
+>Do not communicate by sharing memory; instead, share memory by communicating
+>Errors should be handled differently in an application versus a library
+>Fearless concurrency
+>Green threads
+>Message passing
+>Mutex
+>Null references: the billion dollar mistake
+>Ownership in Rust
+>Strings are a complicated data structure
+>The Stack and the Heap
+>The borrow checker
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+>Zero-cost abstractions in Rust
+
+# Filter with multiple tags.
+$ zk list -qf\{{title}} --tag programming,rust
+>Concurrency in Rust
+>Ownership in Rust
+>The borrow checker
+>Zero-cost abstractions in Rust
+
+# Filter with any of the given tags.
+$ zk list -qf\{{title}} --tag "swift OR http"
+>Use small Hashable items with diffable data sources
+>When to prefer PUT over POST HTTP method?
+
+# Exclude notes with the given tags.
+$ zk list -qf\{{title}} --tag "NOT programming"
+>Buy low, sell high
+>Compound interests make you rich
+>Diversify your portfolio
+>Don't speculate
+>Financial markets are random
+>How to choose a broker?
+>Investment business is a scam
+>Stick to your portfolio strategy
+>§How to invest in the stock markets?
+
+# Filter by a tag prefix.
+$ zk list -qf\{{title}} --tag "sw*"
+>Use small Hashable items with diffable data sources
+

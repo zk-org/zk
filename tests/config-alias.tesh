@@ -1,0 +1,41 @@
+$ cd blank
+
+# Setup note fixtures.
+$ mkdir "red planet"
+$ touch "without-title.md"
+$ echo "# Yellow sun" > "yellow-sun.md"
+$ touch "red planet/blue moon.md"
+
+# Alias to override the default flags of a command.
+$ echo "[alias] list = 'zk list --quiet -fpath \$@'" > .zk/config.toml
+$ zk list -n2 --sort path-
+>yellow-sun.md
+>without-title.md
+
+# Shortcut for a native command.
+$ echo "[alias] ls = 'zk list \$@'" > .zk/config.toml
+$ zk ls --quiet -fpath
+>red planet/blue moon.md
+>without-title.md
+>yellow-sun.md
+
+# Use $*
+$ echo "[note] filename = '\{{slug title}}'\n [alias] nt = 'zk new --dry-run --title \"\$*\"'" > .zk/config.toml
+$ zk nt Hello world
+2>{{working-dir}}/hello-world.md
+
+# Use the `ZK_NOTEBOOK_DIR` env variable.
+$ echo "[alias] nbdir = 'echo \$ZK_NOTEBOOK_DIR'" > .zk/config.toml
+$ zk nbdir
+>{{working-dir}}
+
+# Test the "xargs formula"
+$ echo "[alias] xargs = 'zk list --quiet --format path --delimiter0 | xargs -0 head'" > .zk/config.toml
+$ zk xargs
+>==> red planet/blue moon.md <==
+>
+>==> without-title.md <==
+>
+>==> yellow-sun.md <==
+># Yellow sun
+

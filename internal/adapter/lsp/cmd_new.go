@@ -79,8 +79,12 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 			return nil, err
 		}
 
-		currentDir := filepath.Dir(doc.Path)
-		linkFormatterContext, err := core.NewLinkFormatterContext(note.AsMinimalNote(), notebook.Path, currentDir)
+		path := core.NotebookPath{
+			Path:       note.Path,
+			BasePath:   notebook.Path,
+			WorkingDir: filepath.Dir(doc.Path),
+		}
+		linkFormatterContext, err := core.NewLinkFormatterContext(path, note.Title, note.Metadata)
 		if err != nil {
 			return nil, err
 		}

@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/mickael-menu/zk/internal/util/errors"
@@ -13,32 +12,31 @@ import (
 // Metadata used to generate a link.
 type LinkFormatterContext struct {
 	// Filename of the note
-	Filename string
-	// File path to the note, relative to the notebook root.
-	Path string
+	Filename string `json:"filename"`
+	// File path to the note, relative to the notebook root.link-encode-path
+	Path string `json:"path"`
 	// Absolute file path to the note.
-	AbsPath string `handlebars:"abs-path"`
+	AbsPath string `json:"absPath" handlebars:"abs-path"`
 	// File path to the note, relative to the current directory.
-	RelPath string `handlebars:"rel-path"`
+	RelPath string `json:"relPath" handlebars:"rel-path"`
 	// Title of the note.
-	Title string
+	Title string `json:"title"`
 	// Metadata extracted from the YAML frontmatter.
-	Metadata map[string]interface{}
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
-func NewLinkFormatterContext(note MinimalNote, notebookDir string, currentDir string) (LinkFormatterContext, error) {
-	absPath := filepath.Join(notebookDir, note.Path)
-	relPath, err := filepath.Rel(currentDir, absPath)
+func NewLinkFormatterContext(path NotebookPath, title string, metadata map[string]interface{}) (LinkFormatterContext, error) {
+	relPath, err := path.PathRelToWorkingDir()
 	if err != nil {
 		return LinkFormatterContext{}, err
 	}
 	return LinkFormatterContext{
-		Filename: filepath.Base(note.Path),
-		Path:     note.Path,
-		AbsPath:  absPath,
+		Filename: path.Filename(),
+		Path:     path.Path,
+		AbsPath:  path.AbsPath(),
 		RelPath:  relPath,
-		Title:    note.Title,
-		Metadata: note.Metadata,
+		Title:    title,
+		Metadata: metadata,
 	}, nil
 }
 

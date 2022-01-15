@@ -10,8 +10,8 @@ import (
 // Index indexes the content of all the notes in the notebook.
 type Index struct {
 	Force   bool `short:"f" help:"Force indexing all the notes."`
-	Verbose bool `short:"v" help:"Print detailed information about the indexing process."`
-	Quiet   bool `short:"q" help:"Do not print statistics nor progress."`
+	Verbose bool `short:"v" xor:"print" help:"Print detailed information about the indexing process."`
+	Quiet   bool `short:"q" xor:"print" help:"Do not print statistics nor progress."`
 }
 
 func (cmd *Index) Help() string {

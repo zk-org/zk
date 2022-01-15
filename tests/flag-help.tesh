@@ -1,0 +1,37 @@
+# Print the main help
+$ zk --help
+>Usage: zk <command>
+>
+>Commands:
+>
+>NOTEBOOK
+>  A notebook is a directory containing a collection of notes
+>
+>  init     Create a new notebook in the given directory.
+>  index    Index the notes to be searchable.
+>
+>NOTES
+>  Edit or browse your notes
+>
+>  new      Create a new note in the given notebook directory.
+>  list     List notes matching the given criteria.
+>  graph    Produce a graph of the notes matching the given criteria.
+>  edit     Edit notes matching the given criteria.
+>  tag      Manage the note tags.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>
+>Run "zk <command> --help" for more information on a command.
+
+# Short flags
+$ zk -h | head -n1
+>Usage: zk <command>
+$ zk init -h | head -n1
+>Usage: zk init [<directory>]
+

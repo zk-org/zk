@@ -1,0 +1,13 @@
+[note]
+filename = "{{slug title}}"
+template = "default.md"
+
+[extra]
+content = "Default content"
+
+[group.journal.note]
+filename = "{{date now '%d-%m'}}"
+template = "journal.md"
+
+[group.journal.extra]
+content = "What did you do today?"

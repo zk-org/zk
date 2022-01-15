@@ -1,0 +1,19 @@
+$ cd neuron
+
+# Test that [[[link]]], #[[link]] and [[link]]# are properly parsed and have
+# the proper link relation.
+$ zk graph -qfjson
+>{
+>  "notes": [
+>    {{match '.*'}}
+>    {{match '.*'}}
+>    {{match '.*'}}
+>  ],
+>  "links": [
+>    {"title":"a","href":"a","type":"wiki-link","isExternal":false,"rels":["down"],"snippet":"[[a]]#","snippetStart":17,"snippetEnd":23,"sourceId":1,"sourcePath":"a.md","targetId":1,"targetPath":"a.md"},
+>    {"title":"b","href":"b","type":"wiki-link","isExternal":false,"rels":["down"],"snippet":"[[[b]]]","snippetStart":7,"snippetEnd":14,"sourceId":1,"sourcePath":"a.md","targetId":2,"targetPath":"b.md"},
+>    {"title":"b","href":"b","type":"wiki-link","isExternal":false,"rels":["down"],"snippet":"[[b]]#","snippetStart":5,"snippetEnd":11,"sourceId":2,"sourcePath":"b.md","targetId":2,"targetPath":"b.md"},
+>    {"title":"a","href":"a","type":"wiki-link","isExternal":false,"rels":["up"],"snippet":"#[[a]]","snippetStart":5,"snippetEnd":11,"sourceId":3,"sourcePath":"c.md","targetId":1,"targetPath":"a.md"}
+>  ]
+>}
+

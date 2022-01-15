@@ -1,0 +1,116 @@
+$ cd tags
+
+# Print help for `zk tag list`
+$ zk tag list --help
+>Usage: zk tag list
+>
+>List all the note tags.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>
+>Formatting
+>  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
+>                           of the predefined formats: name, full, json, jsonl.
+>      --header=STRING      Arbitrary text printed at the start of the list.
+>      --footer="\\n"       Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print tags delimited by the given separator.
+>  -0, --delimiter0         Print tags delimited by ASCII NUL characters. This is
+>                           useful when used in conjunction with `xargs -0`.
+>  -P, --no-pager           Do not pipe output into a pager.
+>  -q, --quiet              Do not print the total number of tags found.
+>
+>Sorting
+>  -s, --sort=TERM,...    Order the tags by the given criterion.
+
+# List all tags.
+$ zk tag list
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+2>
+2>Found 13 tags
+
+# Quiet mode.
+$ zk tag list --quiet
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+
+# Quiet mode (short).
+$ zk tag list -q
+>biography (1)
+>biology (2)
+>book (12)
+>dystopia (2)
+>feminism (1)
+>fiction (6)
+>history (2)
+>non-fiction (6)
+>philosophy (3)
+>physics (1)
+>romance (3)
+>science (3)
+>science-fiction (1)
+
+# Remove some tags.
+$ rm the*
+$ zk tag list
+>book (6)
+>dystopia (2)
+>fiction (5)
+>non-fiction (1)
+>physics (1)
+>romance (2)
+>science (1)
+>science-fiction (1)
+2>
+2>Found 8 tags
+
+# Add new tags.
+$ echo "#tag1 #tag2 #science" > ulysses.md
+$ zk tag list
+>book (5)
+>dystopia (2)
+>fiction (4)
+>non-fiction (1)
+>physics (1)
+>romance (2)
+>science (2)
+>science-fiction (1)
+>tag1 (1)
+>tag2 (1)
+2>
+2>Found 10 tags
+
+# Remove all tags.
+$ rm *
+$ zk tag list
+2>
+2>Found 0 tag
+
