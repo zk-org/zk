@@ -161,7 +161,8 @@ type LSPConfig struct {
 
 // LSPCompletionConfig holds the LSP auto-completion configuration.
 type LSPCompletionConfig struct {
-	Note LSPCompletionTemplates
+	Note                   LSPCompletionTemplates
+	UseAdditionalTextEdits opt.Bool
 }
 
 // LSPCompletionConfig holds the LSP completion templates for a particular
@@ -373,6 +374,7 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if lspCompl.NoteDetail != nil {
 		config.LSP.Completion.Note.Detail = opt.NewNotEmptyString(*lspCompl.NoteDetail)
 	}
+	config.LSP.Completion.UseAdditionalTextEdits = opt.NewBoolWithPtr(lspCompl.UseAdditionalTextEdits)
 
 	// LSP diagnostics
 	lspDiags := tomlConf.LSP.Diagnostics
@@ -508,9 +510,10 @@ type tomlToolConfig struct {
 
 type tomlLSPConfig struct {
 	Completion struct {
-		NoteLabel      *string `toml:"note-label"`
-		NoteFilterText *string `toml:"note-filter-text"`
-		NoteDetail     *string `toml:"note-detail"`
+		NoteLabel              *string `toml:"note-label"`
+		NoteFilterText         *string `toml:"note-filter-text"`
+		NoteDetail             *string `toml:"note-detail"`
+		UseAdditionalTextEdits *bool   `toml:"use-additional-text-edits"`
 	}
 	Diagnostics struct {
 		WikiTitle *string `toml:"wiki-title"`
