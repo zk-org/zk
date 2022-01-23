@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.
+* [#152](https://github.com/mickael-menu/zk/issues/152) Incorrect timezone for natural dates.
 
 
 ## 0.9.0

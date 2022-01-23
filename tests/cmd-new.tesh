@@ -60,11 +60,25 @@ $ EDITOR="echo 'edit'" zk new --title "Edit"
 $ EDITOR="echo 'edit'" zk new --title "Print path" --print-path
 >{{working-dir}}/print-path.md
 
-# Set explicitely today's date.
+# Set explicitely today's date (natural dates).
 $ zk new --group date --date "January 2nd" --dry-run
 2>{{working-dir}}/02-01.md
 $ zk new --group date --date "December 24th" --dry-run
 2>{{working-dir}}/24-12.md
+
+# Set explicitely today's date (RFC 3339)
+$ zk new --group date-raw --date "2022-01-23T13:55:48+01:00" --dry-run
+2>{{working-dir}}/2022-01-23 13:55:48 +0100 {{match ".+"}}.md
+$ zk new --group date-raw --date "2022-02-17T17:53:12" --dry-run
+2>{{working-dir}}/2022-02-17 17:53:12 {{match ".+"}}.md
+$ zk new --group date-raw --date "2022-02-17T17:53" --dry-run
+2>{{working-dir}}/2022-02-17 17:53:00 {{match ".+"}}.md
+$ zk new --group date-raw --date "2022-02-17" --dry-run
+2>{{working-dir}}/2022-02-17 00:00:00 {{match ".+"}}.md
+$ zk new --group date-raw --date "2022-02" --dry-run
+2>{{working-dir}}/2022-02-01 00:00:00 {{match ".+"}}.md
+$ zk new --group date-raw --date "2022" --dry-run
+2>{{working-dir}}/2022-01-01 00:00:00 {{match ".+"}}.md
 
 # Dry run doesn't write the note.
 $ zk new --dry-run --title "Dry run"
