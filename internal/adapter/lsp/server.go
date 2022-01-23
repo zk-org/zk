@@ -22,13 +22,14 @@ import (
 
 // Server holds the state of the Language Server.
 type Server struct {
-	server            *glspserv.Server
-	notebooks         *core.NotebookStore
-	documents         *documentStore
-	noteContentParser core.NoteContentParser
-	templateLoader    core.TemplateLoader
-	fs                core.FileStorage
-	logger            util.Logger
+	server                 *glspserv.Server
+	notebooks              *core.NotebookStore
+	documents              *documentStore
+	noteContentParser      core.NoteContentParser
+	templateLoader         core.TemplateLoader
+	fs                     core.FileStorage
+	logger                 util.Logger
+	useAdditionalTextEdits opt.Bool
 }
 
 // ServerOpts holds the options to create a new Server.
@@ -60,12 +61,13 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	server := &Server{
-		server:         glspServer,
-		notebooks:      opts.Notebooks,
-		documents:      newDocumentStore(fs, opts.Logger),
-		templateLoader: opts.TemplateLoader,
-		fs:             fs,
-		logger:         opts.Logger,
+		server:                 glspServer,
+		notebooks:              opts.Notebooks,
+		documents:              newDocumentStore(fs, opts.Logger),
+		templateLoader:         opts.TemplateLoader,
+		fs:                     fs,
+		logger:                 opts.Logger,
+		useAdditionalTextEdits: opt.NullBool,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -77,6 +79,15 @@ func NewServer(opts ServerOpts) *Server {
 		// https://github.com/neoclide/coc.nvim/wiki/Debug-language-server#using-output-channel
 		if params.Trace != nil {
 			protocol.SetTraceValue(*params.Trace)
+		}
+
+		if params.ClientInfo != nil {
+			if params.ClientInfo.Name == "Visual Studio Code" {
+				// Visual Studio Code doesn't seem to support inl
+				// VSCode doesn't support deleting the trigger characters with
+				// the main TextEdit. We'll use additional text edits instead.
+				server.useAdditionalTextEdits = opt.True
+			}
 		}
 
 		capabilities := handler.CreateServerCapabilities()
@@ -792,17 +803,19 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 		return item, err
 	}
 
-	addTextEdits := []protocol.TextEdit{}
+	if s.useAdditionalTextEditsWithNotebook(notebook) {
+		addTextEdits := []protocol.TextEdit{}
 
-	// Some LSP clients (e.g. VSCode) don't support deleting the trigger
-	// characters with the main TextEdit. So let's add an additional
-	// TextEdit for that.
-	addTextEdits = append(addTextEdits, protocol.TextEdit{
-		NewText: "",
-		Range:   rangeFromPosition(pos, -2, 0),
-	})
+		// Some LSP clients (e.g. VSCode) don't support deleting the trigger
+		// characters with the main TextEdit. So let's add an additional
+		// TextEdit for that.
+		addTextEdits = append(addTextEdits, protocol.TextEdit{
+			NewText: "",
+			Range:   rangeFromPosition(pos, -2, 0),
+		})
 
-	item.AdditionalTextEdits = addTextEdits
+		item.AdditionalTextEdits = addTextEdits
+	}
 
 	return item, nil
 }
@@ -822,6 +835,12 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 		return nil, err
 	}
 
+	// Overwrite [[ trigger directly if the additional text edits are disabled.
+	startOffset := 0
+	if !s.useAdditionalTextEditsWithNotebook(notebook) {
+		startOffset = -2
+	}
+
 	// Some LSP clients (e.g. VSCode) auto-pair brackets, so we need to
 	// remove the closing ]] or )) after the completion.
 	endOffset := 0
@@ -832,8 +851,15 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 
 	return protocol.TextEdit{
 		NewText: link,
-		Range:   rangeFromPosition(pos, 0, endOffset),
+		Range:   rangeFromPosition(pos, startOffset, endOffset),
 	}, nil
+}
+
+func (s *Server) useAdditionalTextEditsWithNotebook(nb *core.Notebook) bool {
+	return nb.Config.LSP.Completion.UseAdditionalTextEdits.
+		Or(s.useAdditionalTextEdits).
+		OrBool(false).
+		Unwrap()
 }
 
 func positionInRange(content string, rng protocol.Range, pos protocol.Position) bool {

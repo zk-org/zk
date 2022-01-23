@@ -6,11 +6,12 @@ The `[lsp]` [configuration file](config.md) section provides settings to fine-tu
 
 Customize how completion items appear in your editor when auto-completing links with the `[lsp.completion]` sub-section.
 
-| Setting            | Type       | Description                                                                |
-|--------------------|------------|----------------------------------------------------------------------------|
-| `note-label`       | `template` | Label displayed in the completion pop-up for each note                     |
-| `note-filter-text` | `template` | Text used as a source when filtering the completion pop-up with keystrokes |
-| `note-detail`      | `template` | Additional information about a completion item                             |
+| Setting                     | Type       | Description                                                                           |
+|-----------------------------|------------|---------------------------------------------------------------------------------------|
+| `note-label`                | `template` | Label displayed in the completion pop-up for each note                                |
+| `note-filter-text`          | `template` | Text used as a source when filtering the completion pop-up with keystrokes            |
+| `note-detail`               | `template` | Additional information about a completion item                                        |
+| `use-additional-text-edits` | `boolean`  | Indicates whether `additionalTextEdits` will be used to remove the trigger characters |
 
 Each key accepts a [template](template.md) with the following context:
 

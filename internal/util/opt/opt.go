@@ -91,3 +91,76 @@ func (s String) String() string {
 func (s String) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%v"`, s)), nil
 }
+
+// Bool holds an optional boolean value.
+type Bool struct {
+	Value *bool
+}
+
+// NullBool represents an empty optional Bool.
+var NullBool = Bool{nil}
+
+// True represents a true optional Bool.
+var True = NewBool(true)
+
+// False represents a false optional Bool.
+var False = NewBool(false)
+
+// NewBool creates a new optional Bool with the given value.
+func NewBool(value bool) Bool {
+	return Bool{&value}
+}
+
+// NewBool creates a new optional Bool with the given pointer.
+// When nil, the Bool is considered null.
+func NewBoolWithPtr(value *bool) Bool {
+	return Bool{value}
+}
+
+// IsNull returns whether the optional Bool has no value.
+func (s Bool) IsNull() bool {
+	return s.Value == nil
+}
+
+// Or returns the receiver if it is not null, otherwise the given optional
+// Bool.
+func (s Bool) Or(other Bool) Bool {
+	if s.IsNull() {
+		return other
+	} else {
+		return s
+	}
+}
+
+// OrBool returns the optional Bool value or the given default boolean if
+// it is null.
+func (s Bool) OrBool(alt bool) Bool {
+	if s.IsNull() {
+		return NewBool(alt)
+	} else {
+		return s
+	}
+}
+
+// Unwrap returns the optional Bool value or false if none is set.
+func (s Bool) Unwrap() bool {
+	if s.IsNull() {
+		return false
+	} else {
+		return *s.Value
+	}
+}
+
+func (s Bool) Equal(other Bool) bool {
+	return s.Value == other.Value ||
+		(s.Value != nil && other.Value != nil && *s.Value == *other.Value)
+}
+
+func (s Bool) MarshalJSON() ([]byte, error) {
+	value := s.Unwrap()
+	if value {
+		return []byte("true"), nil
+	} else {
+		return []byte("false"), nil
+	}
+}

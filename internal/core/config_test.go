@@ -126,6 +126,7 @@ func TestParseComplete(t *testing.T) {
 		paths = []
 
 		[lsp.completion]
+		use-additional-text-edits = true
 		note-label = "notelabel"
 		note-filter-text = "notefiltertext"
 		note-detail = "notedetail"
@@ -236,6 +237,7 @@ func TestParseComplete(t *testing.T) {
 					FilterText: opt.NewString("notefiltertext"),
 					Detail:     opt.NewString("notedetail"),
 				},
+				UseAdditionalTextEdits: opt.True,
 			},
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle: LSPDiagnosticHint,
