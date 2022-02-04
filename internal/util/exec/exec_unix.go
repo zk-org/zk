@@ -3,16 +3,18 @@
 package exec
 
 import (
-	"os"
 	"os/exec"
+
+	osutil "github.com/mickael-menu/zk/internal/util/os"
 )
 
 // CommandFromString returns a Cmd running the given command with $SHELL.
 func CommandFromString(command string, args ...string) *exec.Cmd {
-	shell := os.Getenv("SHELL")
-	if len(shell) == 0 {
-		shell = "sh"
-	}
+	shell := osutil.GetOptEnv("ZK_SHELL").
+		Or(osutil.GetOptEnv("SHELL")).
+		OrString("sh").
+		Unwrap()
+
 	args = append([]string{"-c", command, "--"}, args...)
 	return exec.Command(shell, args...)
 }
