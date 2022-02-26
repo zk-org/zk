@@ -3,6 +3,7 @@ package lsp
 import (
 	"fmt"
 	"net/url"
+	"runtime"
 
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
@@ -22,6 +23,12 @@ func uriToPath(uri string) (string, error) {
 	}
 	if parsed.Scheme != "file" {
 		return "", errors.New("URI was not a file:// URI")
+	}
+
+	if runtime.GOOS == "windows" {
+		// In Windows "file:///c:/tmp/foo.md" is parsed to "/c:/tmp/foo.md".
+		// Strip the first character to get a valid path.
+		return parsed.Path[1:], nil
 	}
 	return parsed.Path, nil
 }
