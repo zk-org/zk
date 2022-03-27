@@ -29,6 +29,7 @@ $ zk new --help
 >  -n, --dry-run                Don't actually create the note. Instead, prints
 >                               its content on stdout and the generated path on
 >                               stderr.
+>      --id=ID                  Skip id generation and use provided value.
 
 # Default note title.
 $ zk new --print-path
@@ -47,6 +48,10 @@ $ cat custom-title.md
 ># Custom title
 >
 >
+
+# Provide a custom note id
+$ zk new --group id --id 123abc --dry-run
+2>{{working-dir}}/123abc.md
 
 # Provide a custom title (short flag).
 $ zk new -t "Another custom title" -p
