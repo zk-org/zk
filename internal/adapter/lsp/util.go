@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"runtime"
+	"strings"
 
 	"github.com/mickael-menu/zk/internal/util/errors"
 )
@@ -17,7 +18,8 @@ func pathToURI(path string) string {
 }
 
 func uriToPath(uri string) (string, error) {
-	parsed, err := url.Parse(uri)
+	s := strings.ReplaceAll(uri, "%5C", "/")
+	parsed, err := url.Parse(s)
 	if err != nil {
 		return "", err
 	}
@@ -28,7 +30,13 @@ func uriToPath(uri string) (string, error) {
 	if runtime.GOOS == "windows" {
 		// In Windows "file:///c:/tmp/foo.md" is parsed to "/c:/tmp/foo.md".
 		// Strip the first character to get a valid path.
-		return parsed.Path[1:], nil
+		if strings.Contains(parsed.Path[1:], ":") {
+			// url.Parse() behaves differently with "file:///c:/..." and "file://c:/..."
+			return parsed.Path[1:], nil
+		} else {
+			// if the windows drive is not included in Path it will be in Host
+			return parsed.Host + "/" + parsed.Path[1:], nil
+		}
 	}
 	return parsed.Path, nil
 }
