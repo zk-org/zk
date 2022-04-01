@@ -24,6 +24,7 @@ type New struct {
 	Template  string            `          placeholder:PATH  help:"Custom template used to render the note."`
 	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
 	DryRun    bool              `short:n                     help:"Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."`
+	ID        string            `          placeholder:ID    help:"Skip id generation and use provided value."`
 }
 
 func (cmd *New) Run(container *cli.Container) error {
@@ -54,6 +55,7 @@ func (cmd *New) Run(container *cli.Container) error {
 		Extra:     cmd.Extra,
 		Date:      date,
 		DryRun:    cmd.DryRun,
+		ID:        cmd.ID,
 	})
 
 	if cmd.DryRun {

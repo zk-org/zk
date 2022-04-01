@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New `--date` flag for `zk new` to set the current date manually.
+* New `--id` flag for `zk new` to skip ID generation and use a provided value (contributed by [@skbolton](https://github.com/mickael-menu/zk/pull/183)).
 * [#144](https://github.com/mickael-menu/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
 * [zk-nvim#26](https://github.com/mickael-menu/zk-nvim/issues/26) The LSP server doesn't use `additionalTextEdits` anymore to remove the trigger characters when completing links.
     * You can customize the default behavior with the [`use-additional-text-edits` configuration key](docs/config-lsp.md).

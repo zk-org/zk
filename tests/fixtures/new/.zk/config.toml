@@ -10,6 +10,10 @@ filename = "{{date now '%d-%m'}}"
 template = "empty.md"
 filename = "{{now}}"
 
+[group.id.note]
+template = "empty.md"
+filename = "{{id}}"
+
 [group.handlebars.note]
 template = "handlebars.md"
 
