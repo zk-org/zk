@@ -8,6 +8,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/alecthomas/kong v0.2.18-0.20210927063154-5c7b038540ab
 	github.com/aymerick/raymond v2.0.2+incompatible
+	github.com/bmatcuk/doublestar/v4 v4.0.2 // indirect
 	github.com/fatih/color v1.13.0
 	github.com/go-testfixtures/testfixtures/v3 v3.4.1
 	github.com/google/go-cmp v0.5.6
