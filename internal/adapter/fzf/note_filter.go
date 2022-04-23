@@ -35,6 +35,8 @@ type NoteFilterOpts struct {
 	LineTemplate opt.String
 	// Optionally provide additional arguments, taken from the config `fzf-options` property.
 	FzfOptions opt.String
+	// Key binding for the new action.
+	NewBinding opt.String
 	// Preview command to run when selecting a note.
 	PreviewCmd opt.String
 	// When non null, a "create new note from query" binding will be added to
@@ -91,11 +93,14 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 			suffix = " in " + dir.Name + "/"
 		}
 
-		bindings = append(bindings, Binding{
-			Keys:        "Ctrl-N",
-			Description: "create a note with the query as title" + suffix,
-			Action:      fmt.Sprintf(`abort+execute("%s" new "%s" --title {q} < /dev/tty > /dev/tty)`, zkBin, dir.Path),
-		})
+		newBinding := f.opts.NewBinding.OrString("Ctrl-N").String()
+		if newBinding != "" {
+			bindings = append(bindings, Binding{
+				Keys:        newBinding,
+				Description: "create a note with the query as title" + suffix,
+				Action:      fmt.Sprintf(`abort+execute("%s" new "%s" --title {q} < /dev/tty > /dev/tty)`, zkBin, dir.Path),
+			})
+		}
 	}
 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()

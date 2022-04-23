@@ -90,6 +90,7 @@ func TestParseComplete(t *testing.T) {
 		fzf-preview = "bat {1}"
 		fzf-line = "{{title}}"
 		fzf-options = "--border --height 40%"
+		fzf-bind-new = "Ctrl-C"
 
 		[extra]
 		hello = "world"
@@ -231,6 +232,7 @@ func TestParseComplete(t *testing.T) {
 			FzfPreview: opt.NewString("bat {1}"),
 			FzfLine:    opt.NewString("{{title}}"),
 			FzfOptions: opt.NewString("--border --height 40%"),
+			FzfBindNew: opt.NewString("Ctrl-C"),
 		},
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
