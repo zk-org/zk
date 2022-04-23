@@ -1,0 +1,22 @@
+# Wiki links in subdirectories are broken
+# https://github.com/mickael-menu/zk/issues/170
+
+$ cd blank-slug
+
+$ touch one.md
+$ echo "[[one]]" > two.md
+$ mkdir my_dir
+$ echo "[[one]]" > my_dir/three.md
+
+$ zk list -qfpath
+>my_dir/three.md
+>one.md
+>two.md
+
+$ zk list --link-to one.md -qfpath
+>my_dir/three.md
+>two.md
+
+$ zk list --linked-by my_dir/three.md -qfpath
+>one.md
+
