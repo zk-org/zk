@@ -152,7 +152,8 @@ func (ns *NotebookStore) locateNotebook(path string) (string, error) {
 
 	var locate func(string) (string, error)
 	locate = func(currentPath string) (string, error) {
-		if currentPath == "/" || currentPath == "." {
+                // For Windows, the root dir may end with volume name, e.g. E:\\
+		if currentPath == "/" || currentPath == filepath.VolumeName(currentPath)+"\\" || currentPath == "." {
 			return "", ErrNotebookNotFound(path)
 		}
 		exists, err := ns.fs.DirExists(filepath.Join(currentPath, ".zk"))

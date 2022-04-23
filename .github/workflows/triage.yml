@@ -1,0 +1,31 @@
+name: Triage
+
+on:
+  push:
+    paths:
+      - .github/workflows/triage.yml
+  schedule:
+    # Once every day at midnight UTC
+    - cron: "0 0 * * *"
+      
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v4
+        with:
+          days-before-stale: 30
+
+          days-before-issue-close: 5
+          stale-issue-label: 'stale'
+          stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs in the next 5 days.'
+          close-issue-message: 'This issue was closed because it has been stalled for 5 days with no activity.'
+          exempt-issue-labels: 'help wanted,feature request,enhancement,bug'
+
+          days-before-pr-close: -1
+          stale-pr-label: 'stale'
+          stale-pr-message: 'This pull request has been automatically marked as stale because it has not had recent activity.'

@@ -80,7 +80,7 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	}
 
 	for _, link := range contentParts.Links {
-		if !strutil.IsURL(link.Href) {
+		if !strutil.IsURL(link.Href) && link.Type == LinkTypeMarkdown {
 			// Make the href relative to the notebook root.
 			href := filepath.Join(filepath.Dir(absPath), link.Href)
 			link.Href, err = n.RelPath(href)

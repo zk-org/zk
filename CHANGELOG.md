@@ -7,11 +7,17 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New `--date` flag for `zk new` to set the current date manually.
+* New `--id` flag for `zk new` to skip ID generation and use a provided value (contributed by [@skbolton](https://github.com/mickael-menu/zk/pull/183)).
 * [#144](https://github.com/mickael-menu/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
+* [zk-nvim#26](https://github.com/mickael-menu/zk-nvim/issues/26) The LSP server doesn't use `additionalTextEdits` anymore to remove the trigger characters when completing links.
+    * You can customize the default behavior with the [`use-additional-text-edits` configuration key](docs/config-lsp.md).
+* [#163](https://github.com/mickael-menu/zk/issues/163) Use the `ZK_SHELL` environment variable to override the shell for `zk` only.
 
 ### Fixed
 
 * [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.
+* [#152](https://github.com/mickael-menu/zk/issues/152) Incorrect timezone for natural dates.
+* [#170](https://github.com/mickael-menu/zk/issues/170) Broken wiki links in subdirectories.
 
 
 ## 0.9.0

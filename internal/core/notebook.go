@@ -109,6 +109,8 @@ type NewNoteOpts struct {
 	Date time.Time
 	// Don't save the generated note on the file system.
 	DryRun bool
+	// Use a provided id over generating one
+	ID string
 }
 
 // ErrNoteExists is an error returned when a note already exists with the
@@ -148,6 +150,15 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 		return nil, wrap(err)
 	}
 
+	var idGenerator IDGenerator
+	if opts.ID != "" {
+		idGenerator = func() string {
+			return opts.ID
+		}
+	} else {
+		idGenerator = n.idGeneratorFactory(config.Note.IDOptions)
+	}
+
 	task := newNoteTask{
 		dir:              dir,
 		title:            opts.Title.OrString(config.Note.DefaultTitle).Unwrap(),
@@ -159,7 +170,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 		filenameTemplate: config.Note.FilenameTemplate + "." + config.Note.Extension,
 		bodyTemplatePath: opts.Template.Or(config.Note.BodyTemplatePath),
 		templates:        templates,
-		genID:            n.idGeneratorFactory(config.Note.IDOptions),
+		genID:            idGenerator,
 		dryRun:           opts.DryRun,
 	}
 	path, content, err := task.execute()
