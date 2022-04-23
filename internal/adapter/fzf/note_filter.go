@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/mickael-menu/zk/internal/adapter/term"
@@ -100,7 +101,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
 
 	fzf, err := New(Opts{
-		Options:    f.opts.FzfOptions,
+		Options:    f.opts.FzfOptions.OrString(defaultOptions),
 		PreviewCmd: opt.NewNotEmptyString(previewCmd),
 		Padding:    2,
 		Bindings:   bindings,
@@ -160,6 +161,18 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 }
 
 var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`
+
+// defaultOptions are the default fzf options used when filtering notes.
+var defaultOptions = strings.Join([]string{
+	"--tiebreak begin",      // Prefer matches located at the beginning of the line
+	"--exact",               // Look for exact matches instead of fuzzy ones by default
+	"--tabstop 4",           // Length of tab characters
+	"--height 100%",         // Height of the list relative to the terminal window
+	"--layout reverse",      // Display the input field at the top
+	"--no-hscroll",          // Make sure the path and titles are always visible
+	"--color hl:-1,hl+:-1",  // Don't highlight search terms
+	"--preview-window wrap", // Enable line wrapping in the preview window
+}, " ")
 
 type lineRenderContext struct {
 	Filename     string

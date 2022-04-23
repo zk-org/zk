@@ -75,22 +75,13 @@ func New(opts Opts) (*Fzf, error) {
 		opts.Delimiter = "\x01"
 	}
 
+	// Hard-coded fzf options that are required by zk.
 	args := []string{
-		"--delimiter", opts.Delimiter,
-		"--tiebreak", "begin",
 		"--ansi",
-		"--exact",
-		"--tabstop", "4",
-		"--height", "100%",
-		"--layout", "reverse",
-		//"--info", "inline",
-		// Make sure the path and titles are always visible
-		"--no-hscroll",
-		// Don't highlight search terms
-		"--color", "hl:-1,hl+:-1",
-		"--preview-window", "wrap",
+		"--delimiter", opts.Delimiter,
 	}
 
+	// Additional options.
 	additionalArgs, err := shellquote.Split(opts.Options.String())
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't split the fzf-options: %s", opts.Options.String())
