@@ -27,8 +27,8 @@ var (
 type Opts struct {
 	// Preview command executed by fzf when hovering a line.
 	PreviewCmd opt.String
-	// Optionally preovide additional arguments, taken from the config `fzf-additional-args` property.
-	AdditionalArgs opt.String
+	// Optionally provide additional arguments, taken from the config `fzf-options` property.
+	Options opt.String
 	// Amount of space between two non-empty fields.
 	Padding int
 	// Delimiter used by fzf between fields.
@@ -75,12 +75,6 @@ func New(opts Opts) (*Fzf, error) {
 		opts.Delimiter = "\x01"
 	}
 
-	rawDefaultOpts := os.Getenv("FZF_DEFAULT_OPTS")
-	defaultFzfArgs, err := shellquote.Split(rawDefaultOpts)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can't split FZF_DEFAULT_OPTS: %s", rawDefaultOpts)
-	}
-
 	args := []string{
 		"--delimiter", opts.Delimiter,
 		"--tiebreak", "begin",
@@ -97,11 +91,9 @@ func New(opts Opts) (*Fzf, error) {
 		"--preview-window", "wrap",
 	}
 
-	args = append(defaultFzfArgs, args...)
-
-	additionalArgs, err := shellquote.Split(opts.AdditionalArgs.String())
+	additionalArgs, err := shellquote.Split(opts.Options.String())
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't split the fzf-options: %s", opts.AdditionalArgs.String())
+		return nil, errors.Wrapf(err, "can't split the fzf-options: %s", opts.Options.String())
 	}
 	args = append(args, additionalArgs...)
 

@@ -147,11 +147,11 @@ type MarkdownConfig struct {
 
 // ToolConfig holds the external tooling configuration.
 type ToolConfig struct {
-	Editor               opt.String
-	Pager                opt.String
-	FzfPreview           opt.String
-	FzfLine              opt.String
-	FzfAdditionalArgs    opt.String
+	Editor     opt.String
+	Pager      opt.String
+	FzfPreview opt.String
+	FzfLine    opt.String
+	FzfOptions opt.String
 }
 
 // LSPConfig holds the Language Server Protocol configuration.
@@ -363,8 +363,8 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if tool.FzfLine != nil {
 		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
 	}
-	if tool.FzfAdditionalArgs != nil {
-		config.Tool.FzfAdditionalArgs = opt.NewNotEmptyString(*tool.FzfAdditionalArgs)
+	if tool.FzfOptions != nil {
+		config.Tool.FzfOptions = opt.NewNotEmptyString(*tool.FzfOptions)
 	}
 
 	// LSP completion
@@ -506,11 +506,11 @@ type tomlMarkdownConfig struct {
 }
 
 type tomlToolConfig struct {
-	Editor             *string
-	Pager              *string
-	FzfPreview         *string `toml:"fzf-preview"`
-	FzfLine            *string `toml:"fzf-line"`
-	FzfAdditionalArgs  *string `toml:"fzf-additional-args"`
+	Editor     *string
+	Pager      *string
+	FzfPreview *string `toml:"fzf-preview"`
+	FzfLine    *string `toml:"fzf-line"`
+	FzfOptions *string `toml:"fzf-options"`
 }
 
 type tomlLSPConfig struct {
