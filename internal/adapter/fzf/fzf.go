@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -74,7 +75,11 @@ func New(opts Opts) (*Fzf, error) {
 		opts.Delimiter = "\x01"
 	}
 
-    defaultFzfArgs := strings.Split(os.Getenv("FZF_DEFAULT_OPTS"), " ")
+	rawDefaultOpts := os.Getenv("FZF_DEFAULT_OPTS")
+	defaultFzfArgs, err := shellquote.Split(rawDefaultOpts)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't split FZF_DEFAULT_OPTS: %s", rawDefaultOpts)
+	}
 
 	args := []string{
 		"--delimiter", opts.Delimiter,
@@ -92,8 +97,13 @@ func New(opts Opts) (*Fzf, error) {
 		"--preview-window", "wrap",
 	}
 
-    args = append(defaultFzfArgs, args...)
-    args = append(args, strings.Split(opts.AdditionalArgs.String(), " ")...)
+	args = append(defaultFzfArgs, args...)
+
+	additionalArgs, err := shellquote.Split(opts.AdditionalArgs.String())
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't split the fzf-options: %s", opts.AdditionalArgs.String())
+	}
+	args = append(args, additionalArgs...)
 
 	header := ""
 	binds := []string{}
