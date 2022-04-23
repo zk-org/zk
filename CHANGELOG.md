@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * [zk-nvim#26](https://github.com/mickael-menu/zk-nvim/issues/26) The LSP server doesn't use `additionalTextEdits` anymore to remove the trigger characters when completing links.
     * You can customize the default behavior with the [`use-additional-text-edits` configuration key](docs/config-lsp.md).
 * [#163](https://github.com/mickael-menu/zk/issues/163) Use the `ZK_SHELL` environment variable to override the shell for `zk` only.
+* [#173](https://github.com/mickael-menu/zk/issues/173) Support for double star globbing in `note.ignore` config option.
 
 ### Fixed
 
