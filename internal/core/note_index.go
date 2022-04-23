@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
@@ -132,7 +133,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		}
 
 		for _, ignoreGlob := range group.IgnoreGlobs() {
-			matches, err := filepath.Match(ignoreGlob, path)
+			matches, err := doublestar.PathMatch(ignoreGlob, path)
 			if err != nil {
 				return true, errors.Wrapf(err, "failed to match ignore glob %s to %s", ignoreGlob, path)
 			}

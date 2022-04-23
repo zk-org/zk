@@ -1,0 +1,16 @@
+# Support for double star globbing with `note.ignore`.
+# https://github.com/mickael-menu/zk/issues/173
+
+$ cd blank
+
+$ echo "[note]\n ignore = ['drafts/**']" > .zk/config.toml
+
+$ mkdir -p drafts/subdir/subdir
+$ echo "# This is not ignored" > not-ignored.md
+$ echo "# This is ignored" > drafts/ignored.md
+$ echo "# This should be ignored as well" > drafts/subdir/should-ignore.md
+$ echo "# This should be ignored as well" > drafts/subdir/subdir/should-ignore.md
+
+$ zk list -qfpath
+>not-ignored.md
+
