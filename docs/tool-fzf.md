@@ -60,3 +60,33 @@ The following variables are available in the line template.
 | `checksum`      | string   | SHA-256 checksum of the note file                                  |
 
 1. YAML keys are normalized to lower case.
+
+
+## `fzf` options
+
+You can override the default `fzf` options used by `zk` with `fzf-options`. Look at `man fzf` for the list of available options.
+
+```toml
+[tool]
+fzf-options = "--height 40% --border"
+```
+
+Note that this overrides all the default options used by `zk`, you might want to keep some of them:
+
+* `--tiebreak begin` Prefer matches located at the beginning of the line
+* `--exact` Look for exact matches instead of fuzzy ones by default
+* `--tabstop 4` Length of tab characters
+* `--height 100%` Height of the list relative to the terminal window
+* `--layout reverse` Display the input field at the top
+* `--no-hscroll` Make sure the path and titles are always visible
+* `--color hl:-1,hl+:-1` Don't highlight search terms
+* `--preview-window wrap` Enable line wrapping in the preview window
+
+## Key bindings
+
+When running `fzf` with `zk edit --interactive`, you can [create a new note with the `Ctrl-N` key binding](note-creation.md#search-or-create-with-a-single-command). This binding is customizable with `fzf-bind-new`. You can also disable it by setting it to an empty string (`""`).
+
+```toml
+[tool]
+fzf-bind-new = "Ctrl-C"
+```
