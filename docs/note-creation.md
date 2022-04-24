@@ -10,7 +10,7 @@ By default, `zk new` will start [your editor](tool-editor.md) after creating the
 
 If you are not sure whether a note already exists for a particular subject, the "search or create" mode might be more appropriate than `zk new`. It is inspired by [Notational Velocity](https://notational.net/) and enables searching for an existing note or creating a new one in a single action.
 
-This option is available when running `zk edit --interactive`, which spawns [`fzf`](tool-fzf.md) to filter selected notes. From `fzf`, press `Ctrl-N` to create a new note using the current search query as title.
+This option is available when running `zk edit --interactive`, which spawns [`fzf`](tool-fzf.md) to filter selected notes. From `fzf`, press `Ctrl-E` to create a new note using the current search query as title.
 
 ## Create a note with initial content
 

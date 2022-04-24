@@ -151,6 +151,8 @@ type ToolConfig struct {
 	Pager      opt.String
 	FzfPreview opt.String
 	FzfLine    opt.String
+	FzfOptions opt.String
+	FzfBindNew opt.String
 }
 
 // LSPConfig holds the Language Server Protocol configuration.
@@ -362,6 +364,12 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if tool.FzfLine != nil {
 		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
 	}
+	if tool.FzfOptions != nil {
+		config.Tool.FzfOptions = opt.NewNotEmptyString(*tool.FzfOptions)
+	}
+	if tool.FzfBindNew != nil {
+		config.Tool.FzfBindNew = opt.NewStringWithPtr(tool.FzfBindNew)
+	}
 
 	// LSP completion
 	lspCompl := tomlConf.LSP.Completion
@@ -506,6 +514,8 @@ type tomlToolConfig struct {
 	Pager      *string
 	FzfPreview *string `toml:"fzf-preview"`
 	FzfLine    *string `toml:"fzf-line"`
+	FzfOptions *string `toml:"fzf-options"`
+	FzfBindNew *string `toml:"fzf-bind-new"`
 }
 
 type tomlLSPConfig struct {

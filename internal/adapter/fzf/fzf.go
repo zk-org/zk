@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/kballard/go-shellquote"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -26,6 +27,8 @@ var (
 type Opts struct {
 	// Preview command executed by fzf when hovering a line.
 	PreviewCmd opt.String
+	// Optionally provide additional arguments, taken from the config `fzf-options` property.
+	Options opt.String
 	// Amount of space between two non-empty fields.
 	Padding int
 	// Delimiter used by fzf between fields.
@@ -72,21 +75,18 @@ func New(opts Opts) (*Fzf, error) {
 		opts.Delimiter = "\x01"
 	}
 
+	// Hard-coded fzf options that are required by zk.
 	args := []string{
-		"--delimiter", opts.Delimiter,
-		"--tiebreak", "begin",
 		"--ansi",
-		"--exact",
-		"--tabstop", "4",
-		"--height", "100%",
-		"--layout", "reverse",
-		//"--info", "inline",
-		// Make sure the path and titles are always visible
-		"--no-hscroll",
-		// Don't highlight search terms
-		"--color", "hl:-1,hl+:-1",
-		"--preview-window", "wrap",
+		"--delimiter", opts.Delimiter,
 	}
+
+	// Additional options.
+	additionalArgs, err := shellquote.Split(opts.Options.String())
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't split the fzf-options: %s", opts.Options.String())
+	}
+	args = append(args, additionalArgs...)
 
 	header := ""
 	binds := []string{}
