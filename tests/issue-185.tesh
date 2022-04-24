@@ -1,0 +1,12 @@
+# Markdown table syntax is parsed as colon tags
+# https://github.com/mickael-menu/zk/issues/185
+
+$ cd blank
+
+$ echo "[format.markdown] colon-tags = true" > .zk/config.toml
+$ echo "|:---:|" > test.md
+
+$ zk tag list
+2>
+2>Found 0 tag
+
