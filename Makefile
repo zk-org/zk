@@ -14,6 +14,10 @@ test:
 tesh: build
 	@PATH=".:$(shell pwd):$(PATH)" tesh tests tests/fixtures
 
+# Run end-to-end tests and prints difference as raw bytes.
+teshb: build
+	@PATH=".:$(shell pwd):$(PATH)" tesh -b tests tests/fixtures
+
 # Update end-to-end tests.
 tesh-update: build
 	PATH=".:$(shell pwd):$(PATH)" tesh -u tests tests/fixtures
@@ -28,9 +32,9 @@ dist-macos:
 
 # Produce a release bundle for Linux.
 dist-linux:
-	rm -f zk && docker run --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-i386 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-i386.tar.gz" zk
-	rm -f zk && docker run --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-amd64 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-amd64.tar.gz" zk
-	rm -f zk && docker run --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-arm64 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-arm64.tar.gz" zk
+	rm -f zk && docker run --platform linux/amd64 --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-i386 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-i386.tar.gz" zk
+	rm -f zk && docker run --platform linux/amd64 --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-amd64 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-amd64.tar.gz" zk
+	rm -f zk && docker run --platform linux/amd64 --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk mickaelmenu/zk-xcompile:linux-arm64 /bin/bash -c 'make' && tar -zcvf "zk-${VERSION}-linux-arm64.tar.gz" zk
 
 # Clean build products.
 clean:

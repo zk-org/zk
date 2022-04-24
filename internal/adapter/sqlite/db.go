@@ -207,6 +207,12 @@ func (db *DB) migrate() error {
 					   LEFT JOIN notes t ON l.target_id = t.id`,
 				},
 			},
+
+			{ // 7
+				SQL: []string{},
+				// https://github.com/mickael-menu/zk/issues/170#issuecomment-1107848441
+				NeedsReindexing: true,
+			},
 		}
 
 		needsReindexing := false
