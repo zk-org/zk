@@ -27,7 +27,7 @@ You can customize your experience using [custom templates](template.md) to gener
 
 If you are not sure whether a note already exists for a particular subject, the "search or create" mode might be more appropriate than `zk new`. It is inspired by [Notational Velocity](https://notational.net/) and enables searching for an existing note or creating a new one in a single action.
 
-From `zk`'s interactive edit screen, press `Ctrl-N` to create a new note using the current search query as title.
+From `zk`'s interactive edit screen, press `Ctrl-E` to create a new note using the current search query as title.
 
 <div align="center"><img alt="Create a note" width="85%" src="assets/media/new2.svg"/></div>
 

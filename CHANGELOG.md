@@ -13,8 +13,13 @@ All notable changes to this project will be documented in this file.
     * You can customize the default behavior with the [`use-additional-text-edits` configuration key](docs/config-lsp.md).
 * [#163](https://github.com/mickael-menu/zk/issues/163) Use the `ZK_SHELL` environment variable to override the shell for `zk` only.
 * [#173](https://github.com/mickael-menu/zk/issues/173) Support for double star globbing in `note.ignore` config option.
-* [#137](https://github.com/mickael-menu/zk/issues/137) Customize the `fzf` options used by `zk`'s interactive modes with the [`fzf-options`](docs/tool-fzf.md) config option.
+* [#137](https://github.com/mickael-menu/zk/issues/137) Customize the `fzf` options used by `zk`'s interactive modes with the [`fzf-options`](docs/tool-fzf.md) config option (contributed by [@Nelyah](https://github.com/mickael-menu/zk/pull/154)).
+
 * [#168](https://github.com/mickael-menu/zk/discussions/168) Customize the `fzf` key binding to create new notes with the [`fzf-bind-new`](docs/tool-fzf.md) config option.
+
+### Changed
+
+* The default `fzf` key binding to create a new note with `zk edit --interactive` was changed to `Ctrl-E`, to avoid conflict with the default `Ctrl-N` binding.
 
 ### Fixed
 

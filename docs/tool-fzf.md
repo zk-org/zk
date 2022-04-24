@@ -84,7 +84,7 @@ Note that this overrides all the default options used by `zk`, you might want to
 
 ## Key bindings
 
-When running `fzf` with `zk edit --interactive`, you can [create a new note with the `Ctrl-N` key binding](note-creation.md#search-or-create-with-a-single-command). This binding is customizable with `fzf-bind-new`. You can also disable it by setting it to an empty string (`""`).
+When running `fzf` with `zk edit --interactive`, you can [create a new note with the `Ctrl-E` key binding](note-creation.md#search-or-create-with-a-single-command). This binding is customizable with `fzf-bind-new`. You can also disable it by setting it to an empty string (`""`).
 
 ```toml
 [tool]

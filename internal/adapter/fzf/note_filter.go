@@ -93,7 +93,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 			suffix = " in " + dir.Name + "/"
 		}
 
-		newBinding := f.opts.NewBinding.OrString("Ctrl-N").String()
+		newBinding := f.opts.NewBinding.OrString("Ctrl-E").String()
 		if newBinding != "" {
 			bindings = append(bindings, Binding{
 				Keys:        newBinding,
