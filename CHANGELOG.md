@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 * [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.
 * [#152](https://github.com/mickael-menu/zk/issues/152) Incorrect timezone for natural dates.
 * [#170](https://github.com/mickael-menu/zk/issues/170) Broken wiki links in subdirectories.
+* [#185](https://github.com/mickael-menu/zk/issues/185) Don't parse a Markdown table header as a colon tag.
 
 
 ## 0.9.0

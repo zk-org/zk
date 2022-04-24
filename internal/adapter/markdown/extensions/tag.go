@@ -226,7 +226,7 @@ func (p *colontagParser) Parse(parent ast.Node, block text.Reader, pc parser.Con
 
 		} else if char == ':' {
 			tag = strings.TrimSpace(tag)
-			if len(tag) == 0 {
+			if !isValidTag(tag) {
 				break
 			}
 			tags = append(tags, tag)
@@ -259,4 +259,20 @@ func isValidTagChar(r rune, excluded rune) bool {
 		r == '-' || r == '_' || r == '$' || r == '%' ||
 		r == '&' || r == '+' || r == '=' || r == ':' ||
 		r == '#')
+}
+
+func isValidTag(tag string) bool {
+	if len(tag) == 0 {
+		return false
+	}
+
+	// Prevent Markdown table syntax to be parsed a a colon tag, e.g. |:---:|
+	// https://github.com/mickael-menu/zk/issues/185
+	for _, c := range tag {
+		if c != '-' {
+			return true
+		}
+	}
+
+	return false
 }
