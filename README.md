@@ -51,6 +51,15 @@ Or, if you want to the latest changes:
 brew install --HEAD zk
 ```
 
+### Nix
+
+```sh
+# Run zk from Nix store without installing it:
+nix run nixpkgs#zk
+# Or, to install it permanently:
+nix-env -iA zk
+```
+
 ### Arch Linux
 
 You can install [the zk package](https://archlinux.org/packages/community/x86_64/zk/) from the official repos.
