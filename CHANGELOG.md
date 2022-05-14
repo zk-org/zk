@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Changed
+
+* Removed the dependency on `libicu`.
+
 
 ## 0.10.0
 

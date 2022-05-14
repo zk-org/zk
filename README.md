@@ -79,20 +79,14 @@ $ cd zk
 
 #### On macOS
 
-`icu4c` is required to build `zk`, which you can install with [Homebrew](https://brew.sh/).
-
 ```
-$ brew install icu4c
 $ make
 $ ./zk -h
 ```
 
 #### On Linux
 
-`libicu-dev` is required to build `zk`, use your favorite package manager to install it.
-
 ```
-$ apt-install libicu-dev
 $ make
 $ ./zk -h
 ```

@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 
 	sqlite "github.com/mattn/go-sqlite3"
 	"github.com/mickael-menu/zk/internal/core"
@@ -14,6 +15,9 @@ func init() {
 	sql.Register("sqlite3_custom", &sqlite.SQLiteDriver{
 		ConnectHook: func(conn *sqlite.SQLiteConn) error {
 			if err := conn.RegisterFunc("mention_query", buildMentionQuery, true); err != nil {
+				return err
+			}
+			if err := conn.RegisterFunc("regexp", regexp.MatchString, true); err != nil {
 				return err
 			}
 			return nil

@@ -47,11 +47,11 @@ BUILD := `git rev-parse --short HEAD`
 ENV_PREFIX := CGO_ENABLED=1
 # Add necessary env variables for Apple Silicon.
 ifeq ($(shell uname -sm),Darwin arm64)
-	ENV_PREFIX := $(ENV) GOARCH=arm64 CGO_CFLAGS="-I/opt/homebrew/opt/icu4c/include" CGO_LDFLAGS="-L/opt/homebrew/opt/icu4c/lib"
+	ENV_PREFIX := $(ENV) GOARCH=arm64
 endif
 
 # Wrapper around the go binary, to set all the default parameters.
 define go
-	$(ENV_PREFIX) go $(1) -tags "fts5 icu" -ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)" $(2)
+	$(ENV_PREFIX) go $(1) -tags "fts5" -ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)" $(2)
 endef
 

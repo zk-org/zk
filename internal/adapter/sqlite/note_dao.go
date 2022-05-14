@@ -12,7 +12,6 @@ import (
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/fts5"
-	"github.com/mickael-menu/zk/internal/util/icu"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
@@ -284,7 +283,7 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 	// matching a sub-section in the note.
 	href = strings.SplitN(href, "#", 2)[0]
 
-	href = icu.EscapePattern(href)
+	href = regexp.QuoteMeta(href)
 
 	if allowPartialHref {
 		ids, err := d.findIdsByPathRegex("^(.*/)?[^/]*" + href + "[^/]*$")
@@ -298,7 +297,7 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 		}
 	}
 
-	ids, err := d.findIdsByPathRegex(href + "[^/]*|" + href + "/.+")
+	ids, err := d.findIdsByPathRegex("^(?:" + href + "[^/]*|" + href + "/.+)$")
 	if len(ids) > 0 || err != nil {
 		return ids, err
 	}
