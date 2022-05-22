@@ -521,10 +521,6 @@ func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.No
 	if note == nil && err == nil && link.IsWikiLink {
 		// Try to find a partial href match.
 		note, err = notebook.FindByHref(link.Href, true)
-		if note == nil && err == nil {
-			// Fallback on matching the note title.
-			note, err = s.noteMatchingTitle(link.Href, notebook)
-		}
 	}
 	if note == nil || err != nil {
 		return nil, err
@@ -548,19 +544,6 @@ func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook
 	note, err := notebook.FindByHref(path, false)
 	if err != nil {
 		s.logger.Printf("findByHref(%s): %s", href, err.Error())
-	}
-	return note, err
-}
-
-// noteMatchingTitle returns the LSP documentUri for the note matching the given search terms.
-func (s *Server) noteMatchingTitle(terms string, notebook *core.Notebook) (*core.MinimalNote, error) {
-	if terms == "" {
-		return nil, nil
-	}
-
-	note, err := notebook.FindMatching("title:(" + terms + ")")
-	if err != nil {
-		s.logger.Printf("findMatching(title: %s): %s", terms, err.Error())
 	}
 	return note, err
 }
