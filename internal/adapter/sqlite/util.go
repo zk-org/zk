@@ -30,6 +30,14 @@ func escapeLikeTerm(term string, escapeChar rune) string {
 	return escape(escape(escape(term, string(escapeChar)), "%"), "_")
 }
 
+func linkIDToSQL(id core.LinkID) sql.NullInt64 {
+	if id.IsValid() {
+		return sql.NullInt64{Int64: int64(id), Valid: true}
+	} else {
+		return sql.NullInt64{}
+	}
+}
+
 func noteIDToSQL(id core.NoteID) sql.NullInt64 {
 	if id.IsValid() {
 		return sql.NullInt64{Int64: int64(id), Valid: true}

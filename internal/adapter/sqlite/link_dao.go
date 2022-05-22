@@ -15,8 +15,8 @@ type LinkDAO struct {
 
 	// Prepared SQL statements
 	addLinkStmt        *LazyStmt
-	setLinksTargetStmt *LazyStmt
 	removeLinksStmt    *LazyStmt
+	updateTargetIDStmt *LazyStmt
 }
 
 // NewLinkDAO creates a new instance of a DAO working on the given database
@@ -32,18 +32,16 @@ func NewLinkDAO(tx Transaction, logger util.Logger) *LinkDAO {
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
-		// Set links matching a given href and missing a target ID to the given
-		// target ID.
-		setLinksTargetStmt: tx.PrepareLazy(`
-			UPDATE links
-			   SET target_id = ?
-			 WHERE target_id IS NULL AND external = 0 AND ? LIKE href || '%'
-		`),
-
 		// Remove all the outbound links of a note.
 		removeLinksStmt: tx.PrepareLazy(`
 			DELETE FROM links
 			 WHERE source_id = ?
+		`),
+
+		updateTargetIDStmt: tx.PrepareLazy(`
+			UPDATE links
+			   SET target_id = ?
+			 WHERE id = ?
 		`),
 	}
 }
@@ -69,10 +67,9 @@ func (d *LinkDAO) RemoveAll(id core.NoteID) error {
 	return err
 }
 
-// SetTargetID updates the missing target_id for links matching the given href.
-// FIXME: Probably doesn't work for all type of href (partial, wikilinks, etc.)
-func (d *LinkDAO) SetTargetID(href string, id core.NoteID) error {
-	_, err := d.setLinksTargetStmt.Exec(int64(id), href)
+// SetTargetID updates the target note of a link.
+func (d *LinkDAO) SetTargetID(id core.LinkID, targetID core.NoteID) error {
+	_, err := d.updateTargetIDStmt.Exec(noteIDToSQL(targetID), linkIDToSQL(id))
 	return err
 }
 
@@ -90,15 +87,31 @@ func joinLinkRels(rels []core.LinkRelation) string {
 	return res
 }
 
+// FindInternal returns all the links internal to the notebook.
+func (d *LinkDAO) FindInternal() ([]core.ResolvedLink, error) {
+	return d.findWhere("external = 0")
+}
+
+// FindBetweenNotes returns all the links existing between the given notes.
 func (d *LinkDAO) FindBetweenNotes(ids []core.NoteID) ([]core.ResolvedLink, error) {
+	idsString := joinNoteIDs(ids, ",")
+	return d.findWhere(fmt.Sprintf("source_id IN (%s) AND target_id IN (%s)", idsString, idsString))
+}
+
+// findWhere returns all the links, filtered by the given where query.
+func (d *LinkDAO) findWhere(where string) ([]core.ResolvedLink, error) {
 	links := make([]core.ResolvedLink, 0)
 
-	idsString := joinNoteIDs(ids, ",")
-	rows, err := d.tx.Query(fmt.Sprintf(`
+	query := `
 		SELECT id, source_id, source_path, target_id, target_path, title, href, type, external, rels, snippet, snippet_start, snippet_end
 		  FROM resolved_links
-		 WHERE source_id IN (%s) AND target_id IN (%s)
-	`, idsString, idsString))
+	`
+
+	if where != "" {
+		query += "\nWHERE " + where
+	}
+
+	rows, err := d.tx.Query(query)
 	if err != nil {
 		return links, err
 	}
@@ -120,10 +133,11 @@ func (d *LinkDAO) FindBetweenNotes(ids []core.NoteID) ([]core.ResolvedLink, erro
 
 func (d *LinkDAO) scanLink(row RowScanner) (*core.ResolvedLink, error) {
 	var (
-		id, sourceID, targetID, snippetStart, snippetEnd       int
-		sourcePath, targetPath, title, href, linkType, snippet string
-		external                                               bool
-		rels                                                   sql.NullString
+		id, sourceID, snippetStart, snippetEnd     int
+		targetID                                   sql.NullInt64
+		sourcePath, title, href, linkType, snippet string
+		external                                   bool
+		targetPath, rels                           sql.NullString
 	)
 
 	err := row.Scan(
@@ -137,10 +151,11 @@ func (d *LinkDAO) scanLink(row RowScanner) (*core.ResolvedLink, error) {
 		return nil, err
 	default:
 		return &core.ResolvedLink{
+			ID:         core.LinkID(id),
 			SourceID:   core.NoteID(sourceID),
 			SourcePath: sourcePath,
-			TargetID:   core.NoteID(targetID),
-			TargetPath: targetPath,
+			TargetID:   core.NoteID(targetID.Int64),
+			TargetPath: targetPath.String,
 			Link: core.Link{
 				Title:        title,
 				Href:         href,
