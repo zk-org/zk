@@ -220,7 +220,7 @@ func TestNoteIndexUpdateWithTags(t *testing.T) {
 
 func testNoteIndex(t *testing.T) (*DB, *NoteIndex) {
 	db := testDB(t)
-	return db, NewNoteIndex(db, &util.NullLogger)
+	return db, NewNoteIndex("", db, &util.NullLogger)
 }
 
 func assertTagExistsOrNot(t *testing.T, db *DB, shouldExist bool, tag string) {

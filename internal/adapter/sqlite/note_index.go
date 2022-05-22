@@ -1,18 +1,22 @@
 package sqlite
 
 import (
+	"path/filepath"
+
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/mickael-menu/zk/internal/util/strings"
 )
 
 // NoteIndex persists note indexing results in the SQLite database.
 // It implements the port core.NoteIndex and acts as a facade to the DAOs.
 type NoteIndex struct {
-	db     *DB
-	dao    *dao
-	logger util.Logger
+	notebookPath string
+	db           *DB
+	dao          *dao
+	logger       util.Logger
 }
 
 type dao struct {
@@ -22,10 +26,11 @@ type dao struct {
 	metadata    *MetadataDAO
 }
 
-func NewNoteIndex(db *DB, logger util.Logger) *NoteIndex {
+func NewNoteIndex(notebookPath string, db *DB, logger util.Logger) *NoteIndex {
 	return &NoteIndex{
-		db:     db,
-		logger: logger,
+		notebookPath: notebookPath,
+		db:           db,
+		logger:       logger,
 	}
 }
 
@@ -45,6 +50,47 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 		return err
 	})
 	return
+}
+
+// FindLinkMatch implements core.NoteIndex.
+func (ni *NoteIndex) FindLinkMatch(baseDir string, href string, linkType core.LinkType) (id core.NoteID, err error) {
+	err = ni.commit(func(dao *dao) error {
+		id, err = ni.findLinkMatch(dao, baseDir, href, linkType)
+		return err
+	})
+	return
+}
+
+func (ni *NoteIndex) findLinkMatch(dao *dao, baseDir string, href string, linkType core.LinkType) (core.NoteID, error) {
+	if strings.IsURL(href) {
+		return 0, nil
+	}
+
+	id, _ := ni.findPathMatch(dao, baseDir, href)
+	if id.IsValid() {
+		return id, nil
+	}
+
+	allowPartialMatch := (linkType == core.LinkTypeWikiLink)
+	return dao.notes.FindIdByHref(href, allowPartialMatch)
+}
+
+func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.NoteID, error) {
+	href, err := ni.relNotebookPath(baseDir, href)
+	if err != nil {
+		return 0, err
+	}
+	return dao.notes.FindIdByHref(href, false)
+}
+
+// relNotebookHref makes the given href (which is relative to baseDir) relative
+// to the notebook root instead.
+func (ni *NoteIndex) relNotebookPath(baseDir string, href string) (string, error) {
+	path := filepath.Clean(filepath.Join(baseDir, href))
+	path, err := filepath.Rel(ni.notebookPath, path)
+
+	return path,
+		errors.Wrapf(err, "failed to make href relative to the notebook: %s", href)
 }
 
 // FindLinksBetweenNotes implements core.NoteIndex.
@@ -157,8 +203,7 @@ func (ni *NoteIndex) resolveLinkNoteIDs(dao *dao, sourceID core.NoteID, links []
 	resolvedLinks := []core.ResolvedLink{}
 
 	for _, link := range links {
-		allowPartialMatch := (link.Type == core.LinkTypeWikiLink)
-		targetID, err := dao.notes.FindIdByHref(link.Href, allowPartialMatch)
+		targetID, err := ni.findLinkMatch(dao, "" /* base dir */, link.Href, link.Type)
 		if err != nil {
 			return resolvedLinks, err
 		}
