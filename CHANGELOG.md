@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Deprecated
+
+* The LSP server does not support resolving a wiki link to a note title anymore.
+    * For example, `[[Planet]]` can match a note with filename `i4w0 Planet.md` but not `i4w0.md` with a Markdown title `Planet` anymore.
+    * This "smart" fallback resolution based on note titles was too fragile and not supported by the `zk` CLI.
+
 ### Changed
 
 * Removed the dependency on `libicu`.
