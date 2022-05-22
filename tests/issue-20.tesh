@@ -6,5 +6,5 @@
 
 $ mkdir .zk
 
-$ zk index -q
+$ zk index -q 2> /dev/null
 

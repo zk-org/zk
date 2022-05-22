@@ -10,9 +10,16 @@ All notable changes to this project will be documented in this file.
     * For example, `[[Planet]]` can match a note with filename `i4w0 Planet.md` but not `i4w0.md` with a Markdown title `Planet` anymore.
     * This "smart" fallback resolution based on note titles was too fragile and not supported by the `zk` CLI.
 
+
+## 0.10.1
+
 ### Changed
 
 * Removed the dependency on `libicu`.
+
+### Fixed
+
+* Indexed links are now automatically updated when adding a new note, if it is a better match than the previous link target.
 
 
 ## 0.10.0

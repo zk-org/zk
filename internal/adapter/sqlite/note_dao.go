@@ -278,6 +278,7 @@ func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core
 	return ids, nil
 }
 
+// FIXME: This logic is duplicated in NoteIndex.linkMatchesPath(). Maybe there's a way to share it using a custom SQLite function?
 func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.NoteID, error) {
 	// Remove any anchor at the end of the HREF, since it's most likely
 	// matching a sub-section in the note.
