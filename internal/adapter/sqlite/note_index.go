@@ -1,18 +1,24 @@
 package sqlite
 
 import (
+	"path/filepath"
+	"regexp"
+	"strings"
+
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/paths"
+	strutil "github.com/mickael-menu/zk/internal/util/strings"
 )
 
 // NoteIndex persists note indexing results in the SQLite database.
 // It implements the port core.NoteIndex and acts as a facade to the DAOs.
 type NoteIndex struct {
-	db     *DB
-	dao    *dao
-	logger util.Logger
+	notebookPath string
+	db           *DB
+	dao          *dao
+	logger       util.Logger
 }
 
 type dao struct {
@@ -22,10 +28,11 @@ type dao struct {
 	metadata    *MetadataDAO
 }
 
-func NewNoteIndex(db *DB, logger util.Logger) *NoteIndex {
+func NewNoteIndex(notebookPath string, db *DB, logger util.Logger) *NoteIndex {
 	return &NoteIndex{
-		db:     db,
-		logger: logger,
+		notebookPath: notebookPath,
+		db:           db,
+		logger:       logger,
 	}
 }
 
@@ -45,6 +52,37 @@ func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNo
 		return err
 	})
 	return
+}
+
+// FindLinkMatch implements core.NoteIndex.
+func (ni *NoteIndex) FindLinkMatch(baseDir string, href string, linkType core.LinkType) (id core.NoteID, err error) {
+	err = ni.commit(func(dao *dao) error {
+		id, err = ni.findLinkMatch(dao, baseDir, href, linkType)
+		return err
+	})
+	return
+}
+
+func (ni *NoteIndex) findLinkMatch(dao *dao, baseDir string, href string, linkType core.LinkType) (core.NoteID, error) {
+	if strutil.IsURL(href) {
+		return 0, nil
+	}
+
+	id, _ := ni.findPathMatch(dao, baseDir, href)
+	if id.IsValid() {
+		return id, nil
+	}
+
+	allowPartialMatch := (linkType == core.LinkTypeWikiLink)
+	return dao.notes.FindIdByHref(href, allowPartialMatch)
+}
+
+func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.NoteID, error) {
+	href, err := ni.relNotebookPath(baseDir, href)
+	if err != nil {
+		return 0, err
+	}
+	return dao.notes.FindIdByHref(href, false)
 }
 
 // FindLinksBetweenNotes implements core.NoteIndex.
@@ -82,8 +120,14 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 		if err != nil {
 			return err
 		}
+		note.ID = id
 
-		err = ni.addLinks(dao, id, note)
+		err = ni.addLinks(dao, id, note.Links)
+		if err != nil {
+			return err
+		}
+
+		err = ni.fixExistingLinks(dao, note.ID, note.Path)
 		if err != nil {
 			return err
 		}
@@ -93,6 +137,81 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 
 	err = errors.Wrapf(err, "%v: failed to index the note", note.Path)
 	return
+}
+
+// fixExistingLinks will go over all indexed links and update their target to
+// the given id if they match the given path better than their current
+// targetPath.
+func (ni *NoteIndex) fixExistingLinks(dao *dao, id core.NoteID, path string) error {
+	links, err := dao.links.FindInternal()
+	if err != nil {
+		return err
+	}
+
+	for _, link := range links {
+		// To find the best match possible, shortest paths take precedence.
+		// See https://github.com/mickael-menu/zk/issues/23
+		if link.TargetPath != "" && len(link.TargetPath) < len(path) {
+			continue
+		}
+
+		if matches, err := ni.linkMatchesPath(link, path); matches && err == nil {
+			err = dao.links.SetTargetID(link.ID, id)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// linkMatchesPath returns whether the given link can be used to reach the
+// given note path.
+func (ni *NoteIndex) linkMatchesPath(link core.ResolvedLink, path string) (bool, error) {
+	// Remove any anchor at the end of the HREF, since it's most likely
+	// matching a sub-section in the note.
+	href := strings.SplitN(link.Href, "#", 2)[0]
+
+	matchString := func(pattern string, s string) bool {
+		reg := regexp.MustCompile(pattern)
+		return reg.MatchString(s)
+	}
+
+	matches := func(href string, allowPartialHref bool) bool {
+		href = regexp.QuoteMeta(href)
+
+		if allowPartialHref {
+			if matchString("^(.*/)?[^/]*"+href+"[^/]*$", path) {
+				return true
+			}
+			if matchString(".*"+href+".*", path) {
+				return true
+			}
+		}
+
+		return matchString("^(?:"+href+"[^/]*|"+href+"/.+)$", path)
+	}
+
+	baseDir := filepath.Dir(link.SourcePath)
+	if relHref, err := ni.relNotebookPath(baseDir, href); err != nil {
+		if matches(relHref, false) {
+			return true, nil
+		}
+	}
+
+	allowPartialMatch := (link.Type == core.LinkTypeWikiLink)
+	return matches(href, allowPartialMatch), nil
+}
+
+// relNotebookHref makes the given href (which is relative to baseDir) relative
+// to the notebook root instead.
+func (ni *NoteIndex) relNotebookPath(baseDir string, href string) (string, error) {
+	path := filepath.Clean(filepath.Join(baseDir, href))
+	path, err := filepath.Rel(ni.notebookPath, path)
+
+	return path,
+		errors.Wrapf(err, "failed to make href relative to the notebook: %s", href)
 }
 
 // Update implements core.NoteIndex.
@@ -108,7 +227,7 @@ func (ni *NoteIndex) Update(note core.Note) error {
 		if err != nil {
 			return err
 		}
-		err = ni.addLinks(dao, id, note)
+		err = ni.addLinks(dao, id, note.Links)
 		if err != nil {
 			return err
 		}
@@ -139,26 +258,19 @@ func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteId core.NoteI
 	return nil
 }
 
-func (ni *NoteIndex) addLinks(dao *dao, id core.NoteID, note core.Note) error {
-	links, err := ni.resolveLinkNoteIDs(dao, id, note.Links)
+func (ni *NoteIndex) addLinks(dao *dao, id core.NoteID, links []core.Link) error {
+	resolvedLinks, err := ni.resolveLinkNoteIDs(dao, id, links)
 	if err != nil {
 		return err
 	}
-
-	err = dao.links.Add(links)
-	if err != nil {
-		return err
-	}
-
-	return dao.links.SetTargetID(note.Path, id)
+	return dao.links.Add(resolvedLinks)
 }
 
 func (ni *NoteIndex) resolveLinkNoteIDs(dao *dao, sourceID core.NoteID, links []core.Link) ([]core.ResolvedLink, error) {
 	resolvedLinks := []core.ResolvedLink{}
 
 	for _, link := range links {
-		allowPartialMatch := (link.Type == core.LinkTypeWikiLink)
-		targetID, err := dao.notes.FindIdByHref(link.Href, allowPartialMatch)
+		targetID, err := ni.findLinkMatch(dao, "" /* base dir */, link.Href, link.Type)
 		if err != nil {
 			return resolvedLinks, err
 		}

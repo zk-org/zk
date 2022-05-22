@@ -20,6 +20,10 @@ type NoteIndex interface {
 	// given filtering and sorting criteria.
 	FindMinimal(opts NoteFindOpts) ([]MinimalNote, error)
 
+	// Find link match returns the best note match for a given link href,
+	// relative to baseDir.
+	FindLinkMatch(baseDir string, href string, linkType LinkType) (NoteID, error)
+
 	// FindLinksBetweenNotes retrieves the links between the given notes.
 	FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error)
 

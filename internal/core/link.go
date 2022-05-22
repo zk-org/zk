@@ -1,5 +1,13 @@
 package core
 
+// LinkID represents the unique ID of a note link relative to a given
+// NoteIndex implementation.
+type LinkID int64
+
+func (id LinkID) IsValid() bool {
+	return id > 0
+}
+
 // Link represents a link in a note to another note or an external resource.
 type Link struct {
 	// Label of the link.
@@ -23,6 +31,7 @@ type Link struct {
 // ResolvedLink represents a link between two indexed notes.
 type ResolvedLink struct {
 	Link
+	ID         LinkID `json:"-"`
 	SourceID   NoteID `json:"sourceId"`
 	SourcePath string `json:"sourcePath"`
 	TargetID   NoteID `json:"targetId"`

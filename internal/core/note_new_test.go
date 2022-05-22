@@ -504,6 +504,9 @@ type noteIndexAddMock struct {
 
 func (m *noteIndexAddMock) Find(opts NoteFindOpts) ([]ContextualNote, error)     { return nil, nil }
 func (m *noteIndexAddMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) { return nil, nil }
+func (m *noteIndexAddMock) FindLinkMatch(baseDir string, href string, linkType LinkType) (NoteID, error) {
+	return 0, nil
+}
 func (m *noteIndexAddMock) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error) {
 	return nil, nil
 }

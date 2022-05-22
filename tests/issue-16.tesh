@@ -1,0 +1,11 @@
+# Links with anchors are broken.
+# https://github.com/mickael-menu/zk/issues/16
+
+$ cd blank
+
+$ touch note.md
+$ echo "[[note#section]]" > index.md
+
+$ zk list -qfpath --linked-by index.md
+>note.md
+

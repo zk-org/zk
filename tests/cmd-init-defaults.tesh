@@ -1,4 +1,6 @@
-$ zk init --no-input > /dev/null
+$ zk init --no-input 2> /dev/null
+>
+>Initialized a notebook in {{working-dir}}
 
 # Test default config.
 $ cat .zk/config.toml

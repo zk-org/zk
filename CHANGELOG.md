@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 * Removed the dependency on `libicu`.
 
+### Fixed
+
+* Indexed links are now automatically updated when adding a new note, if it is a better match than the previous link target.
+
 
 ## 0.10.0
 
