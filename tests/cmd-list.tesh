@@ -33,8 +33,6 @@ $ zk list --help
 >  -i, --interactive              Select notes interactively with fzf.
 >  -n, --limit=COUNT              Limit the number of notes found.
 >  -m, --match=QUERY              Terms to search for in the notes.
->  -e, --exact-match              Search for exact occurrences of the --match
->                                 argument (case insensitive).
 >  -x, --exclude=PATH,...         Ignore notes matching the given path, including
 >                                 its descendants.
 >  -t, --tag=TAG,...              Find notes tagged with the given tags.

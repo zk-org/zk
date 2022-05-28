@@ -111,16 +111,16 @@ $ zk list -q --debug-style --match 'mut*'
 >
 
 # Search for an exact match.
-$ zk list -q --debug-style --exact-match --match '["न", "म", "स्", "ते"]'
-><title>Strings are a complicated data structure</title> <path>oumc.md</path> (just now)
->
->  - Given the Hindi word "नमस्ते":
->
+# $ zk list -q --debug-style --exact-match --match '["न", "म", "स्", "ते"]'
+# ><title>Strings are a complicated data structure</title> <path>oumc.md</path> (just now)
+# >
+# >  - Given the Hindi word "नमस्ते":
+# >
 
-# Search for an exact match (short flag).
-$ zk list -q --debug-style -em '["न", "म", "स्", "ते"]'
-><title>Strings are a complicated data structure</title> <path>oumc.md</path> (just now)
->
->  - Given the Hindi word "नमस्ते":
->
+# --exact-match is deprecated.
+1$ zk list -q --exact-match
+2>zk: error: incorrect criteria: the --exact-match (-e) option is deprecated, use --match-strategy=exact (-Se) instead
 
+# --exact-match is deprecated (short flag).
+1$ zk list -q -e
+2>zk: error: incorrect criteria: the --exact-match (-e) option is deprecated, use --match-strategy=exact (-Se) instead
