@@ -161,3 +161,29 @@ func NoteSorterFromString(str string) (NoteSorter, error) {
 
 	return sorter, nil
 }
+
+// MatchStrategy represents a text matching strategy used when filtering notes with `--match`.
+type MatchStrategy int
+
+const (
+	// Full text search.
+	MatchStrategyFts MatchStrategy = iota + 1
+	// Exact text matching.
+	MatchStrategyExact
+	// Regular expression.
+	MatchStrategyRe
+)
+
+// MatchStrategyFromString returns a MatchStrategy from its string representation.
+func MatchStrategyFromString(str string) (MatchStrategy, error) {
+	switch str {
+	case "fts", "f":
+		return MatchStrategyFts, nil
+	case "re", "grep", "r":
+		return MatchStrategyRe, nil
+	case "exact", "e":
+		return MatchStrategyExact, nil
+	default:
+		return 0, fmt.Errorf("%s: unknown match strategy\ntry fts (full-text search), re (regular expression) or exact", str)
+	}
+}

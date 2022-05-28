@@ -20,6 +20,7 @@ type Filtering struct {
 	Interactive    bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
 	Limit          int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
 	Match          string   `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
+	MatchStrategy  string   `kong:"group='filter',short='M',placeholder='STRATEGY',help='Text matching strategy among: fts, re, exact.'" json:"matchStrategy"`
 	Exclude        []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
 	Tag            []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
 	Mention        []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
@@ -120,6 +121,9 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 				f.Match = parsedFilter.Match
 			} else if parsedFilter.Match != "" {
 				f.Match = fmt.Sprintf("(%s) AND (%s)", f.Match, parsedFilter.Match)
+			}
+			if f.MatchStrategy == "" {
+				f.MatchStrategy = parsedFilter.MatchStrategy
 			}
 
 		} else {
