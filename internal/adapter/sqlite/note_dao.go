@@ -529,6 +529,8 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 			whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
 			args = append(args, fts5.ConvertQuery(opts.Match.String()))
 		case core.MatchStrategyRe:
+			whereExprs = append(whereExprs, "n.raw_content REGEXP ?")
+			args = append(args, opts.Match.String())
 			break
 		}
 	}
