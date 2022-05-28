@@ -67,3 +67,24 @@ func TestSortersFromStrings(t *testing.T) {
 	_, err := NoteSortersFromStrings([]string{"c", "foobar"})
 	assert.Err(t, err, "foobar: unknown sorting term")
 }
+
+func TestMatchStrategyFromString(t *testing.T) {
+	test := func(str string, expected MatchStrategy) {
+		actual, err := MatchStrategyFromString(str)
+		assert.Nil(t, err)
+		assert.Equal(t, actual, expected)
+	}
+
+	test("f", MatchStrategyFts)
+	test("fts", MatchStrategyFts)
+
+	test("r", MatchStrategyRe)
+	test("re", MatchStrategyRe)
+	test("grep", MatchStrategyRe)
+
+	test("e", MatchStrategyExact)
+	test("exact", MatchStrategyExact)
+
+	_, err := MatchStrategyFromString("foobar")
+	assert.Err(t, err, "foobar: unknown match strategy\ntry fts (full-text search), re (regular expression) or exact")
+}

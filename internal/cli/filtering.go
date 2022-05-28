@@ -20,7 +20,7 @@ type Filtering struct {
 	Interactive    bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
 	Limit          int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
 	Match          string   `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
-	ExactMatch     bool     `kong:"group='filter',short='e',help='Search for exact occurrences of the --match argument (case insensitive).'" json:"exactMatch"`
+	MatchStrategy  string   `kong:"group='filter',short='M',default='fts',placeholder='STRATEGY',help='Text matching strategy among: fts, re, exact.'" json:"matchStrategy"`
 	Exclude        []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
 	Tag            []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
 	Mention        []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
@@ -41,6 +41,9 @@ type Filtering struct {
 	ModifiedAfter  string   `kong:"group='filter',placeholder='DATE',help='Find notes modified after the given date.'" json:"modifiedAfter"`
 
 	Sort []string `kong:"group='sort',short='s',placeholder='TERM',help='Order the notes by the given criterion.'" json:"sort"`
+
+	// Deprecated
+	ExactMatch bool `kong:"hidden,short='e'" json:"exactMatch"`
 }
 
 // ExpandNamedFilters expands recursively any named filter found in the Path field.
@@ -119,6 +122,9 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			} else if parsedFilter.Match != "" {
 				f.Match = fmt.Sprintf("(%s) AND (%s)", f.Match, parsedFilter.Match)
 			}
+			if f.MatchStrategy == "" {
+				f.MatchStrategy = parsedFilter.MatchStrategy
+			}
 
 		} else {
 			actualPaths = append(actualPaths, path)
@@ -138,8 +144,15 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 		return opts, err
 	}
 
+	if f.ExactMatch {
+		return opts, fmt.Errorf("the --exact-match (-e) option is deprecated, use --match-strategy=exact (-Me) instead")
+	}
+
 	opts.Match = opt.NewNotEmptyString(f.Match)
-	opts.ExactMatch = f.ExactMatch
+	opts.MatchStrategy, err = core.MatchStrategyFromString(f.MatchStrategy)
+	if err != nil {
+		return opts, err
+	}
 
 	if paths, ok := relPaths(notebook, f.Path); ok {
 		opts.IncludeHrefs = paths

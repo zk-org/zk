@@ -45,11 +45,35 @@ $ zk list --linked-by "`zk inline journal`"
 
 Use `--match <query>` (or `-m`) to search through the title and body of notes.
 
-The search is powered by a [full-text search](https://en.wikipedia.org/wiki/Full-text_search) database enabling near-instant results. Queries are not case-sensitive and terms are tokenized, which means that searching for `create` will also match `created` and `creating`.
+The search is powered by different strategies to answer various use cases:
+
+* `fts` (default) uses a [full-text search](https://en.wikipedia.org/wiki/Full-text_search) database to offer near-instant results and advanced search operators.
+* `exact` is useful if you need to find patterns containing special characters.
+* `re` enables regular expression for advanced use cases.
+
+Change the currently used strategy with `--match-strategy <strategy>` (or `-M`). To set the default strategy, you can declare a [custom alias](config-alias.md):
+
+```toml
+[alias]
+list = "zk list --match-strategy re $@"
+```
+
+### Full-text search (`fts`)
+
+The default match strategy is powered by a [full-text search](https://en.wikipedia.org/wiki/Full-text_search) database enabling near-instant results. Queries are not case-sensitive and terms are tokenized, which means that searching for `create` will also match `created` and `creating`.
 
 A syntax similar to Google Search is available for advanced search queries.
 
-### Combining terms
+```sh
+# FTS is the default match strategy
+$ zk list --match "tesla OR edison"
+
+# ...but you can enable it explicitly.
+$ zk list --match-strategy fts --match "tesla OR edison"
+$ zk list -Mf -m "tesla OR edison"
+```
+
+#### Combining terms
 
 By default, the search engine will find the notes containing all the terms in the query, in any order.
 
@@ -83,7 +107,7 @@ Finally, you can filter out results by excluding a term with `NOT` (all caps) or
 "tesla -car"
 ```
 
-### Search in specific fields
+#### Search in specific fields
 
 If you want to search only in the title or body of notes, prefix a query with `title:` or `body:`.
 
@@ -92,7 +116,7 @@ If you want to search only in the title or body of notes, prefix a query with `t
 "body: (tesla OR edison)"
 ```
 
-### Prefix terms
+#### Prefix terms
 
 Match any term beginning with the given prefix with a wildcard `*`.
 
@@ -106,13 +130,25 @@ Prefixing a query with `^` will match notes whose title or body start with the f
 "title: ^journal"
 ```
 
-### Search for special characters
+### Exact matches (`exact`)
 
-If you need to find patterns containing special characters, such as an `email@addre.ss` or a `[[wiki-link]]`, use the `--exact-match` / `-e` option. The search will be case-insensitive.
+If you need to find patterns containing special characters, such as an `email@addre.ss` or a `[[wiki-link]]`, use the `exact` match strategy. The search will be case-insensitive.
 
+```sh
+$ zk list --match-strategy exact --match "[[link]]"
+$ zk list -Me -m "[[link]]"
 ```
-$ zk list --exact-match --match "[[link]]"
-$ zk list -em "[[link]]"
+
+### Regular expressions (`re`)
+
+For advanced use cases, you can use the `re` match strategy to search the notebook using regular expressions. The supported syntax is similar to the one used by Python or Perl. [See the full reference](https://golang.org/s/re2syntax).
+
+:warning: Make sure to use quotes to prevent your shell from expanding wildcards.
+
+```sh
+# Find notes containing emails.
+$ zk list --match-strategy re --match ".+@.+"
+$ zk list -Mr -m ".+@.+"
 ```
 
 ## Filter by tags

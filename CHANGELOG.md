@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* Use regular expressions when searching for notes with `--match`.
+    ```sh
+    # Find notes containing emails.
+    $ zk list --match-strategy re --match ".+@.+"
+    $ zk list -Mr -m ".+@.+"
+    ```
+
+### Changed
+
+* The flags `--exact-match`/`-e` are deprecated in favor of `--match-strategy exact`/`-Me`.
+
 ### Deprecated
 
 * The LSP server does not support resolving a wiki link to a note title anymore.

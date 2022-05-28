@@ -1,0 +1,17 @@
+# Regular expression match strategy.
+
+$ cd full-sample
+
+# Long flag.
+$ zk list -q --debug-style --match-strategy re --match 'न.*ते'
+><title>Strings are a complicated data structure</title> <path>oumc.md</path> (just now)
+>
+>  - Given the Hindi word "नमस्ते":
+>
+
+# Short flag.
+$ zk list -q --debug-style -Mr --match 'न.*ते'
+><title>Strings are a complicated data structure</title> <path>oumc.md</path> (just now)
+>
+>  - Given the Hindi word "नमस्ते":
+>
