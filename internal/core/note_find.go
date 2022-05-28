@@ -177,7 +177,7 @@ const (
 // MatchStrategyFromString returns a MatchStrategy from its string representation.
 func MatchStrategyFromString(str string) (MatchStrategy, error) {
 	switch str {
-	case "fts", "f":
+	case "fts", "f", "":
 		return MatchStrategyFts, nil
 	case "re", "grep", "r":
 		return MatchStrategyRe, nil
