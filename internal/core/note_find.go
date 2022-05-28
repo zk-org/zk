@@ -11,10 +11,10 @@ import (
 
 // NoteFindOpts holds a set of filtering options used to find notes.
 type NoteFindOpts struct {
-	// Filter used to match the notes with FTS predicates.
+	// Filter used to match the notes with the given MatchStrategy.
 	Match opt.String
-	// Search for exact occurrences of the Match string.
-	ExactMatch bool
+	// Text matching strategy used with Match.
+	MatchStrategy MatchStrategy
 	// Filter by note hrefs.
 	IncludeHrefs []string
 	// Filter excluding notes at the given hrefs.
