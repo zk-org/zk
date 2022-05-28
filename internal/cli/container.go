@@ -139,6 +139,10 @@ func NewContainer(version string) (*Container, error) {
 // XDG Base Directory specification
 // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 func locateGlobalConfig() (string, error) {
+	if _, ok := os.LookupEnv("RUNNING_TESH"); ok {
+		return "", nil
+	}
+
 	configPath := filepath.Join(globalConfigDir(), "config.toml")
 	exists, err := paths.Exists(configPath)
 	switch {

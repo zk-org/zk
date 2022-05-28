@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * Use regular expressions when searching for notes with `--match`.
-    ```
+    ```sh
     # Find notes containing emails.
     $ zk list --match-strategy re --match ".+@.+"
     $ zk list -Mr -m ".+@.+"
