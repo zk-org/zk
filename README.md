@@ -70,7 +70,7 @@ sudo pacman -S zk
 
 ### Build from scratch
 
-Make sure you have a working [Go installation](https://golang.org/), then clone the repository:
+Make sure you have a working [Go 1.18+ installation](https://golang.org/), then clone the repository:
 
 ```sh
 $ git clone https://github.com/mickael-menu/zk.git
