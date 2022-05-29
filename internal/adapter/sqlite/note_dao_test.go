@@ -312,9 +312,10 @@ func TestNoteDAOFindMinimalAll(t *testing.T) {
 func TestNoteDAOFindMinimalWithFilter(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		notes, err := dao.FindMinimal(core.NoteFindOpts{
-			Match:   opt.NewString("daily | index"),
-			Sorters: []core.NoteSorter{{Field: core.NoteSortWordCount, Ascending: true}},
-			Limit:   3,
+			Match:         opt.NewString("daily | index"),
+			MatchStrategy: core.MatchStrategyFts,
+			Sorters:       []core.NoteSorter{{Field: core.NoteSortWordCount, Ascending: true}},
+			Limit:         3,
 		})
 		assert.Nil(t, err)
 
@@ -366,7 +367,10 @@ func TestNoteDAOFindTag(t *testing.T) {
 
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
-		core.NoteFindOpts{Match: opt.NewString("daily | index")},
+		core.NoteFindOpts{
+			Match:         opt.NewString("daily | index"),
+			MatchStrategy: core.MatchStrategyFts,
+		},
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
@@ -451,7 +455,8 @@ func TestNoteDAOFindMatch(t *testing.T) {
 func TestNoteDAOFindMatchWithSort(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			Match: opt.NewString("daily | index"),
+			Match:         opt.NewString("daily | index"),
+			MatchStrategy: core.MatchStrategyFts,
 			Sorters: []core.NoteSorter{
 				{Field: core.NoteSortPath, Ascending: false},
 			},
@@ -469,8 +474,8 @@ func TestNoteDAOFindExactMatch(t *testing.T) {
 	test := func(match string, expected []string) {
 		testNoteDAOFindPaths(t,
 			core.NoteFindOpts{
-				Match:      opt.NewString(match),
-				ExactMatch: true,
+				Match:         opt.NewString(match),
+				MatchStrategy: core.MatchStrategyExact,
 			},
 			expected,
 		)
@@ -482,13 +487,27 @@ func TestNoteDAOFindExactMatch(t *testing.T) {
 	test(`[exact% ch\ar_acters]`, []string{"ref/test/a.md"})
 }
 
-func TestNoteDAOFindExactMatchCannotBeUsedWithMention(t *testing.T) {
+func TestNoteDAOFindMentionRequiresFtsMatchStrategy(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		_, err := dao.Find(core.NoteFindOpts{
-			ExactMatch: true,
-			Mention:    []string{"mention"},
+			MatchStrategy: core.MatchStrategyExact,
+			Mention:       []string{"mention"},
 		})
-		assert.Err(t, err, "--exact-match and --mention cannot be used together")
+		assert.Err(t, err, "--mention can only be used with --match-strategy=fts")
+	})
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		_, err := dao.Find(core.NoteFindOpts{
+			MatchStrategy: core.MatchStrategyRe,
+			Mention:       []string{"mention"},
+		})
+		assert.Err(t, err, "--mention can only be used with --match-strategy=fts")
+	})
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		_, err := dao.Find(core.NoteFindOpts{
+			MatchStrategy: core.MatchStrategyFts,
+			Mention:       []string{"mention"},
+		})
+		assert.Err(t, err, "could not find notes at: mention")
 	})
 }
 
@@ -559,7 +578,10 @@ func TestNoteDAOFindExcludingMultiplePaths(t *testing.T) {
 
 func TestNoteDAOFindMentions(t *testing.T) {
 	testNoteDAOFind(t,
-		core.NoteFindOpts{Mention: []string{"log/2021-01-03.md", "index.md"}},
+		core.NoteFindOpts{
+			MatchStrategy: core.MatchStrategyFts,
+			Mention:       []string{"log/2021-01-03.md", "index.md"},
+		},
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
@@ -623,7 +645,8 @@ func TestNoteDAOFindMentions(t *testing.T) {
 func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			Mention: []string{"log/2021-01-03.md", "index.md"},
+			MatchStrategy: core.MatchStrategyFts,
+			Mention:       []string{"log/2021-01-03.md", "index.md"},
 			LinkTo: &core.LinkFilter{
 				Hrefs:  []string{"log/2021-01-03.md", "index.md"},
 				Negate: true,
@@ -636,7 +659,8 @@ func TestNoteDAOFindUnlinkedMentions(t *testing.T) {
 func TestNoteDAOFindMentionUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		opts := core.NoteFindOpts{
-			Mention: []string{"will-not-be-found"},
+			MatchStrategy: core.MatchStrategyFts,
+			Mention:       []string{"will-not-be-found"},
 		}
 		_, err := dao.Find(opts)
 		assert.Err(t, err, "could not find notes at: will-not-be-found")
@@ -645,7 +669,10 @@ func TestNoteDAOFindMentionUnknown(t *testing.T) {
 
 func TestNoteDAOFindMentionedBy(t *testing.T) {
 	testNoteDAOFind(t,
-		core.NoteFindOpts{MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"}},
+		core.NoteFindOpts{
+			MatchStrategy: core.MatchStrategyFts,
+			MentionedBy:   []string{"ref/test/b.md", "log/2021-01-04.md"},
+		},
 		[]core.ContextualNote{
 			{
 				Note: core.Note{
@@ -697,7 +724,8 @@ func TestNoteDAOFindMentionedBy(t *testing.T) {
 func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			MentionedBy: []string{"ref/test/b.md", "log/2021-01-04.md"},
+			MatchStrategy: core.MatchStrategyFts,
+			MentionedBy:   []string{"ref/test/b.md", "log/2021-01-04.md"},
 			LinkedBy: &core.LinkFilter{
 				Hrefs:  []string{"ref/test/b.md", "log/2021-01-04.md"},
 				Negate: true,
@@ -710,7 +738,8 @@ func TestNoteDAOFindUnlinkedMentionedBy(t *testing.T) {
 func TestNoteDAOFindMentionedByUnknown(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		opts := core.NoteFindOpts{
-			MentionedBy: []string{"will-not-be-found"},
+			MatchStrategy: core.MatchStrategyFts,
+			MentionedBy:   []string{"will-not-be-found"},
 		}
 		_, err := dao.Find(opts)
 		assert.Err(t, err, "could not find notes at: will-not-be-found")

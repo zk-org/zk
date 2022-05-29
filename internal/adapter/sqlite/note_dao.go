@@ -380,8 +380,8 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	if opts.Mention == nil {
 		return opts, nil
 	}
-	if opts.ExactMatch {
-		return opts, fmt.Errorf("--exact-match and --mention cannot be used together")
+	if opts.MatchStrategy != core.MatchStrategyFts {
+		return opts, fmt.Errorf("--mention can only be used with --match-strategy=fts")
 	}
 
 	// Find the IDs for the mentioned paths.
@@ -518,15 +518,20 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	}
 
 	if !opts.Match.IsNull() {
-		if opts.ExactMatch {
+		switch opts.MatchStrategy {
+		case core.MatchStrategyExact:
 			whereExprs = append(whereExprs, `n.raw_content LIKE '%' || ? || '%' ESCAPE '\'`)
 			args = append(args, escapeLikeTerm(opts.Match.String(), '\\'))
-		} else {
+		case core.MatchStrategyFts:
 			snippetCol = `snippet(fts_match.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 			joinClauses = append(joinClauses, "JOIN notes_fts fts_match ON n.id = fts_match.rowid")
 			additionalOrderTerms = append(additionalOrderTerms, `bm25(fts_match.notes_fts, 1000.0, 500.0, 1.0)`)
 			whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
 			args = append(args, fts5.ConvertQuery(opts.Match.String()))
+		case core.MatchStrategyRe:
+			whereExprs = append(whereExprs, "n.raw_content REGEXP ?")
+			args = append(args, opts.Match.String())
+			break
 		}
 	}
 
