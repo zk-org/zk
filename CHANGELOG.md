@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
     * For example, `[[Planet]]` can match a note with filename `i4w0 Planet.md` but not `i4w0.md` with a Markdown title `Planet` anymore.
     * This "smart" fallback resolution based on note titles was too fragile and not supported by the `zk` CLI.
 
+### Fixed
+
+* [#233](https://github.com/mickael-menu/zk/issues/233) Hide index progress in non-interactive shells.
+
 
 ## 0.10.1
 

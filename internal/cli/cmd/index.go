@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/mickael-menu/zk/internal/cli"
 	"github.com/mickael-menu/zk/internal/core"
+	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/schollz/progressbar/v3"
 )
 
 // Index indexes the content of all the notes in the notebook.
@@ -24,10 +28,37 @@ func (cmd *Index) Run(container *cli.Container) error {
 		return err
 	}
 
-	stats, err := notebook.Index(core.NoteIndexOpts{
+	return cmd.RunWithNotebook(container, notebook)
+}
+
+func (cmd *Index) RunWithNotebook(container *cli.Container, notebook *core.Notebook) error {
+	showProgress := container.Terminal.IsInteractive()
+
+	var bar *progressbar.ProgressBar
+	if showProgress {
+		bar = progressbar.NewOptions(-1,
+			progressbar.OptionSetWriter(os.Stderr),
+			progressbar.OptionThrottle(100*time.Millisecond),
+			progressbar.OptionSpinnerType(14),
+		)
+	}
+
+	opts := core.NoteIndexOpts{
 		Force:   cmd.Force,
 		Verbose: cmd.Verbose,
+	}
+
+	stats, err := notebook.IndexWithCallback(opts, func(change paths.DiffChange) {
+		if showProgress {
+			bar.Add(1)
+			bar.Describe(change.String())
+		}
 	})
+
+	if showProgress {
+		bar.Clear()
+	}
+
 	if err != nil {
 		return err
 	}
