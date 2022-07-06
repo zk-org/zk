@@ -32,7 +32,8 @@ func (cmd *Init) Run(container *cli.Container) error {
 		return err
 	}
 
-	_, err = notebook.Index(core.NoteIndexOpts{})
+	index := Index{Quiet: true}
+	err = index.RunWithNotebook(container, notebook)
 	if err != nil {
 		return err
 	}

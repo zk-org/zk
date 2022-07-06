@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
-	"github.com/schollz/progressbar/v3"
 )
 
 // Notebook handles queries and commands performed on an opened notebook.
@@ -62,13 +60,11 @@ type NotebookFactory func(path string, config Config) (*Notebook, error)
 
 // Index indexes the content of the notebook to be searchable.
 func (n *Notebook) Index(opts NoteIndexOpts) (stats NoteIndexingStats, err error) {
-	// FIXME: Move out of Core
-	bar := progressbar.NewOptions(-1,
-		progressbar.OptionSetWriter(os.Stderr),
-		progressbar.OptionThrottle(100*time.Millisecond),
-		progressbar.OptionSpinnerType(14),
-	)
+	return n.IndexWithCallback(opts, func(change paths.DiffChange) {})
+}
 
+// Index indexes the content of the notebook to be searchable.
+func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change paths.DiffChange)) (stats NoteIndexingStats, err error) {
 	err = n.index.Commit(func(index NoteIndex) error {
 		task := indexTask{
 			path:    n.Path,
@@ -79,14 +75,10 @@ func (n *Notebook) Index(opts NoteIndexOpts) (stats NoteIndexingStats, err error
 			parser:  n,
 			logger:  n.logger,
 		}
-		stats, err = task.execute(func(change paths.DiffChange) {
-			bar.Add(1)
-			bar.Describe(change.String())
-		})
+		stats, err = task.execute(callback)
 		return err
 	})
 
-	bar.Clear()
 	err = errors.Wrap(err, "indexing")
 	return
 }
