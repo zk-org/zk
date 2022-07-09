@@ -179,6 +179,9 @@ func (ni *NoteIndex) linkMatchesPath(link core.ResolvedLink, path string) (bool,
 	}
 
 	matches := func(href string, allowPartialHref bool) bool {
+		if href == "" {
+			return false
+		}
 		href = regexp.QuoteMeta(href)
 
 		if allowPartialHref {
@@ -193,7 +196,7 @@ func (ni *NoteIndex) linkMatchesPath(link core.ResolvedLink, path string) (bool,
 		return matchString("^(?:"+href+"[^/]*|"+href+"/.+)$", path)
 	}
 
-	baseDir := filepath.Dir(link.SourcePath)
+	baseDir := filepath.Join(ni.notebookPath, filepath.Dir(link.SourcePath))
 	if relHref, err := ni.relNotebookPath(baseDir, href); err != nil {
 		if matches(relHref, false) {
 			return true, nil

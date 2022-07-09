@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#233](https://github.com/mickael-menu/zk/issues/233) Hide index progress in non-interactive shells.
+* [#236](https://github.com/mickael-menu/zk/issues/236) Fix updating links after creating a new note.
 
 
 ## 0.10.1
