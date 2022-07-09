@@ -189,6 +189,10 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 				return
 			}
 
+			// Go regexes work with bytes, but the LSP client expects character indexes.
+			start = strutil.ByteIndexToRuneIndex(line, start)
+			end = strutil.ByteIndexToRuneIndex(line, end)
+
 			links = append(links, documentLink{
 				Href: href,
 				Range: protocol.Range{
