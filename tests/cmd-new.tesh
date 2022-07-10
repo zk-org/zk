@@ -109,6 +109,14 @@ $ echo "Content of the note" | EDITOR=cat zk new --title "Piped note"
 >Content of the note
 >
 
+# Redirect file to standard input when creating a new note.
+$ echo "Content of the note" > input
+$ EDITOR=cat zk new --title "Note from redirected input" < input
+># Note from redirected input
+>
+>Content of the note
+>
+
 # Existing notes are not overwritten, but can be edited.
 $ zk new --force-input n --title "Piped note"
 >? piped-note.md already exists, do you want to edit this note instead? (y/N)
