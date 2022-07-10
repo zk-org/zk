@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#233](https://github.com/mickael-menu/zk/issues/233) Hide index progress in non-interactive shells.
+* [#239](https://github.com/mickael-menu/zk/discussions/239) Support standard input via shell redirection with `zk new`.
 
 
 ## 0.10.1
