@@ -151,3 +151,28 @@ func TestWordAt(t *testing.T) {
 	test("one\ttwo\tthree", 5, "two")
 	test("one @:~two three", 5, "@:~two")
 }
+
+func TestByteIndexToRuneIndex(t *testing.T) {
+	test := func(s string, index int, expected int) {
+		assert.Equal(t, ByteIndexToRuneIndex(s, index), expected)
+	}
+
+	test("", 0, 0)
+
+	source := "une étoile bleuâtre"
+	test(source, -2, 0)
+	test(source, -1, 0)
+	test(source, 0, 0)
+	test(source, 1, 1)
+	test(source, 4, 4)
+	test(source, 5, 5)
+	test(source, 6, 5)
+	test(source, 7, 6)
+	test(source, 16, 15)
+	test(source, 17, 16)
+	test(source, 18, 16)
+	test(source, 19, 17)
+	test(source, 20, 18)
+	test(source, 21, 19)
+	test(source, 22, 19)
+}

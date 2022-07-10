@@ -148,3 +148,14 @@ func CopyList(list []string) []string {
 	copy(out, list)
 	return out
 }
+
+func ByteIndexToRuneIndex(s string, i int) int {
+	res := 0
+	for j, _ := range s {
+		if j >= i {
+			break
+		}
+		res += 1
+	}
+	return res
+}
