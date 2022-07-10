@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/mickael-menu/zk/internal/core"
 	dateutil "github.com/mickael-menu/zk/internal/util/date"
 	"github.com/mickael-menu/zk/internal/util/opt"
-	osutil "github.com/mickael-menu/zk/internal/util/os"
 )
 
 // New adds a new note to the notebook.
@@ -33,7 +33,7 @@ func (cmd *New) Run(container *cli.Container) error {
 		return err
 	}
 
-	content, err := osutil.ReadStdinPipe()
+	content, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (cmd *New) Run(container *cli.Container) error {
 
 	note, err := notebook.NewNote(core.NewNoteOpts{
 		Title:     opt.NewNotEmptyString(cmd.Title),
-		Content:   content.Unwrap(),
+		Content:   string(content),
 		Directory: opt.NewNotEmptyString(cmd.Directory),
 		Group:     opt.NewNotEmptyString(cmd.Group),
 		Template:  opt.NewNotEmptyString(cmd.Template),
