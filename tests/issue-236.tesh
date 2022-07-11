@@ -1,0 +1,13 @@
+# Links broken after adding a new note
+# https://github.com/mickael-menu/zk/issues/236
+$ cd issue-236
+
+$ zk list -qfpath --link-to 8r8q
+>2022-07-06.md
+>ud1o.md
+
+$ zk new --print-path > /dev/null
+
+$ zk list -qfpath --link-to 8r8q
+>2022-07-06.md
+>ud1o.md
