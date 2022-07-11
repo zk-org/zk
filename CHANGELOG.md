@@ -26,7 +26,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#233](https://github.com/mickael-menu/zk/issues/233) Hide index progress in non-interactive shells.
+* [#235](https://github.com/mickael-menu/zk/issues/235) Fix LSP link recognition with unicode (contributed by [@zkbpkp](https://github.com/mickael-menu/zk/issues/235)).
 * [#236](https://github.com/mickael-menu/zk/issues/236) Fix updating links after creating a new note.
+* [#239](https://github.com/mickael-menu/zk/discussions/239) Support standard input via shell redirection with `zk new`.
 
 
 ## 0.10.1
