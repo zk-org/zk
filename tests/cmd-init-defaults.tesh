@@ -1,4 +1,4 @@
-$ zk init --no-input 2> /dev/null
+$ zk init --no-prompt 2> /dev/null
 >
 >Initialized a notebook in {{working-dir}}
 

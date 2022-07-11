@@ -25,7 +25,7 @@ $ zk --help
 >                             the notebook where commands are run.
 >  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
 >                             current working directory.
->      --no-input             Never prompt or ask for confirmation.
+>      --no-prompt            Never prompt or ask for confirmation.
 >
 >Run "zk <command> --help" for more information on a command.
 
