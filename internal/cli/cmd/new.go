@@ -16,15 +16,16 @@ import (
 
 // New adds a new note to the notebook.
 type New struct {
-	Directory string            `arg optional default:"." help:"Directory in which to create the note."`
-	Title     string            `short:t   placeholder:TITLE help:"Title of the new note."`
-	Date      string            `          placeholder:DATE  help:"Set the current date."`
-	Group     string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
-	Extra     map[string]string `                            help:"Extra variables passed to the templates." mapsep:","`
-	Template  string            `          placeholder:PATH  help:"Custom template used to render the note."`
-	PrintPath bool              `short:p                     help:"Print the path of the created note instead of editing it."`
-	DryRun    bool              `short:n                     help:"Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."`
-	ID        string            `          placeholder:ID    help:"Skip id generation and use provided value."`
+	Directory   string            `arg optional default:"." help:"Directory in which to create the note."`
+	Interactive bool              `short:i                  help:"Read contents from standard input."`
+	Title       string            `short:t   placeholder:TITLE help:"Title of the new note."`
+	Date        string            `          placeholder:DATE  help:"Set the current date."`
+	Group       string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
+	Extra       map[string]string `                            help:"Extra variables passed to the templates." mapsep:","`
+	Template    string            `          placeholder:PATH  help:"Custom template used to render the note."`
+	PrintPath   bool              `short:p                     help:"Print the path of the created note instead of editing it."`
+	DryRun      bool              `short:n                     help:"Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."`
+	ID          string            `          placeholder:ID    help:"Skip id generation and use provided value."`
 }
 
 func (cmd *New) Run(container *cli.Container) error {
@@ -33,9 +34,12 @@ func (cmd *New) Run(container *cli.Container) error {
 		return err
 	}
 
-	content, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return err
+	var content []byte
+	if cmd.Interactive {
+		content, err = ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return err
+		}
 	}
 
 	date := time.Now()

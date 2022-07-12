@@ -22,3 +22,9 @@ For example, to use the content of the macOS clipboard as the initial content yo
 $ pbpaste | zk new
 ```
 
+Alternatively, use the `--interactive` or `-i` option with `zk new` to redirect standard input to provide initial content for your note:
+
+```sh
+$ zk new --interactive < file.txt
+```
+

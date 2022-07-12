@@ -17,6 +17,7 @@ $ zk new --help
 >                               current working directory.
 >      --no-input               Never prompt or ask for confirmation.
 >
+>  -i, --interactive            Read contents from standard input.
 >  -t, --title=TITLE            Title of the new note.
 >      --date=DATE              Set the current date.
 >  -g, --group=NAME             Name of the config group this note belongs to.
