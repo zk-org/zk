@@ -17,7 +17,6 @@ import (
 // New adds a new note to the notebook.
 type New struct {
 	Directory string            `arg optional default:"." help:"Directory in which to create the note."`
-	Input     bool              `short:i                     help:"Read contents from stdin."`
 	Title     string            `short:t   placeholder:TITLE help:"Title of the new note."`
 	Date      string            `          placeholder:DATE  help:"Set the current date."`
 	Group     string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
@@ -34,12 +33,9 @@ func (cmd *New) Run(container *cli.Container) error {
 		return err
 	}
 
-	var content []byte
-	if cmd.Input {
-		content, err = ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			return err
-		}
+	content, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return err
 	}
 
 	date := time.Now()

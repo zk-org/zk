@@ -13,10 +13,10 @@ $ zk init --help
 >                             the notebook where commands are run.
 >  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
 >                             current working directory.
->      --no-prompt            Never prompt or ask for confirmation.
+>      --no-input             Never prompt or ask for confirmation.
 
 # Creates a new notebook in a new directory.
-$ zk init --no-prompt new-dir 2> /dev/null
+$ zk init --no-input new-dir 2> /dev/null
 >
 >Initialized a notebook in {{working-dir}}/new-dir
 
@@ -25,7 +25,7 @@ $ test -f new-dir/.zk/config.toml
 # Creates a new notebook in an existing directory.
 $ mkdir existing-dir
 
-$ zk init --no-prompt existing-dir 2> /dev/null
+$ zk init --no-input existing-dir 2> /dev/null
 >
 >Initialized a notebook in {{working-dir}}/existing-dir
 
@@ -34,7 +34,7 @@ $ test -f existing-dir/.zk/config.toml
 # Creates a new notebook in the current directory.
 $ mkdir cur-dir && cd cur-dir
 
-$ zk init --no-prompt 2> /dev/null
+$ zk init --no-input 2> /dev/null
 >
 >Initialized a notebook in {{working-dir}}
 

@@ -15,7 +15,7 @@ $ zk tag --help
 >                             the notebook where commands are run.
 >  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
 >                             current working directory.
->      --no-prompt            Never prompt or ask for confirmation.
+>      --no-input             Never prompt or ask for confirmation.
 
 # The default command is `tag list`.
 $ zk tag

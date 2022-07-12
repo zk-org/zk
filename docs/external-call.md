@@ -10,6 +10,6 @@ Calling `zk` from other programs can be useful in a number of situations, such a
 The following options can be useful to make sure `zk` behaves properly in a background context:
 
 <!-- TODO: --color=none, --json -->
-* `--no-prompt` disables all user prompts and ignores `--interactive`
+* `--no-input` disables all user prompts and ignores `--interactive`
 * `--quiet` reduces unnecessary output
 

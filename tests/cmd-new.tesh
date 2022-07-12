@@ -15,9 +15,8 @@ $ zk new --help
 >                               the notebook where commands are run.
 >  -W, --working-dir=PATH       Run as if zk was started in <PATH> instead of the
 >                               current working directory.
->      --no-prompt              Never prompt or ask for confirmation.
+>      --no-input               Never prompt or ask for confirmation.
 >
->  -i, --input                  Read contents from stdin.
 >  -t, --title=TITLE            Title of the new note.
 >      --date=DATE              Set the current date.
 >  -g, --group=NAME             Name of the config group this note belongs to.
