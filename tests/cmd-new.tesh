@@ -104,7 +104,7 @@ $ zk new -n --title "Dry run"
 2>{{working-dir}}/dry-run.md
 
 # Pipe content in a new note.
-$ echo "Content of the note" | EDITOR=cat zk new --title "Piped note"
+$ echo "Content of the note" | EDITOR=cat zk new --interactive --title "Piped note"
 ># Piped note
 >
 >Content of the note
@@ -112,7 +112,7 @@ $ echo "Content of the note" | EDITOR=cat zk new --title "Piped note"
 
 # Redirect file to standard input when creating a new note.
 $ echo "Content of the note" > input
-$ EDITOR=cat zk new --title "Note from redirected input" < input
+$ EDITOR=cat zk new --interactive --title "Note from redirected input" < input
 ># Note from redirected input
 >
 >Content of the note

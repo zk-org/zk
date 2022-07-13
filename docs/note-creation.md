@@ -14,15 +14,15 @@ This option is available when running `zk edit --interactive`, which spawns [`fz
 
 ## Create a note with initial content
 
-Initial content can be fed to the template through a standard input pipe, which will be expandable with the `{{content}}` [template variable](template-creation.md).
+Initial content can be fed to the template through standard input using `zk new --interactive`, which will be expandable with the `{{content}}` [template variable](template-creation.md).
 
 For example, to use the content of the macOS clipboard as the initial content you can run:
 
 ```sh
-$ pbpaste | zk new
+$ pbpaste | zk new --interactive
 ```
 
-Alternatively, use the `--interactive` or `-i` option with `zk new` to redirect standard input to provide initial content for your note:
+Alternatively, you can use the content of a file:
 
 ```sh
 $ zk new --interactive < file.txt
