@@ -3,7 +3,7 @@ $ cd new
 $ mkdir "a dir"
 
 # Test Handlebars template variables.
-$ echo "Piped content" | zk new --group handlebars --title "Note title" --date "January 2nd" --dry-run "a dir"
+$ echo "Piped content" | zk new --interactive --group handlebars --title "Note title" --date "January 2nd" --dry-run "a dir"
 >id: {{match "[a-z0-9]{4}"}}
 >title: Note title
 >content: Piped content

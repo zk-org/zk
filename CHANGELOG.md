@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Changed
+
+* `zk new` now requires the `--interactive`/`-i` flag to read the note body from a pipe or standard input. [See rational](https://github.com/mickael-menu/zk/pull/242#issuecomment-1182602001).
+
+### Fixed
+
+* [#244](https://github.com/mickael-menu/zk/issues/244) Fixed `zk new` waiting for `Ctrl-D` to proceed (contributed by [@pkazmier](https://github.com/mickael-menu/zk/pull/242)).
+
 
 ## 0.11.0
 

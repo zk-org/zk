@@ -17,7 +17,7 @@ $ zk new --title "A new note" --date "January 5th" --dry-run
 # Test the filename Handlebars variables.
 $ mkdir "a dir"
 $ echo "[note]\n filename = '\{{title}},\{{content}},\{{date now \"%m-%d\"}},\{{json extra}}'" > .zk/config.toml
-$ echo "Piped content" | zk new --title "A new note" --date "January 5th" --extra key=value --dry-run
+$ echo "Piped content" | zk new --interactive --title "A new note" --date "January 5th" --extra key=value --dry-run
 2>{{working-dir}}/A new note,Piped content
 2>,01-05,{"key":"value"}.md
 $ echo "[note]\n filename = '\{{id}},\{{dir}},\{{json extra}},\{{env.ZK_NOTEBOOK_DIR}}'" > .zk/config.toml
