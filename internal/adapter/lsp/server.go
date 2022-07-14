@@ -238,7 +238,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForLink(*link, doc, notebook)
+		target, err := server.noteForLink(*link, notebook)
 		if err != nil || target == nil {
 			return nil, err
 		}
@@ -281,7 +281,7 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.noteForLink(link, doc, notebook)
+			target, err := server.noteForLink(link, notebook)
 			if target == nil || err != nil {
 				continue
 			}
@@ -311,7 +311,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		target, err := server.noteForLink(*link, doc, notebook)
+		target, err := server.noteForLink(*link, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -442,14 +442,13 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 		if link == nil {
-			href, err := notebook.RelPath(doc.Path)
+			link, err = doc.LinkFromRoot(notebook)
 			if err != nil {
 				return nil, err
 			}
-			link = &documentLink{Href: href}
 		}
 
-		target, err := server.noteForLink(*link, doc, notebook)
+		target, err := server.noteForLink(*link, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
 		}
@@ -510,14 +509,14 @@ func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 	return s.notebooks.Open(doc.Path)
 }
 
-// noteForLink returns the LSP documentUri for the note targeted by the given link.
+// noteForLink returns the Note object for the note targeted by the given link.
 //
 // Match by order of precedence:
 //  1. Prefix of relative path
 //  2. Find any occurrence of the href in a note path (substring)
 //  3. Match the href as a term in the note titles
-func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.Notebook) (*Note, error) {
-	note, err := s.noteForHref(link.Href, doc, notebook)
+func (s *Server) noteForLink(link documentLink, notebook *core.Notebook) (*Note, error) {
+	note, err := s.noteForHref(link.Href, link.RelativeToDir, notebook)
 	if note == nil && err == nil && link.IsWikiLink {
 		// Try to find a partial href match.
 		note, err = notebook.FindByHref(link.Href, true)
@@ -530,13 +529,17 @@ func (s *Server) noteForLink(link documentLink, doc *document, notebook *core.No
 	return &Note{*note, pathToURI(joined_path)}, nil
 }
 
-// noteForHref returns the LSP documentUri for the note targeted by the given HREF.
-func (s *Server) noteForHref(href string, doc *document, notebook *core.Notebook) (*core.MinimalNote, error) {
+// noteForHref returns the Note object for the note targeted by the given HREF
+// relative to relativeToDir.
+func (s *Server) noteForHref(href string, relativeToDir string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if strutil.IsURL(href) {
 		return nil, nil
 	}
 
-	path := filepath.Clean(filepath.Join(filepath.Dir(doc.Path), href))
+	path := href
+	if relativeToDir != "" {
+		path = filepath.Clean(filepath.Join(relativeToDir, path))
+	}
 	path, err := filepath.Rel(notebook.Path, path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
@@ -588,7 +591,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 			if strutil.IsURL(link.Href) {
 				continue
 			}
-			target, err := s.noteForLink(link, doc, notebook)
+			target, err := s.noteForLink(link, notebook)
 			if err != nil {
 				s.logger.Err(err)
 				continue

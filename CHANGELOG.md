@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* [#243](https://github.com/mickael-menu/zk/issues/243) LSP: Fixed finding backlink references for notes in a folder.
+
 
 ## 0.11.1
 
