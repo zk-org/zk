@@ -2,6 +2,7 @@ package lsp
 
 import (
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -159,6 +160,19 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
 var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
 
+// LinkFromRoot returns a Link to this document from the root of the given
+// notebook.
+func (d *document) LinkFromRoot(nb *core.Notebook) (*documentLink, error) {
+	href, err := nb.RelPath(d.Path)
+	if err != nil {
+		return nil, err
+	}
+	return &documentLink{
+		Href:          href,
+		RelativeToDir: nb.Path,
+	}, nil
+}
+
 // DocumentLinkAt returns the internal or external link found in the document
 // at the given position.
 func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) {
@@ -194,7 +208,8 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			end = strutil.ByteIndexToRuneIndex(line, end)
 
 			links = append(links, documentLink{
-				Href: href,
+				Href:          href,
+				RelativeToDir: filepath.Dir(d.Path),
 				Range: protocol.Range{
 					Start: protocol.Position{
 						Line:      protocol.UInteger(lineIndex),
@@ -257,8 +272,9 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 }
 
 type documentLink struct {
-	Href  string
-	Range protocol.Range
+	Href          string
+	RelativeToDir string
+	Range         protocol.Range
 	// HasTitle indicates whether this link has a title information. For
 	// example [[filename]] doesn't but [[filename|title]] does.
 	HasTitle bool
