@@ -453,13 +453,8 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		p, err := notebook.RelPath(target.Path)
-		if err != nil {
-			return nil, err
-		}
-
 		opts := core.NoteFindOpts{
-			LinkTo: &core.LinkFilter{Hrefs: []string{p}},
+			LinkTo: &core.LinkFilter{Hrefs: []string{target.Path}},
 		}
 
 		notes, err := notebook.FindNotes(opts)
