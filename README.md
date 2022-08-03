@@ -94,4 +94,5 @@ $ ./zk -h
 ## Related projects
 
 * [Neuron](https://github.com/srid/neuron) – a great tool to publish a Zettelkasten on the web
+* [Emanote](https://emanote.srid.ca/) - an improved successor to Neuron
 * [sirupsen's zk](https://github.com/sirupsen/zk) – a collection of scripts with a similar purpose
