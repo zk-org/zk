@@ -27,3 +27,7 @@ But you can make your [notebook](notebook.md) even more tightly integrated with 
     serve = "neuron gen -wS"
     gen = "neuron gen -o public"
     ```
+
+## Emanote
+
+Emanote is neuron's successor. For Emanote-specific configuration, see https://emanote.srid.ca/resources/zk.
