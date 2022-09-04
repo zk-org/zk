@@ -2,7 +2,7 @@
 
 There are several extensions available to integrate `zk` in your favorite editor:
 
-* [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+, maintained by [Seth Messer](https://github.com/megalithic)
+* [`zk-nvim`](https://github.com/mickael-menu/zk-nvim) for Neovim 0.5+
 * [`zk-vscode`](https://github.com/mickael-menu/zk-vscode) for Visual Studio Code
 
 ## Language Server Protocol
