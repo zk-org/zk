@@ -1,0 +1,8 @@
+# Unable to list by link and backlink
+# https://github.com/mickael-menu/zk/issues/254
+
+$ cd issue-254
+
+$ zk list -qfpath --link-to index.md --linked-by index.md
+>note1.md
+

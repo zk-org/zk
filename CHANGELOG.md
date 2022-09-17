@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * [#243](https://github.com/mickael-menu/zk/issues/243) LSP: Fixed finding backlink references for notes in a folder.
+* [#254](https://github.com/mickael-menu/zk/issues/254) Fixed SQL error when pairing `--link-to` and `--linked-by`.
 
 
 ## 0.11.1
