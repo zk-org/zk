@@ -448,7 +448,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	transitiveClosure := false
 	maxDistance := 0
 
-	setupLinkFilter := func(hrefs []string, direction int, negate, recursive bool) error {
+	setupLinkFilter := func(tableAlias string, hrefs []string, direction int, negate, recursive bool) error {
 		ids, err := d.findIdsByHrefs(hrefs, true /* allowPartialHrefs */)
 		if err != nil {
 			return err
@@ -463,27 +463,29 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		if recursive {
 			transitiveClosure = true
 			linksSrc = "transitive_closure"
+			additionalOrderTerms = append(additionalOrderTerms, tableAlias+".distance")
 		}
 
 		if !negate {
 			if direction != 0 {
-				snippetCol = "GROUP_CONCAT(REPLACE(l.snippet, l.title, '<zk:match>' || l.title || '</zk:match>'), '\x01')"
+				snippetCol = fmt.Sprintf("GROUP_CONCAT(REPLACE(%s.snippet, %[1]s.title, '<zk:match>' || %[1]s.title || '</zk:match>'), '\x01')", tableAlias)
 			}
 
 			joinOns := make([]string, 0)
 			if direction <= 0 {
 				joinOns = append(joinOns, fmt.Sprintf(
-					"(n.id = l.target_id AND l.source_id IN %s)", idsList,
+					"(n.id = %[1]s.target_id AND %[1]s.source_id IN %[2]s)", tableAlias, idsList,
 				))
 			}
 			if direction >= 0 {
 				joinOns = append(joinOns, fmt.Sprintf(
-					"(n.id = l.source_id AND l.target_id IN %s)", idsList,
+					"(n.id = %[1]s.source_id AND %[1]s.target_id IN %[2]s)", tableAlias, idsList,
 				))
 			}
 
 			joinClauses = append(joinClauses, fmt.Sprintf(
-				"LEFT JOIN %s l ON %s",
+				"LEFT JOIN %[2]s %[1]s ON %[3]s",
+				tableAlias,
 				linksSrc,
 				strings.Join(joinOns, " OR "),
 			))
@@ -618,7 +620,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.LinkedBy != nil {
 		filter := opts.LinkedBy
 		maxDistance = filter.MaxDistance
-		err := setupLinkFilter(filter.Hrefs, -1, filter.Negate, filter.Recursive)
+		err := setupLinkFilter("l_by", filter.Hrefs, -1, filter.Negate, filter.Recursive)
 		if err != nil {
 			return nil, err
 		}
@@ -627,7 +629,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	if opts.LinkTo != nil {
 		filter := opts.LinkTo
 		maxDistance = filter.MaxDistance
-		err := setupLinkFilter(filter.Hrefs, 1, filter.Negate, filter.Recursive)
+		err := setupLinkFilter("l_to", filter.Hrefs, 1, filter.Negate, filter.Recursive)
 		if err != nil {
 			return nil, err
 		}
@@ -635,11 +637,11 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 
 	if opts.Related != nil {
 		maxDistance = 2
-		err := setupLinkFilter(opts.Related, 0, false, true)
+		err := setupLinkFilter("l_rel", opts.Related, 0, false, true)
 		if err != nil {
 			return nil, err
 		}
-		groupBy += " HAVING MIN(l.distance) = 2"
+		groupBy += " HAVING MIN(l_rel.distance) = 2"
 	}
 
 	if opts.Orphan {
@@ -687,8 +689,6 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 
 	// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
 	if transitiveClosure {
-		orderTerms = append([]string{"l.distance"}, orderTerms...)
-
 		query += `WITH RECURSIVE transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
     SELECT source_id, target_id, title, snippet,
            1 AS distance,
