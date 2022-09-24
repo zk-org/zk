@@ -281,15 +281,24 @@ func NewServer(opts ServerOpts) *Server {
 
 		documentLinks := []protocol.DocumentLink{}
 		for _, link := range links {
-			target, err := server.noteForLink(link, notebook)
-			if target == nil || err != nil {
-				continue
+			var target string
+			if strutil.IsURL(link.Href) {
+				// External link
+				target = link.Href
+			} else {
+				// Internal note link
+				targetNote, err := server.noteForLink(link, notebook)
+				if targetNote != nil && err == nil {
+					target = targetNote.URI
+				}
 			}
 
-			documentLinks = append(documentLinks, protocol.DocumentLink{
-				Range:  link.Range,
-				Target: &target.URI,
-			})
+			if target != "" {
+				documentLinks = append(documentLinks, protocol.DocumentLink{
+					Range:  link.Range,
+					Target: &target,
+				})
+			}
 		}
 
 		return documentLinks, err

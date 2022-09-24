@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+* LSP: Support for external URLs with `documentLink`.
+
 ### Fixed
 
 * [#243](https://github.com/mickael-menu/zk/issues/243) LSP: Fixed finding backlink references for notes in a folder.
