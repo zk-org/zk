@@ -3,7 +3,7 @@ package date
 import (
 	"time"
 
-	"github.com/tj/go-naturaldate"
+	naturaldate "github.com/tj/go-naturaldate"
 )
 
 // Provider returns a date instance.
