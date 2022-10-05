@@ -5,6 +5,7 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/mickael-menu/zk/internal/util"
+	"github.com/pkg/errors"
 	naturaldate "github.com/tj/go-naturaldate"
 )
 
@@ -15,7 +16,7 @@ func RegisterGetDate(logger util.Logger) {
 	raymond.RegisterHelper("get-date", func(natural string) time.Time {
 		date, err := naturaldate.Parse(natural, time.Now())
 		if err != nil {
-			logger.Err(errors.Wrap(err, "the {{get-date}} template helper failed to parse the date))
+			logger.Err(errors.Wrap(err, "the {{get-date}} template helper failed to parse the date"))
 		}
 		return date
 	})
