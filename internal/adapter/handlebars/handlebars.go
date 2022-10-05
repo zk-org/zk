@@ -15,13 +15,14 @@ import (
 
 func Init(supportsUTF8 bool, logger util.Logger) {
 	helpers.RegisterConcat()
-	helpers.RegisterSubstring()
 	helpers.RegisterDate(logger)
+	helpers.RegisterGetDate(logger)
 	helpers.RegisterJoin()
 	helpers.RegisterJSON(logger)
 	helpers.RegisterList(supportsUTF8)
 	helpers.RegisterPrepend(logger)
 	helpers.RegisterShell(logger)
+	helpers.RegisterSubstring()
 }
 
 // Template renders a parsed handlebars template.
