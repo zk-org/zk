@@ -15,7 +15,7 @@ func RegisterGetDate(logger util.Logger) {
 	raymond.RegisterHelper("get-date", func(natural string) time.Time {
 		date, err := naturaldate.Parse(natural, time.Now())
 		if err != nil {
-			logger.Printf("the {{get-date}} template helper failed to parse the date: %s", err)
+			logger.Err(errors.Wrap(err, "the {{get-date}} template helper failed to parse the date))
 		}
 		return date
 	})
