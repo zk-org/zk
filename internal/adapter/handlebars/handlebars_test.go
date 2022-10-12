@@ -241,6 +241,11 @@ func TestDateHelper(t *testing.T) {
 	testString(t, "{{date now 'elapsed'}}", context, "13 years ago")
 }
 
+func TestGetDateHelper(t *testing.T) {
+	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	testString(t, "{{get-date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 +0000 UTC")
+}
+
 func TestShellHelper(t *testing.T) {
 	// block is passed as piped input
 	testString(t,
