@@ -243,10 +243,7 @@ func TestDateHelper(t *testing.T) {
 
 func TestGetDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
-	testString(t, "{{get-date \"last week\"}}", context, "2022-09-28 00:00:00 +0000 UTC")
-	testString(t, "{{get-date \"next week\"}}", context, "2022-10-12 00:00:00 +0000 UTC")
-	testString(t, "{{date (get-date \"next week\") \"%Y-W%W\"}}", context, "2022-W41")
-	testString(t, "{{date (get-date \"last week\") \"%Y-W%W\"}}", context, "2022-W39")
+	testString(t, "{{get-date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 +0000 UTC")
 }
 
 func TestShellHelper(t *testing.T) {
