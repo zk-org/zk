@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * LSP: Support for external URLs with `documentLink`.
+* New `{{get-date}}` template helper to obtain a date object from natural language.
+    ```
+    Get a relative date using natural language:
+    {{get-date "next week"}}
+
+    Format a date returned by `get-date`:
+    {{date (get-date "monday") "timestamp"}}
+    ```
 
 ### Fixed
 
