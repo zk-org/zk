@@ -524,6 +524,14 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		case core.MatchStrategyExact:
 			whereExprs = append(whereExprs, `n.raw_content LIKE '%' || ? || '%' ESCAPE '\'`)
 			args = append(args, escapeLikeTerm(opts.Match.String(), '\\'))
+		case core.MatchStrategyExactWord:
+			words := strings.Fields(opts.Match.String())
+			for range words {
+				whereExprs = append(whereExprs, `n.raw_content LIKE '%' || ? || '%' ESCAPE '\'`)
+			}
+			for _, word := range words {
+				args = append(args, escapeLikeTerm(word, '\\'))
+			}
 		case core.MatchStrategyFts:
 			snippetCol = `snippet(fts_match.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 			joinClauses = append(joinClauses, "JOIN notes_fts fts_match ON n.id = fts_match.rowid")

@@ -170,6 +170,8 @@ const (
 	MatchStrategyFts MatchStrategy = iota + 1
 	// Exact text matching.
 	MatchStrategyExact
+	// Exact word matching.
+	MatchStrategyExactWord
 	// Regular expression.
 	MatchStrategyRe
 )
@@ -183,7 +185,9 @@ func MatchStrategyFromString(str string) (MatchStrategy, error) {
 		return MatchStrategyRe, nil
 	case "exact", "e":
 		return MatchStrategyExact, nil
+	case "exact-word", "w":
+		return MatchStrategyExactWord, nil
 	default:
-		return 0, fmt.Errorf("%s: unknown match strategy\ntry fts (full-text search), re (regular expression) or exact", str)
+		return 0, fmt.Errorf("%s: unknown match strategy\ntry fts (full-text search), re (regular expression), exact or exact-word", str)
 	}
 }
