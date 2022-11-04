@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -204,9 +205,9 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 // which path arguments are relative from.
 //
 // By order of precedence:
-//   1. --notebook-dir flag
-//   2. current working directory
-//   3. ZK_NOTEBOOK_DIR environment variable
+//  1. --notebook-dir flag
+//  2. current working directory
+//  3. ZK_NOTEBOOK_DIR environment variable
 func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -255,12 +256,34 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 	var d cli.Dirs
 	var err error
 
+	// Split str by first "=" if present and return the split pair, otherwise return nil
+	maybeSplitConjoined := func(str string) (pair []string) {
+		re := regexp.MustCompile(`=`)
+		slice := re.FindStringIndex(str)
+		if slice == nil {
+			return nil
+		}
+		return []string{str[:slice[0]], str[slice[1]:]}
+	}
+
+	// Check if str matches long, or if it matches str if not empty
+	matchesLongOrShort := func(str string, long string, short string) bool {
+		return str == long || (short != "" && str == short)
+	}
+
 	findFlag := func(long string, short string, args []string) (string, []string, error) {
 		newArgs := []string{}
-
 		foundFlag := ""
 		for i, arg := range args {
-			if arg == long || (short != "" && arg == short) {
+			// We can be given "--notebook-dir x" (two args) or "--notebook-dir=x" (one arg),
+			// so we split by the first "=" (incase the "value" side includes one)
+			// and check the split if it exists, otherwise check for the two argument form.
+			disconj := maybeSplitConjoined(arg)
+			if disconj != nil && matchesLongOrShort(disconj[0], long, short) {
+				path, err := filepath.Abs(disconj[1])
+				newArgs = append(newArgs, args[i+1:]...)
+				return path, newArgs, err
+			} else if matchesLongOrShort(arg, long, short) {
 				foundFlag = arg
 			} else if foundFlag != "" {
 				newArgs = append(newArgs, args[i+1:]...)
