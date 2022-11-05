@@ -266,7 +266,7 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 		return []string{str[:slice[0]], str[slice[1]:]}
 	}
 
-  // Peek ahead at next value  and pair with current if it exists, otherwise return nil
+	// Peek ahead at next value  and pair with current if it exists, otherwise return nil
 	makePeekPair := func(args []string, index int) (pair []string) {
 		if len(args) <= (index + 1) {
 			return nil
@@ -282,8 +282,8 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 		newArgs := []string{}
 		for i, arg := range args {
 			// We can be given "--notebook-dir x" (two args) or "--notebook-dir=x" (one arg)
-      // so we must test against the current argument split into two, and 
-      // the current argument + the next.
+			// so we must test against the current argument split into two, and
+			// the current argument + the next.
 			splitPair := makeSplitPair(arg)
 			peekPair := makePeekPair(args, i)
 			var option string
@@ -300,8 +300,8 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 				// skip 2 ahead (arg and value)
 				newArgs = append(newArgs, args[i+2:]...)
 			} else {
-        // we either had no split pair or peek pair, or they didn't match the
-        // needle, so just save the given arg and keep looking.
+				// we either had no split pair or peek pair, or they didn't match the
+				// needle, so just save the given arg and keep looking.
 				newArgs = append(newArgs, arg)
 			}
 
@@ -310,9 +310,9 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 				return path, newArgs, err
 			} else if option != "" && value == "" {
 				return "", newArgs, errors.New(option + " requires a path argument")
-			}	
-    }
-    return "", newArgs, nil
+			}
+		}
+		return "", newArgs, nil
 	}
 
 	d.NotebookDir, args, err = findFlag("--notebook-dir", "", args)
