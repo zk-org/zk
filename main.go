@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -204,9 +205,9 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 // which path arguments are relative from.
 //
 // By order of precedence:
-//   1. --notebook-dir flag
-//   2. current working directory
-//   3. ZK_NOTEBOOK_DIR environment variable
+//  1. --notebook-dir flag
+//  2. current working directory
+//  3. ZK_NOTEBOOK_DIR environment variable
 func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -255,23 +256,63 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 	var d cli.Dirs
 	var err error
 
+	// Split str by first "=" if present and return the split pair, otherwise return nil
+	makeSplitPair := func(str string) (pair []string) {
+		re := regexp.MustCompile(`=`)
+		slice := re.FindStringIndex(str)
+		if slice == nil {
+			return nil
+		}
+		return []string{str[:slice[0]], str[slice[1]:]}
+	}
+
+	// Peek ahead at next value  and pair with current if it exists, otherwise return nil
+	makePeekPair := func(args []string, index int) (pair []string) {
+		if len(args) <= (index + 1) {
+			return nil
+		}
+		return []string{args[index], args[index+1]}
+	}
+
+	matchesLongOrShort := func(str string, long string, short string) bool {
+		return str == long || (short != "" && str == short)
+	}
+
 	findFlag := func(long string, short string, args []string) (string, []string, error) {
 		newArgs := []string{}
-
-		foundFlag := ""
 		for i, arg := range args {
-			if arg == long || (short != "" && arg == short) {
-				foundFlag = arg
-			} else if foundFlag != "" {
+			// We can be given "--notebook-dir x" (two args) or "--notebook-dir=x" (one arg)
+			// so we must test against the current argument split into two, and
+			// the current argument + the next.
+			splitPair := makeSplitPair(arg)
+			peekPair := makePeekPair(args, i)
+			var option string
+			var value string
+
+			if splitPair != nil && matchesLongOrShort(splitPair[0], long, short) {
+				option = splitPair[0]
+				value = splitPair[1]
+				// skip 1 ahead
 				newArgs = append(newArgs, args[i+1:]...)
-				path, err := filepath.Abs(arg)
-				return path, newArgs, err
+			} else if peekPair != nil && matchesLongOrShort(peekPair[0], long, short) {
+				option = peekPair[0]
+				value = peekPair[1]
+				// skip 2 ahead (arg and value)
+				newArgs = append(newArgs, args[i+2:]...)
 			} else {
+				// we either had no split pair or peek pair, or they didn't match the
+				// needle, so just save the given arg and keep looking.
 				newArgs = append(newArgs, arg)
 			}
-		}
-		if foundFlag != "" {
-			return "", newArgs, errors.New(foundFlag + " requires a path argument")
+
+			if option != "" && value != "" {
+				path, err := filepath.Abs(value)
+				return path, newArgs, err
+			} else if option != "" && value == "" {
+				return "", newArgs, errors.New(option + " requires a path argument")
+			} else if len(args) == (i+1) && matchesLongOrShort(arg, long, short) {
+				return "", newArgs, errors.New(arg + " requires a path argument")
+			}
 		}
 		return "", newArgs, nil
 	}

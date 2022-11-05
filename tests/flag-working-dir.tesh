@@ -3,8 +3,18 @@ $ zk list -qfpath --working-dir paths
 >paper.md
 >brown/wood.md
 
+# working-dir is custom parsed, check that it handles both one and two arg forms
+$ zk list -qfpath --working-dir=paths
+>paper.md
+>brown/wood.md
+
 # Short flag.
 $ zk list -qfpath -W paths
+>paper.md
+>brown/wood.md
+
+# working-dir is custom parsed, check that it handles both one and two arg forms
+$ zk list -qfpath -W=paths
 >paper.md
 >brown/wood.md
 
