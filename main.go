@@ -310,6 +310,8 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 				return path, newArgs, err
 			} else if option != "" && value == "" {
 				return "", newArgs, errors.New(option + " requires a path argument")
+			} else if len(args) == (i+1) && matchesLongOrShort(arg, long, short) {
+				return "", newArgs, errors.New(arg + " requires a path argument")
 			}
 		}
 		return "", newArgs, nil
