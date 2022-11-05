@@ -266,7 +266,6 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 		return []string{str[:slice[0]], str[slice[1]:]}
 	}
 
-	// Check if str matches long, or if it matches str if not empty
 	matchesLongOrShort := func(str string, long string, short string) bool {
 		return str == long || (short != "" && str == short)
 	}
