@@ -12,7 +12,6 @@ import (
 	"github.com/mickael-menu/zk/internal/util"
 	"github.com/mickael-menu/zk/internal/util/errors"
 	"github.com/mickael-menu/zk/internal/util/fts5"
-	"github.com/mickael-menu/zk/internal/util/opt"
 	"github.com/mickael-menu/zk/internal/util/paths"
 	strutil "github.com/mickael-menu/zk/internal/util/strings"
 )
@@ -421,9 +420,10 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Expand the mention queries in the match predicate.
-	match := opts.Match.String()
-	match += " " + strings.Join(mentionQueries, " OR ")
-	opts.Match = opt.NewString(match)
+	match := make([]string, len(opts.Match))
+	copy(match, opts.Match)
+	match = append(match, " ("+strings.Join(mentionQueries, " OR ")+") ")
+	opts.Match = match
 
 	return opts, nil
 }
@@ -519,20 +519,26 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		return nil
 	}
 
-	if !opts.Match.IsNull() {
+	if 0 < len(opts.Match) {
 		switch opts.MatchStrategy {
 		case core.MatchStrategyExact:
-			whereExprs = append(whereExprs, `n.raw_content LIKE '%' || ? || '%' ESCAPE '\'`)
-			args = append(args, escapeLikeTerm(opts.Match.String(), '\\'))
+			for _, match := range opts.Match {
+				whereExprs = append(whereExprs, `n.raw_content LIKE '%' || ? || '%' ESCAPE '\'`)
+				args = append(args, escapeLikeTerm(match, '\\'))
+			}
 		case core.MatchStrategyFts:
 			snippetCol = `snippet(fts_match.notes_fts, 2, '<zk:match>', '</zk:match>', '…', 20)`
 			joinClauses = append(joinClauses, "JOIN notes_fts fts_match ON n.id = fts_match.rowid")
 			additionalOrderTerms = append(additionalOrderTerms, `bm25(fts_match.notes_fts, 1000.0, 500.0, 1.0)`)
-			whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
-			args = append(args, fts5.ConvertQuery(opts.Match.String()))
+			for _, match := range opts.Match {
+				whereExprs = append(whereExprs, "fts_match.notes_fts MATCH ?")
+				args = append(args, fts5.ConvertQuery(match))
+			}
 		case core.MatchStrategyRe:
-			whereExprs = append(whereExprs, "n.raw_content REGEXP ?")
-			args = append(args, opts.Match.String())
+			for _, match := range opts.Match {
+				whereExprs = append(whereExprs, "n.raw_content REGEXP ?")
+				args = append(args, match)
+			}
 			break
 		}
 	}

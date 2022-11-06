@@ -312,7 +312,7 @@ func TestNoteDAOFindMinimalAll(t *testing.T) {
 func TestNoteDAOFindMinimalWithFilter(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
 		notes, err := dao.FindMinimal(core.NoteFindOpts{
-			Match:         opt.NewString("daily | index"),
+			Match:         []string{"daily | index"},
 			MatchStrategy: core.MatchStrategyFts,
 			Sorters:       []core.NoteSorter{{Field: core.NoteSortWordCount, Ascending: true}},
 			Limit:         3,
@@ -368,7 +368,7 @@ func TestNoteDAOFindTag(t *testing.T) {
 func TestNoteDAOFindMatch(t *testing.T) {
 	testNoteDAOFind(t,
 		core.NoteFindOpts{
-			Match:         opt.NewString("daily | index"),
+			Match:         []string{"daily | index"},
 			MatchStrategy: core.MatchStrategyFts,
 		},
 		[]core.ContextualNote{
@@ -452,10 +452,25 @@ func TestNoteDAOFindMatch(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindMatchWithMultiMatch(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		core.NoteFindOpts{
+			Match:         []string{"daily | index", "second"},
+			MatchStrategy: core.MatchStrategyFts,
+			Sorters: []core.NoteSorter{
+				{Field: core.NoteSortPath, Ascending: false},
+			},
+		},
+		[]string{
+			"log/2021-01-04.md",
+		},
+	)
+}
+
 func TestNoteDAOFindMatchWithSort(t *testing.T) {
 	testNoteDAOFindPaths(t,
 		core.NoteFindOpts{
-			Match:         opt.NewString("daily | index"),
+			Match:         []string{"daily | index"},
 			MatchStrategy: core.MatchStrategyFts,
 			Sorters: []core.NoteSorter{
 				{Field: core.NoteSortPath, Ascending: false},
@@ -474,7 +489,7 @@ func TestNoteDAOFindExactMatch(t *testing.T) {
 	test := func(match string, expected []string) {
 		testNoteDAOFindPaths(t,
 			core.NoteFindOpts{
-				Match:         opt.NewString(match),
+				Match:         []string{match},
 				MatchStrategy: core.MatchStrategyExact,
 			},
 			expected,
