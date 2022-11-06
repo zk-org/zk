@@ -420,10 +420,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Expand the mention queries in the match predicate.
-	match := make([]string, len(opts.Match))
-	copy(match, opts.Match)
-	match = append(match, " ("+strings.Join(mentionQueries, " OR ")+") ")
-	opts.Match = match
+	opts.Match = append(opts.Match, " ("+strings.Join(mentionQueries, " OR ")+") ")
 
 	return opts, nil
 }
