@@ -17,7 +17,16 @@ $ zk list -q --debug-style --match '"green thread"'
 
 # Search for two terms (defaults to AND).
 $ zk list -q --debug-style --match 'green channel'
-><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (9 minutes ago)
+>
+>  - …runtime, so it doesn't support [<term>green</term> threads](inbox/my59).
+>        *   Crates exist to add support for <term>green</term> threads if needed.
+>        *   Instead, Rust…
+>
+
+# Search for two term by two --match flags (implicit AND).
+$ zk list -q --debug-style --match 'green' --match 'channel'
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (9 minutes ago)
 >
 >  - …runtime, so it doesn't support [<term>green</term> threads](inbox/my59).
 >        *   Crates exist to add support for <term>green</term> threads if needed.

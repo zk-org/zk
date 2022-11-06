@@ -15,3 +15,34 @@ $ zk list -q --debug-style -Me --match '["न", "म", "स्", "ते"]'
 >
 >  - Given the Hindi word "नमस्ते":
 >
+
+# Mutliple match flags.
+$ zk list -q --debug-style -Me --match "thread" --match "mut"
+><title>Concurrency in Rust</title> <path>g7qa.md</path> (9 minutes ago)
+>
+>  - *   Thanks to the [Ownership pattern](88el), Rust has a model of [Fearless concurrency](2cl7).
+>    *   Rust aims to have a small runtime, so it doesn't support [green threads](inbox/my59).
+>        *   Crates exist to add support for green threads if needed.
+>        *   Instead, Rust relies on the OS threads, a model called 1-1.
+>
+><title>Mutex</title> <path>inbox/er4k.md</path> (9 minutes ago)
+>
+>  - *   Abbreviation of *mutual exclusion*.
+>    *   An approach to manage safely shared state by allowing only a single thread to access a protected value at one time.
+>    *   A mutex *guards* a protected data with a *locking system*.
+>    *   Managing mutexes is tricky, using [channels](../fwsj) is an easier alternative.
+>        *   The main risk is to create *deadlocks*.
+>        *   Thanks to its [Ownership](../88el) pattern, Rust makes sure we can't mess up when using locks.
+>
+
+# Mutliple match flags.
+$ zk list -q --debug-style -Me --match "thread" --match "mutual"
+><title>Mutex</title> <path>inbox/er4k.md</path> (9 minutes ago)
+>
+>  - *   Abbreviation of *mutual exclusion*.
+>    *   An approach to manage safely shared state by allowing only a single thread to access a protected value at one time.
+>    *   A mutex *guards* a protected data with a *locking system*.
+>    *   Managing mutexes is tricky, using [channels](../fwsj) is an easier alternative.
+>        *   The main risk is to create *deadlocks*.
+>        *   Thanks to its [Ownership](../88el) pattern, Rust makes sure we can't mess up when using locks.
+>
