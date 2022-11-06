@@ -236,9 +236,9 @@ func (n *Notebook) FindByHref(href string, allowPartialHref bool) (*MinimalNote,
 }
 
 // FindMatching retrieves the first note matching the given search terms.
-func (n *Notebook) FindMatching(terms string) (*MinimalNote, error) {
+func (n *Notebook) FindMatching(terms []string) (*MinimalNote, error) {
 	return n.FindMinimalNote(NoteFindOpts{
-		Match: opt.NewNotEmptyString(terms),
+		Match: terms,
 	})
 }
 
