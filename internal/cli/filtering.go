@@ -119,7 +119,6 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			if len(f.Match) == 0 {
 				f.Match = parsedFilter.Match
 			} else if 0 < len(parsedFilter.Match) {
-				// f.Match = append(f.Match, fmt.Sprintf("(%s) AND (%s)", f.Match, parsedFilter.Match))
 				for _, pmatch := range parsedFilter.Match {
 					f.Match = append(f.Match, pmatch)
 				}
