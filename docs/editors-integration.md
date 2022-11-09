@@ -189,7 +189,7 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
     | `select`         | string array | Yes       | List of note fields to return<sup>1</sup>                               |
     | `hrefs`          | string array | No        | Find notes matching the given path, including its descendants           |
 	| `limit`          | integer      | No        | Limit the number of notes found                                         |
-	| `match`          | string       | No        | Terms to search for in the notes                                        |
+	| `match`          | string array | No        | Terms to search for in the notes                                        |
 	| `exactMatch`     | boolean      | No        | Search for exact occurrences of the `match` argument (case insensitive) |
 	| `excludeHrefs`   | string array | No        | Ignore notes matching the given path, including its descendants         |
 	| `tags`           | string array | No        | Find notes tagged with the given tags                                   |
