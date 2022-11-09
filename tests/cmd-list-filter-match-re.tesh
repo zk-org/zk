@@ -18,7 +18,7 @@ $ zk list -q --debug-style -Mr --match 'न.*ते'
 
 # multiple match flags.
 $ zk list -q --debug-style -Mr --match "mut.*" --match "thr..d"
-><title>Mutex</title> <path>inbox/er4k.md</path> (9 minutes ago)
+><title>Mutex</title> <path>inbox/er4k.md</path> (just now)
 >
 >  - *   Abbreviation of *mutual exclusion*.
 >    *   An approach to manage safely shared state by allowing only a single thread to access a protected value at one time.
