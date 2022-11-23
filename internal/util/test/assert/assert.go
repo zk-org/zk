@@ -3,6 +3,7 @@ package assert
 import (
 	"encoding/json"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -58,6 +59,20 @@ func NotEqual(t *testing.T, actual, other interface{}) {
 		t.Errorf("\n---\n")
 		t.Errorf("Expected to be different from (type %v):\n% #v", reflect.TypeOf(other), pretty.Formatter(other))
 		t.Errorf("\n---\n")
+	}
+}
+
+func Regexp(t *testing.T, actual, pattern string) {
+	rx := regexp.MustCompile(pattern)
+	if !(rx.MatchString(actual)) {
+		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
+		t.Errorf("\n---\n")
+		t.Errorf("But expected to match regexp:\n% #v", pretty.Formatter(pattern))
+		t.Errorf("\n---\n")
+		t.Errorf("Diff:\n")
+		for _, diff := range pretty.Diff(actual, pattern) {
+			t.Errorf("\t% #v", diff)
+		}
 	}
 }
 
