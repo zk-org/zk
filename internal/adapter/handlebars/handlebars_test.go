@@ -45,6 +45,17 @@ func testString(t *testing.T, template string, context interface{}, expected str
 	assert.Equal(t, actual, expected)
 }
 
+func testStringMatch(t *testing.T, template string, context interface{}, pattern string) {
+	sut := testLoader(LoaderOpts{})
+
+	templ, err := sut.LoadTemplate(template)
+	assert.Nil(t, err)
+
+	actual, err := templ.Render(context)
+	assert.Nil(t, err)
+	assert.Regexp(t, actual, pattern)
+}
+
 func testFile(t *testing.T, name string, context interface{}, expected string) {
 	sut := testLoader(LoaderOpts{})
 
