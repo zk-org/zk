@@ -116,13 +116,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 				f.ModifiedAfter = parsedFilter.ModifiedAfter
 			}
 
-			if len(f.Match) == 0 {
-				f.Match = parsedFilter.Match
-			} else if 0 < len(parsedFilter.Match) {
-				for _, pmatch := range parsedFilter.Match {
-					f.Match = append(f.Match, pmatch)
-				}
-			}
+			f.Match = append(f.Match, parsedFilter.Match...)
 			if f.MatchStrategy == "" {
 				f.MatchStrategy = parsedFilter.MatchStrategy
 			}
