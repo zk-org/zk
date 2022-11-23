@@ -249,12 +249,12 @@ func TestDateHelper(t *testing.T) {
 	testString(t, "{{date now 'timestamp'}}", context, "200911172034")
 	testString(t, "{{date now 'timestamp-unix'}}", context, "1258490098")
 	testString(t, "{{date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
-	testString(t, "{{date now 'elapsed'}}", context, "13 years ago")
+	testStringMatch(t, "{{date now 'elapsed'}}", context, `[\d]+ years ago`)
 }
 
 func TestGetDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
-	testString(t, "{{get-date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 +0000 UTC")
+	testStringMatch(t, "{{get-date \"2009-11-17T20:34:58\"}}", context, `2009-11-17 20:34:58 \+[\d]{4} [A-Z]+`)
 }
 
 func TestShellHelper(t *testing.T) {
