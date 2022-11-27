@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
     Format a date returned by `get-date`:
     {{date (get-date "monday") "timestamp"}}
     ```
+* `zk list` now support multiple `--match`/`-m` flags, which allows to search for several tokens appearing in any order in the notes (contributed by [@rktjmp](https://github.com/mickael-menu/zk/pull/268)).
 
 ### Fixed
 
