@@ -24,7 +24,7 @@ $ zk graph --help
 >Filtering
 >  -i, --interactive                Select notes interactively with fzf.
 >  -n, --limit=COUNT                Limit the number of notes found.
->  -m, --match=QUERY                Terms to search for in the notes.
+>  -m, --match=QUERY,...            Terms to search for in the notes.
 >  -M, --match-strategy=STRATEGY    Text matching strategy among: fts, re, exact.
 >  -x, --exclude=PATH,...           Ignore notes matching the given path,
 >                                   including its descendants.

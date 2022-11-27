@@ -11,7 +11,7 @@ func TestExpandNamedFiltersNone(t *testing.T) {
 		Path:           []string{"path1"},
 		Limit:          10,
 		Interactive:    true,
-		Match:          "match query",
+		Match:          []string{"match query"},
 		Exclude:        []string{"excl-path1", "excl-path2"},
 		Tag:            []string{"tag1", "tag2"},
 		Mention:        []string{"mention1", "mention2"},
@@ -156,7 +156,7 @@ func TestExpandNamedFiltersJoinLitterals(t *testing.T) {
 func TestExpandNamedFiltersJoinMatch(t *testing.T) {
 	f := Filtering{
 		Path:  []string{"f1", "f2"},
-		Match: "(chocolate OR caramel)",
+		Match: []string{"(chocolate OR caramel)"},
 	}
 
 	res, err := f.ExpandNamedFilters(
@@ -168,7 +168,7 @@ func TestExpandNamedFiltersJoinMatch(t *testing.T) {
 	)
 
 	assert.Nil(t, err)
-	assert.Equal(t, res.Match, "(((chocolate OR caramel)) AND (banana)) AND (apple)")
+	assert.Equal(t, res.Match, []string{"(chocolate OR caramel)", "banana", "apple"})
 }
 
 func TestExpandNamedFiltersExpandsRecursively(t *testing.T) {

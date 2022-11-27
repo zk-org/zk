@@ -58,6 +58,21 @@ Change the currently used strategy with `--match-strategy <strategy>` (or `-M`).
 list = "zk list --match-strategy re $@"
 ```
 
+The `--match` option may be given multiple times, where each argument will be combined with a boolean AND.
+
+For example,
+
+```sh
+$ zk list --tag "recipe" --match "pizza -pineapple" --match "mushrooms"
+```
+
+Is equivalent to,
+
+```sh
+$ zk list --tag "recipe" --match "(pizza -pineapple) AND (mushrooms)"
+```
+
+
 ### Full-text search (`fts`)
 
 The default match strategy is powered by a [full-text search](https://en.wikipedia.org/wiki/Full-text_search) database enabling near-instant results. Queries are not case-sensitive and terms are tokenized, which means that searching for `create` will also match `created` and `creating`.

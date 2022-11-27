@@ -5,14 +5,12 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"github.com/mickael-menu/zk/internal/util/opt"
 )
 
 // NoteFindOpts holds a set of filtering options used to find notes.
 type NoteFindOpts struct {
 	// Filter used to match the notes with the given MatchStrategy.
-	Match opt.String
+	Match []string
 	// Text matching strategy used with Match.
 	MatchStrategy MatchStrategy
 	// Filter by note hrefs.
