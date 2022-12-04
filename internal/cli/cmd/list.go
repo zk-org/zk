@@ -155,26 +155,26 @@ var defaultNoteFormats = map[string]string{
 	"path":  `{{path}}`,
 	"link":  `{{link}}`,
 
-	"oneline": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})`,
+	"oneline": `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})`,
 
-	"short": `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
+	"short": `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})
 
 {{list snippets}}`,
 
 	"medium": `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
+Created: {{format-date created "short"}}
 
 {{list snippets}}`,
 
 	"long": `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
-Modified: {{date modified "short"}}
+Created: {{format-date created "short"}}
+Modified: {{format-date modified "short"}}
 
 {{list snippets}}`,
 
 	"full": `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
-Modified: {{date modified "short"}}
+Created: {{format-date created "short"}}
+Modified: {{format-date modified "short"}}
 Tags: {{join tags ", "}}
 
 {{prepend "  " body}}

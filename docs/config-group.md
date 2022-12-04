@@ -34,7 +34,7 @@ You can override the global [note configuration](config-note.md) and [extra user
 
 ```toml
 [group.journal.note]
-filename = "{{date now}}"
+filename = "{{format-date now}}"
 template = "journal.md"
 
 [group.journal.extra]

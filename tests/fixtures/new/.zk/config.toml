@@ -4,7 +4,7 @@ filename = "{{slug title}}"
 
 [group.date.note]
 template = "empty.md"
-filename = "{{date now '%d-%m'}}"
+filename = "{{format-date now '%d-%m'}}"
 
 [group.date-raw.note]
 template = "empty.md"

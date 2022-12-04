@@ -77,7 +77,7 @@ $ cat .zk/config.toml
 >#[group."<NAME>"]
 >#paths = ["<DIR1>", "<DIR2>"]
 >#[group."<NAME>".note]
->#filename = "\{{date now}}"
+>#filename = "\{{format-date now}}"
 >#[group."<NAME>".extra]
 >#key = "value"
 >
