@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+<!--## Unreleased-->
+
+## 0.12.0
 
 ### Added
 
