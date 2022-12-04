@@ -1,6 +1,6 @@
 $ cd blank
 
-$ echo "[note]\n filename = '\{{slug title}} - \{{date now \"%B\"}}'" > .zk/config.toml
+$ echo "[note]\n filename = '\{{slug title}} - \{{format-date now \"%B\"}}'" > .zk/config.toml
 
 # The default language is `en`.
 # Note the & converted to `and` in the slug.

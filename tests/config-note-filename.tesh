@@ -5,7 +5,7 @@ $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{4}"}}.md
 
 # Set a custom filename.
-$ echo "[note]\n filename = '\{{slug title}} - \{{date now \"%m-%d\"}}'" > .zk/config.toml
+$ echo "[note]\n filename = '\{{slug title}} - \{{format-date now \"%m-%d\"}}'" > .zk/config.toml
 $ zk new --title "A new note" --date "January 5th" --dry-run
 2>{{working-dir}}/a-new-note - 01-05.md
 
@@ -16,7 +16,7 @@ $ zk new --title "A new note" --date "January 5th" --dry-run
 
 # Test the filename Handlebars variables.
 $ mkdir "a dir"
-$ echo "[note]\n filename = '\{{title}},\{{content}},\{{date now \"%m-%d\"}},\{{json extra}}'" > .zk/config.toml
+$ echo "[note]\n filename = '\{{title}},\{{content}},\{{format-date now \"%m-%d\"}},\{{json extra}}'" > .zk/config.toml
 $ echo "Piped content" | zk new --interactive --title "A new note" --date "January 5th" --extra key=value --dry-run
 2>{{working-dir}}/A new note,Piped content
 2>,01-05,{"key":"value"}.md

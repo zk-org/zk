@@ -152,7 +152,7 @@ func (ns *NotebookStore) locateNotebook(path string) (string, error) {
 
 	var locate func(string) (string, error)
 	locate = func(currentPath string) (string, error) {
-                // For Windows, the root dir may end with volume name, e.g. E:\\
+		// For Windows, the root dir may end with volume name, e.g. E:\\
 		if currentPath == "/" || currentPath == filepath.VolumeName(currentPath)+"\\" || currentPath == "." {
 			return "", ErrNotebookNotFound(path)
 		}
@@ -251,7 +251,7 @@ template = "default.md"
 #[group."<NAME>"]
 #paths = ["<DIR1>", "<DIR2>"]
 #[group."<NAME>".note]
-#filename = "\{{date now}}"
+#filename = "\{{format-date now}}"
 #[group."<NAME>".extra]
 #key = "value"
 

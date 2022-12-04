@@ -7,15 +7,19 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * LSP: Support for external URLs with `documentLink`.
-* New `{{get-date}}` template helper to obtain a date object from natural language.
+* New `{{date}}` template helper to obtain a date object from natural language (contributed by [@zalegrala](https://github.com/mickael-menu/zk/pull/262)).
     ```
     Get a relative date using natural language:
-    {{get-date "next week"}}
+    {{date "next week"}}
 
     Format a date returned by `get-date`:
-    {{date (get-date "monday") "timestamp"}}
+    {{format-date (date "monday") "timestamp"}}
     ```
 * `zk list` now support multiple `--match`/`-m` flags, which allows to search for several tokens appearing in any order in the notes (contributed by [@rktjmp](https://github.com/mickael-menu/zk/pull/268)).
+
+### Changed
+
+* **Breaking change:** The `{{date}}` template helper was renamed to `{{format-date}}`. You might need to update your configuration and templates.
 
 ### Fixed
 

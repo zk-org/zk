@@ -2,7 +2,7 @@
 
 Let's assume you want to write daily notes named like `2021-02-16.md` in a `journal/daily` sub-directory. This common use case is a good fit for creating a [note group](config-group.md) overriding the default [note creation](note-creation.md) settings.
 
-First, create a `group` entry in the [configuration file](config.md) to set the note settings for this directory. Refer to the [template syntax reference](template.md) to understand how to use the `{{date}}` helper.
+First, create a `group` entry in the [configuration file](config.md) to set the note settings for this directory. Refer to the [template syntax reference](template.md) to understand how to use the `{{format-date}}` helper.
 
 ```toml
 [group.daily]
@@ -10,8 +10,8 @@ First, create a `group` entry in the [configuration file](config.md) to set the 
 paths = ["journal/daily"]
 
 [group.daily.note]
-# %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
-filename = "{{date now '%Y-%m-%d'}}"
+# %Y-%m-%d is actually the default format, so you could use {{format-date now}} instead.
+filename = "{{format-date now '%Y-%m-%d'}}"
 extension = "md"
 template = "daily.md"
 ```
@@ -19,7 +19,7 @@ template = "daily.md"
 Next, create a template file under `.zk/templates/daily.md` to render the note content. Here we used the date again to generate a title like "February 16, 2021".
 
 ```markdown
-# {{date now "long"}}
+# {{format-date now "long"}}
 
 What did I do today?
 ```

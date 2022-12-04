@@ -67,7 +67,7 @@ author = "Mickaël"
 paths = ["journal/weekly", "journal/daily"]
 
 [dir.journal.note]
-filename = "{{date now}}"
+filename = "{{format-date now}}"
 
 
 # MARKDOWN SETTINGS

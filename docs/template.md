@@ -38,13 +38,25 @@ The `{{concat s1 s2}}` helper concatenates two strings together. For example `{{
     * `{{substring 'A full quote' 2 4}}` outputs `full`
     * `{{substring 'A full quote' -5 5}` outputs `quote`
 
-### Date helper
+### Date helpers
 
-The `{{date}}` helper formats the given date for display.
+#### Date from natural string helper
+
+You can get a date object from a natural human date (e.g. `tomorrow`, `2 weeks ago`, `2022-03-24`) using the `{{date}}` helper. It is most useful when paired with the `{{format-date}}` helper.
+
+```
+{{date "tomorrow"}}
+
+{{format-date (date "last week") "timestamp"}}
+```
+
+#### Date formatting helper
+
+The `{{format-date}}` helper formats the given date for display.
 
 Template contexts usually provide a `now` variable which can be used to print the current date.
 
-The default format output by `{{date <variable>}}` looks like `2009-11-17`, but you can choose a different format by providing a second argument, e.g. `{{date now "medium"}}`.
+The default format output by `{{format-date <variable>}}` looks like `2009-11-17`, but you can choose a different format by providing a second argument, e.g. `{{format-date now "medium"}}`.
 
 | Format           | Output                     | Notes                                            |
 |------------------|----------------------------|--------------------------------------------------|
@@ -58,7 +70,7 @@ The default format output by `{{date <variable>}}` looks like `2009-11-17`, but 
 | `timestamp-unix` | 1258490098                 | Number of seconds since January 1, 1970          |
 | `elapsed`        | 12 years ago               | Time elapsed since then in human-friendly format |
 
-If none of the provided formats suit you, you can use a custom format using `strftime`-style placeholders, e.g. `{{date now "%m-%d-%Y"}}`. See `man strftime` for a list of placeholders.
+If none of the provided formats suit you, you can use a custom format using `strftime`-style placeholders, e.g. `{{format-date now "%m-%d-%Y"}}`. See `man strftime` for a list of placeholders.
 
 ### Slug helper
 

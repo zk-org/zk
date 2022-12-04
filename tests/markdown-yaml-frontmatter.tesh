@@ -28,7 +28,7 @@ $ zk list -q --format "\{{path}}: \{{json tags}}"
 >case.md: ["writing","essay","practice"]
 
 # Creation date extracted from the frontmatter.
-$ zk list -q --format "\{{path}}: \{{date created 'full'}}"
+$ zk list -q --format "\{{path}}: \{{format-date created 'full'}}"
 >keywords.md: {{match '.*'}}
 >empty.md: {{match '.*'}}
 >full.md: Monday, May 16, 2011

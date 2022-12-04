@@ -8,7 +8,7 @@ import (
 
 func TestListFormatDefault(t *testing.T) {
 	cmd := List{}
-	assert.Equal(t, cmd.noteTemplate(), `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
+	assert.Equal(t, cmd.noteTemplate(), `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})
 
 {{list snippets}}`)
 }
@@ -25,26 +25,26 @@ func TestListFormatPredefined(t *testing.T) {
 	test("path", `{{path}}`)
 	test("link", `{{link}}`)
 
-	test("oneline", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})`)
+	test("oneline", `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})`)
 
-	test("short", `{{style "title" title}} {{style "path" path}} ({{date created "elapsed"}})
+	test("short", `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})
 
 {{list snippets}}`)
 
 	test("medium", `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
+Created: {{format-date created "short"}}
 
 {{list snippets}}`)
 
 	test("long", `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
-Modified: {{date modified "short"}}
+Created: {{format-date created "short"}}
+Modified: {{format-date modified "short"}}
 
 {{list snippets}}`)
 
 	test("full", `{{style "title" title}} {{style "path" path}}
-Created: {{date created "short"}}
-Modified: {{date modified "short"}}
+Created: {{format-date created "short"}}
+Modified: {{format-date modified "short"}}
 Tags: {{join tags ", "}}
 
 {{prepend "  " body}}

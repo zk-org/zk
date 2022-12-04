@@ -48,10 +48,10 @@ Here are some common filename patterns you may want to use:
     * Readable and practical for web servers, but fragile in case of renaming.
 * `{{id}}-{{slug title}}` – e.g. `i2hn8-an-interesting-concept.md`
     * The best of both worlds? Readable but if you link only with the prefix ID, you can rename without breaking links.
-* `{{date now 'timestamp'}}` – e.g. `200911172034.md`
+* `{{format-date now 'timestamp'}}` – e.g. `200911172034.md`
     * Verbose, but sortable by creation date and stable.
-* `{{date now 'timestamp'}} {{title}}` – e.g. `200911172034 An interesting concept.md`
+* `{{format-date now 'timestamp'}} {{title}}` – e.g. `200911172034 An interesting concept.md`
     * The format of [The Archive](https://zettelkasten.de/the-archive/) and [sirupsen's zk](https://github.com/sirupsen/zk).
-* `{{date now '%Y-%m-%d'}}` – e.g. `2009-11-17.md`
+* `{{format-date now '%Y-%m-%d'}}` – e.g. `2009-11-17.md`
     * Sortable, human-friendly format for a daily journal.
     * i.e. [Maintaining a daily journal](daily-journal.md).

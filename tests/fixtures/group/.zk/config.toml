@@ -6,7 +6,7 @@ template = "default.md"
 content = "Default content"
 
 [group.journal.note]
-filename = "{{date now '%d-%m'}}"
+filename = "{{format-date now '%d-%m'}}"
 template = "journal.md"
 
 [group.journal.extra]

@@ -9,7 +9,7 @@ The following variables are available in the templates used when [creating new n
 | `content`     | string | Any text piped through the standard input                                             |
 | `dir`         | string | Parent directory in the notebook                                                      |
 | `extra.<key>` | string | [Additional variables](config-extra.md) provided through the config file or `--extra` |
-| `now`         | date   | Current date and time, useful when paired with [`{{date now}}`](template.md)          |
+| `now`         | date   | Current date and time, useful when paired with [`{{format-date now}}`](template.md)   |
 | `env`         | map    | Dictionary of case-sensitive environment variables, e.g. `{{env.PATH}}`.              |
 
 These additional variables are available only to the note content template, once the filename is generated.

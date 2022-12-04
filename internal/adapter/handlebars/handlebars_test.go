@@ -226,25 +226,25 @@ func TestSlugHelper(t *testing.T) {
 	)
 }
 
-func TestDateHelper(t *testing.T) {
+func TestFormatDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
-	testString(t, "{{date now}}", context, "2009-11-17")
-	testString(t, "{{date now 'short'}}", context, "11/17/2009")
-	testString(t, "{{date now 'medium'}}", context, "Nov 17, 2009")
-	testString(t, "{{date now 'long'}}", context, "November 17, 2009")
-	testString(t, "{{date now 'full'}}", context, "Tuesday, November 17, 2009")
-	testString(t, "{{date now 'year'}}", context, "2009")
-	testString(t, "{{date now 'time'}}", context, "20:34")
-	testString(t, "{{date now 'timestamp'}}", context, "200911172034")
-	testString(t, "{{date now 'timestamp-unix'}}", context, "1258490098")
-	testString(t, "{{date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
-	testString(t, "{{date now 'elapsed'}}", context, "14 years ago")
+	testString(t, "{{format-date now}}", context, "2009-11-17")
+	testString(t, "{{format-date now 'short'}}", context, "11/17/2009")
+	testString(t, "{{format-date now 'medium'}}", context, "Nov 17, 2009")
+	testString(t, "{{format-date now 'long'}}", context, "November 17, 2009")
+	testString(t, "{{format-date now 'full'}}", context, "Tuesday, November 17, 2009")
+	testString(t, "{{format-date now 'year'}}", context, "2009")
+	testString(t, "{{format-date now 'time'}}", context, "20:34")
+	testString(t, "{{format-date now 'timestamp'}}", context, "200911172034")
+	testString(t, "{{format-date now 'timestamp-unix'}}", context, "1258490098")
+	testString(t, "{{format-date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
+	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 
-func TestGetDateHelper(t *testing.T) {
+func TestDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	localOffsetAndTZ := time.Now().Format("-0700 MST")
-	testString(t, "{{get-date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 "+localOffsetAndTZ)
+	testString(t, "{{date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 "+localOffsetAndTZ)
 }
 
 func TestShellHelper(t *testing.T) {
