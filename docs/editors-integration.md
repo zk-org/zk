@@ -150,19 +150,21 @@ This LSP command calls `zk new` to create a new note. It can be useful to quickl
 1. A path to any file or directory in the notebook, to locate it.
 2. <details><summary>(Optional) A dictionary of additional options (click to expand)</summary>
     
-    | Key                    | Type                 | Description                                                                               |
-    |------------------------|----------------------|-------------------------------------------------------------------------------------------|
-    | `title`                | string               | Title of the new note                                                                     |
-    | `content`              | string               | Initial content of the note                                                               |
-    | `dir`                  | string               | Parent directory, relative to the root of the notebook                                    |
-    | `group`                | string               | [Note configuration group](config-group.md)                                               |
-    | `template`             | string               | [Custom template used to render the note](template-creation.md)                           |
-    | `extra`                | dictionary           | A dictionary of extra variables to expand in the template                                 |
-    | `date`                 | string               | A date of creation for the note in natural language, e.g. "tomorrow"                      |
-    | `edit`                 | boolean              | When true, the editor will open the newly created note (**not supported by all editors**) |
-    | `insertLinkAtLocation` | location<sup>1</sup> | A location in another note where a link to the new note will be inserted                  |
+    | Key                       | Type                 | Description                                                                                                          |
+    |---------------------------|----------------------|----------------------------------------------------------------------------------------------------------------------|
+    | `title`                   | string               | Title of the new note                                                                                                |
+    | `content`                 | string               | Initial content of the note                                                                                          |
+    | `dir`                     | string               | Parent directory, relative to the root of the notebook                                                               |
+    | `group`                   | string               | [Note configuration group](config-group.md)                                                                          |
+    | `template`                | string               | [Custom template used to render the note](template-creation.md)                                                      |
+    | `extra`                   | dictionary           | A dictionary of extra variables to expand in the template                                                            |
+    | `date`                    | string               | A date of creation for the note in natural language, e.g. "tomorrow"                                                 |
+    | `edit`                    | boolean              | When true, the editor will open the newly created note (**not supported by all editors**)                            |
+    | `dryRun`                  | boolean              | When true, `zk` will not actually create the note on the file system, but will return its generated content and path |
+    | `insertLinkAtLocation`    | location<sup>1</sup> | A location in another note where a link to the new note will be inserted                                             |
+    | `insertContentAtLocation` | location<sup>1</sup> | A location in another note where the content of the new note will be inserted                                        |
 
-    The `location` type is an [LSP Location object](https://microsoft.github.io/language-server-protocol/specification#location), for example:
+    1. The `location` type is an [LSP Location object](https://microsoft.github.io/language-server-protocol/specification#location), for example:
 
     ```json
     {
@@ -175,7 +177,10 @@ This LSP command calls `zk new` to create a new note. It can be useful to quickl
     ```
     </details>
 
-`zk.new` returns a dictionary with the key `path` containing the absolute path to the newly created file.
+`zk.new` returns a dictionary with two properties:
+
+* `path` containing the absolute path to the created note.
+* `content` containing the raw content of the created note.
 
 #### `zk.list`
 

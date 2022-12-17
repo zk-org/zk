@@ -15,15 +15,17 @@ import (
 const cmdNew = "zk.new"
 
 type cmdNewOpts struct {
-	Title                string             `json:"title"`
-	Content              string             `json:"content"`
-	Dir                  string             `json:"dir"`
-	Group                string             `json:"group"`
-	Template             string             `json:"template"`
-	Extra                map[string]string  `json:"extra"`
-	Date                 string             `json:"date"`
-	Edit                 jsonBoolean        `json:"edit"`
-	InsertLinkAtLocation *protocol.Location `json:"insertLinkAtLocation"`
+	Title                   string             `json:"title"`
+	Content                 string             `json:"content"`
+	Dir                     string             `json:"dir"`
+	Group                   string             `json:"group"`
+	Template                string             `json:"template"`
+	Extra                   map[string]string  `json:"extra"`
+	Date                    string             `json:"date"`
+	Edit                    jsonBoolean        `json:"edit"`
+	DryRun                  jsonBoolean        `json:"dryRun"`
+	InsertLinkAtLocation    *protocol.Location `json:"insertLinkAtLocation"`
+	InsertContentAtLocation *protocol.Location `json:"insertContentAtLocation"`
 }
 
 func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
@@ -51,6 +53,7 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		Group:     opt.NewNotEmptyString(opts.Group),
 		Template:  opt.NewNotEmptyString(opts.Template),
 		Extra:     opts.Extra,
+		DryRun:    bool(opts.DryRun),
 		Date:      date,
 	})
 	if err != nil {
@@ -69,7 +72,17 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		return nil, errors.New("zk.new could not generate a new note")
 	}
 
-	if opts.InsertLinkAtLocation != nil {
+	if opts.InsertContentAtLocation != nil {
+		go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
+			Edit: protocol.WorkspaceEdit{
+				Changes: map[string][]protocol.TextEdit{
+					opts.InsertContentAtLocation.URI: {{Range: opts.InsertContentAtLocation.Range, NewText: note.RawContent}},
+				},
+			},
+		}, nil)
+	}
+
+	if !opts.DryRun && opts.InsertLinkAtLocation != nil {
 		doc, ok := documents.Get(opts.InsertLinkAtLocation.URI)
 		if !ok {
 			return nil, fmt.Errorf("can't insert link in %s", opts.InsertLinkAtLocation.URI)
@@ -104,12 +117,15 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 	}
 
 	absPath := filepath.Join(notebook.Path, note.Path)
-	if opts.Edit {
+	if !opts.DryRun && opts.Edit {
 		go context.Call(protocol.ServerWindowShowDocument, protocol.ShowDocumentParams{
 			URI:       pathToURI(absPath),
 			TakeFocus: boolPtr(true),
 		}, nil)
 	}
 
-	return map[string]interface{}{"path": absPath}, nil
+	return map[string]interface{}{
+		"path":    absPath,
+		"content": note.RawContent,
+	}, nil
 }
