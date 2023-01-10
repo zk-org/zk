@@ -369,6 +369,13 @@ func NewServer(opts ServerOpts) *Server {
 			}
 			return executeCommandNew(nb, server.documents, context, params.Arguments)
 
+		case cmdLink:
+			nb, err := openNotebook()
+			if err != nil {
+				return nil, err
+			}
+			return executeCommandLink(nb, server.documents, context, params.Arguments)
+
 		case cmdList:
 			nb, err := openNotebook()
 			if err != nil {
