@@ -30,4 +30,4 @@ But you can make your [notebook](notebook.md) even more tightly integrated with 
 
 ## Emanote
 
-Emanote is neuron's successor. For Emanote-specific configuration, see https://emanote.srid.ca/resources/zk.
+Emanote is neuron's successor. For Emanote-specific configuration, see https://emanote.srid.ca/start/resources/zk.
