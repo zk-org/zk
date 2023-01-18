@@ -182,6 +182,18 @@ This LSP command calls `zk new` to create a new note. It can be useful to quickl
 * `path` containing the absolute path to the created note.
 * `content` containing the raw content of the created note.
 
+#### `zk.link`
+
+This LSP command allows editors to tap into the note linking mechanism. It takes three arguments:
+
+1. A `path` to any file in the notebook that will be linked to
+2. An LSP `location` object that points to where the link will be inserted
+3. An optional title of the link. If `title` is not provided, the title of the note will be inserted instead
+
+`zk.link` returns a JSON object with the path to the linked note, if the linking was successful.
+
+**Note**: This command is _not_ exposed in the command line. This command is targeted at editor / plugin authors to extend zk functionality.
+
 #### `zk.list`
 
 This LSP command calls `zk list` to search a notebook. It takes two arguments:

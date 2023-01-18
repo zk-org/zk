@@ -6,9 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* LSP: `zk.new` now returns the created note's content in its output (`content`), and has two new options:
-    * `dryRun` will prevent `zk.new` from creating the note on the file system.
-    * `insertContentAtLocation` can be used to insert the created note's content into an arbitrary location.
+* LSP:
+    * `zk.new` now returns the created note's content in its output (`content`), and has two new options:
+        * `dryRun` will prevent `zk.new` from creating the note on the file system.
+        * `insertContentAtLocation` can be used to insert the created note's content into an arbitrary location.
+    * A new `zk.link` command to insert a link to a given note (contributed by [@psanker](https://github.com/mickael-menu/zk/pull/284)).
 
 ## 0.12.0
 

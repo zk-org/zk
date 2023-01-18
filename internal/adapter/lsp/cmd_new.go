@@ -83,37 +83,18 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 	}
 
 	if !opts.DryRun && opts.InsertLinkAtLocation != nil {
-		doc, ok := documents.Get(opts.InsertLinkAtLocation.URI)
-		if !ok {
-			return nil, fmt.Errorf("can't insert link in %s", opts.InsertLinkAtLocation.URI)
-		}
-		linkFormatter, err := notebook.NewLinkFormatter()
-		if err != nil {
-			return nil, err
-		}
+        minNote := note.AsMinimalNote()
 
-		path := core.NotebookPath{
-			Path:       note.Path,
-			BasePath:   notebook.Path,
-			WorkingDir: filepath.Dir(doc.Path),
-		}
-		linkFormatterContext, err := core.NewLinkFormatterContext(path, note.Title, note.Metadata)
-		if err != nil {
-			return nil, err
-		}
+        info := &linkInfo{
+            note: &minNote,
+            location: opts.InsertLinkAtLocation,
+            title: &opts.Title,
+        }
+        err := linkNote(notebook, documents, context, info)
 
-		link, err := linkFormatter(linkFormatterContext)
-		if err != nil {
-			return nil, err
-		}
-
-		go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
-			Edit: protocol.WorkspaceEdit{
-				Changes: map[string][]protocol.TextEdit{
-					opts.InsertLinkAtLocation.URI: {{Range: opts.InsertLinkAtLocation.Range, NewText: link}},
-				},
-			},
-		}, nil)
+        if err != nil {
+            return nil, err
+        }
 	}
 
 	absPath := filepath.Join(notebook.Path, note.Path)

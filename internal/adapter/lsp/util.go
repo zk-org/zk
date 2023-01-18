@@ -3,10 +3,14 @@ package lsp
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 func pathToURI(path string) string {
@@ -54,5 +58,61 @@ func (b *jsonBoolean) UnmarshalJSON(data []byte) error {
 	} else {
 		return fmt.Errorf("%s: failed to unmarshal as boolean", s)
 	}
+	return nil
+}
+
+type linkInfo struct {
+    note *core.MinimalNote
+	location *protocol.Location
+	title    *string
+}
+
+func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.Context, info *linkInfo) error {
+	if info.location == nil {
+		return errors.New("'location' not provided")
+	}
+
+	// Get current document to edit
+	doc, ok := documents.Get(info.location.URI)
+	if !ok {
+		return fmt.Errorf("Cannot insert link in '%s'", info.location.URI)
+	}
+
+	formatter, err := notebook.NewLinkFormatter()
+	if err != nil {
+		return err
+	}
+
+	path := core.NotebookPath{
+		Path:       info.note.Path,
+		BasePath:   notebook.Path,
+		WorkingDir: filepath.Dir(doc.Path),
+	}
+
+	var title *string
+	title = info.title
+
+	if title == nil {
+		title = &info.note.Title
+	}
+
+	formatterContext, err := core.NewLinkFormatterContext(path, *title, info.note.Metadata)
+	if err != nil {
+		return err
+	}
+
+	link, err := formatter(formatterContext)
+	if err != nil {
+		return err
+	}
+
+	go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
+		Edit: protocol.WorkspaceEdit{
+			Changes: map[string][]protocol.TextEdit{
+				info.location.URI: {{Range: info.location.Range, NewText: link}},
+			},
+		},
+	}, nil)
+
 	return nil
 }
