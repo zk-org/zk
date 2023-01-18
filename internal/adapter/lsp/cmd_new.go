@@ -90,9 +90,9 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
             location: opts.InsertLinkAtLocation,
             title: &opts.Title,
         }
-        ok, err := linkNote(notebook, documents, context, info)
+        err := linkNote(notebook, documents, context, info)
 
-        if !ok {
+        if err != nil {
             return nil, err
         }
 	}
