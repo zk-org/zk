@@ -67,20 +67,20 @@ type linkInfo struct {
 	title    *string
 }
 
-func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.Context, info *linkInfo) (bool, error) {
+func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.Context, info *linkInfo) error {
 	if info.location == nil {
-		return false, errors.New("'location' not provided")
+		return errors.New("'location' not provided")
 	}
 
 	// Get current document to edit
 	doc, ok := documents.Get(info.location.URI)
 	if !ok {
-		return false, fmt.Errorf("Cannot insert link in '%s'", info.location.URI)
+		return fmt.Errorf("Cannot insert link in '%s'", info.location.URI)
 	}
 
 	formatter, err := notebook.NewLinkFormatter()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	path := core.NotebookPath{
@@ -98,12 +98,12 @@ func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.C
 
 	formatterContext, err := core.NewLinkFormatterContext(path, *title, info.note.Metadata)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	link, err := formatter(formatterContext)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
@@ -114,5 +114,5 @@ func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.C
 		},
 	}, nil)
 
-	return true, nil
+	return nil
 }

@@ -38,7 +38,11 @@ func executeCommandLink(notebook *core.Notebook, documents *documentStore, conte
 
 	note, err := notebook.FindByHref(*opts.Path, false)
 
-	if err != nil || note == nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if note == nil {
 		return nil, errors.New("Requested note to link to not found!")
 	}
 
@@ -48,14 +52,13 @@ func executeCommandLink(notebook *core.Notebook, documents *documentStore, conte
 		title:    opts.Title,
 	}
 
-    ok, err := linkNote(notebook, documents, context, info)
+    err = linkNote(notebook, documents, context, info)
 
-    if !ok {
+    if err != nil {
         return nil, err
     }
 
 	return map[string]interface{}{
-		"ok":   true,
 		"path": filepath.Join(notebook.Path, note.Path),
 	}, nil
 }
