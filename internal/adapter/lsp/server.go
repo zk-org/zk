@@ -428,6 +428,7 @@ func NewServer(opts ServerOpts) *Server {
 				Title: actionTitle,
 				Kind:  stringPtr(protocol.CodeActionKindRefactor),
 				Command: &protocol.Command{
+					Title:   actionTitle,
 					Command:   cmdNew,
 					Arguments: []interface{}{wd, jsonOpts},
 				},
