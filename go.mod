@@ -10,13 +10,13 @@ require (
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/fatih/color v1.13.0
-	github.com/go-testfixtures/testfixtures/v3 v3.6.2
+	github.com/go-testfixtures/testfixtures/v3 v3.6.1
 	github.com/google/go-cmp v0.5.8
 	github.com/gosimple/slug v1.12.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.0.6
 	github.com/mattn/go-isatty v0.0.14
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mickael-menu/pretty v0.2.3
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.9.5
