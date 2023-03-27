@@ -40,6 +40,7 @@ func TestParseDefaultConfig(t *testing.T) {
 		},
 		Tool: ToolConfig{
 			Editor:     opt.NullString,
+			Shell:      opt.NullString,
 			Pager:      opt.NullString,
 			FzfPreview: opt.NullString,
 			FzfLine:    opt.NullString,
@@ -86,6 +87,7 @@ func TestParseComplete(t *testing.T) {
 
 		[tool]
 		editor = "vim"
+		shell = "/bin/bash"
 		pager = "less"
 		fzf-preview = "bat {1}"
 		fzf-line = "{{title}}"
@@ -228,6 +230,7 @@ func TestParseComplete(t *testing.T) {
 		},
 		Tool: ToolConfig{
 			Editor:     opt.NewString("vim"),
+			Shell:      opt.NewString("/bin/bash"),
 			Pager:      opt.NewString("less"),
 			FzfPreview: opt.NewString("bat {1}"),
 			FzfLine:    opt.NewString("{{title}}"),
