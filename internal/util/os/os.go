@@ -10,7 +10,10 @@ import (
 // Getenv returns an optional String for the environment variable with given
 // key.
 func GetOptEnv(key string) opt.String {
-	return opt.NewNotEmptyString(os.Getenv(key))
+	if value, ok := os.LookupEnv(key); ok {
+		return opt.NewNotEmptyString(value)
+	}
+	return opt.NullString
 }
 
 // Env returns a map of environment variables.

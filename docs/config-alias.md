@@ -6,7 +6,7 @@ Declaring your own aliases is a great way to make your experience with `zk` easi
 
 ## Configuring aliases
 
-Command aliases are declared in your [configuration file](config.md), under the `[alias]` section. They are executed with `$SHELL -c`, which allows you to:
+Command aliases are declared in your [configuration file](config.md), under the `[alias]` section. They are executed with [your default shell](tool-shell.md), which allows you to:
 
 * expand arguments with `$@` or `$*`
 * expand environment variables

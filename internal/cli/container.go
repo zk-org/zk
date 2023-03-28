@@ -71,6 +71,11 @@ func NewContainer(version string) (*Container, error) {
 		}
 	}
 
+	// Set the default shell if not already set
+	if osutil.GetOptEnv("ZK_SHELL").IsNull() && !config.Tool.Shell.IsEmpty() {
+		os.Setenv("ZK_SHELL", config.Tool.Shell.Unwrap())
+	}
+
 	return &Container{
 		Version:        version,
 		Config:         config,

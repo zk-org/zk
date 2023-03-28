@@ -8,6 +8,7 @@ Each [notebook](notebook.md) contains a configuration file used to customize you
 * `[format]` configures the [note format settings](note-format.md), such as Markdown options
 * `[tool]` customizes interaction with external programs such as:
     * [your default editor](tool-editor.md)
+    * [your default shell](tool-shell.md)
     * [your default pager](tool-pager.md)
     * [`fzf`](tool-fzf.md)
 * `[lsp]` setups the [Language Server Protocol settings](config-lsp.md) for [editors integration](editors-integration.md)
@@ -63,10 +64,10 @@ author = "Mickaël"
 
 
 # GROUP OVERRIDES
-[dir.journal]
+[group.journal]
 paths = ["journal/weekly", "journal/daily"]
 
-[dir.journal.note]
+[group.journal.note]
 filename = "{{format-date now}}"
 
 
@@ -83,6 +84,9 @@ colon-tags = true
 
 # Default editor used to open notes.
 editor = "nvim"
+
+# Default shell used by aliases and commands.
+shell = "/bin/bash"
 
 # Pager used to scroll through long output.
 pager = "less -FIRX"

@@ -148,6 +148,7 @@ type MarkdownConfig struct {
 // ToolConfig holds the external tooling configuration.
 type ToolConfig struct {
 	Editor     opt.String
+	Shell      opt.String
 	Pager      opt.String
 	FzfPreview opt.String
 	FzfLine    opt.String
@@ -355,6 +356,9 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	if tool.Editor != nil {
 		config.Tool.Editor = opt.NewNotEmptyString(*tool.Editor)
 	}
+	if tool.Shell != nil {
+		config.Tool.Shell = opt.NewNotEmptyString(*tool.Shell)
+	}
 	if tool.Pager != nil {
 		config.Tool.Pager = opt.NewStringWithPtr(tool.Pager)
 	}
@@ -511,6 +515,7 @@ type tomlMarkdownConfig struct {
 
 type tomlToolConfig struct {
 	Editor     *string
+	Shell      *string
 	Pager      *string
 	FzfPreview *string `toml:"fzf-preview"`
 	FzfLine    *string `toml:"fzf-line"`
