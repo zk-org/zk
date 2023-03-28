@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Added
+
+* New [`tool.shell`](docs/tool-shell.md) configuration key to set a custom shell (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/302)).
 
 ## 0.13.0
 
