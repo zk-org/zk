@@ -12,19 +12,23 @@ import (
 
 // Config holds the user configuration.
 type Config struct {
-	Note    NoteConfig
-	Groups  map[string]GroupConfig
-	Format  FormatConfig
-	Tool    ToolConfig
-	LSP     LSPConfig
-	Filters map[string]string
-	Aliases map[string]string
-	Extra   map[string]string
+	Notebook NotebookConfig
+	Note     NoteConfig
+	Groups   map[string]GroupConfig
+	Format   FormatConfig
+	Tool     ToolConfig
+	LSP      LSPConfig
+	Filters  map[string]string
+	Aliases  map[string]string
+	Extra    map[string]string
 }
 
 // NewDefaultConfig creates a new Config with the default settings.
 func NewDefaultConfig() Config {
 	return Config{
+		Notebook: NotebookConfig{
+			Dir: opt.NullString,
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -192,6 +196,11 @@ const (
 	LSPDiagnosticHint    LSPDiagnosticSeverity = 4
 )
 
+// NotebookConfig holds configuration about the default notebook
+type NotebookConfig struct {
+	Dir opt.String
+}
+
 // NoteConfig holds the user configuration used when generating new notes.
 type NoteConfig struct {
 	// Handlebars template used when generating a new filename.
@@ -278,6 +287,12 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
 		return config, wrap(err)
+	}
+
+	// Notebook
+	notebook := tomlConf.Notebook
+	if notebook.Dir != "" {
+		config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
 	}
 
 	// Note
@@ -472,14 +487,19 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 
 // tomlConfig holds the TOML representation of Config
 type tomlConfig struct {
-	Note    tomlNoteConfig
-	Groups  map[string]tomlGroupConfig `toml:"group"`
-	Format  tomlFormatConfig
-	Tool    tomlToolConfig
-	LSP     tomlLSPConfig
-	Extra   map[string]string
-	Filters map[string]string `toml:"filter"`
-	Aliases map[string]string `toml:"alias"`
+	Notebook tomlNotebookConfig
+	Note     tomlNoteConfig
+	Groups   map[string]tomlGroupConfig `toml:"group"`
+	Format   tomlFormatConfig
+	Tool     tomlToolConfig
+	LSP      tomlLSPConfig
+	Extra    map[string]string
+	Filters  map[string]string `toml:"filter"`
+	Aliases  map[string]string `toml:"alias"`
+}
+
+type tomlNotebookConfig struct {
+	Dir string
 }
 
 type tomlNoteConfig struct {

@@ -2,6 +2,7 @@
 
 Each [notebook](notebook.md) contains a configuration file used to customize your experience with `zk`. This file is located at `.zk/config.toml` and uses the [TOML format](https://github.com/toml-lang/toml). It is composed of several optional sections:
 
+* `[notebook]` configures the [default notebook](config-notebook.md)
 * `[note]` sets the [note creation rules](config-note.md)
 * `[extra]` contains free [user variables](config-extra.md) which can be expanded in templates
 * `[group]` defines [note groups](config-group.md) with custom rules
@@ -26,6 +27,10 @@ Notebook configuration files will inherit the settings defined in the global con
 Here's an example of a complete configuration file:
 
 ```toml
+# NOTEBOOK SETTINGS
+[notebook]
+dir = "~/notebook"
+
 # NOTE SETTINGS
 [note]
 

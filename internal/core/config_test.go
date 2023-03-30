@@ -14,6 +14,9 @@ func TestParseDefaultConfig(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Dir: opt.NullString,
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -65,6 +68,9 @@ func TestParseInvalidConfig(t *testing.T) {
 func TestParseComplete(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		# Comment
+
+		[notebook]
+		dir = "~/notebook"
 
 		[note]
 		filename = "{{id}}.note"
@@ -142,6 +148,9 @@ func TestParseComplete(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Dir: opt.NewString("~/notebook"),
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "txt",
