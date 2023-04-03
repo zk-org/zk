@@ -66,7 +66,7 @@ func NewContainer(version string) (*Container, error) {
 		return nil, wrap(err)
 	}
 	if configPath != "" {
-		config, err = core.OpenConfig(configPath, config, fs)
+		config, err = core.OpenConfig(configPath, config, fs, true)
 		if err != nil {
 			return nil, wrap(err)
 		}

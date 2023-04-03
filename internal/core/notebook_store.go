@@ -64,7 +64,7 @@ func (ns *NotebookStore) Open(path string) (*Notebook, error) {
 	}
 
 	configPath := filepath.Join(path, ".zk/config.toml")
-	config, err := OpenConfig(configPath, ns.config, ns.fs)
+	config, err := OpenConfig(configPath, ns.config, ns.fs, false)
 	if err != nil {
 		return nil, wrap(err)
 	}

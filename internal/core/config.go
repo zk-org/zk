@@ -258,7 +258,7 @@ func (c GroupConfig) Clone() GroupConfig {
 
 // OpenConfig creates a new Config instance from its TOML representation stored
 // in the given file.
-func OpenConfig(path string, parentConfig Config, fs FileStorage) (Config, error) {
+func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool) (Config, error) {
 	// The local config is optional.
 	exists, err := fs.FileExists(path)
 	if err == nil && !exists {
@@ -270,7 +270,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage) (Config, error
 		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)
 	}
 
-	return ParseConfig(content, path, parentConfig)
+	return ParseConfig(content, path, parentConfig, isGlobal)
 }
 
 // ParseConfig creates a new Config instance from its TOML representation.
@@ -278,7 +278,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage) (Config, error
 // for templates.
 //
 // The parentConfig will be used to inherit default config settings.
-func ParseConfig(content []byte, path string, parentConfig Config) (Config, error) {
+func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool) (Config, error) {
 	wrap := errors.Wrapperf("failed to read config")
 
 	config := parentConfig
@@ -292,7 +292,11 @@ func ParseConfig(content []byte, path string, parentConfig Config) (Config, erro
 	// Notebook
 	notebook := tomlConf.Notebook
 	if notebook.Dir != "" {
-		config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
+		if isGlobal {
+			config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
+		} else {
+			return config, wrap(errors.New("notebook.dir should not be set on local configuration"))
+		}
 	}
 
 	// Note
