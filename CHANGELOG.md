@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New [`tool.shell`](docs/tool-shell.md) configuration key to set a custom shell (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/302)).
+* New [`notebook.dir`](docs/config-notebook.md) configuration key to set the default notebook (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/304)).
 
 ## 0.13.0
 
