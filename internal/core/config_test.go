@@ -10,10 +10,13 @@ import (
 )
 
 func TestParseDefaultConfig(t *testing.T) {
-	conf, err := ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig())
+	conf, err := ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig(), true)
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Dir: opt.NullString,
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -58,13 +61,16 @@ func TestParseDefaultConfig(t *testing.T) {
 }
 
 func TestParseInvalidConfig(t *testing.T) {
-	_, err := ParseConfig([]byte(`;`), ".zk/config.toml", NewDefaultConfig())
+	_, err := ParseConfig([]byte(`;`), ".zk/config.toml", NewDefaultConfig(), false)
 	assert.NotNil(t, err)
 }
 
 func TestParseComplete(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		# Comment
+
+		[notebook]
+		dir = "~/notebook"
 
 		[note]
 		filename = "{{id}}.note"
@@ -138,10 +144,13 @@ func TestParseComplete(t *testing.T) {
 		[lsp.diagnostics]
 		wiki-title = "hint"
 		dead-link = "none"
-	`), ".zk/config.toml", NewDefaultConfig())
+	`), ".zk/config.toml", NewDefaultConfig(), true)
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Dir: opt.NewString("~/notebook"),
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "txt",
@@ -295,7 +304,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		log-ext = "value"
 
 		[group.inherited]
-	`), ".zk/config.toml", NewDefaultConfig())
+	`), ".zk/config.toml", NewDefaultConfig(), false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
@@ -394,7 +403,7 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 		[tool]
 		pager = ""
 		fzf-preview = ""
-	`), ".zk/config.toml", NewDefaultConfig())
+	`), ".zk/config.toml", NewDefaultConfig(), false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf.Tool.Pager.IsNull(), false)
@@ -403,13 +412,29 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 	assert.Equal(t, conf.Tool.FzfPreview, opt.NewString(""))
 }
 
+func TestParseNotebook(t *testing.T) {
+	toml := `
+			[notebook]
+			dir = "/home/user/folder"
+		`
+	// Should parse notebook if isGlobal == true
+	conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), true)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Notebook.Dir, opt.NewString("/home/user/folder"))
+
+	// Should not parse notebook if isGlobal == false
+	conf, err = ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.NotNil(t, err)
+	assert.Err(t, err, "notebook.dir should not be set on local configuration")
+}
+
 func TestParseIDCharset(t *testing.T) {
 	test := func(charset string, expected Charset) {
 		toml := fmt.Sprintf(`
 			[note]
 			id-charset = "%v"
 		`, charset)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Charset, expected) {
 			t.Errorf("Didn't parse ID charset `%v` as expected", charset)
@@ -430,7 +455,7 @@ func TestParseIDCase(t *testing.T) {
 			[note]
 			id-case = "%v"
 		`, letterCase)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 		assert.Nil(t, err)
 		if !cmp.Equal(conf.Note.IDOptions.Case, expected) {
 			t.Errorf("Didn't parse ID case `%v` as expected", letterCase)
@@ -451,7 +476,7 @@ func TestParseMarkdownLinkEncodePath(t *testing.T) {
 			[format.markdown]
 			link-format = "%s"
 		`, format)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 		assert.Nil(t, err)
 		assert.Equal(t, conf.Format.Markdown.LinkEncodePath, expected)
 	}
@@ -469,7 +494,7 @@ func TestParseLSPDiagnosticsSeverity(t *testing.T) {
 			wiki-title = "%s"
 			dead-link = "%s"
 		`, value, value)
-		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 		assert.Nil(t, err)
 		assert.Equal(t, conf.LSP.Diagnostics.WikiTitle, expected)
 		assert.Equal(t, conf.LSP.Diagnostics.DeadLink, expected)
@@ -486,7 +511,7 @@ func TestParseLSPDiagnosticsSeverity(t *testing.T) {
 		[lsp.diagnostics]
 		wiki-title = "foobar"
 	`
-	_, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig())
+	_, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 	assert.Err(t, err, "foobar: unknown LSP diagnostic severity - may be none, hint, info, warning or error")
 }
 

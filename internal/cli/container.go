@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mickael-menu/zk/internal/adapter/editor"
 	"github.com/mickael-menu/zk/internal/adapter/fs"
@@ -65,10 +66,25 @@ func NewContainer(version string) (*Container, error) {
 		return nil, wrap(err)
 	}
 	if configPath != "" {
-		config, err = core.OpenConfig(configPath, config, fs)
+		config, err = core.OpenConfig(configPath, config, fs, true)
 		if err != nil {
 			return nil, wrap(err)
 		}
+	}
+
+	// Set the default notebook if not already set
+	// might be overrided if --notebook-dir flag is present
+	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR").IsNull() && !config.Notebook.Dir.IsNull() {
+		// Expand in case there are environment variables on the path
+		notebookDir := os.Expand(config.Notebook.Dir.Unwrap(), os.Getenv)
+		if strings.HasPrefix(notebookDir, "~") {
+			dirname, err := os.UserHomeDir()
+			if err != nil {
+				return nil, wrap(err)
+			}
+			notebookDir = filepath.Join(dirname, notebookDir[1:])
+		}
+		os.Setenv("ZK_NOTEBOOK_DIR", notebookDir)
 	}
 
 	// Set the default shell if not already set
