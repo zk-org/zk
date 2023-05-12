@@ -656,19 +656,19 @@ func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *docume
 func (s *Server) buildTriggerCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
 	// We don't use the context because clients might not send it. Instead,
 	// we'll look for trigger patterns in the document.
-	if reflect.DeepEqual(doc.LookBehind(position, 3), utf16.Encode([]rune("](("))) {
+	if cmp(doc.LookBehind(position, 3), "]((") {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	if reflect.DeepEqual(doc.LookBehind(position, 2), utf16.Encode([]rune("[["))) {
+	if cmp(doc.LookBehind(position, 2), "[[") {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	if reflect.DeepEqual(doc.LookBehind(position, 1), utf16.Encode([]rune("#"))) {
+	if cmp(doc.LookBehind(position, 1), "#") {
 		if notebook.Config.Format.Markdown.Hashtags {
 			return s.buildTagCompletionList(notebook, "#")
 		}
-	} else if reflect.DeepEqual(doc.LookBehind(position, 1), utf16.Encode([]rune(":"))) {
+	} else if cmp(doc.LookBehind(position, 1), ":") {
 		if notebook.Config.Format.Markdown.ColonTags {
 			return s.buildTagCompletionList(notebook, ":")
 		}
@@ -742,7 +742,7 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 }
 
 func newLinkFormatter(notebook *core.Notebook, doc *document, position protocol.Position) (core.LinkFormatter, error) {
-	if reflect.DeepEqual(doc.LookBehind(position, 3), utf16.Encode([]rune("](("))) {
+	if cmp(doc.LookBehind(position, 3), "]((") {
 		return core.NewMarkdownLinkFormatter(notebook.Config.Format.Markdown, true)
 	} else {
 		return notebook.NewLinkFormatter()
@@ -842,7 +842,7 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	// remove the closing ]] or )) after the completion.
 	endOffset := 0
 	suffix := doc.LookForward(pos, 2)
-	if reflect.DeepEqual(suffix, utf16.Encode([]rune("]]"))) || reflect.DeepEqual(suffix, utf16.Encode([]rune("))"))) {
+	if cmp(suffix, "]]") || cmp(suffix, "))") {
 		endOffset = 2
 	}
 
@@ -915,4 +915,8 @@ func unmarshalJSON(obj interface{}, v interface{}) error {
 func toBool(obj interface{}) bool {
 	s := strings.ToLower(fmt.Sprint(obj))
 	return s == "true" || s == "1"
+}
+
+func cmp(l []uint16, r string) bool {
+	return reflect.DeepEqual(l, utf16.Encode([]rune(r)))
 }
