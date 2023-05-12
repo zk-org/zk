@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
@@ -654,22 +656,19 @@ func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *docume
 func (s *Server) buildTriggerCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
 	// We don't use the context because clients might not send it. Instead,
 	// we'll look for trigger patterns in the document.
-	switch doc.LookBehind(position, 3) {
-	case "]((":
+	if reflect.DeepEqual(doc.LookBehind(position, 3), utf16.Encode([]rune("](("))) {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	switch doc.LookBehind(position, 2) {
-	case "[[":
+	if reflect.DeepEqual(doc.LookBehind(position, 2), utf16.Encode([]rune("[["))) {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	switch doc.LookBehind(position, 1) {
-	case "#":
+	if reflect.DeepEqual(doc.LookBehind(position, 1), utf16.Encode([]rune("#"))) {
 		if notebook.Config.Format.Markdown.Hashtags {
 			return s.buildTagCompletionList(notebook, "#")
 		}
-	case ":":
+	} else if reflect.DeepEqual(doc.LookBehind(position, 1), utf16.Encode([]rune(":"))) {
 		if notebook.Config.Format.Markdown.ColonTags {
 			return s.buildTagCompletionList(notebook, ":")
 		}
@@ -743,7 +742,7 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 }
 
 func newLinkFormatter(notebook *core.Notebook, doc *document, position protocol.Position) (core.LinkFormatter, error) {
-	if doc.LookBehind(position, 3) == "]((" {
+	if reflect.DeepEqual(doc.LookBehind(position, 3), utf16.Encode([]rune("](("))) {
 		return core.NewMarkdownLinkFormatter(notebook.Config.Format.Markdown, true)
 	} else {
 		return notebook.NewLinkFormatter()
@@ -843,7 +842,7 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	// remove the closing ]] or )) after the completion.
 	endOffset := 0
 	suffix := doc.LookForward(pos, 2)
-	if suffix == "]]" || suffix == "))" {
+	if reflect.DeepEqual(suffix, utf16.Encode([]rune("]]"))) || reflect.DeepEqual(suffix, utf16.Encode([]rune("))"))) {
 		endOffset = 2
 	}
 
