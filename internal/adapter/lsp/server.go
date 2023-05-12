@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
-	"unicode/utf16"
 
 	"github.com/mickael-menu/zk/internal/core"
 	"github.com/mickael-menu/zk/internal/util"
@@ -656,19 +654,22 @@ func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *docume
 func (s *Server) buildTriggerCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
 	// We don't use the context because clients might not send it. Instead,
 	// we'll look for trigger patterns in the document.
-	if cmp(doc.LookBehind(position, 3), "]((") {
+	switch doc.LookBehind(position, 3) {
+	case "]((":
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	if cmp(doc.LookBehind(position, 2), "[[") {
+	switch doc.LookBehind(position, 2) {
+	case "[[":
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
-	if cmp(doc.LookBehind(position, 1), "#") {
+	switch doc.LookBehind(position, 1) {
+	case "#":
 		if notebook.Config.Format.Markdown.Hashtags {
 			return s.buildTagCompletionList(notebook, "#")
 		}
-	} else if cmp(doc.LookBehind(position, 1), ":") {
+	case ":":
 		if notebook.Config.Format.Markdown.ColonTags {
 			return s.buildTagCompletionList(notebook, ":")
 		}
@@ -742,7 +743,7 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 }
 
 func newLinkFormatter(notebook *core.Notebook, doc *document, position protocol.Position) (core.LinkFormatter, error) {
-	if cmp(doc.LookBehind(position, 3), "]((") {
+	if doc.LookBehind(position, 3) == "]((" {
 		return core.NewMarkdownLinkFormatter(notebook.Config.Format.Markdown, true)
 	} else {
 		return notebook.NewLinkFormatter()
@@ -842,7 +843,7 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	// remove the closing ]] or )) after the completion.
 	endOffset := 0
 	suffix := doc.LookForward(pos, 2)
-	if cmp(suffix, "]]") || cmp(suffix, "))") {
+	if suffix == "]]" || suffix == "))" {
 		endOffset = 2
 	}
 
@@ -915,8 +916,4 @@ func unmarshalJSON(obj interface{}, v interface{}) error {
 func toBool(obj interface{}) bool {
 	s := strings.ToLower(fmt.Sprint(obj))
 	return s == "true" || s == "1"
-}
-
-func cmp(l []uint16, r string) bool {
-	return reflect.DeepEqual(l, utf16.Encode([]rune(r)))
 }

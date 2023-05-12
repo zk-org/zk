@@ -130,34 +130,34 @@ func (d *document) GetLines() []string {
 }
 
 // LookBehind returns the n characters before the given position, on the same line.
-func (d *document) LookBehind(pos protocol.Position, length int) []uint16 {
+func (d *document) LookBehind(pos protocol.Position, length int) string {
 	line, ok := d.GetLine(int(pos.Line))
 	utf16Bytes := utf16.Encode([]rune(line))
 	if !ok {
-		return utf16.Encode([]rune(""))
+		return ""
 	}
 
 	charIdx := int(pos.Character)
 	if length > charIdx {
-		return utf16Bytes[0:charIdx]
+		return string(utf16.Decode(utf16Bytes[0:charIdx]))
 	}
-	return utf16Bytes[(charIdx - length):charIdx]
+	return string(utf16.Decode(utf16Bytes[(charIdx - length):charIdx]))
 }
 
 // LookForward returns the n characters after the given position, on the same line.
-func (d *document) LookForward(pos protocol.Position, length int) []uint16 {
+func (d *document) LookForward(pos protocol.Position, length int) string {
 	line, ok := d.GetLine(int(pos.Line))
 	utf16Bytes := utf16.Encode([]rune(line))
 	if !ok {
-		return utf16.Encode([]rune(""))
+		return ""
 	}
 
 	lineLength := len(utf16Bytes)
 	charIdx := int(pos.Character)
 	if lineLength <= charIdx+length {
-		return utf16Bytes[charIdx:]
+		return string(utf16.Decode(utf16Bytes[charIdx:]))
 	}
-	return utf16Bytes[charIdx:(charIdx + length)]
+	return string(utf16.Decode(utf16Bytes[charIdx:(charIdx + length)]))
 }
 
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
