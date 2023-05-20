@@ -2,12 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+<!--## Unreleased-->
+
+## 0.14.0
 
 ### Added
 
 * New [`tool.shell`](docs/tool-shell.md) configuration key to set a custom shell (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/302)).
 * New [`notebook.dir`](docs/config-notebook.md) configuration key to set the default notebook (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/304)).
+
+### Changed
+
+* The `note.ignore` configuration property was renamed to `note.exclude`, to be more consistent with the CLI flags.
+
+### Fixed
+
+* Fixed LSP positions using UTF-16 offsets (contributed by [@wrvsrx](https://github.com/mickael-menu/zk/pull/317)).
 
 ## 0.13.0
 
@@ -89,7 +99,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 * Removed the dependency on `libicu`.
-* The `note.ignore` configuration property was renamed to `note.exclude`, to be more consistent with the CLI flags.
 
 ### Fixed
 
