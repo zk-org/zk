@@ -1,0 +1,15 @@
+$ cd legacy-ignore
+
+# Index initial notes.
+$ zk index
+>Indexed 3 notes in 0s
+>  + 3 added
+>  ~ 0 modified
+>  - 0 removed
+
+# Ignore path patterns.
+$ touch carrot-ignored/ananas.md && zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed

@@ -99,8 +99,8 @@ $ touch banana.md && echo "More" >> litchee.md && rm eggplant/apple.md && zk ind
 >- removed eggplant/apple.md
 >- unchanged eggplant/clementine.md
 >- modified litchee.md
->- ignored carrot-ignored/ananas.md: matched ignore glob "carrot-ignored/*"
->- ignored carrot-ignored/tomato.md: matched ignore glob "carrot-ignored/*"
+>- ignored carrot-ignored/ananas.md: matched exclude glob "carrot-ignored/*"
+>- ignored carrot-ignored/tomato.md: matched exclude glob "carrot-ignored/*"
 >- ignored orange.markdown: expected extension "md"
 >
 >Indexed 3 notes in 0s
@@ -113,8 +113,8 @@ $ zk index -v
 >- unchanged banana.md
 >- unchanged eggplant/clementine.md
 >- unchanged litchee.md
->- ignored carrot-ignored/ananas.md: matched ignore glob "carrot-ignored/*"
->- ignored carrot-ignored/tomato.md: matched ignore glob "carrot-ignored/*"
+>- ignored carrot-ignored/ananas.md: matched exclude glob "carrot-ignored/*"
+>- ignored carrot-ignored/tomato.md: matched exclude glob "carrot-ignored/*"
 >- ignored orange.markdown: expected extension "md"
 >
 >Indexed 3 notes in 0s

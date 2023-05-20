@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 * Removed the dependency on `libicu`.
+* The `note.ignore` configuration property was renamed to `note.exclude`, to be more consistent with the CLI flags.
 
 ### Fixed
 
