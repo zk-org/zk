@@ -1,0 +1,65 @@
+name: Bug report
+description: File a bug report to help improve zk.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for filing a bug report!
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Check if applicable
+      description: |
+        :warning: My time is limited and if I don't plan on fixing the reported bug myself, I might close this issue. No hard feelings.
+        :heart: But if you would like to contribute a fix yourself, **I'll be happy to guide you through the codebase and review a pull request**.
+      options:
+        - label: I have searched the existing issues (**required**)
+          required: true
+        - label: I'm willing to help fix the problem and contribute a pull request
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: Also tell me, what did you expect to happen?
+      placeholder: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: bug-steps
+    attributes:
+      label: How to reproduce?
+      description: |
+        Step by step explanation to reproduce the issue.
+
+        If you can, drag and drop:
+        - a zipped sample notebook
+        - screenshots or a screencast showing the issue
+      placeholder: |
+        1. Add a note with the content "..."
+        2. Run `zk edit --interactive`
+        3. See error
+        ...
+    validations:
+      required: true
+  - type: textarea
+    id: vim-config
+    attributes:
+      label: zk configuration
+      description: |
+        Paste the minimal `zk` configuration file (`.zk/config.toml`) reproducing the issue.
+      render: toml
+    validations:
+      required: true
+  - type: textarea
+    id: bug-environment
+    attributes:
+      label: Environment
+      description: |
+        Run the following shell commands and paste the result here:
+        ```
+        zk --version && echo "system: `uname -srmo`"
+        ```
+      placeholder: |
+        zk 0.13.0
+        system: Darwin 22.5.0 arm64
+      render: bash

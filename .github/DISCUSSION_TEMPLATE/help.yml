@@ -1,0 +1,19 @@
+title: "[Help] "
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verify
+      options:
+        - label: I searched the existing discussions for help
+          required: true
+  - type: textarea
+    id: help
+    attributes:
+      label: How can we help you?
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        :warning: Unfortunately, my time is limited and I can't offer reliable user support. I might answer if you catch me on a slow day, or hopefully someone else will.

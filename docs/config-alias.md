@@ -9,6 +9,7 @@ Declaring your own aliases is a great way to make your experience with `zk` easi
 Command aliases are declared in your [configuration file](config.md), under the `[alias]` section. They are executed with [your default shell](tool-shell.md), which allows you to:
 
 * expand arguments with `$@` or `$*`
+    * [it is recommended to wrap `$@` in quotes](https://github.com/mickael-menu/zk/issues/316#issuecomment-1543564168)
 * expand environment variables
 * run several commands with `&&`
 * pipe several commands with `|`
@@ -17,7 +18,7 @@ An alias can call other aliases but cannot call itself. This enables you to over
 
 ```toml
 [alias]
-edit = "zk edit --interactive $@"
+edit = 'zk edit --interactive "$@"'
 ```
 
 When running an alias, the `ZK_NOTEBOOK_DIR` environment variable is set to the absolute path of the current notebook. You can use it to run commands working no matter the location of the working directory.

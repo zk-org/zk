@@ -1,0 +1,14 @@
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verify
+      options:
+        - label: I searched the existing discussions for similar ideas
+          required: true
+  - type: textarea
+    id: help
+    attributes:
+      label: Share your idea or feature request
+    validations:
+      required: true

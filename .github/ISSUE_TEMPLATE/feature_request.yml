@@ -1,0 +1,10 @@
+name: Feature request
+description: Suggest an idea for this project.
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: If you have an idea, open a discussion
+      options:
+        - label: I will [create a new discussion](https://github.com/mickael-menu/zk/discussions/new?category=ideas) instead of an issue.
+

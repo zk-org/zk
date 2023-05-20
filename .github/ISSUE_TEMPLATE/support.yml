@@ -1,0 +1,13 @@
+name: User support
+description: You need help?
+body:
+  - type: markdown
+    attributes:
+      value: |
+        :warning: Unfortunately, my time is limited and I can't offer reliable user support. I might answer if you catch me on a slow day, or hopefully someone else will.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: If you need help, open a discussion
+      options:
+        - label: I will [create a new discussion](https://github.com/mickael-menu/zk/discussions/new?category=help) instead of an issue.
