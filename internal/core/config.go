@@ -40,7 +40,7 @@ func NewDefaultConfig() Config {
 				Length:  4,
 				Case:    CaseLower,
 			},
-			Ignore: []string{},
+			Exclude: []string{},
 		},
 		Groups: map[string]GroupConfig{},
 		Format: FormatConfig{
@@ -216,7 +216,7 @@ type NoteConfig struct {
 	// Settings used when generating a random ID.
 	IDOptions IDOptions
 	// Path globs to ignore when indexing notes.
-	Ignore []string
+	Exclude []string
 }
 
 // GroupConfig holds the user configuration for a given group of notes.
@@ -226,16 +226,16 @@ type GroupConfig struct {
 	Extra map[string]string
 }
 
-// IgnoreGlobs returns all the Note.Ignore path globs for the group paths,
+// ExcludeGlobs returns all the Note.Exclude path globs for the group paths,
 // relative to the root of the notebook.
-func (c GroupConfig) IgnoreGlobs() []string {
+func (c GroupConfig) ExcludeGlobs() []string {
 	if len(c.Paths) == 0 {
-		return c.Note.Ignore
+		return c.Note.Exclude
 	}
 
 	globs := []string{}
 	for _, p := range c.Paths {
-		for _, g := range c.Note.Ignore {
+		for _, g := range c.Note.Exclude {
 			globs = append(globs, filepath.Join(p, g))
 		}
 	}
@@ -325,8 +325,11 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if note.DefaultTitle != "" {
 		config.Note.DefaultTitle = note.DefaultTitle
 	}
+	for _, v := range note.Exclude {
+		config.Note.Exclude = append(config.Note.Exclude, v)
+	}
 	for _, v := range note.Ignore {
-		config.Note.Ignore = append(config.Note.Ignore, v)
+		config.Note.Exclude = append(config.Note.Exclude, v)
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
@@ -477,8 +480,11 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	if note.DefaultTitle != "" {
 		res.Note.DefaultTitle = note.DefaultTitle
 	}
+	for _, v := range note.Exclude {
+		res.Note.Exclude = append(res.Note.Exclude, v)
+	}
 	for _, v := range note.Ignore {
-		res.Note.Ignore = append(res.Note.Ignore, v)
+		res.Note.Exclude = append(res.Note.Exclude, v)
 	}
 	if tomlConf.Extra != nil {
 		for k, v := range tomlConf.Extra {
@@ -515,7 +521,8 @@ type tomlNoteConfig struct {
 	IDCharset    string   `toml:"id-charset"`
 	IDLength     int      `toml:"id-length"`
 	IDCase       string   `toml:"id-case"`
-	Ignore       []string `toml:"ignore"`
+	Exclude      []string `toml:"exclude"`
+	Ignore      []string `toml:"ignore"` // Legacy alias to `exclude`
 }
 
 type tomlGroupConfig struct {
