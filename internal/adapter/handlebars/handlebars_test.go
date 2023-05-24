@@ -243,8 +243,7 @@ func TestFormatDateHelper(t *testing.T) {
 
 func TestDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
-	localOffsetAndTZ := time.Now().Format("-0700 MST")
-	testString(t, "{{date \"2009-11-17T20:34:58\"}}", context, "2009-11-17 20:34:58 "+localOffsetAndTZ)
+	testString(t, "{{format-date (date \"2009-11-17T20:34:58\") 'timestamp'}}", context, "200911172034")
 }
 
 func TestShellHelper(t *testing.T) {
