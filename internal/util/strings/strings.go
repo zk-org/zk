@@ -2,6 +2,7 @@ package strings
 
 import (
 	"bufio"
+	"log"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -37,8 +38,14 @@ func Pluralize(word string, count int) string {
 func SplitLines(s string) []string {
 	var lines []string
 	scanner := bufio.NewScanner(strings.NewReader(s))
+	// increase the buffer size to 2Mb
+	buf := []byte{}
+	scanner.Buffer(buf, 2048*1024)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("error while scanning text: %v", err)
 	}
 	return lines
 }
