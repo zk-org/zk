@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--## Unreleased-->
+## Unreleased
+
+### Fixed
+
+* [#331](https://github.com/mickael-menu/zk/issues/331) Fixed parsing large notes (contributed by [@khimaros](https://github.com/mickael-menu/zk/pull/339)).
 
 ## 0.14.0
 
