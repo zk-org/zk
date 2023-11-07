@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -114,7 +113,7 @@ func (fs *FileStorage) IsDescendantOf(dir string, path string) (bool, error) {
 }
 
 func (fs *FileStorage) Read(path string) ([]byte, error) {
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 func (fs *FileStorage) Write(path string, content []byte) error {

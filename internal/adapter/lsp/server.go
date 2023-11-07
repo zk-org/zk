@@ -3,7 +3,7 @@ package lsp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -209,7 +209,7 @@ func NewServer(opts ServerOpts) *Server {
 
 	handler.CompletionItemResolve = func(context *glsp.Context, params *protocol.CompletionItem) (*protocol.CompletionItem, error) {
 		if path, ok := params.Data.(string); ok {
-			content, err := ioutil.ReadFile(path)
+			content, err := os.ReadFile(path)
 			if err != nil {
 				return params, err
 			}
@@ -250,7 +250,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 		path = fs.Canonical(path)
 
-		contents, err := ioutil.ReadFile(path)
+		contents, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
