@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -36,7 +36,7 @@ func (cmd *New) Run(container *cli.Container) error {
 
 	var content []byte
 	if cmd.Interactive {
-		content, err = ioutil.ReadAll(os.Stdin)
+		content, err = io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}
