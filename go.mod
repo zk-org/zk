@@ -1,6 +1,6 @@
 module github.com/mickael-menu/zk
 
-go 1.18
+go 1.21
 
 replace github.com/tliron/glsp => github.com/mickael-menu/glsp v0.1.1
 
