@@ -50,6 +50,15 @@ You can get a date object from a natural human date (e.g. `tomorrow`, `2 weeks a
 {{format-date (date "last week") "timestamp"}}
 ```
 
+#### Date from natural string helper, based on a reference date
+
+You can also get a date object from a natural human date (e.g. `tomorrow`, `2 weeks ago`, `2022-03-24`), but from a given reference time, using the `{{date-from}}` helper. It is most useful when paired with the `{{format-date}}` helper.
+```
+{{ datefrom "2006-01-02" "1 day ago" }}
+
+{{format-date (date-from "2006-01-02" "next monday") "timestamp"}}
+```
+
 #### Date formatting helper
 
 The `{{format-date}}` helper formats the given date for display.

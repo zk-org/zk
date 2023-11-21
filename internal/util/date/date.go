@@ -1,6 +1,7 @@
 package date
 
 import (
+	"fmt"
 	"time"
 
 	naturaldate "github.com/tj/go-naturaldate"
@@ -37,6 +38,20 @@ func (n *Frozen) Date() time.Time {
 
 // TimeFromNatural parses a human date into a time.Time.
 func TimeFromNatural(date string) (time.Time, error) {
+	if t, err := ParseTimestamp(date); err == nil {
+		return t, nil
+	}
+	return naturaldate.Parse(date, time.Now(), naturaldate.WithDirection(naturaldate.Past))
+}
+
+func TimeFromReference(date string, refTime time.Time) (time.Time, error) {
+	if t, err := ParseTimestamp(date); err == nil {
+		return t, nil
+	}
+	return naturaldate.Parse(date, refTime, naturaldate.WithDirection(naturaldate.Past))
+}
+
+func ParseTimestamp(date string) (time.Time, error) {
 	if date == "" {
 		return time.Now(), nil
 	}
@@ -61,5 +76,5 @@ func TimeFromNatural(date string) (time.Time, error) {
 	if t, err := time.ParseInLocation("15:04", date, time.Local); err == nil {
 		return t, nil
 	}
-	return naturaldate.Parse(date, time.Now(), naturaldate.WithDirection(naturaldate.Past))
+	return time.Time{}, fmt.Errorf("unable to parse reference time '%s'", date)
 }

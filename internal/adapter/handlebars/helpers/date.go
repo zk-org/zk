@@ -66,6 +66,41 @@ func RegisterFormatDate(logger util.Logger) {
 	})
 }
 
+// RegisterDateFrom registers the {{date-from}} template helper to use the `naturaldate` package to generate time.Time based on language strings,
+// based on a reference time which can also be a time string or a time.Time object.
+// This can be used in combination with the `format-date` helper to generate dates in the user's language.
+// {{format-date (date-from "2006-01-02" "last week") "timestamp"}}
+//
+// Format is: {{date-from "REFERENCE TIME" "NATURAL DATE TIMESTAMP"}}
+// Reference Time can either be a time.Time object or a string. Parsing matches the {{date}} helper, but without natural language parsing
+// Natural Date Timestamp behaves the same as the {{date}} helper, but uses the given reference time to offset the generated time.Time object.
+func RegisterDateFrom(logger util.Logger) {
+	raymond.RegisterHelper("date-from", func(arg1 any, arg2 string) time.Time {
+		var refTime time.Time
+
+		switch ref := arg1.(type) {
+		case string:
+			var err error
+			refTime, err = dateutil.ParseTimestamp(ref)
+			if err != nil {
+				logger.Printf("the {{date-from}} template helper failed to parse the reference date: %v", err)
+				return refTime
+			}
+		case time.Time:
+			refTime = ref
+		default:
+			logger.Printf("the {{date-from}} template helper expects a date string ir a time object as its first argument")
+			return refTime
+		}
+
+		t, err := dateutil.TimeFromReference(arg2, refTime)
+		if err != nil {
+			logger.Err(errors.Wrap(err, "the {{date-from}} template helper failed to parse the date"))
+		}
+		return t
+	})
+}
+
 var (
 	shortFormat         = `%m/%d/%Y`
 	mediumFormat        = `%b %d, %Y`
