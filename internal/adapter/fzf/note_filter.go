@@ -19,6 +19,7 @@ type NoteFilter struct {
 	fs             core.FileStorage
 	terminal       *term.Terminal
 	templateLoader core.TemplateLoader
+	Query          string
 }
 
 // NoteFilterOpts holds the configuration for the fzf notes filtering.
@@ -153,6 +154,8 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		return selectedNotes, err
 	}
 
+	f.Query = fzf.Query
+
 	for _, s := range selection {
 		path := s[len(s)-1]
 		for i, m := range notes {
@@ -175,6 +178,7 @@ var defaultOptions = strings.Join([]string{
 	"--height 100%",         // Height of the list relative to the terminal window
 	"--layout reverse",      // Display the input field at the top
 	"--no-hscroll",          // Make sure the path and titles are always visible
+	"--print-query",         // Print the query as the first line
 	"--color hl:-1,hl+:-1",  // Don't highlight search terms
 	"--preview-window wrap", // Enable line wrapping in the preview window
 }, " ")

@@ -96,7 +96,7 @@ func (cmd *New) Run(container *cli.Container) error {
 		fmt.Printf("%+v\n", path)
 		return nil
 	} else {
-		editor, err := container.NewNoteEditor(notebook)
+		editor, err := container.NewNoteEditor(notebook, "")
 		if err != nil {
 			return err
 		}
