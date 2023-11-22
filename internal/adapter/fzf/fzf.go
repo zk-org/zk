@@ -62,6 +62,8 @@ type Fzf struct {
 	cmd       *exec.Cmd
 	pipe      io.WriteCloser
 	closeOnce sync.Once
+
+	Query     string
 }
 
 // New runs a fzf instance.
@@ -162,7 +164,8 @@ func New(opts Opts) (*Fzf, error) {
 func (f *Fzf) parseSelection(output []byte) {
 	f.selection = make([][]string, 0)
 	lines := stringsutil.SplitLines(string(output))
-	for _, line := range lines {
+	f.Query = lines[0]
+	for _, line := range lines[1:] {
 		fields := strings.Split(line, f.opts.Delimiter)
 		// Trim padding
 		for i, field := range fields {
