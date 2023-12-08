@@ -243,6 +243,102 @@ func TestFormatDateHelper(t *testing.T) {
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 
+func TestFormatDateHelperElapsed(t *testing.T) {
+	cases := []struct {
+		elapsed time.Duration
+		want    string
+	}{
+		{
+			elapsed: -12 * time.Minute,
+			want:    "not yet",
+		},
+		{
+			elapsed: 23 * time.Second,
+			want:    "just now",
+		},
+		{
+			elapsed: 1 * time.Minute,
+			want:    "1 minute ago",
+		},
+		{
+			elapsed: 90 * time.Second,
+			want:    "1 minute ago",
+		},
+		{
+			elapsed: 17 * time.Minute,
+			want:    "17 minutes ago",
+		},
+		{
+			elapsed: time.Hour,
+			want:    "1 hour ago",
+		},
+		{
+			elapsed: 3 * time.Hour,
+			want:    "3 hours ago",
+		},
+		{
+			elapsed: 4 * 24 * time.Hour,
+			want:    "4 days ago",
+		},
+		{
+			elapsed: 7 * 24 * time.Hour,
+			want:    "1 week ago",
+		},
+		{
+			elapsed: 18 * 24 * time.Hour,
+			want:    "3 weeks ago",
+		},
+		{
+			elapsed: 30 * 24 * time.Hour,
+			want:    "1 month ago",
+		},
+		{
+			elapsed: 31 * 24 * time.Hour,
+			want:    "2 months ago",
+		},
+		{
+			elapsed: 45 * 24 * time.Hour,
+			want:    "2 months ago",
+		},
+		{
+			elapsed: 60 * 24 * time.Hour,
+			want:    "2 months ago",
+		},
+		{
+			elapsed: 90 * 24 * time.Hour,
+			want:    "3 months ago",
+		},
+		{
+			elapsed: 93 * 24 * time.Hour,
+			want:    "4 months ago",
+		},
+		{
+			elapsed: 180 * 24 * time.Hour,
+			want:    "6 months ago",
+		},
+		{
+			elapsed: 193 * 24 * time.Hour,
+			want:    "7 months ago",
+		},
+		{
+			elapsed: 365 * 24 * time.Hour,
+			want:    "1 year ago",
+		},
+		{
+			elapsed: 367 * 24 * time.Hour,
+			want:    "2 years ago",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.want, func(t *testing.T) {
+			templateContext := map[string]interface{}{"now": time.Now().Add(-tc.elapsed)}
+
+			testString(t, "{{format-date now 'elapsed'}}", templateContext, tc.want)
+		})
+	}
+}
+
 func TestDateHelper(t *testing.T) {
 	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date (date \"2009-11-17T20:34:58\") 'timestamp'}}", context, "200911172034")
