@@ -62,7 +62,7 @@ nix-env -iA zk
 
 ### Arch Linux
 
-You can install [the zk package](https://archlinux.org/packages/community/x86_64/zk/) from the official repos.
+You can install [the zk package](https://archlinux.org/packages/extra/x86_64/zk/) from the official repos.
 
 ```sh
 sudo pacman -S zk
