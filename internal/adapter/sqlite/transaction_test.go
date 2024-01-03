@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-testfixtures/testfixtures/v3"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 // testDB is an utility function to create a database loaded with the default fixtures.

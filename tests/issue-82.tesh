@@ -1,5 +1,5 @@
 # Crash when `zk new` fails.
-# https://github.com/mickael-menu/zk/issues/82
+# https://github.com/zk-org/zk/issues/82
 $ cd issue-82
 
 $ zk new --group quest --print-path

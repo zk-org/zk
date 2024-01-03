@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestEditorUsesZkEditorFirst(t *testing.T) {

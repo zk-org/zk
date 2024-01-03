@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestListFormatDefault(t *testing.T) {

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/mickael-menu/zk/internal/adapter/lsp"
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/adapter/lsp"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/util/opt"
 )
 
 // LSP starts a server implementing the Language Server Protocol.

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"sync"
 
-	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // LazyStmt is a wrapper around a sql.Stmt which will be evaluated on first use.

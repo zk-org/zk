@@ -1,8 +1,6 @@
-module github.com/mickael-menu/zk
+module github.com/zk-org/zk
 
 go 1.18
-
-replace github.com/tliron/glsp => github.com/mickael-menu/glsp v0.1.1
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
@@ -17,7 +15,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.6
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-sqlite3 v1.14.16
-	github.com/mickael-menu/pretty v0.2.3
+	github.com/zk-org/pretty v0.2.3
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1

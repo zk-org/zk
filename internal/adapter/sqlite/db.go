@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	sqlite "github.com/mattn/go-sqlite3"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 func init() {
@@ -214,7 +214,7 @@ func (db *DB) migrate() error {
 
 			{ // 7
 				SQL: []string{},
-				// https://github.com/mickael-menu/zk/issues/170#issuecomment-1107848441
+				// https://github.com/zk-org/zk/issues/170#issuecomment-1107848441
 				NeedsReindexing: true,
 			},
 		}

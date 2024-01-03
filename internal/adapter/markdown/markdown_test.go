@@ -3,10 +3,10 @@ package markdown
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestParseTitle(t *testing.T) {
@@ -190,7 +190,7 @@ func TestParseHashtags(t *testing.T) {
 	test("#multi word# end", []string{"multi"})
 
 	// Single character
-	// See https://github.com/mickael-menu/zk/issues/118
+	// See https://github.com/zk-org/zk/issues/118
 	test("#a", []string{"a"})
 }
 
@@ -570,7 +570,7 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 	})
 
 	// Markdown links are decoded, but not WikiLinks.
-	// i.e. https://github.com/mickael-menu/zk/issues/86
+	// i.e. https://github.com/zk-org/zk/issues/86
 	test("[foo%20bar](202110031652%20foo%20bar)", []core.Link{
 		{
 			Title:        "foo%20bar",

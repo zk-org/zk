@@ -1,5 +1,5 @@
 # Local notebook configuration should be optional.
-# https://github.com/mickael-menu/zk/issues/20
+# https://github.com/zk-org/zk/issues/20
 
 1$ zk index -q
 2>zk: error: failed to open notebook: no notebook found in {{working-dir}} or a parent directory

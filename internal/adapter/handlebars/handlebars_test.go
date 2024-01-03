@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/fixtures"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/adapter/handlebars/helpers"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/fixtures"
+	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func init() {

@@ -6,14 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#331](https://github.com/mickael-menu/zk/issues/331) Fixed parsing large notes (contributed by [@khimaros](https://github.com/mickael-menu/zk/pull/339)).
+* [#331](https://github.com/zk-org/zk/issues/331) Fixed parsing large notes (contributed by [@khimaros](https://github.com/zk-org/zk/pull/339)).
 
 ## 0.14.0
 
 ### Added
 
-* New [`tool.shell`](docs/tool-shell.md) configuration key to set a custom shell (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/302)).
-* New [`notebook.dir`](docs/config-notebook.md) configuration key to set the default notebook (contributed by [@lsvmello](https://github.com/mickael-menu/zk/pull/304)).
+* New [`tool.shell`](docs/tool-shell.md) configuration key to set a custom shell (contributed by [@lsvmello](https://github.com/zk-org/zk/pull/302)).
+* New [`notebook.dir`](docs/config-notebook.md) configuration key to set the default notebook (contributed by [@lsvmello](https://github.com/zk-org/zk/pull/304)).
 
 ### Changed
 
@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* Fixed LSP positions using UTF-16 offsets (contributed by [@wrvsrx](https://github.com/mickael-menu/zk/pull/317)).
+* Fixed LSP positions using UTF-16 offsets (contributed by [@wrvsrx](https://github.com/zk-org/zk/pull/317)).
 
 ## 0.13.0
 
@@ -31,14 +31,14 @@ All notable changes to this project will be documented in this file.
     * `zk.new` now returns the created note's content in its output (`content`), and has two new options:
         * `dryRun` will prevent `zk.new` from creating the note on the file system.
         * `insertContentAtLocation` can be used to insert the created note's content into an arbitrary location.
-    * A new `zk.link` command to insert a link to a given note (contributed by [@psanker](https://github.com/mickael-menu/zk/pull/284)).
+    * A new `zk.link` command to insert a link to a given note (contributed by [@psanker](https://github.com/zk-org/zk/pull/284)).
 
 ## 0.12.0
 
 ### Added
 
 * LSP: Support for external URLs with `documentLink`.
-* New `{{date}}` template helper to obtain a date object from natural language (contributed by [@zalegrala](https://github.com/mickael-menu/zk/pull/262)).
+* New `{{date}}` template helper to obtain a date object from natural language (contributed by [@zalegrala](https://github.com/zk-org/zk/pull/262)).
     ```
     Get a relative date using natural language:
     {{date "next week"}}
@@ -46,7 +46,7 @@ All notable changes to this project will be documented in this file.
     Format a date returned by `get-date`:
     {{format-date (date "monday") "timestamp"}}
     ```
-* `zk list` now support multiple `--match`/`-m` flags, which allows to search for several tokens appearing in any order in the notes (contributed by [@rktjmp](https://github.com/mickael-menu/zk/pull/268)).
+* `zk list` now support multiple `--match`/`-m` flags, which allows to search for several tokens appearing in any order in the notes (contributed by [@rktjmp](https://github.com/zk-org/zk/pull/268)).
 
 ### Changed
 
@@ -54,19 +54,19 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#243](https://github.com/mickael-menu/zk/issues/243) LSP: Fixed finding backlink references for notes in a folder.
-* [#254](https://github.com/mickael-menu/zk/issues/254) Fixed SQL error when pairing `--link-to` and `--linked-by`.
+* [#243](https://github.com/zk-org/zk/issues/243) LSP: Fixed finding backlink references for notes in a folder.
+* [#254](https://github.com/zk-org/zk/issues/254) Fixed SQL error when pairing `--link-to` and `--linked-by`.
 
 
 ## 0.11.1
 
 ### Changed
 
-* `zk new` now requires the `--interactive`/`-i` flag to read the note body from a pipe or standard input. [See rational](https://github.com/mickael-menu/zk/pull/242#issuecomment-1182602001).
+* `zk new` now requires the `--interactive`/`-i` flag to read the note body from a pipe or standard input. [See rational](https://github.com/zk-org/zk/pull/242#issuecomment-1182602001).
 
 ### Fixed
 
-* [#244](https://github.com/mickael-menu/zk/issues/244) Fixed `zk new` waiting for `Ctrl-D` to proceed (contributed by [@pkazmier](https://github.com/mickael-menu/zk/pull/242)).
+* [#244](https://github.com/zk-org/zk/issues/244) Fixed `zk new` waiting for `Ctrl-D` to proceed (contributed by [@pkazmier](https://github.com/zk-org/zk/pull/242)).
 
 
 ## 0.11.0
@@ -92,10 +92,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#233](https://github.com/mickael-menu/zk/issues/233) Hide index progress in non-interactive shells.
-* [#235](https://github.com/mickael-menu/zk/issues/235) Fix LSP link recognition with unicode (contributed by [@zkbpkp](https://github.com/mickael-menu/zk/issues/235)).
-* [#236](https://github.com/mickael-menu/zk/issues/236) Fix updating links after creating a new note.
-* [#239](https://github.com/mickael-menu/zk/discussions/239) Support standard input via shell redirection with `zk new`.
+* [#233](https://github.com/zk-org/zk/issues/233) Hide index progress in non-interactive shells.
+* [#235](https://github.com/zk-org/zk/issues/235) Fix LSP link recognition with unicode (contributed by [@zkbpkp](https://github.com/zk-org/zk/issues/235)).
+* [#236](https://github.com/zk-org/zk/issues/236) Fix updating links after creating a new note.
+* [#239](https://github.com/zk-org/zk/discussions/239) Support standard input via shell redirection with `zk new`.
 
 
 ## 0.10.1
@@ -114,15 +114,15 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 * New `--date` flag for `zk new` to set the current date manually.
-* New `--id` flag for `zk new` to skip ID generation and use a provided value (contributed by [@skbolton](https://github.com/mickael-menu/zk/pull/183)).
-* [#144](https://github.com/mickael-menu/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
+* New `--id` flag for `zk new` to skip ID generation and use a provided value (contributed by [@skbolton](https://github.com/zk-org/zk/pull/183)).
+* [#144](https://github.com/zk-org/zk/issues/144) LSP auto-completion of YAML frontmatter tags.
 * [zk-nvim#26](https://github.com/mickael-menu/zk-nvim/issues/26) The LSP server doesn't use `additionalTextEdits` anymore to remove the trigger characters when completing links.
     * You can customize the default behavior with the [`use-additional-text-edits` configuration key](docs/config-lsp.md).
-* [#163](https://github.com/mickael-menu/zk/issues/163) Use the `ZK_SHELL` environment variable to override the shell for `zk` only.
-* [#173](https://github.com/mickael-menu/zk/issues/173) Support for double star globbing in `note.ignore` config option.
-* [#137](https://github.com/mickael-menu/zk/issues/137) Customize the `fzf` options used by `zk`'s interactive modes with the [`fzf-options`](docs/tool-fzf.md) config option (contributed by [@Nelyah](https://github.com/mickael-menu/zk/pull/154)).
+* [#163](https://github.com/zk-org/zk/issues/163) Use the `ZK_SHELL` environment variable to override the shell for `zk` only.
+* [#173](https://github.com/zk-org/zk/issues/173) Support for double star globbing in `note.ignore` config option.
+* [#137](https://github.com/zk-org/zk/issues/137) Customize the `fzf` options used by `zk`'s interactive modes with the [`fzf-options`](docs/tool-fzf.md) config option (contributed by [@Nelyah](https://github.com/zk-org/zk/pull/154)).
 
-* [#168](https://github.com/mickael-menu/zk/discussions/168) Customize the `fzf` key binding to create new notes with the [`fzf-bind-new`](docs/tool-fzf.md) config option.
+* [#168](https://github.com/zk-org/zk/discussions/168) Customize the `fzf` key binding to create new notes with the [`fzf-bind-new`](docs/tool-fzf.md) config option.
 
 ### Changed
 
@@ -130,10 +130,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#126](https://github.com/mickael-menu/zk/issues/126) Embedded image links shown as not found.
-* [#152](https://github.com/mickael-menu/zk/issues/152) Incorrect timezone for natural dates.
-* [#170](https://github.com/mickael-menu/zk/issues/170) Broken wiki links in subdirectories.
-* [#185](https://github.com/mickael-menu/zk/issues/185) Don't parse a Markdown table header as a colon tag.
+* [#126](https://github.com/zk-org/zk/issues/126) Embedded image links shown as not found.
+* [#152](https://github.com/zk-org/zk/issues/152) Incorrect timezone for natural dates.
+* [#170](https://github.com/zk-org/zk/issues/170) Broken wiki links in subdirectories.
+* [#185](https://github.com/zk-org/zk/issues/185) Don't parse a Markdown table header as a colon tag.
 
 
 ## 0.9.0
@@ -147,10 +147,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#111](https://github.com/mickael-menu/zk/issues/111) Filenames take precedence over folders when matching a sub-path with wiki links.
-* [#118](https://github.com/mickael-menu/zk/issues/118) Fix infinite loop when parsing a single-character hashtag.
-* [#121](https://github.com/mickael-menu/zk/issues/121) Take into account the `--no-input` flag with `zk init`.
-* [#120](https://github.com/mickael-menu/zk/discussions/120) Support RFC 3339 dates with the time flags (e.g. `--created-before`).
+* [#111](https://github.com/zk-org/zk/issues/111) Filenames take precedence over folders when matching a sub-path with wiki links.
+* [#118](https://github.com/zk-org/zk/issues/118) Fix infinite loop when parsing a single-character hashtag.
+* [#121](https://github.com/zk-org/zk/issues/121) Take into account the `--no-input` flag with `zk init`.
+* [#120](https://github.com/zk-org/zk/discussions/120) Support RFC 3339 dates with the time flags (e.g. `--created-before`).
 
 
 ## 0.8.0
@@ -175,9 +175,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#89](https://github.com/mickael-menu/zk/issues/89) Calling `zk index` from outside the notebook (contributed by [@adamreese](https://github.com/mickael-menu/zk/pull/90)).
-* [#98](https://github.com/mickael-menu/zk/issues/98) Index wiki links using partial paths for `--linked-by` and `--link-to`.
-* [#98](https://github.com/mickael-menu/zk/issues/98) Ignore spaces around the pipe in wiki links for LSP diagnostics.
+* [#89](https://github.com/zk-org/zk/issues/89) Calling `zk index` from outside the notebook (contributed by [@adamreese](https://github.com/zk-org/zk/pull/90)).
+* [#98](https://github.com/zk-org/zk/issues/98) Index wiki links using partial paths for `--linked-by` and `--link-to`.
+* [#98](https://github.com/zk-org/zk/issues/98) Ignore spaces around the pipe in wiki links for LSP diagnostics.
 
 
 ## 0.7.0
@@ -199,7 +199,7 @@ All notable changes to this project will be documented in this file.
         [[book review information]]
         [[Information Graphics]]
         ```
-* Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/60)).
+* Use the `{{abs-path}}` template variable when [formatting notes](docs/template-format.md) to print the absolute path to the note (contributed by [@pstuifzand](https://github.com/zk-org/zk/pull/60)).
 * A new `{{substring s index length}}` template helper extracts a portion of a given string, e.g.:
     * `{{substring 'A full quote' 2 4}}` outputs `full`
     * `{{substring 'A full quote' -5 5}` outputs `quote`
@@ -207,9 +207,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * UTF-8 handling in the LSP server.
-* [#78](https://github.com/mickael-menu/zk/issues/78) Do not exclude notes containing broken links from the index.
+* [#78](https://github.com/zk-org/zk/issues/78) Do not exclude notes containing broken links from the index.
 * Allow setting the `--working-dir` and `--notebook-dir` flags before the `zk` subcommand when using aliases, e.g. `zk -W ~/notes my-alias`.
-* [#86](https://github.com/mickael-menu/zk/issues/86) Index encoded Markdown links.
+* [#86](https://github.com/zk-org/zk/issues/86) Index encoded Markdown links.
 
 
 ## 0.6.0
@@ -223,7 +223,7 @@ All notable changes to this project will be documented in this file.
     * `{{json title}}` prints with quotes `"An interesting note"`
     * `{{json .}}` serializes the full template context as a JSON object.
 * Use `--header` and `--footer` options with `zk list` to print arbitrary text at the start or end of the list.
-* Support for LSP references to browse the backlinks of the link under the caret (contributed by [@pstuifzand](https://github.com/mickael-menu/zk/pull/58)).
+* Support for LSP references to browse the backlinks of the link under the caret (contributed by [@pstuifzand](https://github.com/zk-org/zk/pull/58)).
 * New [`note.ignore`](docs/config-note.md) configuration option to ignore files matching the given path globs when indexing notes.
     ```yaml
     [note]
@@ -235,7 +235,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#16](https://github.com/mickael-menu/zk/issues/16) Links with section anchors, e.g. `[[filename#section]]`.
+* [#16](https://github.com/zk-org/zk/issues/16) Links with section anchors, e.g. `[[filename#section]]`.
 * Unicode support in wiki links. If you use accents or ideograms, please run `zk index --force` after upgrading to fix your index.
 
 
@@ -243,7 +243,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* [Editor integration through LSP](https://github.com/mickael-menu/zk/issues/22):
+* [Editor integration through LSP](https://github.com/zk-org/zk/issues/22):
     * New code actions to create a note using the current selection as title.
     * Custom commands to [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
     * Diagnostics to [report dead links or wiki link titles](docs/config-lsp.md).
@@ -262,7 +262,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 * Creating a new note from `fzf` in a directory containing spaces.
-* Fix completion with Neovim's built-in LSP client (contributed by [@cormacrelf](https://github.com/mickael-menu/zk/pull/39)).
+* Fix completion with Neovim's built-in LSP client (contributed by [@cormacrelf](https://github.com/zk-org/zk/pull/39)).
 
 
 ## 0.4.0
@@ -275,7 +275,7 @@ All notable changes to this project will be documented in this file.
     * Auto-complete [hashtags and colon-separated tags](docs/tags.md).
     * Preview the content of a note when hovering a link.
     * Navigate in your notes by following internal links.
-    * [And more to come...](https://github.com/mickael-menu/zk/issues/22)
+    * [And more to come...](https://github.com/zk-org/zk/issues/22)
     * See [the documentation](docs/editors-integration.md) for configuration samples.
 * Pair `--match` with `--exact-match` / `-e` to search for (case insensitive) exact occurrences in your notes.
     * This can be useful when looking for terms including special characters, such as `[[name]]`.
@@ -320,7 +320,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-* [#4](https://github.com/mickael-menu/zk/issues/4) Terminal borked when piping content with Vim
+* [#4](https://github.com/zk-org/zk/issues/4) Terminal borked when piping content with Vim
 
 
 ## 0.2.1

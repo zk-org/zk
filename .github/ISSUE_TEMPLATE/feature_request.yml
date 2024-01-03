@@ -6,5 +6,5 @@ body:
     attributes:
       label: If you have an idea, open a discussion
       options:
-        - label: I will [create a new discussion](https://github.com/mickael-menu/zk/discussions/new?category=ideas) instead of an issue.
+        - label: I will [create a new discussion](https://github.com/zk-org/zk/discussions/new?category=ideas) instead of an issue.
 

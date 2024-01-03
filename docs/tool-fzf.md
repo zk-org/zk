@@ -4,7 +4,7 @@
 
 Besides the standard [`fzf` configuration options](https://github.com/junegunn/fzf) documented on its website, `zk` offers additional options you can set in the `[tool]` [configuration section](config.md).
 
-If you wish to customize more of `fzf` behavior, [please post a feature request](https://github.com/mickael-menu/zk/issues).
+If you wish to customize more of `fzf` behavior, [please post a feature request](https://github.com/zk-org/zk/issues).
 
 ## Preview command
 

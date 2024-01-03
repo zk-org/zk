@@ -15,8 +15,8 @@
 * [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
 * [Integration with your favorite editors](docs/editors-integration.md):
     * [Any LSP-compatible editor](docs/editors-integration.md)
-    * [`zk-nvim`](https://github.com/mickael-menu/zk-nvim) for Neovim 0.5+
-    * [`zk-vscode`](https://github.com/mickael-menu/zk-vscode) for Visual Studio Code
+    * [`zk-nvim`](https://github.com/zk-org/zk.nvim) for Neovim 0.5+
+    * [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
     * (*unmaintained*) [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+ by [Seth Messer](https://github.com/megalithic)
 * [Interactive browser](docs/tool-fzf.md), powered by `fzf`
 * [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
@@ -37,7 +37,7 @@
 
 ## Install
 
-[Check out the latest release](https://github.com/mickael-menu/zk/releases) for pre-built binaries for macOS and Linux (`zk` was not tested on Windows).
+[Check out the latest release](https://github.com/zk-org/zk/releases) for pre-built binaries for macOS and Linux (`zk` was not tested on Windows).
 
 ### Homebrew
 
@@ -73,7 +73,7 @@ sudo pacman -S zk
 Make sure you have a working [Go 1.18+ installation](https://golang.org/), then clone the repository:
 
 ```sh
-$ git clone https://github.com/mickael-menu/zk.git
+$ git clone https://github.com/zk-org/zk.git
 $ cd zk
 ```
 

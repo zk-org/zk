@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/core"
-	dateutil "github.com/mickael-menu/zk/internal/util/date"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/core"
+	dateutil "github.com/zk-org/zk/internal/util/date"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )

@@ -3,7 +3,7 @@ package lsp
 import (
 	"fmt"
 
-	"github.com/mickael-menu/zk/internal/core"
+	"github.com/zk-org/zk/internal/core"
 )
 
 const cmdIndex = "zk.index"

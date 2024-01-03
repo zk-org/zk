@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/paths"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // NoteIndex persists and grants access to indexed information about the notes.

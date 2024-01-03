@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mickael-menu/zk/internal/adapter/fzf"
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/adapter/fzf"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // Graph produces a directed graph of the notes matching a set of criteria.

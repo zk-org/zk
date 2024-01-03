@@ -3,7 +3,7 @@ package helpers
 import (
 	"github.com/aymerick/raymond"
 	"github.com/gosimple/slug"
-	"github.com/mickael-menu/zk/internal/util"
+	"github.com/zk-org/zk/internal/util"
 )
 
 // NewSlugHelper creates a new template helper to slugify text.

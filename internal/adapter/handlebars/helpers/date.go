@@ -6,8 +6,8 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
-	"github.com/mickael-menu/zk/internal/util"
-	dateutil "github.com/mickael-menu/zk/internal/util/date"
+	"github.com/zk-org/zk/internal/util"
+	dateutil "github.com/zk-org/zk/internal/util/date"
 	"github.com/pkg/errors"
 	"github.com/rvflash/elapsed"
 )

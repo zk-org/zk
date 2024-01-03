@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/mickael-menu/zk/internal/core"
+	"github.com/zk-org/zk/internal/core"
 )
 
 // NewIDGenerator returns a function generating string IDs using the given options.

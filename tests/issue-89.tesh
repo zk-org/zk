@@ -1,5 +1,5 @@
 # zk index only works in notebook directory
-# https://github.com/mickael-menu/zk/issues/89
+# https://github.com/zk-org/zk/issues/89
 
 $ ZK_NOTEBOOK_DIR="{{working-dir}}/blank" zk index
 >Indexed 0 note in 0s

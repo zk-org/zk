@@ -9,11 +9,11 @@ import (
 	"sync"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	executil "github.com/mickael-menu/zk/internal/util/exec"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	osutil "github.com/mickael-menu/zk/internal/util/os"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	executil "github.com/zk-org/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/util/opt"
+	osutil "github.com/zk-org/zk/internal/util/os"
 )
 
 // Pager writes text to a terminal using the user's pager.

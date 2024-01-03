@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/adapter/term"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/adapter/term"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/opt"
+	stringsutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // NoteFilter uses fzf to filter interactively a set of notes.
