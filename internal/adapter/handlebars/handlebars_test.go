@@ -238,6 +238,8 @@ func TestFormatDateHelper(t *testing.T) {
 	testString(t, "{{format-date now 'timestamp'}}", context, "200911172034")
 	testString(t, "{{format-date now 'timestamp-unix'}}", context, "1258490098")
 	testString(t, "{{format-date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
+	year := time.Now().UTC().Year() - 14
+	context = map[string]interface{}{"now": time.Date(year, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 
