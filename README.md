@@ -5,6 +5,34 @@
 <p>Looking for a quick usage example? <a href="docs/getting-started.md">Let's get started</a>.</p>
 </div>
 
+## News: We Are In Maintenance Mode
+
+
+> [!IMPORTANT] 
+> As of January 2nd, the original brain behind zk, [Mickaël
+> Menu](https://github.com/mickael-menu), made the difficult decision to retire
+> from zk and the suite of programs supporting it. He put out a [call for
+> maintainers](https://github.com/zk-org/zk/discussions/371), which has
+> garnerned enough response to enable the project to continue! So zk is
+> definitely still here for you.
+>
+> During this transition phase, we are placing the project into a maintenance
+> mode, which means we are going to address existing issues and any teething
+> problems with transferring the code bases to the new
+> [zk-org](https://github.com/zk-org) organisation, which is where you can now
+> find all the related projects. It also gives us new maintainers the space to
+> get up to speed with the code base, which will help us address new issues and
+> feature requests when they come.
+>
+> So for now, feel free to lodge new issues, but please withold on feature
+> requests until we are out of maintenance mode. This will help keep our issues
+> boards concise and pr's easier to manage.
+>
+> The [call to maintainers](https://github.com/zk-org/zk/discussions/371) is
+> still open. Please comment there if you feel commited enough to come onboard!
+> PR's, ideas, discussions and conversations are still and always will be
+> warmly welcomed, with or without 'maintainer' status ❤️
+
 ## Description
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
