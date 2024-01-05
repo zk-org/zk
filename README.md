@@ -7,7 +7,9 @@
 
 ## News: We Are In Maintenance Mode
 
-> [!IMPORTANT] As of January 2nd, the original brain behind zk, [Mickaël
+
+> [!IMPORTANT] 
+> As of January 2nd, the original brain behind zk, [Mickaël
 > Menu](https://github.com/mickael-menu), made the difficult decision to retire
 > from zk and the suite of programs supporting it. He put out a [call for
 > maintainers](https://github.com/zk-org/zk/discussions/371), which has
