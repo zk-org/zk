@@ -243,38 +243,52 @@ func TestFormatDateHelper(t *testing.T) {
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 
-func TestFormatDateHelperElapsed(t *testing.T) {
+func TestFormatDateHelperElapsedViaTimeMultiplication(t *testing.T) {
+	// test for time being provided in via multiplications on seconds, minutes
+	// and hours, as expected by github.com/rvflash/elapsed
 	cases := []struct {
 		elapsed time.Duration
 		want    string
 	}{
 		{
-			elapsed: -12 * time.Minute,
+			elapsed: -12 * time.Second,
 			want:    "not yet",
 		},
 		{
-			elapsed: 23 * time.Second,
+			elapsed: time.Second,
 			want:    "just now",
+		},
+		{
+			elapsed: 59 * time.Second,
+			want:    "just now",
+		},
+		{
+			elapsed: 60 * time.Second,
+			want:    "1 minute ago",
 		},
 		{
 			elapsed: 1 * time.Minute,
 			want:    "1 minute ago",
 		},
 		{
-			elapsed: 90 * time.Second,
-			want:    "1 minute ago",
+			elapsed: 2 * time.Minute,
+			want:    "2 minutes ago",
 		},
 		{
-			elapsed: 17 * time.Minute,
-			want:    "17 minutes ago",
+			elapsed: 62 * time.Minute,
+			want:    "1 hour ago",
 		},
 		{
 			elapsed: time.Hour,
 			want:    "1 hour ago",
 		},
 		{
-			elapsed: 3 * time.Hour,
-			want:    "3 hours ago",
+			elapsed: 2 * time.Hour,
+			want:    "2 hours ago",
+		},
+		{
+			elapsed: 24 * time.Hour,
+			want:    "yesterday",
 		},
 		{
 			elapsed: 4 * 24 * time.Hour,
@@ -283,6 +297,10 @@ func TestFormatDateHelperElapsed(t *testing.T) {
 		{
 			elapsed: 7 * 24 * time.Hour,
 			want:    "1 week ago",
+		},
+		{
+			elapsed: 8 * 24 * time.Hour,
+			want:    "2 weeks ago",
 		},
 		{
 			elapsed: 18 * 24 * time.Hour,
@@ -297,35 +315,23 @@ func TestFormatDateHelperElapsed(t *testing.T) {
 			want:    "2 months ago",
 		},
 		{
-			elapsed: 45 * 24 * time.Hour,
-			want:    "2 months ago",
-		},
-		{
 			elapsed: 60 * 24 * time.Hour,
 			want:    "2 months ago",
 		},
 		{
-			elapsed: 90 * 24 * time.Hour,
+			elapsed: 61 * 24 * time.Hour,
 			want:    "3 months ago",
 		},
 		{
-			elapsed: 93 * 24 * time.Hour,
-			want:    "4 months ago",
+			elapsed: 330 * 24 * time.Hour,
+			want:    "11 months ago",
 		},
 		{
-			elapsed: 180 * 24 * time.Hour,
-			want:    "6 months ago",
-		},
-		{
-			elapsed: 193 * 24 * time.Hour,
-			want:    "7 months ago",
-		},
-		{
-			elapsed: 365 * 24 * time.Hour,
+			elapsed: 331 * 24 * time.Hour,
 			want:    "1 year ago",
 		},
 		{
-			elapsed: 367 * 24 * time.Hour,
+			elapsed: 366 * 24 * time.Hour,
 			want:    "2 years ago",
 		},
 	}
