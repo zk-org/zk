@@ -339,8 +339,8 @@ func TestFormatDateHelperElapsedViaTimeMultiplication(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.want, func(t *testing.T) {
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d_%s", i, tc.want), func(t *testing.T) {
 			templateContext := map[string]interface{}{"now": time.Now().Add(-tc.elapsed)}
 
 			testString(t, "{{format-date now 'elapsed'}}", templateContext, tc.want)
