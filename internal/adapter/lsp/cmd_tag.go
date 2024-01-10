@@ -3,9 +3,9 @@ package lsp
 import (
 	"fmt"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 const cmdTagList = "zk.tag.list"

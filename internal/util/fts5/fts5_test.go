@@ -3,7 +3,7 @@ package fts5
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestConvertQuery(t *testing.T) {

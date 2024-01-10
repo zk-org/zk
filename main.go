@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/cli/cmd"
-	"github.com/mickael-menu/zk/internal/core"
-	executil "github.com/mickael-menu/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/cmd"
+	"github.com/zk-org/zk/internal/core"
+	executil "github.com/zk-org/zk/internal/util/exec"
 )
 
 var Version = "dev"

@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/adapter/handlebars/helpers"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 func Init(supportsUTF8 bool, logger util.Logger) {

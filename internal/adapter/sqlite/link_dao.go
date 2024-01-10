@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
 )
 
 // LinkDAO persists links in the SQLite database.

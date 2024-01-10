@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/internal/core"
+	"github.com/zk-org/zk/internal/core"
 )
 
 // Style implements core.Styler using ANSI escape codes to be used with a terminal.

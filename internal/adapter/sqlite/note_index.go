@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/paths"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // NoteIndex persists note indexing results in the SQLite database.
@@ -150,7 +150,7 @@ func (ni *NoteIndex) fixExistingLinks(dao *dao, id core.NoteID, path string) err
 
 	for _, link := range links {
 		// To find the best match possible, shortest paths take precedence.
-		// See https://github.com/mickael-menu/zk/issues/23
+		// See https://github.com/zk-org/zk/issues/23
 		if link.TargetPath != "" && len(link.TargetPath) < len(path) {
 			continue
 		}

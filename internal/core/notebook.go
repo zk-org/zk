@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // Notebook handles queries and commands performed on an opened notebook.

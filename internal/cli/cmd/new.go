@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/core"
-	dateutil "github.com/mickael-menu/zk/internal/util/date"
-	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/core"
+	dateutil "github.com/zk-org/zk/internal/util/date"
+	"github.com/zk-org/zk/internal/util/opt"
 )
 
 // New adds a new note to the notebook.

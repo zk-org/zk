@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 const cmdList = "zk.list"

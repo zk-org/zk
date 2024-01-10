@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/util"
+	"github.com/zk-org/zk/internal/util"
 )
 
 // Walk emits the metadata of each file stored in the directory if they pass

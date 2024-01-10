@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 var date1 = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)

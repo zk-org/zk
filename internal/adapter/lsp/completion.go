@@ -3,8 +3,8 @@ package lsp
 import (
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // completionTemplates holds templates to render the various elements of an LSP

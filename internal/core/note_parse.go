@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/opt"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 	"github.com/relvacode/iso8601"
 	"gopkg.in/djherbis/times.v1"
 )

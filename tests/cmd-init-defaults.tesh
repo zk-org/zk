@@ -126,7 +126,7 @@ $ cat .zk/config.toml
 ># LSP
 >#
 >#   Configure basic editor integration for LSP-compatible editors.
->#   See https://github.com/mickael-menu/zk/blob/main/docs/editors-integration.md
+>#   See https://github.com/zk-org/zk/blob/main/docs/editors-integration.md
 >#
 >[lsp]
 >

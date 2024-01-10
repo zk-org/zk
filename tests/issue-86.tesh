@@ -1,5 +1,5 @@
 # Encoded Markdown links are not properly indexed.
-# https://github.com/mickael-menu/zk/issues/86
+# https://github.com/zk-org/zk/issues/86
 $ cd issue-86
 
 $ zk list -qfpath --link-to 202110031652

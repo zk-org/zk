@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/fts5"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/fts5"
+	"github.com/zk-org/zk/internal/util/paths"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // NoteDAO persists notes in the SQLite database.
@@ -74,7 +74,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 			SELECT id FROM notes
 			 WHERE path REGEXP ?
 				-- To find the best match possible, we sort by path length.
-				-- See https://github.com/mickael-menu/zk/issues/23
+				-- See https://github.com/zk-org/zk/issues/23
 			 ORDER BY LENGTH(path) ASC
 		`),
 
