@@ -15,7 +15,6 @@ require (
 	github.com/lestrrat-go/strftime v1.0.6
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-sqlite3 v1.14.16
-	github.com/zk-org/pretty v0.2.3
 	github.com/mvdan/xurls v1.1.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
@@ -27,6 +26,7 @@ require (
 	github.com/tliron/kutil v0.1.59
 	github.com/yuin/goldmark v1.4.12
 	github.com/yuin/goldmark-meta v1.1.0
+	github.com/zk-org/pretty v0.2.4
 	gopkg.in/djherbis/times.v1 v1.3.0
 )
 
@@ -41,7 +41,7 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/petermattis/goid v0.0.0-20220526132513-07eaf5d0b9f4 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/zchee/color/v2 v2.0.6 // indirect
