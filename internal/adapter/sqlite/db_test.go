@@ -3,8 +3,8 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/util/fixtures"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/fixtures"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestOpen(t *testing.T) {

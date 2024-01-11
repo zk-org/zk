@@ -10,4 +10,4 @@ body:
     attributes:
       label: If you need help, open a discussion
       options:
-        - label: I will [create a new discussion](https://github.com/mickael-menu/zk/discussions/new?category=help) instead of an issue.
+        - label: I will [create a new discussion](https://github.com/zk-org/zk/discussions/new?category=help) instead of an issue.

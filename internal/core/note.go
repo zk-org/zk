@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // NoteID represents the unique ID of a note collection relative to a given

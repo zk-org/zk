@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/exec"
 )
 
 // RegisterShell registers the {{sh}} template helper, which runs shell commands.

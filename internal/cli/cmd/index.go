@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/paths"
 	"github.com/schollz/progressbar/v3"
 )
 

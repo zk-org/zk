@@ -2,8 +2,8 @@
 
 There are several extensions available to integrate `zk` in your favorite editor:
 
-* [`zk-nvim`](https://github.com/mickael-menu/zk-nvim) for Neovim 0.5+
-* [`zk-vscode`](https://github.com/mickael-menu/zk-vscode) for Visual Studio Code
+* [`zk-nvim`](https://github.com/zk-org/zk.nvim) for Neovim 0.5+
+* [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
 
 ## Language Server Protocol
 
@@ -15,13 +15,13 @@ There are several extensions available to integrate `zk` in your favorite editor
 * Navigate in your notes by following internal links.
 * Create a new note using the current selection as title.
 * Diagnostics for dead links and wiki-links titles.
-* [And more to come...](https://github.com/mickael-menu/zk/issues/22)
+* [And more to come...](https://github.com/zk-org/zk/issues/22)
   
 You can configure some of these features in your notebook's [configuration file](config-lsp.md).
 
 ### Editor LSP configurations
 
-To start the Language Server, use the `zk lsp` command. Refer to the following sections for editor-specific examples. [Feel free to share the configuration for your editor](https://github.com/mickael-menu/zk/issues/22).
+To start the Language Server, use the `zk lsp` command. Refer to the following sections for editor-specific examples. [Feel free to share the configuration for your editor](https://github.com/zk-org/zk/issues/22).
 
 #### Vim and Neovim
 

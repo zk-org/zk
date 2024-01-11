@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestNoteDAOIndexed(t *testing.T) {
@@ -239,7 +239,7 @@ func TestNoteDAOFindIdsByHref(t *testing.T) {
 	test("test", true, []core.NoteID{6, 5, 8})
 
 	// Filename takes precedence over the rest of the path.
-	// See https://github.com/mickael-menu/zk/issues/111
+	// See https://github.com/zk-org/zk/issues/111
 	test("ref", true, []core.NoteID{8})
 }
 
@@ -258,7 +258,7 @@ func TestNoteDAOFindIncludingHrefs(t *testing.T) {
 	test("test", true, []string{"ref/test/ref.md", "ref/test/b.md", "ref/test/a.md"})
 
 	// Filename takes precedence over the rest of the path.
-	// See https://github.com/mickael-menu/zk/issues/111
+	// See https://github.com/zk-org/zk/issues/111
 	test("ref", true, []string{"ref/test/ref.md"})
 }
 
@@ -280,7 +280,7 @@ func TestNoteDAOFindExcludingHrefs(t *testing.T) {
 		"log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
 
 	// Filename takes precedence over the rest of the path.
-	// See https://github.com/mickael-menu/zk/issues/111
+	// See https://github.com/zk-org/zk/issues/111
 	test("ref", true, []string{"ref/test/b.md", "f39c8.md", "ref/test/a.md",
 		"log/2021-01-03.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
 }

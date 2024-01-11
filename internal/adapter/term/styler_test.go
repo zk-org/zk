@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/fatih/color"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func createTerminal() *Terminal {

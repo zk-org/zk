@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/opt"
 )
 
 // Getenv returns an optional String for the environment variable with given

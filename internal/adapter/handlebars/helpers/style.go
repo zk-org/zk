@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
 )
 
 // NewStyleHelper creates a new template helper which stylizes the text input

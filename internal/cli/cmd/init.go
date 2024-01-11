@@ -6,9 +6,9 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
-	"github.com/mickael-menu/zk/internal/cli"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // Init creates a notebook in the given directory

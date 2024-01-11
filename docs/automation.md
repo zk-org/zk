@@ -7,4 +7,4 @@
 * [send notes for processing by other programs](external-processing.md)
 * [create a note with initial content](note-creation.md) from a standard input pipe
 
-If you find out that `zk` does not behave as expected or could communicate better with other programs, [please post an issue](https://github.com/mickael-menu/zk/issues).
+If you find out that `zk` does not behave as expected or could communicate better with other programs, [please post an issue](https://github.com/zk-org/zk/issues).

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // RegisterJSON registers a {{json}} template helper which serializes its

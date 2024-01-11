@@ -1,5 +1,5 @@
 # Wiki links in subdirectories are broken
-# https://github.com/mickael-menu/zk/issues/170
+# https://github.com/zk-org/zk/issues/170
 
 $ cd blank-slug
 

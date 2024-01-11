@@ -3,9 +3,9 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestCollectionDAOFindOrCreate(t *testing.T) {

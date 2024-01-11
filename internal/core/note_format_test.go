@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/util/opt"
-	"github.com/mickael-menu/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/paths"
 
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestNewNoteFormatter(t *testing.T) {

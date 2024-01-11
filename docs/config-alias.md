@@ -9,7 +9,7 @@ Declaring your own aliases is a great way to make your experience with `zk` easi
 Command aliases are declared in your [configuration file](config.md), under the `[alias]` section. They are executed with [your default shell](tool-shell.md), which allows you to:
 
 * expand arguments with `$@` or `$*`
-    * [it is recommended to wrap `$@` in quotes](https://github.com/mickael-menu/zk/issues/316#issuecomment-1543564168)
+    * [it is recommended to wrap `$@` in quotes](https://github.com/zk-org/zk/issues/316#issuecomment-1543564168)
 * expand environment variables
 * run several commands with `&&`
 * pipe several commands with `|`

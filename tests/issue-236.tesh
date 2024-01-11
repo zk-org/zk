@@ -1,5 +1,5 @@
 # Links broken after adding a new note
-# https://github.com/mickael-menu/zk/issues/236
+# https://github.com/zk-org/zk/issues/236
 $ cd issue-236
 
 $ zk list -qfpath --link-to 8r8q

@@ -3,7 +3,7 @@ package extensions
 import (
 	"strings"
 
-	"github.com/mickael-menu/zk/internal/core"
+	"github.com/zk-org/zk/internal/core"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"

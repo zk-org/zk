@@ -3,7 +3,7 @@ package yaml
 import (
 	"testing"
 
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 // Credit: https://github.com/icza/dyno
