@@ -2,8 +2,8 @@ package helpers
 
 import (
 	"github.com/aymerick/raymond"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // RegisterPrepend registers a {{prepend}} template helper which prepend a

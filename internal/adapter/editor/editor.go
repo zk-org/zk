@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	executil "github.com/mickael-menu/zk/internal/util/exec"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	osutil "github.com/mickael-menu/zk/internal/util/os"
+	"github.com/zk-org/zk/internal/util/errors"
+	executil "github.com/zk-org/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/util/opt"
+	osutil "github.com/zk-org/zk/internal/util/os"
 )
 
 // Editor represents an external editor able to edit the notes.
@@ -37,7 +37,7 @@ func (e *Editor) Open(paths ...string) error {
 	// /dev/tty is restored as stdin, in case the user used a pipe to feed
 	// initial note content to `zk new`. Without this, Vim doesn't work
 	// properly in this case.
-	// See https://github.com/mickael-menu/zk/issues/4
+	// See https://github.com/zk-org/zk/issues/4
 	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + " </dev/tty")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -5,7 +5,7 @@ package exec
 import (
 	"os/exec"
 
-	osutil "github.com/mickael-menu/zk/internal/util/os"
+	osutil "github.com/zk-org/zk/internal/util/os"
 )
 
 // CommandFromString returns a Cmd running the given command with $SHELL.

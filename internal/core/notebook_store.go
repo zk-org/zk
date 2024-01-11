@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mickael-menu/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // NotebookStore retrieves or creates new notebooks.
@@ -316,7 +316,7 @@ multiword-tags = false
 # LSP
 #
 #   Configure basic editor integration for LSP-compatible editors.
-#   See https://github.com/mickael-menu/zk/blob/main/docs/editors-integration.md
+#   See https://github.com/zk-org/zk/blob/main/docs/editors-integration.md
 #
 [lsp]
 

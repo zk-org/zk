@@ -267,7 +267,7 @@ func isValidTag(tag string) bool {
 	}
 
 	// Prevent Markdown table syntax to be parsed a a colon tag, e.g. |:---:|
-	// https://github.com/mickael-menu/zk/issues/185
+	// https://github.com/zk-org/zk/issues/185
 	for _, c := range tag {
 		if c != '-' {
 			return true

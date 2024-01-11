@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
 )
 
 // NewLinkHelper creates a new template helper to generate an internal link

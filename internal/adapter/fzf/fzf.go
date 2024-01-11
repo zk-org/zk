@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	"github.com/mickael-menu/zk/internal/util/opt"
-	stringsutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/opt"
+	stringsutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // ErrCancelled is returned when the user cancelled fzf.

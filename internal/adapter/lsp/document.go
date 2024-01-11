@@ -7,10 +7,10 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/errors"
-	strutil "github.com/mickael-menu/zk/internal/util/strings"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
@@ -258,7 +258,7 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 	lineIdx := int(position.Line)
 	charIdx := int(position.Character)
 	line := lines[lineIdx]
-	// https://github.com/mickael-menu/zk/issues/144#issuecomment-1006108485
+	// https://github.com/zk-org/zk/issues/144#issuecomment-1006108485
 	line = line[:charIdx] + "ZK_PLACEHOLDER" + line[charIdx:]
 	lines[lineIdx] = line
 	targetWord := strutil.WordAt(line, charIdx)

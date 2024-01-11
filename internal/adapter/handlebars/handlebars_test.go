@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mickael-menu/zk/internal/adapter/handlebars/helpers"
-	"github.com/mickael-menu/zk/internal/core"
-	"github.com/mickael-menu/zk/internal/util"
-	"github.com/mickael-menu/zk/internal/util/fixtures"
-	"github.com/mickael-menu/zk/internal/util/paths"
-	"github.com/mickael-menu/zk/internal/util/test/assert"
+	"github.com/zk-org/zk/internal/adapter/handlebars/helpers"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/fixtures"
+	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func init() {
@@ -238,9 +238,114 @@ func TestFormatDateHelper(t *testing.T) {
 	testString(t, "{{format-date now 'timestamp'}}", context, "200911172034")
 	testString(t, "{{format-date now 'timestamp-unix'}}", context, "1258490098")
 	testString(t, "{{format-date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
+}
+
+func TestFormatDateHelperElapsedYear(t *testing.T) {
 	year := time.Now().UTC().Year() - 14
-	context = map[string]interface{}{"now": time.Date(year, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	context := map[string]interface{}{"now": time.Date(year, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
+}
+
+func TestFormatDateHelperElapsedViaTimeMultiplication(t *testing.T) {
+	// test for time being provided in via multiplications on seconds, minutes
+	// and hours, as expected by github.com/rvflash/elapsed
+	cases := []struct {
+		elapsed time.Duration
+		want    string
+	}{
+		{
+			elapsed: -12 * time.Second,
+			want:    "not yet",
+		},
+		{
+			elapsed: time.Second,
+			want:    "just now",
+		},
+		{
+			elapsed: 59 * time.Second,
+			want:    "just now",
+		},
+		{
+			elapsed: 60 * time.Second,
+			want:    "1 minute ago",
+		},
+		{
+			elapsed: 1 * time.Minute,
+			want:    "1 minute ago",
+		},
+		{
+			elapsed: 2 * time.Minute,
+			want:    "2 minutes ago",
+		},
+		{
+			elapsed: 62 * time.Minute,
+			want:    "1 hour ago",
+		},
+		{
+			elapsed: time.Hour,
+			want:    "1 hour ago",
+		},
+		{
+			elapsed: 2 * time.Hour,
+			want:    "2 hours ago",
+		},
+		{
+			elapsed: 24 * time.Hour,
+			want:    "yesterday",
+		},
+		{
+			elapsed: 4 * 24 * time.Hour,
+			want:    "4 days ago",
+		},
+		{
+			elapsed: 7 * 24 * time.Hour,
+			want:    "1 week ago",
+		},
+		{
+			elapsed: 8 * 24 * time.Hour,
+			want:    "2 weeks ago",
+		},
+		{
+			elapsed: 18 * 24 * time.Hour,
+			want:    "3 weeks ago",
+		},
+		{
+			elapsed: 30 * 24 * time.Hour,
+			want:    "1 month ago",
+		},
+		{
+			elapsed: 31 * 24 * time.Hour,
+			want:    "2 months ago",
+		},
+		{
+			elapsed: 60 * 24 * time.Hour,
+			want:    "2 months ago",
+		},
+		{
+			elapsed: 61 * 24 * time.Hour,
+			want:    "3 months ago",
+		},
+		{
+			elapsed: 330 * 24 * time.Hour,
+			want:    "11 months ago",
+		},
+		{
+			elapsed: 331 * 24 * time.Hour,
+			want:    "1 year ago",
+		},
+		{
+			elapsed: 366 * 24 * time.Hour,
+			want:    "2 years ago",
+		},
+	}
+
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d_%s", i, tc.want), func(t *testing.T) {
+			templateContext := map[string]interface{}{"now": time.Now().Add(-tc.elapsed)}
+
+			testString(t, "{{format-date now 'elapsed'}}", templateContext, tc.want)
+		})
+	}
 }
 
 func TestDateHelper(t *testing.T) {

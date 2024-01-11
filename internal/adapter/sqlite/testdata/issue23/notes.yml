@@ -1,4 +1,4 @@
-# See https://github.com/mickael-menu/zk/issues/23
+# See https://github.com/zk-org/zk/issues/23
 - id: 1
   path: "prefix-longest.md"
   sortable_path: "prefix-longest.md"

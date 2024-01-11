@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/mickael-menu/pretty"
+	"github.com/zk-org/pretty"
 )
 
 func True(t *testing.T, value bool) {
