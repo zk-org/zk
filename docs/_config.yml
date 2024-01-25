@@ -1,6 +1,10 @@
 permalink: /:title
 defaults:
   - scope:
-      path: ""
+      path: "README.md"
+    values:
+      title: ""
+  - scope:
+      path: "" # all
     values:
       render_with_liquid: false
