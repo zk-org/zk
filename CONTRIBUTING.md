@@ -45,6 +45,7 @@ Several GitHub action workflows are executed when pull requests are merged or re
 
 * `.github/workflows/build.yml` checks that the project can be built and the tests still pass.
 * `.github/workflows/codeql.yml` runs static analysis to vet code quality.
+* `.github/workflows/gh-pages.yml` deploy the documentation files to GitHub Pages.
 * `.github/workflows/release.yml` submits a new version to Homebrew when a Git version tag is created.
 * `.github/workflows/triage.yml` automatically tags old issues and PRs as staled.
 
