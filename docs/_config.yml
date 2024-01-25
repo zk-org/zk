@@ -2,6 +2,10 @@ title: "zk"
 permalink: /:title
 defaults:
   - scope:
+      path: "README.md"
+    values:
+      title: "zk"
+  - scope:
       path: "" # all
     values:
       render_with_liquid: false
