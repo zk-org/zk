@@ -36,7 +36,7 @@ The `{{concat s1 s2}}` helper concatenates two strings together. For example `{{
 
 * The `{{substring s index length}}` helper extracts a portion of the given string. For example:
     * `{{substring 'A full quote' 2 4}}` outputs `full`
-    * `{{substring 'A full quote' -5 5}` outputs `quote`
+    * `{{substring 'A full quote' -5 5}}` outputs `quote`
 
 ### Date helpers
 
