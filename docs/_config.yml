@@ -1,5 +1,4 @@
 permalink: /:title
-theme: jekyll-theme-modernist
 defaults:
   - scope:
       path: ""
