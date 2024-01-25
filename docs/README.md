@@ -39,29 +39,29 @@
 
 ### Highlights
 
-* [Creating notes from templates](docs/note-creation.md)
-* [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
-* [Integration with your favorite editors](docs/editors-integration.md):
-    * [Any LSP-compatible editor](docs/editors-integration.md)
+* [Creating notes from templates](note-creation.md)
+* [Advanced search and filtering capabilities](note-filtering.md) including [tags](tags.md), links and mentions
+* [Integration with your favorite editors](editors-integration.md):
+    * [Any LSP-compatible editor](editors-integration.md)
     * [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim 0.5+
     * [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
     * (*unmaintained*) [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+ by [Seth Messer](https://github.com/megalithic)
-* [Interactive browser](docs/tool-fzf.md), powered by `fzf`
-* [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
-* [Made with automation in mind](docs/automation.md)
-* [Notebook housekeeping](docs/notebook-housekeeping.md)
-* [Future-proof, thanks to Markdown](docs/future-proof.md)
+* [Interactive browser](tool-fzf.md), powered by `fzf`
+* [Git-style command aliases](config-alias.md) and [named filters](config-filter.md)
+* [Made with automation in mind](automation.md)
+* [Notebook housekeeping](notebook-housekeeping.md)
+* [Future-proof, thanks to Markdown](future-proof.md)
 * Supports most Markdown syntax flavors
     * Links: regular Markdown links, `[[Wikilinks]]` and Neuron's `[[Folgezettel links]]#`.
     * Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
-    * [YAML frontmatter](docs/note-frontmatter.md)
+    * [YAML frontmatter](note-frontmatter.md)
 
-[See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
+[See the changelog](../CHANGELOG.md) for the list of upcoming features waiting to be released.
 
 ### What `zk` is not
 
 * A note editor.
-* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
+* A tool to serve your notes on the web – for this, you may be interested in [Neuron](neuron.md) or [Gollum](https://github.com/gollum/gollum).
 
 ## Install
 
