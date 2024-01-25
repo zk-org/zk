@@ -1,2 +1,7 @@
 permalink: /:title
 theme: jekyll-theme-modernist
+defaults:
+  - scope:
+      path: ""
+    values:
+      render_with_liquid: false
