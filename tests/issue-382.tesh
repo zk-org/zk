@@ -1,0 +1,6 @@
+$ cd issue-382
+
+# A note without a YAML timestamp should be returned 
+# when querying its creation day.
+$ zk list -q --created 2024-01-24 --format "\{{path}}: \{{format-date created 'short'}}"
+>333h.md: 01/24/2024
