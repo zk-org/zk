@@ -1,9 +1,6 @@
+title: "zk"
 permalink: /:title
 defaults:
-  - scope:
-      path: "README.md"
-    values:
-      title: ""
   - scope:
       path: "" # all
     values:
