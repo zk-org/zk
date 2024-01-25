@@ -4,9 +4,6 @@ on:
   push:
     branches: ["main"]
 
-  # TODO: remove before PR
-  workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
@@ -31,8 +28,6 @@ jobs:
           destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-
-  # Deployment job
   deploy:
     environment:
       name: github-pages
