@@ -21,6 +21,4 @@ exclude:
   - "internal/"
   - "main.go"
   - "tests/"
-include:
-  - "docs/**"
 
