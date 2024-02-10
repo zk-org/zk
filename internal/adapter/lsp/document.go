@@ -228,9 +228,12 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			})
 		}
 
-		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-			// Ignore embedded image, e.g. ![title](href.png)
-			if match[0] > 0 && line[match[0]-1] == '!' {
+        // extract link paths from [title](path) patterns
+        for _, match := range 
+        markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+            // case: '!' ignores embedded image, e.g. ![title](href.png)
+            // case: '/' ignores tripple dash file URIs, e.g. file:///file.go
+			if match[0] > 0 && line[match[0]-1] == '!' || line[match[3]+8] == '/' {
 				continue
 			}
 
@@ -241,6 +244,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			}
 			appendLink(href, match[0], match[1], false, false)
 		}
+
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[2]:match[3]]
