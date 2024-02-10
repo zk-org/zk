@@ -7,12 +7,12 @@ import (
 	"strings"
 	"unicode/utf16"
 
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/errors"
 	strutil "github.com/zk-org/zk/internal/util/strings"
-	"github.com/tliron/glsp"
-	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 // documentStore holds opened documents.
@@ -228,23 +228,24 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			})
 		}
 
-        // extract link paths from [title](path) patterns
-        for _, match := range 
-        markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-            // case: '!' ignores embedded image, e.g. ![title](href.png)
-            // case: '/' ignores tripple dash file URIs, e.g. file:///file.go
-			if match[0] > 0 && line[match[0]-1] == '!' || line[match[3]+8] == '/' {
+		// extract link paths from [title](path) patterns
+		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+            // Ignore embedded images ![title](file.png) and tripple dash file 
+            // URIs [title](file:///file.go)
+			if (match[0] > 0 && line[match[0]-1] == '!') ||
+				(match[0] > 0 && line[match[3]+8] == '/') {
 				continue
 			}
 
 			href := line[match[4]:match[5]]
-			// Valid Markdown links are percent-encoded.
+
+			// Decode the href if it's percent-encoded
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
+
 			appendLink(href, match[0], match[1], false, false)
 		}
-
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
 			href := line[match[2]:match[3]]
