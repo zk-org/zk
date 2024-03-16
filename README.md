@@ -2,8 +2,9 @@
 <h1>zk</h1>
 <h4>A plain text note-taking assistant</h4>
 <img alt="Screencast" width="95%" src="docs/assets/media/screencast.svg"/>
-<p>Looking for a quick usage example? <a href="docs/getting-started.md">Let's get started</a>.</p>
 </div>
+
+Looking for a quick usage example? [Let's get started](docs/getting-started.md).
 
 ## News: We Are In Maintenance Mode
 
