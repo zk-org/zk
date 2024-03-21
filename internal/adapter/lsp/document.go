@@ -162,6 +162,7 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
 var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
+var fileURIregex = regexp.MustCompile(`file:///`)
 
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
@@ -229,12 +230,22 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 		}
 
 		// extract link paths from [title](path) patterns
+		// note: match[0:1] is the entire match, match[2:3] is the contents of
+		// brackets, match[4:5] is contents of parentheses
 		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-            // Ignore embedded images ![title](file.png) and tripple dash file 
-            // URIs [title](file:///file.go)
-			if (match[0] > 0 && line[match[0]-1] == '!') ||
-				(match[0] > 0 && line[match[3]+8] == '/') {
+
+			// Ignore embedded images ![title](file.png)
+			if match[0] > 0 && line[match[0]-1] == '!' {
 				continue
+			}
+
+			// ignore tripple dash file URIs [title](file:///foo.go)
+			if match[5]-match[4] >= 8 {
+				linkURL := line[match[4]:match[5]]
+				fileURIresult := linkURL[:8]
+				if fileURIregex.MatchString(fileURIresult) {
+					continue
+				}
 			}
 
 			href := line[match[4]:match[5]]
