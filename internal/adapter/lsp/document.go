@@ -7,12 +7,12 @@ import (
 	"strings"
 	"unicode/utf16"
 
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/errors"
 	strutil "github.com/zk-org/zk/internal/util/strings"
-	"github.com/tliron/glsp"
-	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 // documentStore holds opened documents.
@@ -162,6 +162,7 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
 var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
+var fileURIregex = regexp.MustCompile(`file:///`)
 
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
@@ -228,17 +229,32 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			})
 		}
 
+		// extract link paths from [title](path) patterns
+		// note: match[0:1] is the entire match, match[2:3] is the contents of
+		// brackets, match[4:5] is contents of parentheses
 		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-			// Ignore embedded image, e.g. ![title](href.png)
+
+			// Ignore embedded images ![title](file.png)
 			if match[0] > 0 && line[match[0]-1] == '!' {
 				continue
 			}
 
+			// ignore tripple dash file URIs [title](file:///foo.go)
+			if match[5]-match[4] >= 8 {
+				linkURL := line[match[4]:match[5]]
+				fileURIresult := linkURL[:8]
+				if fileURIregex.MatchString(fileURIresult) {
+					continue
+				}
+			}
+
 			href := line[match[4]:match[5]]
-			// Valid Markdown links are percent-encoded.
+
+			// Decode the href if it's percent-encoded
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
+
 			appendLink(href, match[0], match[1], false, false)
 		}
 
