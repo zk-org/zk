@@ -281,6 +281,9 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 	if targetWord == "" {
 		return false
 	}
+	if string(targetWord[0]) == "#" {
+		targetWord = targetWord[1:]
+	}
 
 	content := strings.Join(lines, "\n")
 	note, err := noteContentParser.ParseNoteContent(content)
