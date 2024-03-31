@@ -643,10 +643,16 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 // buildInvokedCompletionList builds the completion item response for a
 // completion started automatically when typing an identifier, or manually.
 func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
-	if !doc.IsTagPosition(position, notebook.Parser) {
-		return nil, nil
+	currentWord := doc.WordAt(position)
+	if strings.HasPrefix(doc.LookBehind(position, len(currentWord)+2), "[[") {
+		return s.buildLinkCompletionList(notebook, doc, position)
 	}
-	return s.buildTagCompletionList(notebook, doc.WordAt(position))
+
+	if doc.IsTagPosition(position, notebook.Parser) {
+		return s.buildTagCompletionList(notebook, doc.WordAt(position))
+	}
+
+	return nil, nil
 }
 
 // buildTriggerCompletionList builds the completion item response for a
@@ -804,12 +810,18 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 	if s.useAdditionalTextEditsWithNotebook(notebook) {
 		addTextEdits := []protocol.TextEdit{}
 
+		startOffset := -2
+		if doc.LookBehind(pos, 2) != "[[" {
+			currentWord := doc.WordAt(pos)
+			startOffset = -2 - len(currentWord)
+		}
+
 		// Some LSP clients (e.g. VSCode) don't support deleting the trigger
 		// characters with the main TextEdit. So let's add an additional
 		// TextEdit for that.
 		addTextEdits = append(addTextEdits, protocol.TextEdit{
 			NewText: "",
-			Range:   rangeFromPosition(pos, -2, 0),
+			Range:   rangeFromPosition(pos, startOffset, 0),
 		})
 
 		item.AdditionalTextEdits = addTextEdits
@@ -836,7 +848,12 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	// Overwrite [[ trigger directly if the additional text edits are disabled.
 	startOffset := 0
 	if !s.useAdditionalTextEditsWithNotebook(notebook) {
-		startOffset = -2
+		if doc.LookBehind(pos, 2) == "[[" {
+			startOffset = -2
+		} else {
+			currentWord := doc.WordAt(pos)
+			startOffset = -2 - len(currentWord) 
+		}
 	}
 
 	// Some LSP clients (e.g. VSCode) auto-pair brackets, so we need to
