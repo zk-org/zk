@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
       - name: Fix anchor tag in README
         run: ex -s -c '%s/docs\/getting-started\.md/docs\/getting-started/|x' README.md
       - name: Build with Jekyll
