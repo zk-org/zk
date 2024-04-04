@@ -197,9 +197,9 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 	return nil, nil
 }
 
-// Recursive function to check whether a link is within inline code block.
+// Recursive function to check whether a link is within inline code.
 func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
-	if backtickId := strings.Index(strBuffer, "`"); backtickId > 0 && backtickId < linkEnd {
+	if backtickId := strings.Index(strBuffer, "`"); backtickId >= 0 && backtickId < linkEnd {
 		return linkWithinInlineCode(strBuffer[backtickId+1:],
 		linkStart-backtickId-1, linkEnd-backtickId-1, !insideInline)
 	} else {
