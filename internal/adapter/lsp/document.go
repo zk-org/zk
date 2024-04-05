@@ -323,7 +323,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
         // if there are an odd number of back ticks, the state of insideInline 
         // for the following link will be true
         if strings.Count(line, "`")%2 == 1 {
-			insideInline = !insideInline
+			insideInline = true
 		}
 	}
 
