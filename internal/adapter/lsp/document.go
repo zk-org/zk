@@ -167,6 +167,11 @@ var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
 var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
 var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
 
+var insideInline = false
+var insideFenced = false
+var insideIndented = false
+var currentCodeBlockStart = -1
+
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
 func (d *document) LinkFromRoot(nb *core.Notebook) (*documentLink, error) {
@@ -207,49 +212,53 @@ func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline
 	}
 }
 
+func ignoreLinesInCodeBlocks(lines []string, lineIndex int, line string) bool {
+	// Checks to ignore lines within code fences and indented code blocks
+	if insideFenced {
+		if fencedEndRegex.FindStringIndex(line) != nil &&
+			lines[currentCodeBlockStart][:3] == line[:3] {
+			// Fenced code block ends with this line
+			insideFenced = false
+			currentCodeBlockStart = -1
+		}
+		return true
+	} else if insideIndented {
+		if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
+			// Indeted code block ends with this line
+			insideIndented = false
+			currentCodeBlockStart = -1
+		} else {
+			return true
+		}
+	} else {
+		// Check whether the current line is the start of a code fence or
+		// indented code block
+		if fencedStartRegex.FindStringIndex(line) != nil {
+			insideFenced = true
+			currentCodeBlockStart = lineIndex
+			return true
+		} else if indentedRegex.FindStringIndex(line) != nil &&
+			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
+			insideIndented = true
+			currentCodeBlockStart = lineIndex
+			return true
+		}
+	}
+	return false
+
+}
+
 // DocumentLinks returns all the internal and external links found in the
 // document.
 func (d *document) DocumentLinks() ([]documentLink, error) {
 	links := []documentLink{}
 
-	insideInline := false
-	insideFenced := false
-	insideIndented := false
-	currentCodeBlockStart := -1
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
 
-		// Checks to ignore lines within code fences and indented code blocks
-		if insideFenced {
-			if fencedEndRegex.FindStringIndex(line) != nil &&
-				lines[currentCodeBlockStart][:3] == line[:3] {
-				// Fenced code block ends with this line
-				insideFenced = false
-				currentCodeBlockStart = -1
-			}
-			continue
-		} else if insideIndented {
-			if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
-				// Indeted code block ends with this line
-				insideIndented = false
-				currentCodeBlockStart = -1
-			} else {
-				continue
-			}
-		} else {
-			// Check whether the current line is the start of a code fence or
-			// indented code block
-			if fencedStartRegex.FindStringIndex(line) != nil {
-				insideFenced = true
-				currentCodeBlockStart = lineIndex
-				continue
-			} else if indentedRegex.FindStringIndex(line) != nil &&
-				(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
-				insideIndented = true
-				currentCodeBlockStart = lineIndex
-				continue
-			}
-		}
+        if ignoreLinesInCodeBlocks(lines, lineIndex, line) {
+            continue
+        }
 
 		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
 			if href == "" {
