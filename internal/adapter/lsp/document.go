@@ -201,7 +201,7 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
 	if backtickId := strings.Index(strBuffer, "`"); backtickId >= 0 && backtickId < linkEnd {
 		return linkWithinInlineCode(strBuffer[backtickId+1:],
-		linkStart-backtickId-1, linkEnd-backtickId-1, !insideInline)
+			linkStart-backtickId-1, linkEnd-backtickId-1, !insideInline)
 	} else {
 		return insideInline
 	}
@@ -218,6 +218,38 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	currentCodeBlockStart := -1
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
+
+		// Checks to ignore lines within code fences and indented code blocks
+		if insideFenced {
+			if fencedEndRegex.FindStringIndex(line) != nil &&
+				lines[currentCodeBlockStart][:3] == line[:3] {
+				// Fenced code block ends with this line
+				insideFenced = false
+				currentCodeBlockStart = -1
+			}
+			continue
+		} else if insideIndented {
+			if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
+				// Indeted code block ends with this line
+				insideIndented = false
+				currentCodeBlockStart = -1
+			} else {
+				continue
+			}
+		} else {
+			// Check whether the current line is the start of a code fence or
+			// indented code block
+			if fencedStartRegex.FindStringIndex(line) != nil {
+				insideFenced = true
+				currentCodeBlockStart = lineIndex
+				continue
+			} else if indentedRegex.FindStringIndex(line) != nil &&
+				(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
+				insideIndented = true
+				currentCodeBlockStart = lineIndex
+				continue
+			}
+		}
 
 		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
 			if href == "" {
@@ -244,39 +276,6 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 				HasTitle:   hasTitle,
 				IsWikiLink: isWikiLink,
 			})
-		}
-
-		if insideFenced {
-			if fencedEndRegex.FindStringIndex(line) != nil &&
-			lines[currentCodeBlockStart][:3] == line[:3] {
-				// Fenced code block ending with this line
-				insideFenced = false
-				currentCodeBlockStart = -1
-			}
-			// Within fenced code block, skip link checks
-			continue
-		} else if insideIndented {
-			if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
-				// No longer indented, will process links
-				insideIndented = false
-				currentCodeBlockStart = -1
-			} else {
-				// Still indented, skip link checks
-				continue
-			}
-		} else {
-			// Check whether we are in fenced / indented code check
-			if fencedStartRegex.FindStringIndex(line) != nil {
-				insideFenced = true
-				currentCodeBlockStart = lineIndex
-				continue
-			} else if indentedRegex.FindStringIndex(line) != nil &&
-			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
-				// Indented code block starts on this line
-				insideIndented = true
-				currentCodeBlockStart = lineIndex
-				continue
-			}
 		}
 
 		// extract link paths from [title](path) patterns
@@ -321,7 +320,9 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			hasTitle := match[4] != -1
 			appendLink(href, match[0], match[1], hasTitle, true)
 		}
-		if strings.Count(line, "`") % 2 == 1 {
+        // if there are an odd number of back ticks, the state of insideInline 
+        // for the following link will be true
+        if strings.Count(line, "`")%2 == 1 {
 			insideInline = !insideInline
 		}
 	}
