@@ -212,6 +212,8 @@ var insideFenced = false
 var insideIndented = false
 var currentCodeBlockStart = -1
 
+// check whether the current line in document is within a fenced or indented 
+// code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
     // if line is already within code fences or indented code block
 	if insideFenced {
