@@ -160,18 +160,6 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 	return string(utf16.Decode(utf16Bytes[charIdx:(charIdx + length)]))
 }
 
-var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
-var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
-var fileURIregex = regexp.MustCompile(`file:///`)
-var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
-var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
-var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
-
-var insideInline = false
-var insideFenced = false
-var insideIndented = false
-var currentCodeBlockStart = -1
-
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
 func (d *document) LinkFromRoot(nb *core.Notebook) (*documentLink, error) {
@@ -212,8 +200,20 @@ func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline
 	}
 }
 
-func ignoreLinesInCodeBlocks(lines []string, lineIndex int, line string) bool {
-	// Checks to ignore lines within code fences and indented code blocks
+var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
+var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
+var fileURIregex = regexp.MustCompile(`file:///`)
+var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
+var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
+var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
+
+var insideInline = false
+var insideFenced = false
+var insideIndented = false
+var currentCodeBlockStart = -1
+
+func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
+    // if line is already within code fences or indented code block
 	if insideFenced {
 		if fencedEndRegex.FindStringIndex(line) != nil &&
 			lines[currentCodeBlockStart][:3] == line[:3] {
@@ -256,9 +256,9 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
 
-        if ignoreLinesInCodeBlocks(lines, lineIndex, line) {
-            continue
-        }
+		if isLineWithinCodeBlock(lines, lineIndex, line) {
+			continue
+		}
 
 		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
 			if href == "" {
