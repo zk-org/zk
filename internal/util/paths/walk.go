@@ -10,7 +10,7 @@ import (
 
 // Walk emits the metadata of each file stored in the directory if they pass
 // the given shouldIgnorePath closure. Hidden files and directories are ignored.
-func Walk(basePath string, logger util.Logger, shouldIgnorePath func(string) (bool, error)) <-chan Metadata {
+func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnorePath func(string) (bool, error)) <-chan Metadata {
 	c := make(chan Metadata, 50)
 	go func() {
 		defer close(c)
@@ -22,9 +22,10 @@ func Walk(basePath string, logger util.Logger, shouldIgnorePath func(string) (bo
 
 			filename := info.Name()
 			isHidden := strings.HasPrefix(filename, ".")
+			isNotebookRoot := filename == notebookRoot
 
 			if info.IsDir() {
-				if isHidden {
+				if isHidden && !isNotebookRoot {
 					return filepath.SkipDir
 				}
 
