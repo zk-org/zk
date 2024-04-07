@@ -16,8 +16,9 @@ func TestWalk(t *testing.T) {
 		return filepath.Ext(path) != ".md", nil
 	}
 
+    notebookRoot := filepath.Base(path)
 	actual := make([]string, 0)
-	for m := range Walk(path, &util.NullLogger, shouldIgnore) {
+	for m := range Walk(path, &util.NullLogger, notebookRoot, shouldIgnore) {
 		assert.NotNil(t, m.Modified)
 		actual = append(actual, m.Path)
 	}
