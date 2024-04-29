@@ -43,3 +43,7 @@ Let's unpack this alias:
 * `$ZK_NOTEBOOK_DIR` is set to the absolute path of the current [notebook](notebook.md) when running an alias. Using it allows you to run `zk daily` no matter where you are in the notebook folder hierarchy.
 * We need to use double quotes around `$ZK_NOTEBOOK_DIR`, otherwise it will not be expanded.
 
+If you want to edit today's note, simply use this alias:
+```sh
+$ zk daily
+```
