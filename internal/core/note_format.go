@@ -50,7 +50,10 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 				// `"` chars in note titles break links on `--format json` output
 				// Quick and dirty solution for now. Should use Kong / *cli
 				// container?
-				if slices.Contains(os.Args[1:], `json`) {
+				if slices.Contains(os.Args[1:], `--format=json`) ||
+					slices.Contains(os.Args[1:], `json`) &&
+						(slices.Contains(os.Args[1:], `--format`) ||
+							slices.Contains(os.Args[1:], `-f`)) {
 					link = strings.ReplaceAll(link, `"`, `\"`)
 				}
 				return link
