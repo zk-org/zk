@@ -160,10 +160,6 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 	return string(utf16.Decode(utf16Bytes[charIdx:(charIdx + length)]))
 }
 
-var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
-var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
-var fileURIregex = regexp.MustCompile(`file:///`)
-
 // LinkFromRoot returns a Link to this document from the root of the given
 // notebook.
 func (d *document) LinkFromRoot(nb *core.Notebook) (*documentLink, error) {
@@ -194,6 +190,66 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 	return nil, nil
 }
 
+// Recursive function to check whether a link is within inline code.
+func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
+	if backtickId := strings.Index(strBuffer, "`"); backtickId >= 0 && backtickId < linkEnd {
+		return linkWithinInlineCode(strBuffer[backtickId+1:],
+			linkStart-backtickId-1, linkEnd-backtickId-1, !insideInline)
+	} else {
+		return insideInline
+	}
+}
+
+var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
+var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
+var fileURIregex = regexp.MustCompile(`file:///`)
+var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
+var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
+var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
+
+var insideInline = false
+var insideFenced = false
+var insideIndented = false
+var currentCodeBlockStart = -1
+
+// check whether the current line in document is within a fenced or indented 
+// code block
+func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
+    // if line is already within code fences or indented code block
+	if insideFenced {
+		if fencedEndRegex.FindStringIndex(line) != nil &&
+			lines[currentCodeBlockStart][:3] == line[:3] {
+			// Fenced code block ends with this line
+			insideFenced = false
+			currentCodeBlockStart = -1
+		}
+		return true
+	} else if insideIndented {
+		if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
+			// Indeted code block ends with this line
+			insideIndented = false
+			currentCodeBlockStart = -1
+		} else {
+			return true
+		}
+	} else {
+		// Check whether the current line is the start of a code fence or
+		// indented code block
+		if fencedStartRegex.FindStringIndex(line) != nil {
+			insideFenced = true
+			currentCodeBlockStart = lineIndex
+			return true
+		} else if indentedRegex.FindStringIndex(line) != nil &&
+			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
+			insideIndented = true
+			currentCodeBlockStart = lineIndex
+			return true
+		}
+	}
+	return false
+
+}
+
 // DocumentLinks returns all the internal and external links found in the
 // document.
 func (d *document) DocumentLinks() ([]documentLink, error) {
@@ -201,6 +257,10 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
+
+		if isLineWithinCodeBlock(lines, lineIndex, line) {
+			continue
+		}
 
 		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
 			if href == "" {
@@ -233,6 +293,10 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 		// note: match[0:1] is the entire match, match[2:3] is the contents of
 		// brackets, match[4:5] is contents of parentheses
 		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+			// Ignore when inside backticks: `[title](file)`
+			if linkWithinInlineCode(line, match[0], match[1], insideInline) {
+				continue
+			}
 
 			// Ignore embedded images ![title](file.png)
 			if match[0] > 0 && line[match[0]-1] == '!' {
@@ -259,9 +323,16 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 		}
 
 		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
+			// Ignore when inside backticks: `[[filename]]`
+			if linkWithinInlineCode(line, match[0], match[1], insideInline) {
+				continue
+			}
 			href := line[match[2]:match[3]]
 			hasTitle := match[4] != -1
 			appendLink(href, match[0], match[1], hasTitle, true)
+		}
+		if strings.Count(line, "`")%2 == 1 {
+			insideInline = !insideInline
 		}
 	}
 

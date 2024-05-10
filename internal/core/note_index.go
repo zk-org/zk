@@ -150,7 +150,8 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		return false, nil
 	}
 
-	source := paths.Walk(t.path, t.logger, shouldIgnorePath)
+	notebookPath := &NotebookPath{Path: t.path}
+	source := paths.Walk(t.path, t.logger, notebookPath.Filename(), shouldIgnorePath)
 
 	target, err := t.index.IndexedPaths()
 	if err != nil {
