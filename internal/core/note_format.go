@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"time"
-    "strings"
 )
 
 // NoteFormatter formats notes to be printed on the screen.
@@ -33,11 +32,6 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			snippets = append(snippets, noteTermRegex.ReplaceAllString(snippet, termRepl))
 		}
 
-        //FIXME: if notes have `"` in their titles, they will break when 
-        //executing `zk graph --format json` as `Link:...` gets unescaped quotes 
-        //from `newLazyStringer`. Issue: https://github.com/zk-org/zk/issues/389
-        // escaping the quotes breaks tesh tests, but is the test perhaps 
-        // guarding a less robust solution?
 		return template.Render(noteFormatRenderContext{
 			Filename:     note.Filename(),
 			FilenameStem: note.FilenameStem(),
@@ -50,7 +44,6 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 					return ""
 				}
 				link, _ := linkFormatter(context)
-                link = strings.ReplaceAll(link, `"`, `\"`) // breaks tesh test
 				return link
 			}),
 			Lead:       note.Lead,
