@@ -3,7 +3,10 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
+	"slices"
+	"strings"
 	"time"
 )
 
@@ -44,6 +47,12 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 					return ""
 				}
 				link, _ := linkFormatter(context)
+				// `"` chars in note titles break links on `--format json` output
+				// Quick and dirty solution for now. Should use Kong / *cli
+				// container?
+				if slices.Contains(os.Args[1:], `json`) {
+					link = strings.ReplaceAll(link, `"`, `\"`)
+				}
 				return link
 			}),
 			Lead:       note.Lead,
