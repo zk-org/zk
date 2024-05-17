@@ -5,7 +5,6 @@ import (
 	"unicode"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
 	gast "github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
@@ -77,7 +76,7 @@ func (p *hashtagParser) Trigger() []byte {
 	return []byte{'#'}
 }
 
-func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
+func (p *hashtagParser) Parse(parent gast.Node, block text.Reader, pc parser.Context) gast.Node {
 	previousChar := block.PrecendingCharacter()
 	line, _ := block.PeekLine()
 
@@ -189,7 +188,7 @@ func (p *colontagParser) Trigger() []byte {
 	return []byte{':'}
 }
 
-func (p *colontagParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
+func (p *colontagParser) Parse(parent gast.Node, block text.Reader, pc parser.Context) gast.Node {
 	previousChar := block.PrecendingCharacter()
 	line, _ := block.PeekLine()
 
