@@ -6,7 +6,6 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	gast "github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
@@ -14,7 +13,7 @@ import (
 
 // Tags represents a list of inline tags in a Markdown document.
 type Tags struct {
-	gast.BaseInline
+	ast.BaseInline
 	// Tags in this list.
 	Tags []string
 }
@@ -22,13 +21,13 @@ type Tags struct {
 func (n *Tags) Dump(source []byte, level int) {
 	m := map[string]string{}
 	m["Tags"] = strings.Join(n.Tags, ", ")
-	gast.DumpHelper(n, source, level, m, nil)
+	ast.DumpHelper(n, source, level, m, nil)
 }
 
 // KindTags is a NodeKind of the Tags node.
-var KindTags = gast.NewNodeKind("Tags")
+var KindTags = ast.NewNodeKind("Tags")
 
-func (n *Tags) Kind() gast.NodeKind {
+func (n *Tags) Kind() ast.NodeKind {
 	return KindTags
 }
 
@@ -168,7 +167,7 @@ func (p *hashtagParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 	block.Advance(endPos)
 
 	return &Tags{
-		BaseInline: gast.BaseInline{},
+		BaseInline: ast.BaseInline{},
 		Tags:       []string{tag},
 	}
 }
@@ -248,7 +247,7 @@ func (p *colontagParser) Parse(parent ast.Node, block text.Reader, pc parser.Con
 	block.Advance(endPos)
 
 	return &Tags{
-		BaseInline: gast.BaseInline{},
+		BaseInline: ast.BaseInline{},
 		Tags:       tags,
 	}
 }
