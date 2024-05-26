@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.14.1
+
 ### Fixed
 
-* [#331](https://github.com/zk-org/zk/issues/331) Fixed parsing large notes (contributed by [@khimaros](https://github.com/zk-org/zk/pull/339)).
+* Fixed parsing large notes @khimaros in https://github.com/zk-org/zk/pull/339
+* fix day range parsing (zk-org/zk#382) by @tjex in https://github.com/zk-org/zk/pull/384
+* accept tripple dash file URIs as valid links by @tjex in https://github.com/zk-org/zk/pull/391
+* fix(lsp): fix trigger completion of zk LSP by @Rahlir in https://github.com/zk-org/zk/pull/397
+* fix(lsp): ignore diagnostic check within code blocks by @Rahlir in https://github.com/zk-org/zk/pull/399
+* allow notebook as hidden dir by @tjex in https://github.com/zk-org/zk/pull/402
 
 ## 0.14.0
 
