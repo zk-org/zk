@@ -33,7 +33,7 @@ From `zk`'s interactive edit screen, press `Ctrl-E` to create a new note using t
 
 ## List existing notes
 
-After some time, hopefully you will have enough notes to be lost in it. Use `zk`'s powerful [filtering capabilities](note-filtering.md) to find the notes you need.
+After some time, hopefully you will have enough notes to be lost in it. To structure your notebook, `zk` allows associating notes with additional [metadata](note-frontmatter.md) (e.g. keywords/tags). You can then use `zk`'s powerful [filtering capabilities](note-filtering.md) to find the notes you need.
 
 ```sh
 $ zk list --tag "recipe" --match "pizza -pineapple"
@@ -48,7 +48,7 @@ Sort the results however you need with `--sort`.
 
 <div align="center"><img alt="Format the list output" width="85%" src="assets/media/list-format.svg"/></div>
 
-`zk` is aware of the links you set between your notes. You can use the linking options to find the backlinks or outbound links of a note. It even supports listing indirect links thanks to `--recursive`.
+`zk` is aware of the links you set between your notes, you can link to other notes by their [note ID](note-id.md). Afterward, you can use the linking options to find the backlinks or outbound links of a note. It even supports listing indirect links thanks to `--recursive`.
 
 <div align="center"><img alt="Format the list output" width="85%" src="assets/media/list-link.svg"/></div>
 
