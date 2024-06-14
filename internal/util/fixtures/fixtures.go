@@ -1,15 +1,15 @@
 package fixtures
 
 import (
+	"os"
 	"path/filepath"
-	"runtime"
 )
 
 // Path returns the absolute path to the given fixture.
 func Path(name string) string {
-	_, callerPath, _, ok := runtime.Caller(1)
-	if !ok {
-		panic("failed to get the caller's path")
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic("failed to obtain current working directory")
 	}
-	return filepath.Join(filepath.Dir(callerPath), "testdata", name)
+	return filepath.Join(cwd, "testdata", name)
 }
