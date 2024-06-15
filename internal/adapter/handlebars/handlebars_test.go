@@ -243,6 +243,7 @@ func TestFormatDateHelper(t *testing.T) {
 func TestFormatDateHelperElapsedYear(t *testing.T) {
 	year := time.Now().UTC().Year() - 14
 	context := map[string]interface{}{"now": time.Date(year, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	// FIXME: this test will break once per year
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 

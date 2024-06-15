@@ -236,8 +236,8 @@ func (c *Container) NewNoteFilter(opts fzf.NoteFilterOpts) *fzf.NoteFilter {
 	return fzf.NewNoteFilter(opts, c.FS, c.Terminal, c.TemplateLoader)
 }
 
-func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, error) {
-	return editor.NewEditor(notebook.Config.Tool.Editor)
+func (c *Container) NewNoteEditor(notebook *core.Notebook, query string) (*editor.Editor, error) {
+	return editor.NewEditor(notebook.Config.Tool.Editor, query)
 }
 
 // Paginate creates an auto-closing io.Writer which will be automatically

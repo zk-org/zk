@@ -15,11 +15,12 @@ import (
 // Editor represents an external editor able to edit the notes.
 type Editor struct {
 	editor string
+	query string
 }
 
 // NewEditor creates a new Editor from the given editor user setting or the
 // matching environment variables.
-func NewEditor(editor opt.String) (*Editor, error) {
+func NewEditor(editor opt.String, query string) (*Editor, error) {
 	editor = osutil.GetOptEnv("ZK_EDITOR").
 		Or(editor).
 		Or(osutil.GetOptEnv("VISUAL")).
@@ -29,7 +30,7 @@ func NewEditor(editor opt.String) (*Editor, error) {
 		return nil, fmt.Errorf("no editor set in config")
 	}
 
-	return &Editor{editor.Unwrap()}, nil
+	return &Editor{editor.Unwrap(), query}, nil
 }
 
 // Open launches the editor with the notes at given paths.
@@ -38,6 +39,7 @@ func (e *Editor) Open(paths ...string) error {
 	// initial note content to `zk new`. Without this, Vim doesn't work
 	// properly in this case.
 	// See https://github.com/zk-org/zk/issues/4
+	os.Setenv("ZK_QUERY", e.query)
 	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + " </dev/tty")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

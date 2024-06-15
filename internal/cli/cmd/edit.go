@@ -65,7 +65,12 @@ func (cmd *Edit) Run(container *cli.Container) error {
 			paths = append(paths, absPath)
 		}
 
-		editor, err := container.NewNoteEditor(notebook)
+		query := filter.Query
+		if query == "" && len(cmd.Match) > 0 {
+			query = cmd.Match[0]
+		}
+
+		editor, err := container.NewNoteEditor(notebook, query)
 		if err != nil {
 			return err
 		}
