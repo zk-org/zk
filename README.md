@@ -62,6 +62,14 @@ nix run nixpkgs#zk
 nix-env -iA zk
 ```
 
+### Alpine Linux
+
+`zk` is currently available in the `testing` repositories:
+
+```sh
+apk add zk
+```
+
 ### Arch Linux
 
 You can install [the zk package](https://archlinux.org/packages/extra/x86_64/zk/) from the official repos.
