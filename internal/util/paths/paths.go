@@ -1,7 +1,9 @@
 package paths
 
 import (
+	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -75,4 +77,19 @@ func WriteString(path string, content string) error {
 	defer f.Close()
 	_, err = f.WriteString(content)
 	return err
+}
+
+// Expands leading tilde.
+func ExpandTilde(path string) (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", fmt.Errorf("failed to determine current user")
+	}
+	home := usr.HomeDir
+	if path == "~" {
+		path = home
+	} else if strings.HasPrefix(path, "~/") {
+		path = filepath.Join(home, path[2:])
+	}
+	return path, nil
 }
