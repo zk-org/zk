@@ -206,6 +206,7 @@ var fileURIregex = regexp.MustCompile(`file:///`)
 var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
 var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
 var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
+var magnetRegex = regexp.MustCompile(`magnet:\?`)
 
 var insideInline = false
 var insideFenced = false
@@ -303,11 +304,11 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 				continue
 			}
 
-			// ignore tripple dash file URIs [title](file:///foo.go)
+			// ignore tripple dash file URIs [title](file:///foo.go) and magnet links
 			if match[5]-match[4] >= 8 {
 				linkURL := line[match[4]:match[5]]
 				fileURIresult := linkURL[:8]
-				if fileURIregex.MatchString(fileURIresult) {
+				if fileURIregex.MatchString(fileURIresult) || magnetRegex.MatchString(fileURIresult) {
 					continue
 				}
 			}
