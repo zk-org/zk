@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	toml "github.com/pelletier/go-toml"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
-	toml "github.com/pelletier/go-toml"
 )
 
 // Config holds the user configuration.
@@ -22,6 +22,10 @@ type Config struct {
 	Aliases  map[string]string
 	Extra    map[string]string
 }
+
+// NOTE: config generation occurs in core.Init. The below function is used
+// for test cases and as a program level default if the user conf is missing or
+// has values missing.
 
 // NewDefaultConfig creates a new Config with the default settings.
 func NewDefaultConfig() Config {
@@ -522,7 +526,7 @@ type tomlNoteConfig struct {
 	IDLength     int      `toml:"id-length"`
 	IDCase       string   `toml:"id-case"`
 	Exclude      []string `toml:"exclude"`
-	Ignore      []string `toml:"ignore"` // Legacy alias to `exclude`
+	Ignore       []string `toml:"ignore"` // Legacy alias to `exclude`
 }
 
 type tomlGroupConfig struct {
