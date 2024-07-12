@@ -3,6 +3,7 @@ package editor
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/kballard/go-shellquote"
@@ -43,5 +44,12 @@ func (e *Editor) Open(paths ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	return errors.Wrapf(cmd.Run(), "failed to launch editor: %s %s", e.editor, strings.Join(paths, " "))
+	err := cmd.Run()
+	switch err.(type) {
+	case *exec.ExitError:
+		return errors.Wrapf(err, "operation aborted by editor: %s %s", e.editor, strings.Join(paths, " "))
+	default:
+		return errors.Wrapf(err, "failed to launch editor: %s %s", e.editor, strings.Join(paths, " "))
+
+	}
 }
