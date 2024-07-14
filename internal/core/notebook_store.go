@@ -201,7 +201,7 @@ const defaultConfig = `# zk configuration file
 #extension = "md"
 
 # Template used to generate a note's content.
-# If not an absolute path, it is relative to .zk/templates/
+# If not an absolute path or "~/path", it's relative to .zk/templates/
 template = "default.md"
 
 # Path globs ignored while indexing existing notes.
@@ -332,11 +332,11 @@ dead-link = "error"
 # Customize the completion pop-up of your LSP client.
 
 # Show the note title in the completion pop-up, or fallback on its path if empty.
-#note-label = "\{{title-or-path}}"
+#note-label = "{{title-or-path}}"
 # Filter out the completion pop-up using the note title or its path.
-#note-filter-text = "\{{title}} \{{path}}"
+#note-filter-text = "{{title}} {{path}}"
 # Show the note filename without extension as detail.
-#note-detail = "\{{filename-stem}}"
+#note-detail = "{{filename-stem}}"
 
 
 # NAMED FILTERS
