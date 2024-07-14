@@ -25,7 +25,8 @@ You can customize your experience using [custom templates](template.md) to gener
 
 <div align="center"><img alt="Create a note" width="85%" src="assets/media/new1.svg"/></div>
 
-If you are not sure whether a note already exists for a particular subject, the "search or create" mode might be more appropriate than `zk new`. It is inspired by [Notational Velocity](https://notational.net/) and enables searching for an existing note or creating a new one in a single action.
+If you are not sure whether a note already exists for a particular subject, the "search or create" mode might be more appropriate than `zk new`. 
+It is inspired by [Notational Velocity](https://notational.net/) and enables searching for an existing note or creating a new one in a single action.
 
 From `zk`'s interactive edit screen, press `Ctrl-E` to create a new note using the current search query as title.
 
@@ -33,7 +34,10 @@ From `zk`'s interactive edit screen, press `Ctrl-E` to create a new note using t
 
 ## List existing notes
 
-After some time, hopefully you will have enough notes to be lost in it. Use `zk`'s powerful [filtering capabilities](note-filtering.md) to find the notes you need.
+After some time, hopefully you will have enough notes to be lost in it. 
+
+To help structure your notebook, you can add [metadata](note-frontmatter.md) (e.g. keywords/tags) to your notes. 
+You can then use `zk`'s powerful [filtering capabilities](note-filtering.md) to find the notes you need.
 
 ```sh
 $ zk list --tag "recipe" --match "pizza -pineapple"
@@ -48,7 +52,9 @@ Sort the results however you need with `--sort`.
 
 <div align="center"><img alt="Format the list output" width="85%" src="assets/media/list-format.svg"/></div>
 
-`zk` is aware of the links you set between your notes. You can use the linking options to find the backlinks or outbound links of a note. It even supports listing indirect links thanks to `--recursive`.
+`zk` is aware of the links you set between your notes. 
+Backlinks or outbound links of a note can be revealed by using the link filtering options. 
+It even supports listing indirect links thanks to `--recursive`.
 
 <div align="center"><img alt="Format the list output" width="85%" src="assets/media/list-link.svg"/></div>
 
