@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Added
+
+* Path in .zk/config.toml for the default note template now accepts UNIX "~/paths" (by @WhyNotHugo)
+
+## Fixed
+
+* LSP ignores magnet links as links to notes (by @billymosis)
+* Compilation robustness for Alpine package builds (by @nmeum)
+
 ## 0.14.1
 
 ### Fixed
