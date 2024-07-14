@@ -201,7 +201,7 @@ const defaultConfig = `# zk configuration file
 #extension = "md"
 
 # Template used to generate a note's content.
-# If not an absolute path, it is relative to .zk/templates/
+# If not an absolute path or "~/unix/path", it's relative to .zk/templates/
 template = "default.md"
 
 # Path globs ignored while indexing existing notes.

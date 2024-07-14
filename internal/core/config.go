@@ -8,6 +8,7 @@ import (
 	toml "github.com/pelletier/go-toml"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // Config holds the user configuration.
@@ -312,7 +313,11 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		config.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
+		expanded, err := paths.ExpandTilde(note.Template)
+		if err != nil {
+			return config, wrap(err)
+		}
+		config.Note.BodyTemplatePath = opt.NewNotEmptyString(expanded)
 	}
 	if note.IDLength != 0 {
 		config.Note.IDOptions.Length = note.IDLength
