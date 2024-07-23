@@ -4,9 +4,6 @@
 <img alt="Screencast" width="95%" src="docs/assets/media/screencast.svg"/>
 </div>
 
-Looking for a quick usage example? [Let's get started](docs/getting-started.md).
-
-
 ## Description
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
