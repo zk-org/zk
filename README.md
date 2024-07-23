@@ -11,6 +11,13 @@ Looking for a quick usage example? [Let's get started](docs/getting-started.md).
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
 
+Looking for a quick usage example? [Let's get started](docs/getting-started.md).
+
+Or want to see it in action? Checkout [Shivan's](https://github.com/shivan-s)
+video, [_Note-taking System ALL Programmers Should Consider_](https://www.youtube.com/watch?v=UzhZb7e4l4Y).
+
+
+
 ### Highlights
 
 * [Creating notes from templates](docs/note-creation.md)
