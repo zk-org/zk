@@ -1,9 +1,8 @@
 package paths
 
 import (
-	"fmt"
+	"github.com/zk-org/zk/internal/util/errors"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -80,16 +79,20 @@ func WriteString(path string, content string) error {
 }
 
 // Expands leading tilde.
-func ExpandTilde(path string) (string, error) {
-	usr, err := user.Current()
+func ResolveHomeDir(path string) string {
+
+	// Expand in case there are environment variables on the path
+	path = os.ExpandEnv(path)
+	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("failed to determine current user")
+		errors.Wrap(err, "get user home directory")
+		return ""
 	}
-	home := usr.HomeDir
+
 	if path == "~" {
 		path = home
 	} else if strings.HasPrefix(path, "~/") {
 		path = filepath.Join(home, path[2:])
 	}
-	return path, nil
+	return path
 }
