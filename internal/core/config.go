@@ -265,6 +265,7 @@ func (c GroupConfig) Clone() GroupConfig {
 // in the given file.
 func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool) (Config, error) {
 	// The local config is optional.
+    path = paths.ResolveHomeDir(path)
 	exists, err := fs.FileExists(path)
 	if err == nil && !exists {
 		return parentConfig, nil
@@ -298,8 +299,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	notebook := tomlConf.Notebook
 	if notebook.Dir != "" {
 		if isGlobal {
-		    expanded := paths.ResolveHomeDir(notebook.Dir)
-			config.Notebook.Dir = opt.NewNotEmptyString(expanded)
+            config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
 		} else {
 			return config, wrap(errors.New("notebook.dir should not be set on local configuration"))
 		}

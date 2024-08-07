@@ -78,7 +78,7 @@ func WriteString(path string, content string) error {
 	return err
 }
 
-// Expands leading tilde.
+// Expands home directory to absolute path.
 func ResolveHomeDir(path string) string {
 
 	// Expand in case there are environment variables on the path
@@ -94,5 +94,6 @@ func ResolveHomeDir(path string) string {
 	} else if strings.HasPrefix(path, "~/") {
 		path = filepath.Join(home, path[2:])
 	}
+
 	return path
 }
