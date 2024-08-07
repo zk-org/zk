@@ -128,7 +128,6 @@ func (l *Loader) locateTemplate(path string) (string, bool) {
 		return "", false
 	}
 
-    path = paths.ResolveHomeDir(path)
 	exists := func(path string) bool {
 		exists, err := paths.Exists(path)
 		return exists && err == nil
