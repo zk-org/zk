@@ -110,3 +110,4 @@ Here you can read [some useful info for contributing to `zk`](./CONTRIBUTING.md)
 * [Emanote](https://emanote.srid.ca/) – an improved successor to Neuron
 * [sirupsen's zk](https://github.com/sirupsen/zk) – a collection of scripts with a similar purpose
 * [zk-spaced](https://github.com/matze/zk-spaced) – spaced repetition plugin for zk
+
