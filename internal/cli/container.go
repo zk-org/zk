@@ -75,9 +75,9 @@ func NewContainer(version string) (*Container, error) {
 	// might be overrided if --notebook-dir flag is present
 	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR").IsNull() && !config.Notebook.Dir.IsNull() {
 		notebookDir, err := paths.ExpandHomeDir(config.Notebook.Dir.Unwrap())
-        if err != nil {
-            return nil, wrap(err)
-        }
+		if err != nil {
+			return nil, wrap(err)
+		}
 		os.Setenv("ZK_NOTEBOOK_DIR", notebookDir)
 	}
 
