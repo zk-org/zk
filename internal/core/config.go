@@ -313,8 +313,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		expanded := paths.ResolveHomeDir(note.Template)
-		config.Note.BodyTemplatePath = opt.NewNotEmptyString(expanded)
+		// expanded := paths.ResolveHomeDir(note.Template)
+		// config.Note.BodyTemplatePath = opt.NewNotEmptyString(expanded)
+		config.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
 	}
 	if note.IDLength != 0 {
 		config.Note.IDOptions.Length = note.IDLength
