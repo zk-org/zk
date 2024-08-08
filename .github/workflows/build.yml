@@ -33,5 +33,5 @@ jobs:
     - name: Tesh
       # See https://github.com/actions/runner/issues/241#issuecomment-924327172
       shell: script --return --quiet --command "bash {0}"
-      run: make tesh
+      run: make tesh-update
 
