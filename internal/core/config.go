@@ -8,7 +8,6 @@ import (
 	toml "github.com/pelletier/go-toml"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
-	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // Config holds the user configuration.
