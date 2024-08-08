@@ -1,7 +1,6 @@
 package paths
 
 import (
-	"github.com/zk-org/zk/internal/util/errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,14 +78,15 @@ func WriteString(path string, content string) error {
 }
 
 // Expands home directory to absolute path.
-func ResolveHomeDir(path string) string {
+// If no expansion is required or possible, the string is returned unaltered.
+// If there is an error, an empty string is returned.
+func ExpandHomeDir(path string) (string, error) {
 
 	// Expand in case there are environment variables on the path
 	path = os.ExpandEnv(path)
 	home, err := os.UserHomeDir()
 	if err != nil {
-		errors.Wrap(err, "get user home directory")
-		return ""
+		return "", err
 	}
 
 	if path == "~" {
@@ -95,5 +95,5 @@ func ResolveHomeDir(path string) string {
 		path = filepath.Join(home, path[2:])
 	}
 
-	return path
+	return path, nil
 }
