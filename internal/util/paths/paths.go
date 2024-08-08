@@ -2,6 +2,7 @@ package paths
 
 import (
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -84,10 +85,11 @@ func ExpandHomeDir(path string) (string, error) {
 
 	// Expand in case there are environment variables on the path
 	path = os.ExpandEnv(path)
-	home, err := os.UserHomeDir()
+	usr, err := user.Current()
 	if err != nil {
 		return "", err
 	}
+	home := usr.HomeDir
 
 	if path == "~" {
 		path = home
