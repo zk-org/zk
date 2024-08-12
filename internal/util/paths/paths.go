@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"github.com/zk-org/zk/internal/util/errors"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -78,24 +79,30 @@ func WriteString(path string, content string) error {
 	return err
 }
 
-// Expands home directory to absolute path.
-// If no expansion is required or possible, the string is returned unaltered.
-// If there is an error, an empty string is returned.
-func ExpandHomeDir(path string) (string, error) {
+// Expands environment variables and `~`, returning an absolute path.
+// On error, an empty string is returned.
+func ExpandPath(path string) (string, error) {
 
-	// Expand in case there are environment variables on the path
+	if strings.HasPrefix(path, "~/") {
+		// resolve necessary variables
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		home := usr.HomeDir
+		if home == "" {
+			return "", errors.New("Could not find user's home directory.")
+		}
+
+		// construct as abs path
+		if path == "~" {
+			path = home
+		} else if strings.HasPrefix(path, "~/") {
+			path = filepath.Join(home, path[2:])
+		}
+	}
+
 	path = os.ExpandEnv(path)
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	home := usr.HomeDir
-
-	if path == "~" {
-		path = home
-	} else if strings.HasPrefix(path, "~/") {
-		path = filepath.Join(home, path[2:])
-	}
 
 	return path, nil
 }
