@@ -38,6 +38,8 @@ type NoteFindOpts struct {
 	Related []string
 	// Filter to select notes having no other notes linking to them.
 	Orphan bool
+	// Filter to select notes having no tags.
+	Tagless bool
 	// Filter notes created after the given date.
 	CreatedStart *time.Time
 	// Filter notes created before the given date.
