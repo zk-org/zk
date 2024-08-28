@@ -1,5 +1,7 @@
 package core
 
+import "strconv"
+
 // lazyStringer implements Stringer and wait for String() to be called the first
 // time before computing its value.
 type lazyStringer struct {
@@ -24,5 +26,5 @@ func (s *lazyStringer) String() string {
 }
 
 func (s *lazyStringer) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + s.String() + `"`), nil
+	return []byte(strconv.Quote(s.String())), nil
 }

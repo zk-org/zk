@@ -190,10 +190,16 @@ $ zk list --tag "NOT done"
 
 Your shell might give you some trouble using the `-` prefix. You can quote it and add an extra space as a workaround, e.g. `--tag " -done"`.
 
-Finally, you can use glob patterns to match multiple tags. This is particularly useful if you use a separator (e.g. `/`) to group multiple tags under a parent tag.
+You can use glob patterns to match multiple tags. This is particularly useful if you use a separator (e.g. `/`) to group multiple tags under a parent tag.
 
 ```sh
 $ zk list --tag "year/201*"
+```
+
+A useful [notebook housekeeping](notebook-housekeeping.md) feature is to find tags which _do not_ have tags.
+
+```sh
+$ zk list --tagless 
 ```
 
 ## Filter by creation or modification date

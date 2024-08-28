@@ -43,6 +43,7 @@ $ zk graph --help
 >                                   ones.
 >      --orphan                     Find notes which are not linked by any other
 >                                   note.
+>      --tagless                    Find notes which have no tags.
 >      --related=PATH,...           Find notes which might be related to the
 >                                   given ones.
 >      --max-distance=COUNT         Maximum distance between two linked notes.
