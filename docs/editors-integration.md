@@ -202,7 +202,7 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
 2. <details><summary>A dictionary of additional options (click to expand)</summary>
     
   | Key                | Type           | Required?   | Description                                                                                               |
-  | ------------------ | -------------- | ----------- | -------------------------------------------------------------------------                                 |
+  | ------------------ | -------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
   | `select`           | string array   | Yes         | List of note fields to return<sup>1</sup>                                                                 |
   | `hrefs`            | string array   | No          | Find notes matching the given path, including its descendants                                             |
   | `limit`            | integer        | No          | Limit the number of notes found                                                                           |
@@ -216,6 +216,7 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
   | `linkTo`           | string array   | No          | Find notes which are linking to the given ones                                                            |
   | `linkedBy`         | string array   | No          | Find notes which are linked by the given ones                                                             |
   | `orphan`           | boolean        | No          | Find notes which are not linked by any other note                                                         |
+  | `tagless`          | boolean        | No          | Find notes which have no tags                                                                              |
   | `related`          | string array   | No          | Find notes which might be related to the given ones                                                       |
   | `maxDistance`      | integer        | No          | Maximum distance between two linked notes                                                                 |
   | `recursive`        | boolean        | No          | Follow links recursively                                                                                  |
@@ -242,7 +243,7 @@ This LSP command calls `zk tag list` to return the list of tags in a notebook. I
     
     | Key    | Type         | Required? | Description                                      |
     |--------|--------------|-----------|--------------------------------------------------|
-	| `sort` | string array | No        | Order the tags by the given criteria<sup>1</sup> |
+	  | `sort` | string array | No        | Order the tags by the given criteria<sup>1</sup> |
 
     1. The available sort criteria are `name` and `note-count`. You can change the order by appending `-` or `+` to the criterion.
 

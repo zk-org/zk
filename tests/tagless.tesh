@@ -1,0 +1,5 @@
+$ cd tagless
+
+# should output only one note
+$ zk list -f '\{{title}}' -q --tagless
+>This note does not have tags
