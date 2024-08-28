@@ -24,3 +24,9 @@ $ zk list --format '{{word-count}}\t{{title}}' --sort word-count --limit 20
 86      Anatomy of a notebook
 ...
 ```
+
+## Find notes without tags
+
+```sh
+$ zk list --tagless
+```
