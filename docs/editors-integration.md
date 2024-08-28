@@ -216,7 +216,7 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
   | `linkTo`           | string array   | No          | Find notes which are linking to the given ones                                                            |
   | `linkedBy`         | string array   | No          | Find notes which are linked by the given ones                                                             |
   | `orphan`           | boolean        | No          | Find notes which are not linked by any other note                                                         |
-  | `tagless`          | boolean        | No          | Find notes that have no tags                                                                              |
+  | `tagless`          | boolean        | No          | Find notes which have no tags                                                                              |
   | `related`          | string array   | No          | Find notes which might be related to the given ones                                                       |
   | `maxDistance`      | integer        | No          | Maximum distance between two linked notes                                                                 |
   | `recursive`        | boolean        | No          | Follow links recursively                                                                                  |

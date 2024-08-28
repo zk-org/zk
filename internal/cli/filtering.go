@@ -29,7 +29,7 @@ type Filtering struct {
 	LinkedBy       []string `kong:"group='filter',short='L',placeholder='PATH',help='Find notes which are linked by the given ones.'" json:"linkedBy"`
 	NoLinkedBy     []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linked by the given ones.'" json:"-"`
 	Orphan         bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
-	Tagless        bool     `kong:"group='filter',help='Find notes that have no tags.'" json:"tagless"`
+	Tagless        bool     `kong:"group='filter',help='Find notes which have no tags.'" json:"tagless"`
 	Related        []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
 	MaxDistance    int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
 	Recursive      bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
