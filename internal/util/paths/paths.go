@@ -80,10 +80,9 @@ func WriteString(path string, content string) error {
 }
 
 // Expands environment variables and `~`, returning an absolute path.
-// On error, an empty string is returned.
 func ExpandPath(path string) (string, error) {
 
-	if strings.HasPrefix(path, "~/") {
+	if strings.HasPrefix(path, "~") {
 		// resolve necessary variables
 		usr, err := user.Current()
 		if err != nil {
@@ -91,7 +90,8 @@ func ExpandPath(path string) (string, error) {
 		}
 		home := usr.HomeDir
 		if home == "" {
-			return "", errors.New("Could not find user's home directory.")
+			err := errors.New("Could not find user's home directory.")
+			return "", err
 		}
 
 		// construct as abs path
