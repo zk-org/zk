@@ -4,7 +4,7 @@ name: Deploy Sphinx documentation
 
 on:
   push:
-    branches: [main] # branch to trigger deployment
+    branches: [feat-sphinx-docs] # branch to trigger deployment
 
 jobs:
   pages:
