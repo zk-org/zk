@@ -1,5 +1,7 @@
 name: Deploy Sphinx documentation
 
+# NOTE: workflow uses this repo: https://github.com/sphinx-notes/pages
+
 on:
   push:
     branches: [main] # branch to trigger deployment
@@ -16,7 +18,4 @@ jobs:
     steps:
     - id: deployment
       uses: sphinx-notes/pages@v3
-      # with:
-      #   documentation_path: docs/source
-      #   requirements_path: docs/source/requirements.txt
 

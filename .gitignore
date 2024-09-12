@@ -26,6 +26,9 @@ zk
 
 
 ### Sphinx Docs (effectively python .gitignore) ###
+# created by `make docs` for building locally
+docs-build/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -37,7 +40,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
-docs-build/
 develop-eggs/
 dist/
 downloads/
