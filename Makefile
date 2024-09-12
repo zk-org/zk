@@ -80,8 +80,8 @@ docs-help:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 docs: Makefile
-	mkdir docs-build
-	@$(SPHINXBUILD) -a $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	mkdir -p docs-build
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 VERSION := `git describe --tags --match v[0-9]* 2> /dev/null`
 BUILD := `git rev-parse --short HEAD`
