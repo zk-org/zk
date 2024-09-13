@@ -20,5 +20,30 @@
 # IDEs/Editors
 .vscode/
 
+# Zk specific
 notebook.db
 zk
+
+# Sphinx Docs / Python #
+# created by `make docs` for building documentation locally
+docs-build/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ruff
+.ruff_cache/
+
+# LSP config files
+pyrightconfig.json
+

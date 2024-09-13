@@ -60,10 +60,17 @@ dist-alpine-i386:
 		&& docker run --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk ghcr.io/zk-org/zk-xcompile:alpine-i386 /bin/bash -c 'make alpine' \
 		&& tar -zcvf "zk-${VERSION}-alpine-i386.tar.gz" zk
 
-# Clean build products.
+# Clean build and docs products.
 clean:
 	rm -rf zk*
+	rm -rf docs-build
 
+### Sphinx Docs ###
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+docs: Makefile
+	mkdir -p docs-build
+	sphinx-build -a docs docs-build 
 
 VERSION := `git describe --tags --match v[0-9]* 2> /dev/null`
 BUILD := `git rev-parse --short HEAD`
