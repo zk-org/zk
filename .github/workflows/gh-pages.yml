@@ -1,11 +1,14 @@
-name: Deploy Sphinx documentation
+name: Deploy GitHub Pages
 
 # NOTE: workflow uses this repo: https://github.com/sphinx-notes/pages
 
 on:
   push:
-    branches: [feat-sphinx-docs] # branch to trigger deployment
+    branches: [main]
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   pages:
