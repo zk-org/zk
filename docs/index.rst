@@ -13,8 +13,8 @@ Let's :doc:`get started <tips/getting-started>`.
    :hidden:
    :titlesonly:
 
-   Repo <https://github.com/zk-org/zk>
-   zk-nvim <https://github.com/zk-org/zk-nvim>
+   GitHub <https://github.com/zk-org/zk>
+   Neovim Plugin <https://github.com/zk-org/zk-nvim>
 
    config/index
    notes/index
