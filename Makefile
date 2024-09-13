@@ -60,9 +60,10 @@ dist-alpine-i386:
 		&& docker run --rm -v "${PWD}":/usr/src/zk -w /usr/src/zk ghcr.io/zk-org/zk-xcompile:alpine-i386 /bin/bash -c 'make alpine' \
 		&& tar -zcvf "zk-${VERSION}-alpine-i386.tar.gz" zk
 
-# Clean build products.
+# Clean build and docs products.
 clean:
 	rm -rf zk*
+	rm -rf docs-build
 
 ### Sphinx Docs ###
 # Catch-all target: route all unknown targets to Sphinx using the new

@@ -62,3 +62,5 @@ Unfortunately, `make dist-macos` must be run manually on both an Apple Silicon a
 This process is convoluted because `zk` requires CGO with `mattn/go-sqlite3`, which prevents using Go's native cross-compilation. Transitioning to a CGO-free SQLite driver such as [cznic/sqlite](https://gitlab.com/cznic/sqlite) could simplify the distribution process significantly.
 
 ## Documentation
+
+TODO: add documentation steps for Sphinx docs, after it's all working.
