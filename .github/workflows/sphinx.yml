@@ -6,6 +6,7 @@ on:
   push:
     branches: [main] # branch to trigger deployment
 
+
 jobs:
   pages:
     runs-on: ubuntu-20.04
