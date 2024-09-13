@@ -6,6 +6,7 @@ on:
   push:
     branches: [feat-sphinx-docs] # branch to trigger deployment
 
+
 jobs:
   pages:
     runs-on: ubuntu-20.04
