@@ -8,38 +8,35 @@
 
 `zk` is a command-line tool helping you to maintain a plain text [Zettelkasten](https://zettelkasten.de/introduction/) or [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
 
-Looking for a quick usage example? [Let's get started](docs/getting-started.md).
+Looking for a [quick usage example?](https://zk-org.github.io/zk/tips/getting-started.html)
 
 Or want to see it in action? Checkout [Shivan's](https://github.com/shivan-s)
 video, [_Note-taking System ALL Programmers Should Consider_](https://www.youtube.com/watch?v=UzhZb7e4l4Y).
 
-
-
 ### Highlights
 
-* [Creating notes from templates](docs/note-creation.md)
-* [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
-* [Integration with your favorite editors](docs/editors-integration.md):
-    * [Any LSP-compatible editor](docs/editors-integration.md)
+* [Creating notes from templates](https://zk-org.github.io/zk/notes/note-creation.html)
+* [Advanced search and filtering capabilities](https://zk-org.github.io/zk/notes/note-filtering.html) including [tags](https://zk-org.github.io/zk/notes/tags.html), links and mentions
+* [Integration with your favorite editors](https://zk-org.github.io/zk/tips/editors-integration.html):
+    * [Any LSP-compatible editor](https://zk-org.github.io/zk/tips/editors-integration.html)
     * [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim 0.8+
     * [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
-    * (*unmaintained*) [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+ by [Seth Messer](https://github.com/megalithic)
-* [Interactive browser](docs/tool-fzf.md), powered by `fzf`
-* [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
-* [Made with automation in mind](docs/automation.md)
-* [Notebook housekeeping](docs/notebook-housekeeping.md)
-* [Future-proof, thanks to Markdown](docs/future-proof.md)
+* [Interactive browser](https://zk-org.github.io/zk/config/tool-fzf.html), powered by `fzf`
+* [Git-style command aliases](https://zk-org.github.io/zk/config/config-alias.html) and [named filters](https://zk-org.github.io/zk/config/config-filter.html)
+* [Made with automation in mind](https://zk-org.github.io/zk/tips/automation.html)
+* [Notebook housekeeping](https://zk-org.github.io/zk/tips/notebook-housekeeping.html)
+* [Future-proof, thanks to Markdown](https://zk-org.github.io/zk/tips/future-proof.html)
 * Supports most Markdown syntax flavors
     * Links: regular Markdown links, `[[Wikilinks]]` and Neuron's `[[Folgezettel links]]#`.
     * Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
-    * [YAML frontmatter](docs/note-frontmatter.md)
+    * [YAML frontmatter](https://zk-org.github.io/zk/notes/note-frontmatter.html)
 
 [See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
 
 ### What `zk` is not
 
 * A note editor.
-* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
+* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/tips/neuron.md) or [Gollum](https://github.com/gollum/gollum).
 
 ## Install
 

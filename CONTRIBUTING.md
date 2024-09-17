@@ -60,3 +60,7 @@ Binaries can be created automatically using `make dist-linux` and `make dist-mac
 Unfortunately, `make dist-macos` must be run manually on both an Apple Silicon and Intel chips. The Linux builds are created using Docker and [these custom images](https://github.com/zk-org/zk-xcompile), which are hosted via [ghcr.io within zk-org](https://github.com/orgs/zk-org/packages/container/package/zk-xcompile).
 
 This process is convoluted because `zk` requires CGO with `mattn/go-sqlite3`, which prevents using Go's native cross-compilation. Transitioning to a CGO-free SQLite driver such as [cznic/sqlite](https://gitlab.com/cznic/sqlite) could simplify the distribution process significantly.
+
+## Documentation
+
+TODO: add documentation steps for Sphinx docs, after it's all working.
