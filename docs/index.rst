@@ -5,6 +5,17 @@
 .. image:: assets/media/screencast.svg
    :align: center
 
+.. toctree::
+   :hidden:
+   :titlesonly:
+
+   GitHub <https://github.com/zk-org/zk>
+   Neovim Plugin <https://github.com/zk-org/zk-nvim>
+
+   config/index
+   notes/index
+   tips/index
+
 `zk` is a plain text note-taking tool that leverages the power of the command line. 
 
 Install as below and then... :doc:`get zettling <tips/getting-started>`!
@@ -41,7 +52,7 @@ Alpine Linux:
 
 Arch Linux:
 
-You can install [the zk package](https://archlinux.org/packages/extra/x86_64/zk/) from the official repos.
+You can install `the zk package <https://archlinux.org/packages/extra/x86_64/zk/>`_ from the official repos.
 
 .. code-block:: sh
 
@@ -49,7 +60,7 @@ You can install [the zk package](https://archlinux.org/packages/extra/x86_64/zk/
 
 Build from scratch:
 
-Make sure you have a working [Go 1.21+ installation](https://golang.org/), then clone the repository:
+Make sure you have a working `Go 1.21+ installation <https://golang.org/>`_, then clone the repository:
 
 .. code-block:: sh
 
@@ -63,18 +74,5 @@ On macOS / Linux:
    make
    ./zk -h
 
-
-
-
-.. toctree::
-   :hidden:
-   :titlesonly:
-
-   GitHub <https://github.com/zk-org/zk>
-   Neovim Plugin <https://github.com/zk-org/zk-nvim>
-
-   config/index
-   notes/index
-   tips/index
 
 
