@@ -7,6 +7,24 @@
 
 `zk` is a plain text note-taking tool that leverages the power of the command line. 
 
+Installation
+============
+
+Mac:
+
+.. code-block:: sh
+   
+   $ brew install zk
+
+Or, if you want to be on the bleeding edge:
+
+.. code-block:: sh
+
+   $ brew install --HEAD zk
+
+
+
+
 Let's :doc:`get started <tips/getting-started>`.
 
 .. toctree::
