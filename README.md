@@ -39,7 +39,7 @@ video, [_Note-taking System ALL Programmers Should Consider_](https://www.youtub
 ### What `zk` is not
 
 * A note editor.
-* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/neuron.md) or [Gollum](https://github.com/gollum/gollum).
+* A tool to serve your notes on the web – for this, you may be interested in [Neuron](docs/tips/neuron.md) or [Gollum](https://github.com/gollum/gollum).
 
 ## Install
 
