@@ -17,22 +17,22 @@ video, [_Note-taking System ALL Programmers Should Consider_](https://www.youtub
 
 ### Highlights
 
-* [Creating notes from templates](docs/note-creation.md)
-* [Advanced search and filtering capabilities](docs/note-filtering.md) including [tags](docs/tags.md), links and mentions
-* [Integration with your favorite editors](docs/editors-integration.md):
-    * [Any LSP-compatible editor](docs/editors-integration.md)
+* [Creating notes from templates](docs/notes/note-creation.md)
+* [Advanced search and filtering capabilities](docs/notes/note-filtering.md) including [tags](docs/tags.md), links and mentions
+* [Integration with your favorite editors](docs/tips/editors-integration.md):
+    * [Any LSP-compatible editor](docs/tips/editors-integration.md)
     * [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim 0.8+
     * [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
     * (*unmaintained*) [`zk.nvim`](https://github.com/megalithic/zk.nvim) for Neovim 0.5+ by [Seth Messer](https://github.com/megalithic)
-* [Interactive browser](docs/tool-fzf.md), powered by `fzf`
-* [Git-style command aliases](docs/config-alias.md) and [named filters](docs/config-filter.md)
-* [Made with automation in mind](docs/automation.md)
-* [Notebook housekeeping](docs/notebook-housekeeping.md)
-* [Future-proof, thanks to Markdown](docs/future-proof.md)
+* [Interactive browser](docs/config/tool-fzf.md), powered by `fzf`
+* [Git-style command aliases](docs/config/config-alias.md) and [named filters](docs/config-filter.md)
+* [Made with automation in mind](docs/tips/automation.md)
+* [Notebook housekeeping](docs/tips/notebook-housekeeping.md)
+* [Future-proof, thanks to Markdown](docs/tips/future-proof.md)
 * Supports most Markdown syntax flavors
     * Links: regular Markdown links, `[[Wikilinks]]` and Neuron's `[[Folgezettel links]]#`.
     * Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
-    * [YAML frontmatter](docs/note-frontmatter.md)
+    * [YAML frontmatter](docs/notes/note-frontmatter.md)
 
 [See the changelog](CHANGELOG.md) for the list of upcoming features waiting to be released.
 
