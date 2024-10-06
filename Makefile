@@ -63,14 +63,14 @@ dist-alpine-i386:
 # Clean build and docs products.
 clean:
 	rm -rf zk*
-	rm -rf docs-build
+	rm -rf docs-local
 
 ### Sphinx Docs ###
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 zkdocs: Makefile
-	mkdir -p docs-build
-	sphinx-build -a docs docs-build 
+	mkdir -p docs-local
+	sphinx-build -a docs docs-local 
 
 VERSION := `git describe --tags --match v[0-9]* 2> /dev/null`
 BUILD := `git rev-parse --short HEAD`
