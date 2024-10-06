@@ -25,7 +25,7 @@ notebook.db
 zk
 
 # Sphinx Docs / Python #
-# created by `make docs` for building documentation locally
+# created by `make zkdocs` for building documentation locally
 docs-build/
 
 # Installer logs
