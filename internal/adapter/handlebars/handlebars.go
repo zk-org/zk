@@ -61,7 +61,6 @@ type LoaderOpts struct {
 }
 
 // NewLoader creates a new instance of Loader.
-//
 func NewLoader(opts LoaderOpts) *Loader {
 	return &Loader{
 		strings:     make(map[string]*Template),

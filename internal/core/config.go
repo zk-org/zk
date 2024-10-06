@@ -313,7 +313,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		expanded, err := paths.ExpandTilde(note.Template)
+		expanded, err := paths.ExpandPath(note.Template)
 		if err != nil {
 			return config, wrap(err)
 		}
