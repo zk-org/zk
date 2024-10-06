@@ -65,10 +65,8 @@ clean:
 	rm -rf zk*
 	rm -rf docs-build
 
-### Sphinx Docs ###
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-zkdocs: Makefile
+# Docs
+zkdocs:
 	mkdir -p docs-build
 	sphinx-build -a docs docs-build 
 
