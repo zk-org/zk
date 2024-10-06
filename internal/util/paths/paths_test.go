@@ -37,6 +37,7 @@ func TestExpandPath(t *testing.T) {
 	test("/usr/opt", "/usr/opt")
 
 	// edge cases
+	test("~foo", "~foo")
 	test("not a path", "not a path")
 	test("E.T phone ${HOME}", etph)
 }
