@@ -204,8 +204,8 @@ const defaultConfig = `# zk configuration file
 # If not an absolute path or "~/unix/path", it's relative to .zk/templates/
 template = "default.md"
 
-# Path globs ignored while indexing existing notes.
-#ignore = [
+# Path globs excluded while indexing existing notes.
+#exclude = [
 #    "drafts/*",
 #	"log.md"
 #]
