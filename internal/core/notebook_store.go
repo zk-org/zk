@@ -204,10 +204,10 @@ const defaultConfig = `# zk configuration file
 # If not an absolute path or "~/unix/path", it's relative to .zk/templates/
 template = "default.md"
 
-# Path globs excluded while indexing existing notes.
+# Path globs ignored while indexing existing notes.
 #exclude = [
 #    "drafts/*",
-#	"log.md"
+#    "log.md"
 #]
 
 # Configure random ID generation.
