@@ -254,17 +254,30 @@ func (n *Notebook) RelPath(originalPath string) (string, error) {
 		return path, wrap(err)
 	}
 
-	path, err = filepath.Rel(n.Path, path)
+	// Resolve real paths (following symlinks) for both paths
+	realPath, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return path, wrap(err)
 	}
-	if strings.HasPrefix(path, "..") {
+	realNotebookPath, err := filepath.EvalSymlinks(n.Path)
+	if err != nil {
+		return path, wrap(err)
+	}
+
+	relPath, err := filepath.Rel(realNotebookPath, realPath)
+	if err != nil {
+		return path, wrap(err)
+	}
+
+	if strings.HasPrefix(relPath, "..") {
 		return path, fmt.Errorf("%s: path is outside the notebook at %s", originalPath, n.Path)
 	}
-	if path == "." {
-		path = ""
+
+	if relPath == "." {
+		relPath = ""
 	}
-	return path, nil
+
+	return relPath, nil
 }
 
 // Dir represents a directory inside a notebook.
