@@ -8,7 +8,7 @@ supports most syntaxes:
 - Bear's `#multi-word tags#` ([opt-in](note-format.md))
 - YAML frontmatter (`tags` and `keywords` keys).
 
-You can filter your notes by their tags using the `--tags` option, as
+You can filter your notes by their tags using the `--tag` option, as
 demonstrated in [Searching and filtering notes](note-filtering.md).
 
 ```sh
