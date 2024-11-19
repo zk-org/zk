@@ -134,3 +134,7 @@ func (fs *FileStorage) Write(path string, content []byte) error {
 	_, err = f.Write(content)
 	return err
 }
+
+func (fs *FileStorage) EvalSymlinks(path string) (string, error) {
+	return filepath.EvalSymlinks(path)
+}

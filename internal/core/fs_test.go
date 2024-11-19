@@ -2,6 +2,7 @@ package core
 
 import (
 	"os"
+  "fmt"
 	"path/filepath"
 )
 
@@ -60,6 +61,22 @@ func (fs *fileStorageMock) DirExists(path string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (fs *fileStorageMock) EvalSymlinks(path string) (string, error) {
+	// For mock filesystem, we should check if the directory exists in our dirs slice
+	for _, dir := range fs.dirs {
+		if dir == path {
+			return path, nil
+		}
+	}
+  
+	// Check if it's a file in our files map
+	if _, ok := fs.files[path]; ok {
+		return path, nil
+	}
+
+	return "", fmt.Errorf("lstat %s: no such file or directory", path)
 }
 
 func (fs *fileStorageMock) fileInfo(path string) (*os.FileInfo, error) {

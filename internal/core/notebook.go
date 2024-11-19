@@ -249,35 +249,28 @@ func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSort
 func (n *Notebook) RelPath(originalPath string) (string, error) {
 	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)
 
+	resolvedPath, err := n.fs.EvalSymlinks(n.Path)
+	if err != nil {
+		return "", wrap(err)
+	}
+
 	path, err := n.fs.Abs(originalPath)
 	if err != nil {
 		return path, wrap(err)
 	}
 
-	// Resolve real paths (following symlinks) for both paths
-	realPath, err := filepath.EvalSymlinks(path)
+	path, err = filepath.Rel(resolvedPath, path)
 	if err != nil {
 		return path, wrap(err)
 	}
-	realNotebookPath, err := filepath.EvalSymlinks(n.Path)
-	if err != nil {
-		return path, wrap(err)
-	}
-
-	relPath, err := filepath.Rel(realNotebookPath, realPath)
-	if err != nil {
-		return path, wrap(err)
-	}
-
-	if strings.HasPrefix(relPath, "..") {
+	if strings.HasPrefix(path, "..") {
 		return path, fmt.Errorf("%s: path is outside the notebook at %s", originalPath, n.Path)
 	}
-
-	if relPath == "." {
-		relPath = ""
+	if path == "." {
+		path = ""
 	}
 
-	return relPath, nil
+	return path, nil
 }
 
 // Dir represents a directory inside a notebook.
