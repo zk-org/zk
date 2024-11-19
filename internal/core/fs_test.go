@@ -2,7 +2,7 @@ package core
 
 import (
 	"os"
-  "fmt"
+	"fmt"
 	"path/filepath"
 )
 
