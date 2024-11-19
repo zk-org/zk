@@ -24,8 +24,8 @@ type FileStorage interface {
 	// DirExists returns whether a directory exists at the given file path.
 	DirExists(path string) (bool, error)
 
-  // EvalSymlinks returns the real path of a given symlink.
-  EvalSymlinks(path string) (string, error)
+	// EvalSymlinks returns the real path of a given symlink.
+	EvalSymlinks(path string) (string, error)
 
 	// IsDescendantOf returns whether the given path is dir or one of its descendants.
 	IsDescendantOf(dir string, path string) (bool, error)
