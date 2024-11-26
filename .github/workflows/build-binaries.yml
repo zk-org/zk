@@ -1,9 +1,7 @@
 name: Build Binaries
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_call:
 env:
   CGO_ENABLED: 1
 jobs:

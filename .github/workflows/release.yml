@@ -1,0 +1,9 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  build-binaries:
+    uses: ./.github/workflows/build-binaries.yml
+
