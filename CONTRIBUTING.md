@@ -72,11 +72,18 @@ When `zk` is ready to be released, you can update the `CHANGELOG.md`
 and create a new Git version tag (for example `v0.13.0`). Make sure you follow the
 [Semantic Versioning](https://semver.org) scheme.
 
-Then, create [a new GitHub release](https://github.com/zk-org/zk/releases) with a copy of
-the latest `CHANGELOG.md` entries and the binaries for all supported platforms.
+If you create the git tag via the command line, and push it, then the
+[release action](.github/workflows/release.yml) will be triggered. This in turn
+calls the [build-binaries action](.github/workflows/build-binaries.yml), creates a
+release on GitHub and attaches the built binaries.
 
-Binaries can be downloaded from the `build-binaries.yml` Actions run
-that was triggered by pushing the tag and uploaded to the release.
+Alternatively, you can manually create a release via the GitHub interface, also
+creating a release tag. Then you would run the [build-binaries
+action](.github/workflows/build-binaries.yml) manually, and download and
+attach the binaries manually.
+
+In both cases the description of the release can be edited after the release is
+created (i.e, adding or editing the changelog).
 
 ## Documentation
 

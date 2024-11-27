@@ -15,6 +15,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Update Homebrew Formula
+        uses: dawidd6/action-homebrew-bump-formula@v4
+        with:
+          token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
+          formula: zk
       - name: Set vars
         id: vars
         run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
@@ -22,13 +27,13 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            zk-${{ steps.vars.outputs.version }}-linux-amd64.tar.gz
-            zk-${{ steps.vars.outputs.version }}-linux-i386.tar.gz
-            zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
-            zk-${{ steps.vars.outputs.version }}-alpine-amd64.tar.gz
-            zk-${{ steps.vars.outputs.version }}-alpine-i386.tar.gz
-            zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
-            zk-${{ steps.vars.outputs.version }}-macos_arm64.tar.gz
-            zk-${{ steps.vars.outputs.version }}-windows_x64_86.tar.gz
+            zk-${{ needs.vars.outputs.version }}-linux-amd64.tar.gz
+            zk-${{ needs.vars.outputs.version }}-linux-i386.tar.gz
+            zk-${{ needs.vars.outputs.version }}-linux-arm64.tar.gz
+            zk-${{ needs.vars.outputs.version }}-alpine-amd64.tar.gz
+            zk-${{ needs.vars.outputs.version }}-alpine-i386.tar.gz
+            zk-${{ needs.vars.outputs.version }}-macos-x86_64.tar.gz
+            zk-${{ needs.vars.outputs.version }}-macos_arm64.tar.gz
+            zk-${{ needs.vars.outputs.version }}-windows_x64_86.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
