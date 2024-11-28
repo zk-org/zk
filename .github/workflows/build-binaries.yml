@@ -1,4 +1,4 @@
-name: Build Binaries
+/ame: Build Binaries
 on:
   workflow_dispatch:
   workflow_call:
