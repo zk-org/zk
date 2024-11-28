@@ -57,6 +57,8 @@ created.
 
 - `.github/workflows/build.yml` checks that the project can be built and the tests still
   pass.
+- `.github/workflows/build-binaries.yml` builds zk binaries for all platforms and uplaods
+  artifacts.
 - `.github/workflows/codeql.yml` runs static analysis to vet code quality.
 - `.github/workflows/gh-pages.yml` deploy the documentation files to GitHub Pages.
 - `.github/workflows/release.yml` submits a new version to Homebrew when a Git version tag
@@ -70,20 +72,18 @@ When `zk` is ready to be released, you can update the `CHANGELOG.md`
 and create a new Git version tag (for example `v0.13.0`). Make sure you follow the
 [Semantic Versioning](https://semver.org) scheme.
 
-Then, create [a new GitHub release](https://github.com/zk-org/zk/releases) with a copy of
-the latest `CHANGELOG.md` entries and the binaries for all supported platforms.
+If you create the git tag via the command line, and push it, then the
+[release action](.github/workflows/release.yml) will be triggered. This in turn
+calls the [build-binaries action](.github/workflows/build-binaries.yml), creates a
+release on GitHub and attaches the built binaries.
 
-Binaries can be created automatically using `make dist-linux` and `make dist-macos`.
+Alternatively, you can manually create a release via the GitHub interface, also
+creating a release tag. Then you would run the [build-binaries
+action](.github/workflows/build-binaries.yml) manually, and download and
+attach the binaries manually.
 
-Unfortunately, `make dist-macos` must be run manually on both an Apple Silicon and Intel
-chips. The Linux builds are created using Docker and
-[these custom images](https://github.com/zk-org/zk-xcompile), which are hosted via
-[ghcr.io within zk-org](https://github.com/orgs/zk-org/packages/container/package/zk-xcompile).
-
-This process is convoluted because `zk` requires CGO with `mattn/go-sqlite3`, which
-prevents using Go's native cross-compilation. Transitioning to a CGO-free SQLite driver
-such as [cznic/sqlite](https://gitlab.com/cznic/sqlite) could simplify the distribution
-process significantly.
+In both cases the description of the release can be edited after the release is
+created (i.e, adding or editing the changelog).
 
 ## Documentation
 
