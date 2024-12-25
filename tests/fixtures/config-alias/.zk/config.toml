@@ -1,0 +1,31 @@
+[alias]
+# Here are a few aliases to get you started.
+
+# Shortcut to a command.
+ls = "zk list $@"
+
+# Default flags for an existing command.
+list = "zk list --quiet $@"
+
+# Edit the last modified note.
+editlast = "zk edit --limit 1 --sort modified- $@"
+
+# Edit the notes selected interactively among the notes created the last two weeks.
+# This alias doesn't take any argument, so we don't use $@.
+recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
+
+# Print paths separated with colons for the notes found with the given
+# arguments. This can be useful to expand a complex search query into a flag
+# taking only paths. For example:
+#   zk list --link-to "`zk path -m potatoe`"
+path = "zk list --quiet --format {{path}} --delimiter , $@"
+
+# Show a random note.
+lucky = "zk list --quiet --format full --sort random --limit 1"
+
+# Returns the Git history for the notes found with the given arguments.
+# Note the use of a pipe and the location of $@.
+hist = "zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"
+
+# Edit this configuration file.
+conf = '$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
