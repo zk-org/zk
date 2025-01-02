@@ -72,7 +72,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		return editor.Open(paths...)
 
 	} else {
-		fmt.Fprintln(os.Stderr, "Found 0 note")
+		fmt.Fprintln(os.Stderr, "Found 0 notes.")
 		return nil
 	}
 }
