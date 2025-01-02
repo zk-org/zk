@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - LSP ignores magnet links as links to notes (by @billymosis, 53df879)
 - Compilation robustness for Alpine package builds (by @nmeum, 00a4361)
 - Note titles with double quoted words no longer break json output (by @flytaly, 4a51e39)
+- Grammar in error output (by @fspeirs-ti, 3ffa0c2)
 
 ## 0.14.1
 
