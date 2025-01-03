@@ -244,7 +244,7 @@ cp = 'mkdir -p "$1" && zk list --quiet --format path --delimiter0 ${@:2} | xargs
 
 Usage: `zk cp output/ --created-after 'last two weeks'`
 
-## Listing tags
+## Listing aliases
 
 You can list all the aliases found in your configuration file using
-`zk config alias`.
+`zk config --list aliases`.

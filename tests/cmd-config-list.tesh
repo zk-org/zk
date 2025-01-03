@@ -1,14 +1,11 @@
-$ cd config-alias
+$ cd config-list
 
 # Print help for `zk config`.
 $ zk config --help
->Usage: zk config <command>
+>Usage: zk config
 >
 >List configuration parameters.
 >
->Commands:
->  config alias    List all the aliases.
->
 >Flags:
 >  -h, --help                 Show context-sensitive help.
 >      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
@@ -16,20 +13,9 @@ $ zk config --help
 >  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
 >                             current working directory.
 >      --no-input             Never prompt or ask for confirmation.
-
-# Print help for `zk config alias`.
-$ zk config alias --help
->Usage: zk config alias
 >
->List all the aliases.
->
->Flags:
->  -h, --help                 Show context-sensitive help.
->      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
->                             the notebook where commands are run.
->  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
->                             current working directory.
->      --no-input             Never prompt or ask for confirmation.
+>  -l, --list=OBJECT          list configuration objects. Possible ojects are
+>                             aliases, filters or extras.
 >
 >Formatting
 >  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
@@ -42,8 +28,8 @@ $ zk config alias --help
 >  -P, --no-pager           Do not pipe output into a pager.
 >  -q, --quiet              Do not print the total number of tags found.
 
-# Print short list.
-$ zk config alias
+# Print short aliases list.
+$ zk config --list aliases
 >conf
 >editlast
 >hist
@@ -55,8 +41,8 @@ $ zk config alias
 2>
 2>Found 8 aliases
 
-# Print full list.
-$ zk config alias --format=full
+# Print full aliases list.
+$ zk config --list aliases --format=full
 >        conf    $EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"
 >    editlast    zk edit --limit 1 --sort modified- $@
 >        hist    zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --
@@ -68,14 +54,14 @@ $ zk config alias --format=full
 2>
 2>Found 8 aliases
 
-# Print json.
-$ zk config alias --format=json
+# Print aliases as json.
+$ zk config --list aliases --format=json
 >[{"conf":"$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml""},{"editlast":"zk edit --limit 1 --sort modified- $@"},{"hist":"zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"},{"list":"zk list --quiet $@"},{"ls":"zk list $@"},{"lucky":"zk list --quiet --format full --sort random --limit 1"},{"path":"zk list --quiet --format \{{path}} --delimiter , $@"},{"recent":"zk edit --sort created- --created-after 'last two weeks' --interactive"}]
 2>
 2>Found 8 aliases
 
-# Print jsonl.
-$ zk config alias --format=jsonl
+# Print aliases as jsonl.
+$ zk config --list aliases --format=jsonl
 >{"conf":"$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml""}
 >{"editlast":"zk edit --limit 1 --sort modified- $@"}
 >{"hist":"zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --patch --"}
@@ -86,3 +72,17 @@ $ zk config alias --format=jsonl
 >{"recent":"zk edit --sort created- --created-after 'last two weeks' --interactive"}
 2>
 2>Found 8 aliases
+
+# Print full filters list.
+$ zk config --list filters --format=full
+>     journal    --sort created journal
+2>
+2>Found 1 filters
+
+# Print full extras list.
+$ zk config --list extras --format=full
+>      author    Mickaël
+>  visibility    public
+2>
+2>Found 2 extras
+

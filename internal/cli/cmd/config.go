@@ -11,13 +11,9 @@ import (
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
-// Config lists configuration setting
-type Config struct {
-	Alias AliasList `cmd group:"cmd" default:"withargs" help:"List all the aliases."`
-}
-
 // AliasList lists all the aliases.
-type AliasList struct {
+type Config struct {
+	List       string `short:l placeholder:OBJECT 				   help:"list configuration objects. Possible ojects are aliases, filters or extras."`
 	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: short, full, json, jsonl."`
 	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
 	Footer     string `group:format default:\n                     help:"Arbitrary text printed at the end of the list."`
@@ -27,7 +23,7 @@ type AliasList struct {
 	Quiet      bool   `group:format short:q help:"Do not print the total number of tags found."`
 }
 
-func (cmd *AliasList) Run(container *cli.Container) error {
+func (cmd *Config) Run(container *cli.Container) error {
 	cmd.Header = strings.ExpandWhitespaceLiterals(cmd.Header)
 	cmd.Footer = strings.ExpandWhitespaceLiterals(cmd.Footer)
 	cmd.Delimiter = strings.ExpandWhitespaceLiterals(cmd.Delimiter)
@@ -73,31 +69,41 @@ func (cmd *AliasList) Run(container *cli.Container) error {
 		}
 	}
 
-	var aliases = container.Config.Aliases
-	count := len(aliases)
+	var objects = make(map[string]string)
+
+	switch cmd.List {
+	case "filters":
+		objects = container.Config.Filters
+	case "aliases":
+		objects = container.Config.Aliases
+	case "extras":
+		objects = container.Config.Extra
+	}
+
+	count := len(objects)
 	keys := make([]string, count)
 	i := 0
-	for k := range aliases {
+	for k := range objects {
 		keys[i] = k
 		i++
 	}
 	sort.Strings(keys)
 
-	format := cmd.aliasTemplate()
+	format := cmd.mapTemplate()
 
 	var err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
 		if cmd.Header != "" {
 			fmt.Fprint(out, cmd.Header)
 		}
-		for i, alias := range keys {
+		for i, o := range keys {
 
 			if i > 0 {
 				fmt.Fprint(out, cmd.Delimiter)
 			}
 			if cmd.Format == "" || cmd.Format == "short" {
-				fmt.Fprintf(out, format, alias)
+				fmt.Fprintf(out, format, o)
 			} else {
-				fmt.Fprintf(out, format, alias, aliases[alias])
+				fmt.Fprintf(out, format, o, objects[o])
 			}
 
 			i += 1
@@ -109,22 +115,18 @@ func (cmd *AliasList) Run(container *cli.Container) error {
 	})
 
 	if err == nil && !cmd.Quiet {
-		if count > 1 {
-			fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, "aliases")
-		} else {
-			fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, "alias")
-		}
+		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, cmd.List)
 	}
 	return err
 }
 
-func (cmd *AliasList) aliasTemplate() string {
+func (cmd *Config) mapTemplate() string {
 	format := cmd.Format
 	if format == "" {
 		format = "short"
 	}
 
-	templ, ok := defaultAliasFormats[format]
+	templ, ok := defaultMapFormats[format]
 	if !ok {
 		templ = strings.ExpandWhitespaceLiterals(format)
 	}
@@ -132,7 +134,7 @@ func (cmd *AliasList) aliasTemplate() string {
 	return templ
 }
 
-var defaultAliasFormats = map[string]string{
+var defaultMapFormats = map[string]string{
 	"json":  `{"%s":"%s"}`,
 	"jsonl": `{"%s":"%s"}`,
 	"short": `%s`,

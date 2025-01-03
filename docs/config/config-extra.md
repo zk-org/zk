@@ -4,8 +4,8 @@
 [creating new notes](../notes/note-creation.md), for example:
 
 - expanding custom metadata (author, subject, etc.)
-- modifying a [template](../notes/template.md)'s output dynamically depending on the
-  value of an extra variable
+- modifying a [template](../notes/template.md)'s output dynamically depending on
+  the value of an extra variable
 
 ## Static extra variables
 
@@ -36,8 +36,8 @@ $ zk new --extra show-header=1,author=Thomas
 ## Using extra variables in templates
 
 After declaring extra variables, you can expand them inside the
-[template used when creating new notes](../notes/template-creation.md), using the usual
-[Handlebars syntax](../notes/template.md).
+[template used when creating new notes](../notes/template-creation.md), using
+the usual [Handlebars syntax](../notes/template.md).
 
 ```markdown
 # {{title}}
@@ -46,3 +46,8 @@ Written by {{extra.author}}.
 
 {{#if extra.show-header}} Behold, the mighty dynamic header! {{/if}}
 ```
+
+## Listing extras
+
+You can list all the extras found in your configuration file using
+`zk config --list extras`.

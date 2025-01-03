@@ -29,3 +29,10 @@ hist = "zk list --format path --delimiter0 --quiet $@ | xargs -t -0 git log --pa
 
 # Edit this configuration file.
 conf = '$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
+
+[filter]
+journal = "--sort created journal"
+
+[extra]
+visibility = "public"
+author = "Mickaël"
