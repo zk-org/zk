@@ -4,7 +4,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        If you have an idea, _please [open as a discussion](https://github.com/zk-org/zk/discussions/new?category=ideas)_ instead of an issue. This helps keep the issue tracker more relavent.
+        If you have an idea, _please [open as a discussion](https://github.com/zk-org/zk/discussions/new?category=ideas)_ instead of an issue. This helps keep the issue tracker more relevant.
         Be aware that feature requests [may not get much attention through 2025!](https://github.com/zk-org/zk/discussions/486)
   - type: textarea
     attributes:

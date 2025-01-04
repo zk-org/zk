@@ -304,7 +304,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 				continue
 			}
 
-			// ignore tripple dash file URIs [title](file:///foo.go) and magnet links
+			// ignore triple dash file URIs [title](file:///foo.go) and magnet links
 			if match[5]-match[4] >= 8 {
 				linkURL := line[match[4]:match[5]]
 				fileURIresult := linkURL[:8]

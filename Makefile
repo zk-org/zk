@@ -50,7 +50,7 @@ define go
 endef
 
 # Alpine (musl) requires statically linked libs. This should be compatible for
-# Void linux and other musl based distros aswell.
+# Void linux and other musl based distros as well.
 define alpine
 	$(ENV_PREFIX) go $(1) -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=$(VERSION) -X=main.Build=$(BUILD)" $(2)
 endef

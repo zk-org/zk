@@ -16,7 +16,7 @@ $ zk list -q --debug-style -Me --match '["न", "म", "स्", "ते"]'
 >  - Given the Hindi word "नमस्ते":
 >
 
-# Mutliple match flags.
+# Multiple match flags.
 $ zk list -q --debug-style -Me --match "thread" --match "mut"
 ><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
 >
@@ -35,7 +35,7 @@ $ zk list -q --debug-style -Me --match "thread" --match "mut"
 >        *   Thanks to its [Ownership](../88el) pattern, Rust makes sure we can't mess up when using locks.
 >
 
-# Mutliple match flags.
+# Multiple match flags.
 $ zk list -q --debug-style -Me --match "thread" --match "mutual"
 ><title>Mutex</title> <path>inbox/er4k.md</path> (just now)
 >

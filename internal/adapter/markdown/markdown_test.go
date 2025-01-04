@@ -181,7 +181,7 @@ func TestParseHashtags(t *testing.T) {
 	// Authorized special characters
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
-	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	test(`#an\ \\escaped\ tag\!`, []string{`an \escaped tag!`})
 	// Hashtags containing only numbers and dots are invalid
 	test("#123, #1.2.3", []string{})
 	// Must not be preceded by a hash or any other valid hashtag character
@@ -221,7 +221,7 @@ func TestParseWordtags(t *testing.T) {
 	// Authorized special characters
 	test("#a/@'~-_$%&+=: end", []string{"a/@'~-_$%&+=:"})
 	// Escape punctuation and space
-	test(`#an\ \\espaced\ tag\!`, []string{`an \espaced tag!`})
+	test(`#an\ \\escaped\ tag\!`, []string{`an \escaped tag!`})
 	// Leading and trailing spaces are trimmed
 	test(`#\ \	tag\	\   end`, []string{`tag`})
 	// Hashtags containing only numbers and dots are invalid
@@ -271,7 +271,7 @@ func TestParseColontags(t *testing.T) {
 	// Authorized special characters
 	test(":#a/@'~-_$%&+=: end", []string{"#a/@'~-_$%&+="})
 	// Escape punctuation and space
-	test(`:an\ \\espaced\ tag\!:`, []string{`an \espaced tag!`})
+	test(`:an\ \\escaped\ tag\!:`, []string{`an \escaped tag!`})
 	// Leading and trailing spaces are trimmed
 	test(`:\ \	tag\	\ :`, []string{`tag`})
 	// A colontag containing only numbers is valid

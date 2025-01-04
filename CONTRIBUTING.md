@@ -57,7 +57,7 @@ created.
 
 - `.github/workflows/build.yml` checks that the project can be built and the tests still
   pass.
-- `.github/workflows/build-binaries.yml` builds zk binaries for all platforms and uplaods
+- `.github/workflows/build-binaries.yml` builds zk binaries for all platforms and uploads
   artifacts.
 - `.github/workflows/codeql.yml` runs static analysis to vet code quality.
 - `.github/workflows/gh-pages.yml` deploy the documentation files to GitHub Pages.

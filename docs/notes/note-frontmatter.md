@@ -3,7 +3,7 @@
 Markdown being a simple format, it does not offer any way to attach additional
 metadata to a note. The community came up with a solution by inserting a YAML
 header at the top of each note to contain its metadata. This method is widely
-supported among Zettelkasten softwares, including `zk`.
+supported among Zettelkasten software, including `zk`.
 
 ```yaml
 ---

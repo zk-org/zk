@@ -103,7 +103,7 @@ func TestExpandNamedFiltersJoinBools(t *testing.T) {
 }
 
 // ExpandNamedFilters: non-zero integer and non-empty string options take precedence over named filters.
-func TestExpandNamedFiltersJoinLitterals(t *testing.T) {
+func TestExpandNamedFiltersJoinLiterals(t *testing.T) {
 	f1 := Filtering{Path: []string{"f1", "f2"}}
 	res1, err := f1.ExpandNamedFilters(
 		map[string]string{
