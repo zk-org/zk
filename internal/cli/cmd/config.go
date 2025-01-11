@@ -13,7 +13,7 @@ import (
 
 // AliasList lists all the aliases.
 type Config struct {
-	List       string `short:l placeholder:OBJECT 				   help:"list configuration objects. Possible ojects are aliases, filters or extras."`
+	List       string `short:l placeholder:OBJECT 				   help:"List configuration objects. Listable ojects are: aliases, filters and extras."`
 	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: short, full, json, jsonl."`
 	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
 	Footer     string `group:format default:\n                     help:"Arbitrary text printed at the end of the list."`
@@ -78,6 +78,9 @@ func (cmd *Config) Run(container *cli.Container) error {
 		objects = container.Config.Aliases
 	case "extras":
 		objects = container.Config.Extra
+	default:
+		fmt.Print("Listable config objects are: filters, aliases and extras.\n")
+		os.Exit(1)
 	}
 
 	count := len(objects)
