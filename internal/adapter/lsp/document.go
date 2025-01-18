@@ -217,7 +217,7 @@ var currentCodeBlockStart = -1
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
 	// if line is already within code fences or indented code block
-	if insideFenced {
+	if insideFenced && currentCodeBlockStart > -1 {
 		if fencedEndRegex.FindStringIndex(line) != nil &&
 			lines[currentCodeBlockStart][:3] == line[:3] {
 			// Fenced code block ends with this line
