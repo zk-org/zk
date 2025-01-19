@@ -216,9 +216,14 @@ var currentCodeBlockStart = -1
 // check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
+	if len(line) == 0 { // if 0 either it's in a fence or no
+		return insideFenced
+	}
 	// if line is already within code fences or indented code block
 	if insideFenced && currentCodeBlockStart > -1 {
 		if fencedEndRegex.FindStringIndex(line) != nil &&
+			currentCodeBlockStart < len(lines) &&
+			3 <= len(line) &&
 			lines[currentCodeBlockStart][:3] == line[:3] {
 			// Fenced code block ends with this line
 			insideFenced = false
@@ -258,15 +263,6 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 
 	lines := d.GetLines()
 	for lineIndex, line := range lines {
-
-		// Cannot be link with less than 4 chars.
-		if len(line) < 4 {
-			// This then beefs up the global vars, because it doesn't call isLinWithinCodeBlock all of the time...
-			if line == "```" {
-				insideFenced = !insideFenced
-			}
-			continue
-		}
 
 		if isLineWithinCodeBlock(lines, lineIndex, line) {
 			continue
