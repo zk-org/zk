@@ -1,0 +1,16 @@
+[note]
+filename = "{{slug title}}"
+
+[group.area]
+paths = ["area"]
+
+[group.area.note]
+extension = "md"
+template = "template1.md"
+
+[group.subarea]
+paths = ["area/subfolder"]
+
+[group.subarea.note]
+extension = "md"
+template = "template2.md"

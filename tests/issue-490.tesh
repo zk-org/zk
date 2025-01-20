@@ -1,0 +1,16 @@
+$ cd issue-490
+
+# Test that subfolder path takes precedence over parent path
+$ zk new area/subfolder --title "TestNote" --dry-run
+>Template 2
+2>{{working-dir}}/area/subfolder/testnote.md
+
+# Test that parent path still works for direct children
+$ zk new area --title "ParentNote" --dry-run
+>Template 1
+2>{{working-dir}}/area/parentnote.md
+
+# Test that explicit group override still works
+$ zk new area/subfolder --group area --title "OverrideTest" --dry-run
+>Template 1
+2>{{working-dir}}/area/subfolder/overridetest.md
