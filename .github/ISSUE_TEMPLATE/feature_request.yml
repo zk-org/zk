@@ -1,10 +1,12 @@
 name: Feature request
 description: Suggest an idea for this project.
 body:
-  - type: checkboxes
-    id: checks
+  - type: markdown
     attributes:
-      label: If you have an idea, open a discussion
-      options:
-        - label: I will [create a new discussion](https://github.com/zk-org/zk/discussions/new?category=ideas) instead of an issue.
-
+      value: |
+        If you have an idea, _please [open as a discussion](https://github.com/zk-org/zk/discussions/new?category=ideas)_ instead of an issue. This helps keep the issue tracker more relavent.
+        Be aware that feature requests [may not get much attention through 2025!](https://github.com/zk-org/zk/discussions/486)
+  - type: textarea
+    attributes:
+      label: Exception
+      placeholder: If you're not going to open a discussion instead, briefly explain why.
