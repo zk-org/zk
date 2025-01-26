@@ -213,13 +213,38 @@ var insideFenced = false
 var insideIndented = false
 var currentCodeBlockStart = -1
 
-// check whether the current line in document is within a fenced or indented 
+// check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
-    // if line is already within code fences or indented code block
-	if insideFenced {
-		if fencedEndRegex.FindStringIndex(line) != nil &&
-			lines[currentCodeBlockStart][:3] == line[:3] {
+	if len(line) == 0 {
+		return insideFenced
+	}
+	outOfBounds := func(line string) bool {
+		return (currentCodeBlockStart < 0 ||
+			len(line) < 3 ||
+			len(lines) <= currentCodeBlockStart ||
+			len(lines[currentCodeBlockStart]) < 3)
+	}
+	isEndOfFence := func(line string) bool {
+		if !insideFenced || outOfBounds(line) ||
+			fencedEndRegex.FindStringIndex(line) == nil {
+			return false
+		}
+		return lines[currentCodeBlockStart][:3] == line[:3]
+	}
+	// if line is already within code fences or indented code block
+	if insideFenced && currentCodeBlockStart > -1 {
+		// something is wrong, and we need to restart the scan
+		if outOfBounds(line) {
+			insideInline = false
+			insideFenced = false
+			insideIndented = false
+			currentCodeBlockStart = -1
+			for i := 0; i < lineIndex; i++ {
+				isLineWithinCodeBlock(lines, i, lines[i])
+			}
+		}
+		if isEndOfFence(line) {
 			// Fenced code block ends with this line
 			insideFenced = false
 			currentCodeBlockStart = -1
