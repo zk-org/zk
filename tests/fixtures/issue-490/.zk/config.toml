@@ -1,16 +1,18 @@
 [note]
-filename = "{{slug title}}"
+filename = "untitled"
 
-[group.area]
-paths = ["area"]
+[group.t1]
+paths = ["dir1", "dir1/dir2/dir3"]
 
-[group.area.note]
+[group.t1.note]
 extension = "md"
 template = "template1.md"
 
-[group.subarea]
-paths = ["area/subfolder"]
 
-[group.subarea.note]
+# This group sits between the two directories of t1.
+[group.t2]
+paths = ["dir1/dir2"]
+
+[group.t2.note]
 extension = "md"
 template = "template2.md"
