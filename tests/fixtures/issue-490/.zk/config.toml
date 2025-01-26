@@ -1,0 +1,18 @@
+[note]
+filename = "untitled"
+
+[group.t1]
+paths = ["dir1", "dir1/dir2/dir3"]
+
+[group.t1.note]
+extension = "md"
+template = "template1.md"
+
+
+# This group sits between the two directories of t1.
+[group.t2]
+paths = ["dir1/dir2"]
+
+[group.t2.note]
+extension = "md"
+template = "template2.md"

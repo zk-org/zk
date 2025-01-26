@@ -275,6 +275,34 @@ func TestParseComplete(t *testing.T) {
 	})
 }
 
+func TestGroupNameForPathApplyDeepestMatch(t *testing.T) {
+	config := Config{
+		Groups: map[string]GroupConfig{
+			"parent": {
+				Paths: []string{"dir1"},
+			},
+			"child": {
+				Paths: []string{"dir1/dir2"},
+			},
+			"other": {
+				Paths: []string{"other"},
+			},
+		},
+	}
+
+	name, err := config.GroupNameForPath("dir1/dir2/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "child")
+
+	name, err = config.GroupNameForPath("dir1/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "parent")
+
+	name, err = config.GroupNameForPath("other/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "other")
+}
+
 func TestParseMergesGroupConfig(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		[note]
