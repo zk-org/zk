@@ -275,14 +275,14 @@ func TestParseComplete(t *testing.T) {
 	})
 }
 
-func TestGroupNameForPathPrefersLongestMatch(t *testing.T) {
+func TestGroupNameForPathApplyDeepestMatch(t *testing.T) {
 	config := Config{
 		Groups: map[string]GroupConfig{
 			"parent": {
-				Paths: []string{"area"},
+				Paths: []string{"dir1"},
 			},
 			"child": {
-				Paths: []string{"area/subfolder"},
+				Paths: []string{"dir1/dir2"},
 			},
 			"other": {
 				Paths: []string{"other"},
@@ -290,11 +290,11 @@ func TestGroupNameForPathPrefersLongestMatch(t *testing.T) {
 		},
 	}
 
-	name, err := config.GroupNameForPath("area/subfolder/note.md")
+	name, err := config.GroupNameForPath("dir1/dir2/note.md")
 	assert.Nil(t, err)
 	assert.Equal(t, name, "child")
 
-	name, err = config.GroupNameForPath("area/note.md")
+	name, err = config.GroupNameForPath("dir1/note.md")
 	assert.Nil(t, err)
 	assert.Equal(t, name, "parent")
 

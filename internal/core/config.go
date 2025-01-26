@@ -113,8 +113,8 @@ func (c Config) GroupConfigNamed(name string) (GroupConfig, error) {
 // GroupNameForPath returns the name of the GroupConfig matching the given
 // path, relative to the notebook.
 func (c Config) GroupNameForPath(path string) (string, error) {
-    var longestMatch string
-    var matchedName string
+	var longestMatch string
+	var matchedName string
 
 	for name, config := range c.Groups {
 		for _, groupPath := range config.Paths {
@@ -122,16 +122,16 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 			if err != nil {
 				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
 			} else if matches {
-                // Early return if an exact match
+				// Early return if an exact match
 				return name, nil
 			}
-            if strings.HasPrefix(path, groupPath+"/") {
-                // If the match is partial, find the longest prefix overlap
-                if len(groupPath) > len(longestMatch) {
-                    longestMatch = groupPath
-                    matchedName = name
-                }
-            }
+			if strings.HasPrefix(path, groupPath+"/") {
+				// If the match is partial, find the longest prefix overlap
+				if len(groupPath) > len(longestMatch) {
+					longestMatch = groupPath
+					matchedName = name
+				}
+			}
 		}
 	}
 
