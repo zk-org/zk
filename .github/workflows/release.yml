@@ -13,19 +13,13 @@ jobs:
       contents: write # required for release creation
     needs: [build-binaries]
     steps:
+      - name: Download artifacts from 'build binaries' workflow
+        uses: actions/download-artifact@v4
+        path: zk
+        pattern: zk-${{ github.ref_name }}-*
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          # github.ref_name is the ref of the branch / tag that triggered the run.
-          # As the run is triggered by the version tag, we can just use that.
-          files: |
-            zk-${{ github.ref_name }}-linux-amd64.tar.gz
-            zk-${{ github.ref_name }}-linux-i386.tar.gz
-            zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            zk-${{ github.ref_name }}-alpine-amd64.tar.gz
-            zk-${{ github.ref_name }}-alpine-i386.tar.gz
-            zk-${{ github.ref_name }}-macos-x86_64.tar.gz
-            zk-${{ github.ref_name }}-macos_arm64.tar.gz
-            zk-${{ github.ref_name }}-windows_x64_86.tar.gz
+          files: zk*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
