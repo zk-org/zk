@@ -15,8 +15,9 @@ jobs:
     steps:
       - name: Download artifacts from 'build binaries' workflow
         uses: actions/download-artifact@v4
-        path: zk
-        pattern: zk-${{ github.ref_name }}-*
+        with: 
+          path: zk
+          pattern: zk-${{ github.ref_name }}-*
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
