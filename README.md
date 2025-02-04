@@ -74,7 +74,7 @@ brew install --HEAD zk
 # Run zk from Nix store without installing it:
 nix run nixpkgs#zk
 # Or, to install it permanently:
-nix-env -iA zk
+nix profile install nixpkgs#zk
 ```
 
 ### Alpine Linux
