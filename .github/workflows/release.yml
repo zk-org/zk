@@ -16,7 +16,6 @@ jobs:
       - name: Download artifacts from 'build binaries' workflow
         uses: actions/download-artifact@v4
         with:
-          path: zk
           merge-multiple: true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
