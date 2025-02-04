@@ -9,22 +9,23 @@ jobs:
 
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # required for release creation
     needs: [build-binaries]
     steps:
-      - name: Set vars
-        id: vars
-        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          # github.ref is the ref of the branch / tag that triggered the run.
+          # As the run is triggered by the version tag, we can just use that.
           files: |
-            zk-${{ needs.vars.outputs.version }}-linux-amd64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-linux-i386.tar.gz
-            zk-${{ needs.vars.outputs.version }}-linux-arm64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-alpine-amd64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-alpine-i386.tar.gz
-            zk-${{ needs.vars.outputs.version }}-macos-x86_64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-macos_arm64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-windows_x64_86.tar.gz
+            zk-${{ github.ref }}-linux-amd64.tar.gz
+            zk-${{ github.ref }}-linux-i386.tar.gz
+            zk-${{ github.ref }}-linux-arm64.tar.gz
+            zk-${{ github.ref }}-alpine-amd64.tar.gz
+            zk-${{ github.ref }}-alpine-i386.tar.gz
+            zk-${{ github.ref }}-macos-x86_64.tar.gz
+            zk-${{ github.ref }}-macos_arm64.tar.gz
+            zk-${{ github.ref }}-windows_x64_86.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
