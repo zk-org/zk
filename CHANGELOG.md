@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+...
+
+## 0.14.2
+
 ## Added
 
 - Path in .zk/config.toml for the default note template now accepts UNIX
