@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+
 jobs:
   build-binaries:
     uses: ./.github/workflows/build-binaries.yml
@@ -13,19 +15,25 @@ jobs:
       contents: write # required for release creation
     needs: [build-binaries]
     steps:
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Download artifacts from 'build binaries' workflow
+        uses: actions/download-artifact@v4
         with:
-          # github.ref is the ref of the branch / tag that triggered the run.
-          # As the run is triggered by the version tag, we can just use that.
-          files: |
-            zk-${{ github.ref }}-linux-amd64.tar.gz
-            zk-${{ github.ref }}-linux-i386.tar.gz
-            zk-${{ github.ref }}-linux-arm64.tar.gz
-            zk-${{ github.ref }}-alpine-amd64.tar.gz
-            zk-${{ github.ref }}-alpine-i386.tar.gz
-            zk-${{ github.ref }}-macos-x86_64.tar.gz
-            zk-${{ github.ref }}-macos_arm64.tar.gz
-            zk-${{ github.ref }}-windows_x64_86.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          merge-multiple: true
+      - name: Find downloaded artifacts
+        run: find . -name '*.gz' 
+      - name: Tree
+        run: tree .
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: |
+      #       zk-${{ github.ref_name }}-linux-amd64.tar.gz
+      #       zk-${{ github.ref_name }}-linux-i386.tar.gz
+      #       zk-${{ github.ref_name }}-linux-arm64.tar.gz
+      #       zk-${{ github.ref_name }}-alpine-amd64.tar.gz
+      #       zk-${{ github.ref_name }}-alpine-i386.tar.gz
+      #       zk-${{ github.ref_name }}-macos-x86_64.tar.gz
+      #       zk-${{ github.ref_name }}-macos_arm64.tar.gz
+      #       zk-${{ github.ref_name }}-windows_x64_86.tar.gz
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
