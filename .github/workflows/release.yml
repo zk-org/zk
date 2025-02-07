@@ -18,14 +18,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ~/downloaded
-          merge-multiple: true
-      - name: Find downloaded artifacts
-        run: tree .
+      - name: Recompress for attaching to release 
+        run: mkdir ~/compressed
+        run: tar -C "~/downloaded/zk-${{ github.ref_name }}-linux-arm64.tar.gz" -cvz . > "~/compressed/zk-${{ github.ref_name }}-linux-amd64.tar.gz"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: /home/runner/downloaded/*
+          files: /home/runner/compressed/*
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
           #   zk-${{ github.ref_name }}-linux-i386.tar.gz
