@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-binaries:
-    uses: ./.github/workflows/build-binaries.yml
+    uses: ./.github/workflows/build-binaries-debug.yml
 
   create-release:
     runs-on: ubuntu-latest
