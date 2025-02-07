@@ -24,19 +24,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: |
-<<<<<<< HEAD
-            zk-${{ github.ref_name }}-linux-amd64.tar.gz
-            ./zk-${{ github.ref_name }}-linux-amd64.tar.gz
-            zk/zk-${{ github.ref_name }}-linux-amd64.tar.gz
-            ./zk/zk-${{ github.ref_name }}-linux-amd64.tar.gz
-=======
-            zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            ./zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            ./zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
->>>>>>> 21352c8 (ci: apply weird directory req from forum suggestion...)
-
+          files: /home/runner/work/zk/zk/*
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
           #   zk-${{ github.ref_name }}-linux-i386.tar.gz
