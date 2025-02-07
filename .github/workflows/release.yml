@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Download artifacts from 'build binaries' workflow
         uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
       - name: Find downloaded artifacts
         run: find . -name '*.gz'
       - name: Create GitHub Release
