@@ -16,13 +16,20 @@ jobs:
     steps:
       - name: Download artifacts from 'build binaries' workflow
         uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
       - name: Find downloaded artifacts
-        run: find . -name '*.gz' 
+        run: find . -name '.gz'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: '*/zk*.gz'
+          files: |
+            zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            ./zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            ./zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
           #   zk-${{ github.ref_name }}-linux-i386.tar.gz
