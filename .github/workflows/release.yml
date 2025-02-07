@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-binaries:
-    uses: ./.github/workflows/build-binaries.yml
+    uses: ./.github/workflows/build-binaries-debug.yml
 
   create-release:
     runs-on: ubuntu-latest
@@ -22,7 +22,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: ./zk-${{ github.ref_name }}-linux-amd64.tar.gz
+          files: */zk*.gz
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
           #   zk-${{ github.ref_name }}-linux-i386.tar.gz
