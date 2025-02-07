@@ -20,12 +20,12 @@ jobs:
           path: ~/downloaded
           merge-multiple: true
       - name: Find downloaded artifacts
-        run: find . -name '*.gz'
+        run: tree .
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: ~/downloaded/*
+          files: /home/runner/downloaded/*
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
           #   zk-${{ github.ref_name }}-linux-i386.tar.gz
