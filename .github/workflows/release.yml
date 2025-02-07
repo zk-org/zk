@@ -19,16 +19,16 @@ jobs:
         with:
           merge-multiple: true
       - name: Find downloaded artifacts
-        run: find . -name '.gz'
+        run: find . -name '*.gz'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: |
-            zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            ./zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz
-            ./zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            ./zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
+            ./zk/zk-${{ github.ref_name }}-linux-arm64.tar.gz/zk-${{ github.ref_name }}-linux-arm64.tar.gz
 
           # files: |
           #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
