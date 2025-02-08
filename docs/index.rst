@@ -20,6 +20,8 @@
 
 Install as below and then... :doc:`get zettling <tips/getting-started>`!
 
+This site always represents the latest state of the documentation.
+
 Installation
 ============
 
