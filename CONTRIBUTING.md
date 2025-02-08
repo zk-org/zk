@@ -90,10 +90,10 @@ created (i.e, adding or editing the changelog).
 We're using [Sphinx](https://www.sphinx-doc.org/en/master/) as our documentation
 framework, and the [furo](https://pradyunsg.me/furo/quickstart/) theme.
 
-To install:
+To install, from the repository root run:
 
 ```sh
-pip install Sphinx furo
+pip install -r docs/requirements.txt
 ```
 
 `docs/` is the root level of the documentation site. [index.rst](./docs/index.rst) is the
