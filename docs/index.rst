@@ -16,7 +16,7 @@
    notes/index
    tips/index
 
-`zk` is a plain text note-taking tool that leverages the power of the command line. 
+`zk` is a plain text note-taking assistant that leverages the power of the command line.
 
 Install as below and then... :doc:`get zettling <tips/getting-started>`!
 
