@@ -1,5 +1,5 @@
 # Build the Sphinx docs on PR to catch any issues before merging.
-# Deployment happens on push to main with gh-pages.yml
+# Deployment happens on push/merge to main with gh-pages.yml
 name: Build Docs
 
 on:
@@ -7,22 +7,15 @@ on:
     branches: [main]
     paths: [docs/**]
 
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   pages:
     runs-on: ubuntu-20.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
     steps:
-    - id: deployment
-      uses: sphinx-notes/pages@v3
-      with:
-        publish: false
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install requirements
+        run: pip install -r docs/requirements.txt
+      - name: Build docs
+        run: make zkdocs
