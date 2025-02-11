@@ -258,9 +258,9 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
   | `modifiedAfter`  | string       | No        | Find notes modified after the given date                                                                  |
   | `sort`           | string array | No        | Order the notes by the given criterion                                                                    |
 
-    1. As the output of this command might be very verbose and put a heavy load on the LSP client, you need to explicitly set which note fields you want to receive with the `select` option. The following fields are available: `filename`, `filenameStem`, `path`, `absPath`, `title`, `lead`, `body`, `snippets`, `rawContent`, `wordCount`, `tags`, `metadata`, `created`, `modified` and `checksum`.
+  1. As the output of this command might be very verbose and put a heavy load on the LSP client, you need to explicitly set which note fields you want to receive with the `select` option. The following fields are available: `filename`, `filenameStem`, `path`, `absPath`, `title`, `lead`, `body`, `snippets`, `rawContent`, `wordCount`, `tags`, `metadata`, `created`, `modified` and `checksum`.
 
-    </details>
+  </details>
 
 `zk.list` returns the found notes as a JSON array.
 
