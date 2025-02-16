@@ -5,6 +5,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main]
+    paths: [docs/**]
 
 concurrency:
   group: "pages"
