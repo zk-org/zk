@@ -30,6 +30,7 @@ var root struct {
 	Graph cmd.Graph `cmd group:"notes" help:"Produce a graph of the notes matching the given criteria."`
 	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
 	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
+	Group cmd.Group `cmd group:"notes" help:"Manage the config groups."`
 
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
 	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
