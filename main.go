@@ -18,8 +18,10 @@ import (
 	executil "github.com/zk-org/zk/internal/util/exec"
 )
 
-var Version = "dev"
-var Build = "dev"
+var (
+	Version = "dev"
+	Build   = "dev"
+)
 
 var root struct {
 	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
@@ -153,7 +155,7 @@ func setupDebugMode() {
 	c := make(chan os.Signal)
 	go func() {
 		stacktrace := make([]byte, 8192)
-		for _ = range c {
+		for range c {
 			length := runtime.Stack(stacktrace, true)
 			fmt.Fprintf(os.Stderr, "%s\n", string(stacktrace[:length]))
 			os.Exit(1)
