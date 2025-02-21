@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -212,17 +213,23 @@ var insideInline = false
 var insideFenced = false
 var insideIndented = false
 var currentCodeBlockStart = -1
+var blockStarts = ""
 
 // check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
+	blockStarts += fmt.Sprint("< ", lineIndex, currentCodeBlockStart, " >")
 	if len(line) == 0 {
-		return insideFenced
+		insideInline = false
+		insideFenced = false
+		insideIndented = false
+		currentCodeBlockStart = -1
+		return false
 	}
 	outOfBounds := func(line string) bool {
 		return (currentCodeBlockStart < 0 ||
-			len(line) < 3 ||
-			len(lines) <= currentCodeBlockStart ||
+			len(line) < 3 || // Not enough chars to start a fence
+			len(lines) <= currentCodeBlockStart || // not enough to
 			len(lines[currentCodeBlockStart]) < 3)
 	}
 	isEndOfFence := func(line string) bool {
@@ -230,19 +237,29 @@ func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
 			fencedEndRegex.FindStringIndex(line) == nil {
 			return false
 		}
-		return lines[currentCodeBlockStart][:3] == line[:3]
+		return lines[currentCodeBlockStart][:3] == line[:3] || lineIndex == len(lines)-1
 	}
 	// if line is already within code fences or indented code block
 	if insideFenced && currentCodeBlockStart > -1 {
 		// something is wrong, and we need to restart the scan
 		if outOfBounds(line) {
-			insideInline = false
-			insideFenced = false
-			insideIndented = false
-			currentCodeBlockStart = -1
-			for i := 0; i < lineIndex; i++ {
-				isLineWithinCodeBlock(lines, i, lines[i])
-			}
+			panic(
+				fmt.Sprintln(
+					"ERROR:", line,
+					"INDEX: ", lineIndex,
+					"CCDS: ", currentCodeBlockStart,
+					"LEN LINES: ", len(lines),
+					"CCDS LINE: ", lines[currentCodeBlockStart],
+					"BLOCK HIST:", blockStarts,
+				),
+			)
+			// insideInline = true
+			// insideFenced = true
+			// insideIndented = true
+			// currentCodeBlockStart = -1
+			// for i := 0; i < lineIndex; i++ {
+			// 	isLineWithinCodeBlock(lines, i, lines[i])
+			// }
 		}
 		if isEndOfFence(line) {
 			// Fenced code block ends with this line
@@ -258,19 +275,19 @@ func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
 		} else {
 			return true
 		}
-	} else {
-		// Check whether the current line is the start of a code fence or
-		// indented code block
-		if fencedStartRegex.FindStringIndex(line) != nil {
-			insideFenced = true
-			currentCodeBlockStart = lineIndex
-			return true
-		} else if indentedRegex.FindStringIndex(line) != nil &&
-			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
-			insideIndented = true
-			currentCodeBlockStart = lineIndex
-			return true
-		}
+	}
+	// Check whether the current line is the start of a code fence or
+	// indented code block
+	if fencedStartRegex.FindStringIndex(line) != nil {
+		insideFenced = true
+		currentCodeBlockStart = lineIndex
+		return true
+	}
+	if indentedRegex.FindStringIndex(line) != nil &&
+		(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
+		insideIndented = true
+		currentCodeBlockStart = lineIndex
+		return true
 	}
 	return false
 
