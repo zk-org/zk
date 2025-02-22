@@ -216,15 +216,15 @@ var currentCodeBlockStart = -1
 // check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
-	// if line is already within code fences or indented code block
+	// Reset global state from previous runs
 	if lineIndex == 0 {
 		insideInline = false
 		insideFenced = false
 		insideIndented = false
 		currentCodeBlockStart = -1
-		return false
 	}
 
+	// if line is already within code fences or indented code block
 	if insideFenced {
 		if fencedEndRegex.FindStringIndex(line) != nil &&
 			lines[currentCodeBlockStart][:3] == line[:3] {
