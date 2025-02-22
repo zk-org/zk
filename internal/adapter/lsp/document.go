@@ -216,29 +216,18 @@ var currentCodeBlockStart = -1
 // check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
-	if len(line) == 0 { // If we are at line 0 -> reset state
+	// if line is already within code fences or indented code block
+	if lineIndex == 0 {
 		insideInline = false
 		insideFenced = false
 		insideIndented = false
 		currentCodeBlockStart = -1
 		return false
 	}
-	outOfBounds := (currentCodeBlockStart < 0 ||
-		len(lines) <= currentCodeBlockStart || // not enough to
-		len(lines[currentCodeBlockStart]) < 3 ||
-		len(line) < 3) // if line < 3 and we try to index line[:3] -> OOB read
 
-	isEndOfFence := func() bool {
-		if !insideFenced || outOfBounds ||
-			fencedEndRegex.FindStringIndex(line) == nil {
-			return false
-		}
-		return lines[currentCodeBlockStart][:3] == line[:3] || lineIndex == len(lines)-1
-	}
-
-	// if line is already within code fences or indented code block
-	if insideFenced && currentCodeBlockStart > -1 {
-		if isEndOfFence() {
+	if insideFenced {
+		if fencedEndRegex.FindStringIndex(line) != nil &&
+			lines[currentCodeBlockStart][:3] == line[:3] {
 			// Fenced code block ends with this line
 			insideFenced = false
 			currentCodeBlockStart = -1
@@ -252,19 +241,19 @@ func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
 		} else {
 			return true
 		}
-	}
-	// Check whether the current line is the start of a code fence or
-	// indented code block
-	if fencedStartRegex.FindStringIndex(line) != nil {
-		insideFenced = true
-		currentCodeBlockStart = lineIndex
-		return true
-	}
-	if indentedRegex.FindStringIndex(line) != nil &&
-		(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
-		insideIndented = true
-		currentCodeBlockStart = lineIndex
-		return true
+	} else {
+		// Check whether the current line is the start of a code fence or
+		// indented code block
+		if fencedStartRegex.FindStringIndex(line) != nil {
+			insideFenced = true
+			currentCodeBlockStart = lineIndex
+			return true
+		} else if indentedRegex.FindStringIndex(line) != nil &&
+			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
+			insideIndented = true
+			currentCodeBlockStart = lineIndex
+			return true
+		}
 	}
 	return false
 
