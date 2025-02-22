@@ -27,6 +27,7 @@ exclude_patterns = [".zk"]
 
 master_doc = "index"
 html_theme = "furo"
-html_title = "zk : a plain text note-taking assitant"
+html_title = "zk : a plain text note-taking assistant"
 # html_static_path = ["_static"]
 # templates_path = ["_templates"]
+
