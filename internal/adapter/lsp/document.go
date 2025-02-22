@@ -1,7 +1,6 @@
 package lsp
 
 import (
-	"fmt"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -213,55 +212,33 @@ var insideInline = false
 var insideFenced = false
 var insideIndented = false
 var currentCodeBlockStart = -1
-var blockStarts = ""
 
 // check whether the current line in document is within a fenced or indented
 // code block
 func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
-	blockStarts += fmt.Sprint("< ", lineIndex, currentCodeBlockStart, " >")
-	if len(line) == 0 {
+	if len(line) == 0 { // If we are at line 0 -> reset state
 		insideInline = false
 		insideFenced = false
 		insideIndented = false
 		currentCodeBlockStart = -1
 		return false
 	}
-	outOfBounds := func(line string) bool {
-		return (currentCodeBlockStart < 0 ||
-			len(line) < 3 || // Not enough chars to start a fence
-			len(lines) <= currentCodeBlockStart || // not enough to
-			len(lines[currentCodeBlockStart]) < 3)
-	}
-	isEndOfFence := func(line string) bool {
-		if !insideFenced || outOfBounds(line) ||
+	outOfBounds := (currentCodeBlockStart < 0 ||
+		len(lines) <= currentCodeBlockStart || // not enough to
+		len(lines[currentCodeBlockStart]) < 3 ||
+		len(line) < 3) // if line < 3 and we try to index line[:3] -> OOB read
+
+	isEndOfFence := func() bool {
+		if !insideFenced || outOfBounds ||
 			fencedEndRegex.FindStringIndex(line) == nil {
 			return false
 		}
 		return lines[currentCodeBlockStart][:3] == line[:3] || lineIndex == len(lines)-1
 	}
+
 	// if line is already within code fences or indented code block
 	if insideFenced && currentCodeBlockStart > -1 {
-		// something is wrong, and we need to restart the scan
-		if outOfBounds(line) {
-			panic(
-				fmt.Sprintln(
-					"ERROR:", line,
-					"INDEX: ", lineIndex,
-					"CCDS: ", currentCodeBlockStart,
-					"LEN LINES: ", len(lines),
-					"CCDS LINE: ", lines[currentCodeBlockStart],
-					"BLOCK HIST:", blockStarts,
-				),
-			)
-			// insideInline = true
-			// insideFenced = true
-			// insideIndented = true
-			// currentCodeBlockStart = -1
-			// for i := 0; i < lineIndex; i++ {
-			// 	isLineWithinCodeBlock(lines, i, lines[i])
-			// }
-		}
-		if isEndOfFence(line) {
+		if isEndOfFence() {
 			// Fenced code block ends with this line
 			insideFenced = false
 			currentCodeBlockStart = -1
