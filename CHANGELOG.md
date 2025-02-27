@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Fixed
+
+- LSP crashes when adjusting code fences (by @dandeandean, f4d3dc7)
+
 ...
 
 ## 0.14.2
