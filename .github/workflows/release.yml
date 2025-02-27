@@ -1,35 +1,33 @@
+# Create a release by pushing a tag to remote.
+# If the same tag is pushed again, the artifacts will be updated in the
+# respective release on GitHub.
+
 name: Release
 on:
   push:
     tags:
       - 'v*.*.*'
+
 jobs:
   build-binaries:
     uses: ./.github/workflows/build-binaries.yml
 
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # required for release creation
     needs: [build-binaries]
     steps:
-      - name: Update Homebrew Formula
-        uses: dawidd6/action-homebrew-bump-formula@v4
+      - name: Download artifacts from 'build binaries' workflow
+        uses: actions/download-artifact@v4
         with:
-          token: ${{secrets.HOMEBREW_GITHUB_TOKEN}}
-          formula: zk
-      - name: Set vars
-        id: vars
-        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+          path: ~/downloaded
+          merge-multiple: true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            zk-${{ needs.vars.outputs.version }}-linux-amd64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-linux-i386.tar.gz
-            zk-${{ needs.vars.outputs.version }}-linux-arm64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-alpine-amd64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-alpine-i386.tar.gz
-            zk-${{ needs.vars.outputs.version }}-macos-x86_64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-macos_arm64.tar.gz
-            zk-${{ needs.vars.outputs.version }}-windows_x64_86.tar.gz
+          draft: true
+          files: /home/runner/downloaded/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
