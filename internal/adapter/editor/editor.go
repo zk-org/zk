@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"runtime"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/zk-org/zk/internal/util/errors"
@@ -40,11 +39,7 @@ func (e *Editor) Open(paths ...string) error {
 	// initial note content to `zk new`. Without this, Vim doesn't work
 	// properly in this case.
 	// See https://github.com/zk-org/zk/issues/4
-	var suffix = " </dev/tty"
-	if runtime.GOOS == "windows" {
-		suffix = ""
-	}
-	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + suffix)
+	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + CMD_SUFFIX)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
