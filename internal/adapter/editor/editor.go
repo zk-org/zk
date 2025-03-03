@@ -39,7 +39,7 @@ func (e *Editor) Open(paths ...string) error {
 	// initial note content to `zk new`. Without this, Vim doesn't work
 	// properly in this case.
 	// See https://github.com/zk-org/zk/issues/4
-	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + " </dev/tty")
+	cmd := executil.CommandFromString(e.editor + " " + shellquote.Join(paths...) + CMD_SUFFIX)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
