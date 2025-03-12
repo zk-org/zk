@@ -21,19 +21,18 @@ paths = [
 ```
 
 You can also use
-[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) in `paths`.
+[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) in `paths`:
 
 ```toml
 [group.journal]
+# Apply to child directories of "journal".
 paths = ["journal/*"]
-```
 
-If you omit `paths`, the directory named after the group will be inferred. Note
-the double quotes when using spaces or slashes for subdirectories.
+# Apply to all sub-directories of "journal" (i.e, recursively).
+paths = ["journal/**"]
 
-```toml
-# This will automatically apply to the `citations/web` directory
-[group."citations/web"]
+# Apply to all directories named "journal".
+paths = ["**/journal"]
 ```
 
 ## Overriding note configuration and extra variables
