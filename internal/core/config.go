@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bmatcuk/doublestar/v4"
 	toml "github.com/pelletier/go-toml"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
@@ -118,7 +119,7 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 
 	for name, config := range c.Groups {
 		for _, groupPath := range config.Paths {
-			matches, err := filepath.Match(groupPath, path)
+			matches, err := doublestar.Match(groupPath, path)
 			if err != nil {
 				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
 			} else if matches {
