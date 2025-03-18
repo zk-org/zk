@@ -9,7 +9,7 @@
 project = "zk"
 copyright = "2024, zk-org"
 author = "zk-org"
-release = "0.14.2"
+release = "0.15.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -30,4 +30,3 @@ html_theme = "furo"
 html_title = "zk : a plain text note-taking assistant"
 # html_static_path = ["_static"]
 # templates_path = ["_templates"]
-
