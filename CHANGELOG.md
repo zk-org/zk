@@ -4,11 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+...
+
+## 0.15.3
+
+## Added
+
+- Set group path rule for any directory with the same name (by @mcDevnagh, 09d0621)
+  - See docs: `./docs/config/config-group.md`
+
 ## Fixed
 
 - LSP crashes when adjusting code fences (by @dandeandean, f4d3dc7)
+- Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh, 64ad7f4)
+- Ctrl-E no longer created notes from fzf picker (by @gyorb, e939463)
+- zk.list.tags LSP error message correction (by @mcDevnagh, f581447)
 
-...
 
 ## 0.14.2
 
