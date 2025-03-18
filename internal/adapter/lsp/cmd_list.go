@@ -24,18 +24,18 @@ func executeCommandList(logger util.Logger, notebook *core.Notebook, args []inte
 	if len(args) > 1 {
 		arg, ok := args[1].(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdTagList, args[1])
+			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdList, args[1])
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdTagList, arg)
+			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdList, arg)
 		}
 	}
 
 	if len(opts.Select) == 0 {
-		return nil, fmt.Errorf("%s expects a `select` option with the list of fields to return", cmdTagList)
+		return nil, fmt.Errorf("%s expects a `select` option with the list of fields to return", cmdList)
 	}
-	var selection = newListSelection(opts.Select)
+	selection := newListSelection(opts.Select)
 
 	findOpts, err := opts.NewNoteFindOpts(notebook)
 	if err != nil {
