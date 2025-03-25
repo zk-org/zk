@@ -36,7 +36,7 @@ Here are some common filename patterns you may want to use:
 
 * `{{id}}` – e.g. `i2hn8.md`
     * Just a [random ID](../notes/note-id.md), simple and elegant.
-    * To use [Neuron](../tips/neuron.md)'s ID format, set:
+    * To use [Neuron](../tips/static-sites.md)'s ID format, set:
         ```toml
         [note]
         id-charset = "hex"
