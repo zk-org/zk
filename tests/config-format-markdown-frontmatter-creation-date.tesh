@@ -1,0 +1,7 @@
+$ cd blank
+
+$ echo "[format.markdown.frontmatter] creation-date-key = \"created\"" > .zk/config.toml
+
+$ echo "---\ncreated: 2025-03-27 01:18:43\n---\n\n# Note" > note.md
+$ zk list -qflink
+>{"filename":"note"}
