@@ -94,16 +94,16 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 
 	times, err := times.Stat(absPath)
 	if err == nil {
-		note.Modified = times.ModTime().UTC()
-		note.Created = creationDateFrom(note.Metadata, times)
+		note.Modified = n.modificationDateFrom(note.Metadata, times)
+		note.Created = n.creationDateFrom(note.Metadata, times)
 	}
 
 	return &note, nil
 }
 
-func creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+func (n *Notebook) creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
 	// Read the creation date from the YAML frontmatter `date` key.
-	if dateVal, ok := metadata["date"]; ok {
+	if dateVal, ok := metadata[n.Config.Format.Markdown.Frontmatter.CreationDate]; ok {
 		if dateStr, ok := dateVal.(string); ok {
 			if time, err := iso8601.ParseString(dateStr); err == nil {
 				return time
@@ -123,4 +123,25 @@ func creationDateFrom(metadata map[string]interface{}, times times.Timespec) tim
 	}
 
 	return time.Now().UTC()
+}
+
+func (n *Notebook) modificationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+	configKey := n.Config.Format.Markdown.Frontmatter.ModificationDate
+	if !configKey.IsNull() {
+		if dateVal, ok := metadata[configKey.Unwrap()]; ok {
+			if dateStr, ok := dateVal.(string); ok {
+				if time, err := iso8601.ParseString(dateStr); err == nil {
+					return time
+				}
+				// Omitting the `T` is common
+				if time, err := time.Parse("2006-01-02 15:04:05", dateStr); err == nil {
+					return time
+				}
+				if time, err := time.Parse("2006-01-02 15:04", dateStr); err == nil {
+					return time
+				}
+			}
+		}
+	}
+	return times.ModTime().UTC()
 }
