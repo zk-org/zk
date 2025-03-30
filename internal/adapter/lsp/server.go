@@ -644,7 +644,8 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 // completion started automatically when typing an identifier, or manually.
 func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
 	currentWord := doc.WordAt(position)
-	if strings.HasPrefix(doc.LookBehind(position, len(currentWord)+2), "[[") {
+	// word includes (( but not [[
+	if strings.HasPrefix(doc.LookBehind(position, len(currentWord)+2), "[[") || strings.HasPrefix(doc.LookBehind(position, len(currentWord)), "((") {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
@@ -811,8 +812,9 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 		addTextEdits := []protocol.TextEdit{}
 
 		startOffset := -2
-		if doc.LookBehind(pos, 2) != "[[" {
+		if (doc.LookBehind(pos, 2) != "[[") || (doc.LookBehind(pos, 2) != "((") {
 			currentWord := doc.WordAt(pos)
+			// TODO: I think the -2 offset is not required for ((
 			startOffset = -2 - len(currentWord)
 		}
 
@@ -848,9 +850,10 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 	// Overwrite [[ trigger directly if the additional text edits are disabled.
 	startOffset := 0
 	if !s.useAdditionalTextEditsWithNotebook(notebook) {
-		if doc.LookBehind(pos, 2) == "[[" {
+		if (doc.LookBehind(pos, 2) == "[[") || (doc.LookBehind(pos, 2) == "((") {
 			startOffset = -2
 		} else {
+			// TODO: I think the -2 offset is not required for ((
 			currentWord := doc.WordAt(pos)
 			startOffset = -2 - len(currentWord) 
 		}
