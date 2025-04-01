@@ -12,6 +12,6 @@ Tips
    external-call
    editors-integration
    future-proof
-   neuron
+   static-sites
    style
 
