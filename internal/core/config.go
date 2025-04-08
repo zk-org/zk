@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bmatcuk/doublestar/v4"
 	toml "github.com/pelletier/go-toml"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
@@ -113,21 +114,29 @@ func (c Config) GroupConfigNamed(name string) (GroupConfig, error) {
 // GroupNameForPath returns the name of the GroupConfig matching the given
 // path, relative to the notebook.
 func (c Config) GroupNameForPath(path string) (string, error) {
+	var longestMatch string
+	var matchedName string
+
 	for name, config := range c.Groups {
 		for _, groupPath := range config.Paths {
-			matches, err := filepath.Match(groupPath, path)
+			matches, err := doublestar.Match(groupPath, path)
 			if err != nil {
 				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
 			} else if matches {
+				// Early return if an exact match
 				return name, nil
 			}
 			if strings.HasPrefix(path, groupPath+"/") {
-				return name, nil
+				// If the match is partial, find the longest prefix overlap
+				if len(groupPath) > len(longestMatch) {
+					longestMatch = groupPath
+					matchedName = name
+				}
 			}
 		}
 	}
 
-	return "", nil
+	return matchedName, nil
 }
 
 // FormatConfig holds the configuration for document formats, such as Markdown.

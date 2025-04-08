@@ -1,0 +1,25 @@
+$ cd issue-490
+
+# This test ensures that group rules do not override other group
+# rules that are applied to child directories.
+
+# Test that group t1 rules are followed.
+$ zk new dir1 --dry-run
+>Template 1
+2>{{working-dir}}/dir1/untitled.md
+
+# Test that group t1 rules are followed.
+$ zk new dir1/dir2/dir3 --dry-run
+>Template 1
+2>{{working-dir}}/dir1/dir2/dir3/untitled.md
+
+# Test that group t2 rules are followed, signifying that nested group rules are
+# functioning correctly.
+$ zk new dir1/dir2 --dry-run
+>Template 2
+2>{{working-dir}}/dir1/dir2/untitled.md
+
+# Test that explicit group override still works
+$ zk new dir1/dir2 --group t1 --dry-run
+>Template 1
+2>{{working-dir}}/dir1/dir2/untitled.md

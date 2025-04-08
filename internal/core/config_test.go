@@ -275,6 +275,55 @@ func TestParseComplete(t *testing.T) {
 	})
 }
 
+func TestGroupNameForPathApplyDeepestMatch(t *testing.T) {
+	config := Config{
+		Groups: map[string]GroupConfig{
+			"parent": {
+				Paths: []string{"dir1"},
+			},
+			"child": {
+				Paths: []string{"dir1/dir2"},
+			},
+			"other": {
+				Paths: []string{"other"},
+			},
+			"star": {
+				Paths: []string{"star/star*.md"},
+			},
+			"false positive for doublestar": {
+				Paths: []string{"*/doublestar.md"},
+			},
+			"doublestar": {
+				Paths: []string{"**/doublestar.md"},
+			},
+		},
+	}
+
+	name, err := config.GroupNameForPath("dir1/dir2/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "child")
+
+	name, err = config.GroupNameForPath("dir1/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "parent")
+
+	name, err = config.GroupNameForPath("other/note.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "other")
+
+	name, err = config.GroupNameForPath("star/start.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "star")
+
+	name, err = config.GroupNameForPath("star/star.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "star")
+
+	name, err = config.GroupNameForPath("double/star/doublestar.md")
+	assert.Nil(t, err)
+	assert.Equal(t, name, "doublestar")
+}
+
 func TestParseMergesGroupConfig(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		[note]

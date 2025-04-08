@@ -1,2 +1,3 @@
+Sphinx
 furo
 myst-parser

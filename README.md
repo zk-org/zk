@@ -37,8 +37,7 @@ video,
 - [Notebook housekeeping](https://zk-org.github.io/zk/tips/notebook-housekeeping.html)
 - [Future-proof, thanks to Markdown](https://zk-org.github.io/zk/tips/future-proof.html)
 - Supports most Markdown syntax flavors
-  - Links: regular Markdown links, `[[Wikilinks]]` and Neuron's
-    `[[Folgezettel links]]#`.
+  - Links: regular Markdown links and `[[Wikilinks]]`.
   - Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
   - [YAML frontmatter](https://zk-org.github.io/zk/notes/note-frontmatter.html)
 
@@ -48,8 +47,7 @@ be released.
 ### What `zk` is not
 
 - A note editor.
-- A tool to serve your notes on the web – for this, you may be interested in
-  [Neuron](docs/tips/neuron.md) or [Gollum](https://github.com/gollum/gollum).
+- A tool to serve your notes on the web – for this, there are some [static site solutions](docs/tips/static-sites.md).
 
 ## Install
 
