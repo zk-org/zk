@@ -26,3 +26,6 @@ keywords: [writing, essay, practice]
 All metadata are indexed and can be printed in `zk list` output, using the
 template variable `{{metadata.<key>}}`, e.g. `{{metadata.description}}`. The
 keys are normalized to lower case.
+
+Some of the keys above can be changed by the configuration file, see [`YAML`
+Frontmatter](note-format.md#yaml-frontmatter).

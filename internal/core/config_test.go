@@ -39,6 +39,10 @@ func TestParseDefaultConfig(t *testing.T) {
 				LinkFormat:        "markdown",
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
+                Frontmatter:       YamlFrontmatterConfig{
+                    CreationDate:     "date",
+                    ModificationDate: opt.NullString,
+                },
 			},
 		},
 		Tool: ToolConfig{
@@ -90,6 +94,10 @@ func TestParseComplete(t *testing.T) {
 		link-format = "custom"
 		link-encode-path = true
 		link-drop-extension = false
+
+        [format.markdown.frontmatter]
+        creation-date-key = "created"
+        modification-date-key = "changed"
 
 		[tool]
 		editor = "vim"
@@ -235,6 +243,10 @@ func TestParseComplete(t *testing.T) {
 				LinkFormat:        "custom",
 				LinkEncodePath:    true,
 				LinkDropExtension: false,
+                Frontmatter:       YamlFrontmatterConfig {
+                    CreationDate:     "created",
+                    ModificationDate: opt.NewString("changed"),
+                },
 			},
 		},
 		Tool: ToolConfig{
@@ -421,6 +433,10 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				LinkFormat:        "markdown",
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
+                Frontmatter:       YamlFrontmatterConfig{
+                    CreationDate:     "date",
+                    ModificationDate: opt.NullString,
+                },
 			},
 		},
 		LSP: LSPConfig{
