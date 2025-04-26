@@ -812,7 +812,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 		addTextEdits := []protocol.TextEdit{}
 
 		startOffset := -2
-		if (doc.LookBehind(pos, 2) != "[[") || (doc.LookBehind(pos, 2) != "((") {
+		if (doc.LookBehind(pos, 2) != "[[") && (doc.LookBehind(pos, 2) != "((") {
 			currentWord := doc.WordAt(pos)
 			// TODO: I think the -2 offset is not required for ((
 			startOffset = -2 - len(currentWord)
