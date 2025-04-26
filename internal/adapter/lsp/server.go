@@ -814,7 +814,6 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 		startOffset := -2
 		if (doc.LookBehind(pos, 2) != "[[") && (doc.LookBehind(pos, 2) != "((") {
 			currentWord := doc.WordAt(pos)
-			// TODO: I think the -2 offset is not required for ((
 			startOffset = -2 - len(currentWord)
 		}
 
@@ -853,7 +852,6 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 		if (doc.LookBehind(pos, 2) == "[[") || (doc.LookBehind(pos, 2) == "((") {
 			startOffset = -2
 		} else {
-			// TODO: I think the -2 offset is not required for ((
 			currentWord := doc.WordAt(pos)
 			startOffset = -2 - len(currentWord) 
 		}
