@@ -856,7 +856,7 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 			startOffset = -2
 		} else {
 			currentWord := doc.WordAt(pos)
-			startOffset = -2 - len(currentWord) 
+			startOffset = -2 - len(currentWord)
 		}
 	}
 
