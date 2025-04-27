@@ -644,8 +644,11 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 // completion started automatically when typing an identifier, or manually.
 func (s *Server) buildInvokedCompletionList(notebook *core.Notebook, doc *document, position protocol.Position) ([]protocol.CompletionItem, error) {
 	currentWord := doc.WordAt(position)
-	// word includes (( but not [[
-	if strings.HasPrefix(doc.LookBehind(position, len(currentWord)+2), "[[") || strings.HasPrefix(doc.LookBehind(position, len(currentWord)), "((") {
+	// currentWord will include parentheses (( but not brackets [[.
+	// We check both if it's at len(currentWord) word and len(currentWord)-2 to account for auto-pair
+	if strings.HasPrefix(doc.LookBehind(position, len(currentWord)+2), "[[") ||
+		strings.HasPrefix(doc.LookBehind(position, len(currentWord)), "((") ||
+		(len(currentWord) >= 2 && strings.HasPrefix(doc.LookBehind(position, len(currentWord)-2), "((")) {
 		return s.buildLinkCompletionList(notebook, doc, position)
 	}
 
