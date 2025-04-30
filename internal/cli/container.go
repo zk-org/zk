@@ -176,16 +176,15 @@ func globalConfigDir() string {
 	if !ok {
 		home, ok := os.LookupEnv("HOME")
 		if !ok {
-      var err error
-      home, err = os.UserHomeDir()
-      // and fall back to unix default
-      if err != nil {
-        home = "~/"
-      }
+		      var err error
+		      home, err = os.UserHomeDir()
+		      // and fall back to unix default
+		      if err != nil {
+			      home = "~/"
+		      }
 		}
 		path = filepath.Join(home, ".config")
 	}
-
 	return filepath.Join(path, "zk")
 }
 
