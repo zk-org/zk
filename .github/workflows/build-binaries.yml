@@ -164,7 +164,7 @@ jobs:
       - name: Build
         run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz zk
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -192,12 +192,12 @@ jobs:
           GOARCH: arm64
         run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-macos_arm64.tar.gz
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz zk
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zk-${{ steps.vars.outputs.version }}-macos_arm64.tar.gz
-          path: zk-${{ steps.vars.outputs.version }}-macos_arm64.tar.gz
+          name: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
 
   build-win:
     runs-on: windows-latest
@@ -217,9 +217,9 @@ jobs:
       - name: Build
         run: go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"
       - name: Compress for upload
-        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows_x64_86.tar.gz zk.exe
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz zk.exe
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zk-${{ steps.vars.outputs.version }}-windows_x64_86.tar.gz
-          path: zk-${{ steps.vars.outputs.version }}-windows_x64_86.tar.gz
+          name: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz

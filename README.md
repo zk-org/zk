@@ -68,11 +68,35 @@ brew install --HEAD zk
 
 ### Nix
 
-```sh
-# Run zk from Nix store without installing it:
+`zk` is available in nixpkgs and has a [Home Manager](https://github.com/nix-community/home-manager) module.
+
+If you want to run `zk` without permanently installing it:
+```
 nix run nixpkgs#zk
-# Or, to install it permanently:
-nix-env -iA zk
+```
+
+Or, if you want to create an ephemeral shell with `zk` available:
+```
+nix shell nixpkgs#zk
+```
+
+To permanently install `zk` on NixOS at the system level, include `nixpkgs.zk` in `environment.systemPackages` in your system configuration (`/etc/nixos/configuration.nix` by default):
+```
+environment.systemPackages = [
+  # Your other packages here
+  nixpkgs.zk
+];
+
+```
+
+If you are using [Home Manager](https://github.com/nix-community/home-manager), instead of installing for all users on the system, you can permanently install and configure `zk` just for your user via the Home Manager module. Add this to your Home Manager configuration:
+```
+programs.zk.enable = true;
+
+# Modify `${XDG_CONFIG_HOME}/zk/config.toml` through this attr
+programs.zk.settings = {
+  # Add your own configuration settings for zk here
+};
 ```
 
 ### Alpine Linux

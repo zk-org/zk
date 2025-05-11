@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ...
 
+## 0.15.1
+
+## Fixed
+
+- Better mac tar compress command compatibility (by @williambowman, 8931553)
+
 ## 0.15.0
 
 ## Added
