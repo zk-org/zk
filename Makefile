@@ -35,7 +35,13 @@ zkdocs:
 	mkdir -p docs-build
 	sphinx-build -a docs docs-build 
 
-VERSION := `git describe --tags --match v[0-9]* 2> /dev/null`
+VERSION ?= $(shell \
+	if grep -vq '^\$$Format' VERSION.txt 2>/dev/null; then \
+		cat VERSION.txt; \
+	else \
+		git describe --tags --always --dirty --match v[0-9]* 2>/dev/null; \
+	fi \
+)
 BUILD := `git rev-parse --short HEAD`
 
 ENV_PREFIX := CGO_ENABLED=1
