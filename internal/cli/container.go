@@ -172,20 +172,26 @@ func locateGlobalConfig() (string, error) {
 
 // globalConfigDir returns the parent directory of the global configuration file.
 func globalConfigDir() string {
+
+  // Try the XDG env variable
 	path, ok := os.LookupEnv("XDG_CONFIG_HOME")
-	if !ok {
-		home, ok := os.LookupEnv("HOME")
-		if !ok {
-		      var err error
-		      home, err = os.UserHomeDir()
-		      // and fall back to unix default
-		      if err != nil {
-			      home = "~/"
-		      }
-		}
-		path = filepath.Join(home, ".config")
-	}
-	return filepath.Join(path, "zk")
+  if ok {
+    return filepath.Join(path, "zk")
+  }
+  // try the Unix standard
+  home, ok := os.LookupEnv("HOME")
+	if ok {
+    return filepath.Join(home, ".config" ,"zk")
+  }
+  // try the std library home directory location
+  // the works best for windows os
+  userhome, err := os.UserHomeDir()
+  if err != nil {
+    return filepath.Join(userhome, ".config" ,"zk")
+  }
+
+  // and fall back to unix shell expansion for home
+  return filepath.Join("~/", ".config" ,"zk")
 }
 
 // SetCurrentNotebook sets the first notebook found in the given search paths
