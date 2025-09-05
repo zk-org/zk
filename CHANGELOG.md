@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## Fixed
+
+- Completions of markdown links with titles not triggering (by @vandalt, 47d0586)
+
 ...
+
+## 0.15.1
+
+## Fixed
+
+- Better mac tar compress command compatibility (by @williambowman, 8931553)
 
 ## 0.15.0
 

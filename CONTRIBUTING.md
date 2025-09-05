@@ -85,7 +85,7 @@ When `zk` is ready to be released, follow these steps in order:
    example: `v0.13.0`). Make sure you follow the
    [Semantic Versioning](https://semver.org) scheme.
 
-If you create the git tag via the command line, and push it (`git tags --push`), then the
+If you create the git tag via the command line, and push it (`git push --tags`), then the
 [release action](.github/workflows/release.yml) will be triggered. This in turn
 calls the [build-binaries action](.github/workflows/build-binaries.yml), creates
 a _draft_ release on GitHub and attaches the built binaries.
