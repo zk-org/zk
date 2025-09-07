@@ -1,10 +1,10 @@
-name: Build
+name: Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ dev, main ]
 
 jobs:
 
@@ -32,6 +32,6 @@ jobs:
 
     - name: Tesh
       # See https://github.com/actions/runner/issues/241#issuecomment-924327172
-      shell: script --return --quiet --command "bash {0}"
+      shell: 'script --return --quiet --command "bash {0}"'
       run: make tesh
 
