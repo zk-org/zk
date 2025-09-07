@@ -2,6 +2,9 @@
 
 ## Understanding the codebase
 
+We have a `dev` and `main` branch. If you are contributing, then branch from
+`dev`.
+
 ### Building the project
 
 It is recommended to use the `Makefile` for compiling the project, as the `go`
@@ -71,33 +74,6 @@ releases are created.
 - `.github/workflows/triage.yml` automatically tags old issues and PRs as
   staled.
 
-## Releasing a new version
-
-When `zk` is ready to be released, follow these steps in order:
-
-1. Update the `CHANGELOG.md`
-   ([for example](https://github.com/zk-org/zk/commit/ea4457ad671aa85a6b15747460c6f2c9ad61bf73))
-2. Update the docs version in `docs/conf.py`
-3. Commit the changes above with `git commit` (no `-m`). In the first line of
-   the commit, provide "Release <the-version>". List any necessary detail on
-   subsequent lines.
-4. Finally, create a new Git version tag with `git tag -a <version>`(syntax
-   example: `v0.13.0`). Make sure you follow the
-   [Semantic Versioning](https://semver.org) scheme.
-
-If you create the git tag via the command line, and push it (`git push --tags`), then the
-[release action](.github/workflows/release.yml) will be triggered. This in turn
-calls the [build-binaries action](.github/workflows/build-binaries.yml), creates
-a _draft_ release on GitHub and attaches the built binaries.
-
-Alternatively, you can manually create a release via the GitHub interface, also
-creating a release tag. Then you would run the
-[build-binaries action](.github/workflows/build-binaries.yml) manually, and
-again manually download and attach the binaries.
-
-In both cases the description of the release can be edited after the release is
-created (i.e, adding or editing the changelog).
-
 ## Documentation
 
 We're using [Sphinx](https://www.sphinx-doc.org/en/master/) as our documentation
@@ -144,10 +120,38 @@ reloading / live server style development.\
 Otherwise you can just manually rebuild with `make zkdocs` each time you want to
 preview your changes.
 
-## Deploying
+### Deploying
 
 Deployment to the world wide web happens via GitHub actions upon a PR to the
 main branch.
 
 So commit and push your changes to your own branch, and make a PR as usual.\
 Once merged to main, the site will be build and deployed.
+
+## Releasing a new version
+
+When `zk` is ready to be released, follow these steps in order:
+
+1. Update the `CHANGELOG.md`
+   ([for example](https://github.com/zk-org/zk/commit/ea4457ad671aa85a6b15747460c6f2c9ad61bf73)).
+2. Update the docs version in `docs/conf.py`
+3. Commit the changes above with `git commit` (no `-m`). In the first line of
+   the commit, provide "Release <the-version>". List any necessary detail on
+   subsequent lines.
+4. Finally, create a new Git version tag with `git tag -a <version>`(syntax
+   example: `v0.13.0`). Make sure you follow the
+   [Semantic Versioning](https://semver.org) scheme.
+
+If you create the git tag via the command line, and push it (`git push --tags`), then the
+[release action](.github/workflows/release.yml) will be triggered. This in turn
+calls the [build-binaries action](.github/workflows/build-binaries.yml), creates
+a _draft_ release on GitHub and attaches the built binaries.
+
+Alternatively, you can manually create a release via the GitHub interface, also
+creating a release tag. Then you would run the
+[build-binaries action](.github/workflows/build-binaries.yml) manually, and
+again manually download and attach the binaries.
+
+In both cases the description of the release can be edited after the release is
+created (i.e, adding or editing the changelog).
+
