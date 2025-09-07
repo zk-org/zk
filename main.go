@@ -177,7 +177,7 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 		os.Setenv("ZK_RUNNING_ALIAS", alias)
 
 		// Move to the current notebook's root directory before running the alias.
-		if notebook, err := container.CurrentNotebook(); err == nil {
+		if notebook, err := container.CurrentNotebook(); err == nil && alias != "init" {
 			cmdStr = `cd "` + notebook.Path + `" && ` + cmdStr
 		}
 
