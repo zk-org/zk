@@ -22,7 +22,7 @@ CGO_ENABLED=1 GOARCH=arm64 go build -tags "fts5" -ldflags "-X=main.Version=`git 
 - `GOARCH=arm64` is only required for Apple Silicon chips.
 - `-tags "fts5"` enables the FTS option with `mattn/go-sqlite3`, which handles
   much of the magic behind `zk`'s `--match` filtering option.
-- ``-ldflags "-X=main.Version=`git describe --tags --match v[0-9]* 2> /dev/null` -X=main.Build=`git rev-parse --short HEAD`"``
+- ``-ldflags "-X=main.Version=`git describe --tags --match v[0-9]* 2> /dev/null`"``
   will automatically set `zk`'s build and version numbers using the latest Git
   tag and commit SHA.
 
