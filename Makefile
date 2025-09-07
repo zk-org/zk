@@ -51,11 +51,11 @@ endif
 
 # Wrapper around the go binary, to set all the default parameters.
 define go
-	$(ENV_PREFIX) go $(1) -tags "fts5" -ldflags "-X=main.Version=$(VERSION)" $(2)
+	$(ENV_PREFIX) go $(1) -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=$(VERSION)" $(2)
 endef
 
 # Alpine (musl) requires statically linked libs. This should be compatible for
 # Void linux and other musl based distros aswell.
 define alpine
-	$(ENV_PREFIX) go $(1) -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=$(VERSION)" $(2)
+	$(ENV_PREFIX) go $(1) -buildvcs=false -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=$(VERSION)" $(2)
 endef
