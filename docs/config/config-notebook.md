@@ -14,4 +14,4 @@ The following properties are customizable:
 
 - `dir` (string)
   - Path of the default notebook.
-  - Only available in the global config file (`~/.config/zk/config.toml`).
+  - Only available in the global config file (`$ZK_CONFIG_DIR/config.toml` or `$XDG_CONFIG_HOME/zk/config.toml`).
