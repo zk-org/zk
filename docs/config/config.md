@@ -123,4 +123,6 @@ lucky = "zk list --quiet --format full --sort random --limit 1"
 wiki-title = "hint"
 # Warn for dead links between notes.
 dead-link = "error"
+# Warn when notes link here without backlinks.
+missing-backlink = { level = "warning", position = "bottom" }
 ```

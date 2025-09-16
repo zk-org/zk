@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -580,8 +581,7 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 	}
 
 	diagConfig := notebook.Config.LSP.Diagnostics
-	if diagConfig.WikiTitle == core.LSPDiagnosticNone && diagConfig.DeadLink == core.LSPDiagnosticNone {
-		// No diagnostic enabled.
+	if !diagConfig.IsEnabled() {
 		return
 	}
 
@@ -631,6 +631,11 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 				Source:   stringPtr("zk"),
 				Message:  message,
 			})
+		}
+
+		if diagConfig.MissingBacklink.Level != core.LSPDiagnosticNone {
+			backlinks := s.getMissingBacklinkDiagnostics(doc, notebook, diagConfig.MissingBacklink)
+			diagnostics = append(diagnostics, backlinks...)
 		}
 
 		go notify(protocol.ServerTextDocumentPublishDiagnostics, protocol.PublishDiagnosticsParams{
@@ -937,4 +942,162 @@ func unmarshalJSON(obj interface{}, v interface{}) error {
 func toBool(obj interface{}) bool {
 	s := strings.ToLower(fmt.Sprint(obj))
 	return s == "true" || s == "1"
+}
+
+// MissingBacklink contains information of a note that links to the current note.
+type MissingBacklink struct {
+	SourcePath  string
+	SourceTitle string
+}
+
+// findMissingBacklinks finds notes that link to the current note but are not linked back.
+func (s *Server) findMissingBacklinks(currentNoteID core.NoteID, notebook *core.Notebook, doc *document) ([]MissingBacklink, error) {
+	currentNote, err := notebook.FindMinimalNotes(core.NoteFindOpts{
+		IncludeIDs: []core.NoteID{currentNoteID},
+	})
+	if err != nil || len(currentNote) == 0 {
+		return nil, err
+	}
+	currentNotePath := currentNote[0].Path
+
+	notesThatLinkToUs, err := notebook.FindMinimalNotes(core.NoteFindOpts{
+		LinkTo: &core.LinkFilter{
+			Hrefs: []string{currentNotePath},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(notesThatLinkToUs) == 0 {
+		return nil, nil
+	}
+
+	currentDocLinks, err := doc.DocumentLinks()
+	if err != nil {
+		return nil, err
+	}
+
+	backlinkedNoteIDs := make(map[core.NoteID]bool)
+	for _, link := range currentDocLinks {
+		if strutil.IsURL(link.Href) {
+			continue
+		}
+		// Resolve the link to find the target note
+		target, err := s.noteForLink(link, notebook)
+		if err != nil || target == nil {
+			continue
+		}
+		// Extract note ID from the URI - we need to find the note by path
+		targetPath, err := uriToPath(target.URI)
+		if err != nil {
+			continue
+		}
+		targetRelPath, err := notebook.RelPath(targetPath)
+		if err != nil {
+			continue
+		}
+		targetNote, err := notebook.FindByHref(targetRelPath, false)
+		if err != nil || targetNote == nil {
+			continue
+		}
+		backlinkedNoteIDs[targetNote.ID] = true
+	}
+
+	var missingBacklinks []MissingBacklink
+	for _, linkingNote := range notesThatLinkToUs {
+		if !backlinkedNoteIDs[linkingNote.ID] {
+			missingBacklinks = append(missingBacklinks, MissingBacklink{
+				SourcePath:  linkingNote.Path,
+				SourceTitle: linkingNote.Title,
+			})
+		}
+	}
+
+	return missingBacklinks, nil
+}
+
+// getMissingBacklinkDiagnostics returns diagnostics for missing backlinks in the current document.
+func (s *Server) getMissingBacklinkDiagnostics(doc *document, notebook *core.Notebook, config core.MissingBacklinkConfig) []protocol.Diagnostic {
+	relPath, err := notebook.RelPath(doc.Path)
+	if err != nil {
+		s.logger.Err(err)
+		return nil
+	}
+
+	currentNote, err := notebook.FindByHref(relPath, false)
+	if err != nil {
+		s.logger.Err(err)
+		return nil
+	}
+
+	if currentNote == nil {
+		return nil
+	}
+
+	missingBacklinks, err := s.findMissingBacklinks(currentNote.ID, notebook, doc)
+	if err != nil {
+		s.logger.Err(err)
+		return nil
+	}
+
+	lines := strings.Split(doc.Content, "\n")
+
+	var targetLine uint32
+	switch config.Position {
+	case core.LSPDiagnosticPositionTop:
+		targetLine = 0
+	case core.LSPDiagnosticPositionBottom:
+		targetLine = uint32(len(lines) - 1)
+	case core.LSPDiagnosticPositionLastSection:
+		targetLine = findLastSectionLine(lines)
+	default:
+		targetLine = uint32(len(lines) - 1) // Fallback to bottom
+	}
+
+	var diagnostics []protocol.Diagnostic
+	for _, backlink := range missingBacklinks {
+		diagSeverity := protocol.DiagnosticSeverity(config.Level)
+
+		noteTitle := backlink.SourceTitle
+		if noteTitle == "" {
+			noteTitle = backlink.SourcePath
+		}
+
+		// Convert path to be relative to current note's directory
+		currentNoteDir := filepath.Dir(doc.Path)
+		sourceNotePath := filepath.Join(notebook.Path, backlink.SourcePath)
+		relativePath, err := filepath.Rel(currentNoteDir, sourceNotePath)
+		if err != nil {
+			// Fallback to original path if relative path calculation fails
+			relativePath = backlink.SourcePath
+		}
+
+		message := fmt.Sprintf("Missing backlink to [%s](%s)", noteTitle, relativePath)
+
+		diagnostics = append(diagnostics, protocol.Diagnostic{
+			Range: protocol.Range{
+				Start: protocol.Position{Line: targetLine, Character: 0},
+				End:   protocol.Position{Line: targetLine, Character: 0},
+			},
+			Severity: &diagSeverity,
+			Source:   stringPtr("zk"),
+			Message:  message,
+		})
+	}
+
+	return diagnostics
+}
+
+// findLastSectionLine finds the line number of the last heading in the document.
+// Falls back to line 0 (top) if no headings are found.
+func findLastSectionLine(lines []string) uint32 {
+	headingRegex := regexp.MustCompile(`^#{1,6}\s+`)
+	var lastHeadingLine uint32 = 0 // Fallback to top
+	for i, line := range lines {
+		if headingRegex.MatchString(line) {
+			lastHeadingLine = uint32(i)
+		}
+	}
+	return lastHeadingLine
 }
