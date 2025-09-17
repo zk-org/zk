@@ -1132,6 +1132,17 @@ func (s *Server) getMissingBacklinkCodeActions(doc *document, docURI protocol.Do
 	}
 
 	var actions []protocol.CodeAction
+	var formattedLinks []string
+
+	lines := strings.Split(doc.Content, "\n")
+	currentLine := min(requestRange.End.Line, uint32(len(lines)-1))
+
+	insertPosition := protocol.Position{
+		Line:      currentLine,
+		Character: uint32(len(lines[currentLine])),
+	}
+
+	// Format all links once and generate individual actions
 	for _, backlink := range missingBacklinks {
 		// Full note metadata is required for NewLinkFormatterContext
 		sourceNote, err := notebook.FindByHref(backlink.SourcePath, false)
@@ -1160,19 +1171,15 @@ func (s *Server) getMissingBacklinkCodeActions(doc *document, docURI protocol.Do
 			continue
 		}
 
-		lines := strings.Split(doc.Content, "\n")
-		currentLine := min(requestRange.End.Line, uint32(len(lines)-1))
-
-		insertPosition := protocol.Position{
-			Line:      currentLine,
-			Character: uint32(len(lines[currentLine])),
-		}
+		// Store formatted link for reuse
+		formattedLinks = append(formattedLinks, link)
 
 		title := backlink.SourceTitle
 		if title == "" {
 			title = filepath.Base(backlink.SourcePath)
 		}
 
+		// Create individual action
 		actions = append(actions, protocol.CodeAction{
 			Title: fmt.Sprintf("Add backlink to %s", title),
 			Kind:  stringPtr(protocol.CodeActionKindQuickFix),
@@ -1184,6 +1191,28 @@ func (s *Server) getMissingBacklinkCodeActions(doc *document, docURI protocol.Do
 							End:   insertPosition,
 						},
 						NewText: "\n" + link,
+					}},
+				},
+			},
+		})
+	}
+
+	// Add "add all missing backlinks" action if there are multiple backlinks
+	if len(formattedLinks) > 1 {
+		// Join all formatted links with newlines
+		allLinksText := "\n" + strings.Join(formattedLinks, "\n")
+
+		actions = append(actions, protocol.CodeAction{
+			Title: fmt.Sprintf("Add all %d missing backlinks", len(formattedLinks)),
+			Kind:  stringPtr(protocol.CodeActionKindQuickFix),
+			Edit: &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					docURI: {{
+						Range: protocol.Range{
+							Start: insertPosition,
+							End:   insertPosition,
+						},
+						NewText: allLinksText,
 					}},
 				},
 			},
