@@ -397,10 +397,6 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (interface{}, error) {
-		if isRangeEmpty(params.Range) {
-			return nil, nil
-		}
-
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -409,37 +405,43 @@ func NewServer(opts ServerOpts) *Server {
 
 		actions := []protocol.CodeAction{}
 
-		addAction := func(dir string, actionTitle string) error {
-			opts := cmdNewOpts{
-				Title: doc.ContentAtRange(params.Range),
-				Dir:   dir,
-				InsertLinkAtLocation: &protocol.Location{
-					URI:   params.TextDocument.URI,
-					Range: params.Range,
-				},
+		missingBacklinkActions := server.getMissingBacklinkCodeActions(doc, params.TextDocument.URI, params.Range)
+		actions = append(actions, missingBacklinkActions...)
+
+		// Only add "New note" actions if range is not empty.
+		if !isRangeEmpty(params.Range) {
+			addAction := func(dir string, actionTitle string) error {
+				opts := cmdNewOpts{
+					Title: doc.ContentAtRange(params.Range),
+					Dir:   dir,
+					InsertLinkAtLocation: &protocol.Location{
+						URI:   params.TextDocument.URI,
+						Range: params.Range,
+					},
+				}
+
+				var jsonOpts map[string]interface{}
+				err := unmarshalJSON(opts, &jsonOpts)
+				if err != nil {
+					return err
+				}
+
+				actions = append(actions, protocol.CodeAction{
+					Title: actionTitle,
+					Kind:  stringPtr(protocol.CodeActionKindRefactor),
+					Command: &protocol.Command{
+						Title:     actionTitle,
+						Command:   cmdNew,
+						Arguments: []interface{}{wd, jsonOpts},
+					},
+				})
+
+				return nil
 			}
 
-			var jsonOpts map[string]interface{}
-			err := unmarshalJSON(opts, &jsonOpts)
-			if err != nil {
-				return err
-			}
-
-			actions = append(actions, protocol.CodeAction{
-				Title: actionTitle,
-				Kind:  stringPtr(protocol.CodeActionKindRefactor),
-				Command: &protocol.Command{
-					Title:     actionTitle,
-					Command:   cmdNew,
-					Arguments: []interface{}{wd, jsonOpts},
-				},
-			})
-
-			return nil
+			addAction(wd, "New note in current directory")
+			addAction("", "New note in top directory")
 		}
-
-		addAction(wd, "New note in current directory")
-		addAction("", "New note in top directory")
 
 		return actions, nil
 	}
@@ -1100,4 +1102,88 @@ func findLastSectionLine(lines []string) uint32 {
 		}
 	}
 	return lastHeadingLine
+}
+
+// getMissingBacklinkCodeActions returns code actions for adding missing backlinks.
+func (s *Server) getMissingBacklinkCodeActions(doc *document, docURI protocol.DocumentUri, requestRange protocol.Range) []protocol.CodeAction {
+	notebook, err := s.notebookOf(doc)
+	if err != nil {
+		return nil
+	}
+
+	diagConfig := notebook.Config.LSP.Diagnostics
+	if diagConfig.MissingBacklink.Level == core.LSPDiagnosticNone {
+		return nil
+	}
+
+	relPath, err := notebook.RelPath(doc.Path)
+	if err != nil {
+		return nil
+	}
+
+	currentNote, err := notebook.FindByHref(relPath, false)
+	if err != nil || currentNote == nil {
+		return nil
+	}
+
+	missingBacklinks, err := s.findMissingBacklinks(currentNote.ID, notebook, doc)
+	if err != nil || len(missingBacklinks) == 0 {
+		return nil
+	}
+
+	var actions []protocol.CodeAction
+	for _, backlink := range missingBacklinks {
+		// Full note metadata is required for NewLinkFormatterContext
+		sourceNote, err := notebook.FindByHref(backlink.SourcePath, false)
+		if err != nil || sourceNote == nil {
+			continue
+		}
+
+		linkFormatter, err := notebook.NewLinkFormatter()
+		if err != nil {
+			continue
+		}
+
+		noteDir := filepath.Dir(doc.Path)
+		linkPath := core.NotebookPath{
+			Path:       backlink.SourcePath,
+			BasePath:   notebook.Path,
+			WorkingDir: noteDir,
+		}
+		linkContext, err := core.NewLinkFormatterContext(linkPath, backlink.SourceTitle, sourceNote.Metadata)
+		if err != nil {
+			continue
+		}
+
+		link, err := linkFormatter(linkContext)
+		if err != nil {
+			continue
+		}
+
+		lines := strings.Split(doc.Content, "\n")
+		currentLine := min(requestRange.End.Line, uint32(len(lines)-1))
+
+		insertPosition := protocol.Position{
+			Line:      currentLine,
+			Character: uint32(len(lines[currentLine])),
+		}
+
+		actions = append(actions, protocol.CodeAction{
+			Title: fmt.Sprintf("Add backlink to %s", filepath.Base(backlink.SourcePath)),
+			Kind:  stringPtr(protocol.CodeActionKindQuickFix),
+			Edit: &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					docURI: {{
+						Range: protocol.Range{
+							Start: insertPosition,
+							End:   insertPosition,
+						},
+						NewText: "\n" + link,
+					}},
+				},
+			},
+		})
+	}
+
+	return actions
 }
