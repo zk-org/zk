@@ -281,6 +281,9 @@ two notes with `--max-distance <count>`.
 Finally, it can be useful to see which notes have no links pointing to them at
 all. You can use the `--orphan` option for this.
 
+You can also find notes that are targets of links from other notes but don't
+link back to them using `--missing-backlink`.
+
 ## Find related notes
 
 Part of writing a great notebook is to establish links between related notes.

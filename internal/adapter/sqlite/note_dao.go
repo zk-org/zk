@@ -657,6 +657,19 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		whereExprs = append(whereExprs, `tags IS NULL`)
 	}
 
+	if opts.MissingBacklink {
+		whereExprs = append(whereExprs, `n.id IN (
+			SELECT DISTINCT incoming.target_id
+			FROM links incoming
+			LEFT JOIN links outgoing ON (
+				outgoing.source_id = incoming.target_id
+				AND outgoing.target_id = incoming.source_id
+			)
+			WHERE incoming.target_id IS NOT NULL
+			  AND outgoing.source_id IS NULL
+		)`)
+	}
+
 	if opts.CreatedStart != nil {
 		whereExprs = append(whereExprs, "created >= ?")
 		args = append(args, opts.CreatedStart)
