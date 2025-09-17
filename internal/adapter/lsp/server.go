@@ -1168,8 +1168,13 @@ func (s *Server) getMissingBacklinkCodeActions(doc *document, docURI protocol.Do
 			Character: uint32(len(lines[currentLine])),
 		}
 
+		title := backlink.SourceTitle
+		if title == "" {
+			title = filepath.Base(backlink.SourcePath)
+		}
+
 		actions = append(actions, protocol.CodeAction{
-			Title: fmt.Sprintf("Add backlink to %s", filepath.Base(backlink.SourcePath)),
+			Title: fmt.Sprintf("Add backlink to %s", title),
 			Kind:  stringPtr(protocol.CodeActionKindQuickFix),
 			Edit: &protocol.WorkspaceEdit{
 				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
