@@ -283,8 +283,8 @@ func parseDayRange(date string) (start time.Time, end time.Time, err error) {
 		return
 	}
 
-    // we add -1 second so that the day range ends at 23:59:59
-    // i.e, the 'new day' begins at 00:00:00
+	// we add -1 second so that the day range ends at 23:59:59
+	// i.e, the 'new day' begins at 00:00:00
 	start = startOfDay(day).Add(time.Second * -1)
 	end = start.AddDate(0, 0, 1)
 	return start, end, nil

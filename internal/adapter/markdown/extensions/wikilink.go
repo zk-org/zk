@@ -3,12 +3,12 @@ package extensions
 import (
 	"strings"
 
-	"github.com/zk-org/zk/internal/core"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
+	"github.com/zk-org/zk/internal/core"
 )
 
 // WikiLinkExt is an extension parsing wiki links and Neuron's Folgezettel.
