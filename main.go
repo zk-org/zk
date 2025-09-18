@@ -19,7 +19,6 @@ import (
 )
 
 var Version = "dev"
-var Build = "dev"
 
 var root struct {
 	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
