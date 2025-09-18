@@ -19,7 +19,7 @@ $ EDITOR=vim VISUAL=echo zk edit blue.md
 >{{working-dir}}/blue.md
 
 # The tool/editor config takes precedence over EDITOR and VISUAL.
-$ echo "[tool]\neditor = 'echo'" > .zk/config.toml
+$ echo -e "[tool]\neditor = 'echo'" > .zk/config.toml
 
 $ EDITOR=vim VISUAL=vim zk edit blue.md
 >{{working-dir}}/blue.md
