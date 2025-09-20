@@ -241,6 +241,57 @@ func TestNoteDAOFindIdsByHref(t *testing.T) {
 	// Filename takes precedence over the rest of the path.
 	// See https://github.com/zk-org/zk/issues/111
 	test("ref", true, []core.NoteID{8})
+
+}
+
+func TestNoteDAOFindIdsByHrefPrefixBug(t *testing.T) {
+	testNoteDAOWithFixtures(t, "", func(tx Transaction, dao *NoteDAO) {
+		shorterNote := core.Note{
+			Path:     "2024-08-27.md",
+			Title:    "Shorter note",
+			Body:     "This is the shorter note",
+			Modified: time.Date(2024, 8, 27, 10, 0, 0, 0, time.UTC),
+		}
+		longerNote := core.Note{
+			Path:     "2024-08-27_ajct.md",
+			Title:    "Longer note with suffix",
+			Body:     "This is the longer note with suffix",
+			Modified: time.Date(2024, 8, 27, 11, 0, 0, 0, time.UTC),
+		}
+
+		shorterId, err := dao.Add(shorterNote)
+		assert.Nil(t, err)
+		longerId, err := dao.Add(longerNote)
+		assert.Nil(t, err)
+
+		// Test partial matching like wiki links would use
+		ids, err := dao.FindIdsByHref("2024-08-27", true)
+		assert.Nil(t, err)
+		if len(ids) == 0 {
+			t.Fatal("Should find at least one match")
+		}
+
+		t.Logf("Partial: Found %d matches for '2024-08-27': %v", len(ids), ids)
+		t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterId, longerId)
+		t.Logf("Expected first ID: %d (2024-08-27.md), Actual first ID: %d", shorterId, ids[0])
+
+		if ids[0] != shorterId {
+			t.Errorf("Expected exact match '2024-08-27.md' (ID %d) but got ID %d. This demonstrates the prefix matching bug.", shorterId, ids[0])
+		}
+
+		// Also test exact matching
+		exactIds, err := dao.FindIdsByHref("2024-08-27.md", false)
+		assert.Nil(t, err)
+		if len(exactIds) == 0 {
+			t.Fatal("Should find at least one exact match")
+		}
+
+		t.Logf("Exact: Found %d matches for '2024-08-27.md': %v", len(exactIds), exactIds)
+
+		if exactIds[0] != shorterId {
+			t.Errorf("Exact matching failed: Expected '2024-08-27.md' (ID %d) but got ID %d. This affects LSP markdown links.", shorterId, exactIds[0])
+		}
+	})
 }
 
 func TestNoteDAOFindIncludingHrefs(t *testing.T) {
