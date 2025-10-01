@@ -3,7 +3,7 @@
 
 $ cd blank
 
-$ echo "[note]\n exclude = ['drafts/**']" > .zk/config.toml
+$ printf "[note]\nexclude = ['drafts/**']\n" > .zk/config.toml
 
 $ mkdir -p drafts/subdir/subdir
 $ echo "# This is not ignored" > not-ignored.md
