@@ -2,17 +2,17 @@ $ cd blank
 
 $ mkdir .zk/templates
 
-$ echo "# \{{title}}" > .zk/templates/custom.md
+$ echo -e "# \{{title}}" > .zk/templates/custom.md
 
 # Set a custom template.
-$ echo "[note] filename = '\{{slug title}}'\n template = 'custom.md'" > .zk/config.toml
+$ echo -e "[note] filename = '\{{slug title}}'\n template = 'custom.md'" > .zk/config.toml
 
 $ zk new --title "A new note" --dry-run
 ># A new note
 2>{{working-dir}}/a-new-note.md
 
 # Template not found.
-$ echo "[note] template = 'not-found'" > .zk/config.toml
+$ echo -e "[note] template = 'not-found'" > .zk/config.toml
 1$ zk new --dry-run
 2>zk: error: new note: load template file failed: cannot find template at not-found
 

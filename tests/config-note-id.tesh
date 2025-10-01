@@ -5,46 +5,46 @@ $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{4}"}}.md
 
 # Custom ID length.
-$ echo "[note] id-length = 100" > .zk/config.toml
+$ echo -e "[note] id-length = 100" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{100}"}}.md
 
 # Uppercase.
-$ echo "[note] id-length = 100\n id-case = 'upper'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-case = 'upper'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[A-Z0-9]{100}"}}.md
 
 # Lowercase.
-$ echo "[note] id-length = 100\n id-case = 'lower'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-case = 'lower'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{100}"}}.md
 
 # Mixed case.
-$ echo "[note] id-length = 100\n id-case = 'mixed'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-case = 'mixed'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-zA-Z0-9]{100}"}}.md
 
 # Letters charset.
-$ echo "[note] id-length = 100\n id-charset = 'letters'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-charset = 'letters'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z]{100}"}}.md
 
 # Numbers charset.
-$ echo "[note] id-length = 100\n id-charset = 'numbers'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-charset = 'numbers'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[0-9]{100}"}}.md
 
 # Alphanumeric charset.
-$ echo "[note] id-length = 100\n id-charset = 'alphanum'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-charset = 'alphanum'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-z0-9]{100}"}}.md
 
 # Hexadecimal charset.
-$ echo "[note] id-length = 100\n id-charset = 'hex'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-charset = 'hex'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-f0-9]{100}"}}.md
 
 # Custom charset.
-$ echo "[note] id-length = 100\n id-charset = 'abc01'" > .zk/config.toml
+$ echo -e "[note] id-length = 100\n id-charset = 'abc01'" > .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/{{match "[a-c01]{100}"}}.md

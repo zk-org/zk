@@ -3,7 +3,7 @@ $ cd edit
 # Editor resolution
 
 # Checks that no editor is set in the current environment.
-$ echo $VISUAL $EDITOR $ZK_EDITOR
+$ echo -e $VISUAL $EDITOR $ZK_EDITOR
 >
 
 # No editor set
@@ -25,7 +25,7 @@ $ EDITOR=vim VISUAL=vim zk edit blue.md
 >{{working-dir}}/blue.md
 
 # ZK_EDITOR takes precedence over everything else.
-$ echo "[tool]\n editor = 'vim'" > .zk/config.toml
+$ echo -e "[tool]\n editor = 'vim'" > .zk/config.toml
 
 $ EDITOR=vim VISUAL=vim ZK_EDITOR=echo zk edit blue.md
 >{{working-dir}}/blue.md
