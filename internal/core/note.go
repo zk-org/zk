@@ -80,8 +80,8 @@ func (n Note) FilenameStem() string {
 // ContextualNote holds a Note and context-sensitive content snippets.
 //
 // This is used for example:
-//   * to show an excerpt with highlighted search terms
-//   * when following links, to print the source paragraph
+//   - to show an excerpt with highlighted search terms
+//   - when following links, to print the source paragraph
 type ContextualNote struct {
 	Note
 	// List of context-sensitive excerpts from the note.

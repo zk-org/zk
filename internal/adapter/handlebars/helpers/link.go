@@ -9,8 +9,9 @@ import (
 // using a LinkFormatter.
 //
 // {{format-link "path/to/note.md" "An interesting subject"}} -> (depends on the LinkFormatter)
-//   [[path/to/note]]
-//   [An interesting subject](path/to/note)
+//
+//	[[path/to/note]]
+//	[An interesting subject](path/to/note)
 func NewLinkHelper(formatter core.LinkFormatter, logger util.Logger) interface{} {
 	return func(path string, opt interface{}) string {
 		title, _ := opt.(string)

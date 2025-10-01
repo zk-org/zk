@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/tliron/glsp"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
 	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
-	"github.com/tliron/glsp"
-	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 const cmdNew = "zk.new"
@@ -83,18 +83,18 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 	}
 
 	if !opts.DryRun && opts.InsertLinkAtLocation != nil {
-        minNote := note.AsMinimalNote()
+		minNote := note.AsMinimalNote()
 
-        info := &linkInfo{
-            note: &minNote,
-            location: opts.InsertLinkAtLocation,
-            title: &opts.Title,
-        }
-        err := linkNote(notebook, documents, context, info)
+		info := &linkInfo{
+			note:     &minNote,
+			location: opts.InsertLinkAtLocation,
+			title:    &opts.Title,
+		}
+		err := linkNote(notebook, documents, context, info)
 
-        if err != nil {
-            return nil, err
-        }
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	absPath := filepath.Join(notebook.Path, note.Path)

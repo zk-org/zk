@@ -9,6 +9,7 @@ install:
 # Run unit tests.
 test:
 	$(call go,test,./...)
+	find . -name '*.go' | xargs gofmt -w
 
 # Run end-to-end tests.
 tesh: build
