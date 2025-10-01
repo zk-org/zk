@@ -185,6 +185,14 @@ This is such a useful command, that an alias might be helpful.
 bl = "zk list --link-to $@"
 ```
 
+### Fix missing backlinks interactively
+
+Edit notes that have incoming links but don't link back to them.
+
+```toml
+fix-backlinks = "zk edit --interactive --missing-backlink"
+```
+
 ### Locate unlinked mentions in a note
 
 This alias can help you look for potential new links to establish, by listing

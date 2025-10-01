@@ -965,6 +965,13 @@ func TestNoteDAOFindOrphan(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindMissingBacklink(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		core.NoteFindOpts{MissingBacklink: true},
+		[]string{"f39c8.md", "ref/test/a.md", "log/2021-01-03.md", "index.md", "log/2021-01-04.md"},
+	)
+}
+
 func TestNoteDAOFindCreatedOn(t *testing.T) {
 	start := time.Date(2020, 11, 22, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 11, 23, 0, 0, 0, 0, time.UTC)
