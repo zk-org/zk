@@ -25,7 +25,7 @@ type Config struct {
 	Extra    map[string]string
 }
 
-// NOTE: config generation occurs in core.Init. The below function is used
+// NOTE: config generation occurs in internal/core/notebook_store.go. The below function is used
 // for test cases and as a program level default if the user conf is missing or
 // has values missing.
 
