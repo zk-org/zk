@@ -285,6 +285,15 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 
 	href = regexp.QuoteMeta(href)
 
+	// Prioritise exact match with extension
+	exactWithMdIds, err := d.findIdsByPathRegex("^" + href + "\\.md$")
+	if err != nil {
+		return nil, err
+	}
+	if len(exactWithMdIds) > 0 {
+		return exactWithMdIds, nil
+	}
+
 	if allowPartialHref {
 		ids, err := d.findIdsByPathRegex("^(.*/)?[^/]*" + href + "[^/]*$")
 		if len(ids) > 0 || err != nil {
