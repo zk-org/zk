@@ -9,7 +9,7 @@
 project = "zk"
 copyright = "2024, zk-org"
 author = "zk-org"
-release = "0.15.1"
+release = "%VERSION%"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
