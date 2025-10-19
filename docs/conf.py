@@ -9,7 +9,8 @@
 project = "zk"
 copyright = "2024, zk-org"
 author = "zk-org"
-release = "%VERSION%"
+with open('version.txt', 'r') as file:
+    release = file.read()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

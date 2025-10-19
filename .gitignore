@@ -47,3 +47,4 @@ venv.bak/
 # LSP config files
 pyrightconfig.json
 
+docs/version.txt

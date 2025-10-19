@@ -42,7 +42,7 @@ VERSION_DOCS := $(shell echo $(VERSION) | cut -c 2-)
 # Docs
 zkdocs:
 	mkdir -p docs-build
-	sed -i "s/%VERSION%/$(VERSION_DOCS)/g" docs/conf.py
+	echo "$(VERSION_DOCS)" > docs/version.txt
 	sphinx-build -a docs docs-build 
 
 ENV_PREFIX := CGO_ENABLED=1
