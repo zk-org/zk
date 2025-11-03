@@ -31,11 +31,6 @@ clean:
 	rm -rf zk*
 	rm -rf docs-build
 
-# Docs
-zkdocs:
-	mkdir -p docs-build
-	sphinx-build -a docs docs-build 
-
 VERSION ?= $(shell \
 	if grep -vq '^\$$Format' VERSION.txt 2>/dev/null; then \
 		cat VERSION.txt; \
@@ -43,6 +38,13 @@ VERSION ?= $(shell \
 		git describe --tags --always --dirty --match v[0-9]* 2>/dev/null; \
 	fi \
 )
+VERSION_DOCS := $(shell echo $(VERSION) | cut -c 2-)
+
+# Docs
+zkdocs:
+	mkdir -p docs-build
+	echo "$(VERSION_DOCS)" > docs/version.txt
+	sphinx-build -a docs docs-build 
 
 ENV_PREFIX := CGO_ENABLED=1
 # Add necessary env variables for Apple Silicon.
