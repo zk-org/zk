@@ -52,3 +52,6 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+// See: https://github.com/zk-org/zk/issues/603
+replace github.com/tliron/kutil => github.com/tliron/go-kutil v0.1.59
