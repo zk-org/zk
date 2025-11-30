@@ -60,7 +60,7 @@ pre-built binaries for macOS and Linux (`zk` was not tested on Windows).
 brew install zk
 ```
 
-Or, if you want to the latest changes:
+Or, if you want the latest state of main:
 
 ```sh
 brew install --HEAD zk
@@ -123,8 +123,17 @@ Make sure you have a working [Go 1.21+ installation](https://golang.org/), then
 clone the repository:
 
 ```sh
-$ git clone https://github.com/zk-org/zk.git
-$ cd zk
+git clone https://github.com/zk-org/zk.git
+cd zk
+make build
+```
+
+The latest state of main can be considered the stable _pre-release_ state.
+To use the absolute latest state (bugs to be expected) and to contribute:
+
+```
+git checkout dev
+make build
 ```
 
 #### On macOS / Linux
@@ -138,6 +147,8 @@ $ ./zk -h
 
 We warmly welcome issues, PRs and
 [discussions](https://github.com/zk-org/zk/discussions).
+
+_Be sure when contributing to branch from dev, not main._
 
 Here you can read
 [some useful info for contributing to `zk`](./CONTRIBUTING.md).

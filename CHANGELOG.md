@@ -2,11 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+Format: `<description> (<contributor>, <commit>)`
+
 ## Unreleased
 
 ## Fixed
 
-- Completions of markdown links with titles not triggering (by @vandalt, 47d0586)
+- Release tarballs now output the program version (by @WhyNotHugo, 344b99f)
 
 ...
 
