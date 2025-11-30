@@ -175,7 +175,7 @@ type MarkdownConfig struct {
 type YamlFrontmatterConfig struct {
 	// CreationDate is the key for the creation date has. Default is "date"
 	CreationDate     string
-	// ModificationDate indicates what name the key for the modification date has. If not present,
+	// ModificationDate is the key for the modification date has. If not present,
 	// the filesystems modification time is used.
 	ModificationDate opt.String
 }
