@@ -1,14 +1,8 @@
-Closes #(issue number)
-
-A brief description of the change and why it is needed.
-
-State whether this is related to a `zk-nvim` feature or bug in some way.
-
 ...
 
-Be sure to:
+Burn after reading:
 
-- [ ] Link the related issue
-- [ ] Run tests (`make test` and `make tesh`)
-- [ ] Updated documentation where needed
-- [ ] Add your contribution and this PR number to `CHANGELOG.md`.
+- Link related PRs
+- Run tests (`make test` and `make tesh`)
+- Update documentation where appropriate
+- Add your contribution along with this PR number to `CHANGELOG.md`
