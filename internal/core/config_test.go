@@ -545,11 +545,13 @@ func TestParseLSPDiagnosticsSeverity(t *testing.T) {
 			[lsp.diagnostics]
 			wiki-title = "%s"
 			dead-link = "%s"
-		`, value, value)
+			self-link = "%s"
+		`, value, value, value)
 		conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
 		assert.Nil(t, err)
 		assert.Equal(t, conf.LSP.Diagnostics.WikiTitle, expected)
 		assert.Equal(t, conf.LSP.Diagnostics.DeadLink, expected)
+		assert.Equal(t, conf.LSP.Diagnostics.SelfLink, expected)
 	}
 
 	test("", LSPDiagnosticNone)

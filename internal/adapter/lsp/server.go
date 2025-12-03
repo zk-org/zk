@@ -619,6 +619,12 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 				}
 				severity = protocol.DiagnosticSeverity(diagConfig.DeadLink)
 				message = "not found"
+			} else if target.URI == doc.URI {
+				if diagConfig.SelfLink == core.LSPDiagnosticNone {
+					continue
+				}
+				severity = protocol.DiagnosticSeverity(diagConfig.SelfLink)
+				message = "self-referential link"
 			} else {
 				if diagConfig.WikiTitle == core.LSPDiagnosticNone {
 					continue
