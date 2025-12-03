@@ -199,6 +199,7 @@ type LSPCompletionTemplates struct {
 type LSPDiagnosticConfig struct {
 	WikiTitle       LSPDiagnosticSeverity
 	DeadLink        LSPDiagnosticSeverity
+	SelfLink        LSPDiagnosticSeverity
 	MissingBacklink MissingBacklinkConfig
 }
 
@@ -206,6 +207,7 @@ type LSPDiagnosticConfig struct {
 func (c LSPDiagnosticConfig) IsEnabled() bool {
 	return c.WikiTitle != LSPDiagnosticNone ||
 		c.DeadLink != LSPDiagnosticNone ||
+		c.SelfLink != LSPDiagnosticNone ||
 		c.MissingBacklink.Level != LSPDiagnosticNone
 }
 
@@ -465,6 +467,12 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 			return config, wrap(err)
 		}
 	}
+	if lspDiags.SelfLink != nil {
+		config.LSP.Diagnostics.SelfLink, err = lspDiagnosticSeverityFromString(*lspDiags.SelfLink)
+		if err != nil {
+			return config, wrap(err)
+		}
+	}
 	if lspDiags.MissingBacklink != nil {
 		config.LSP.Diagnostics.MissingBacklink.Level, err = lspDiagnosticSeverityFromString(lspDiags.MissingBacklink.Level)
 		if err != nil {
@@ -615,6 +623,7 @@ type tomlLSPConfig struct {
 	Diagnostics struct {
 		WikiTitle       *string                    `toml:"wiki-title"`
 		DeadLink        *string                    `toml:"dead-link"`
+		SelfLink        *string                    `toml:"self-link"`
 		MissingBacklink *tomlMissingBacklinkConfig `toml:"missing-backlink"`
 	}
 }
