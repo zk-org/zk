@@ -11,5 +11,4 @@ Be sure to:
 - [ ] Link the related issue
 - [ ] Run tests (`make test` and `make tesh`)
 - [ ] Updated documentation where needed
-- [ ] Add your contribution and this PR number to `CHANGELOG.md` as its own
-      commit.
+- [ ] Add your contribution and this PR number to `CHANGELOG.md`.
