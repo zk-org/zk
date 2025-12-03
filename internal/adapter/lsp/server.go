@@ -747,6 +747,12 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
+		// Exclude current note from completion results.
+		notePath := filepath.Join(notebook.Path, note.Path)
+		if notePath == doc.Path {
+			continue
+		}
+
 		item, err := s.newCompletionItem(notebook, note, doc, position, linkFormatter, templates)
 		if err != nil {
 			s.logger.Err(err)
