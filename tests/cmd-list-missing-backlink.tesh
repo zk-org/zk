@@ -1,0 +1,4 @@
+$ cd missing-backlink
+
+$ zk list -qf\{{title}} --missing-backlink
+>missing-backlink

@@ -6,10 +6,10 @@ import (
 
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
-	"github.com/zk-org/zk/internal/util"
-	dateutil "github.com/zk-org/zk/internal/util/date"
 	"github.com/pkg/errors"
 	"github.com/rvflash/elapsed"
+	"github.com/zk-org/zk/internal/util"
+	dateutil "github.com/zk-org/zk/internal/util/date"
 )
 
 // RegisterDate registers the {{date}} template helper to use the `naturaldate` package to generate time.Time based on language strings.

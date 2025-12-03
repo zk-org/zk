@@ -316,7 +316,7 @@ multiword-tags = false
 # LSP
 #
 #   Configure basic editor integration for LSP-compatible editors.
-#   See https://github.com/zk-org/zk/blob/main/docs/editors-integration.md
+#   See https://zk-org.github.io/zk/tips/editors-integration.html
 #
 [lsp]
 

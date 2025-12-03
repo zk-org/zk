@@ -18,9 +18,10 @@ func ConvertMapToJSONCompatible(m map[string]interface{}) map[string]interface{}
 // maps with interface{} key type are not allowed.
 //
 // Recursion is implemented into values of the following types:
-//   -map[interface{}]interface{}
-//   -map[string]interface{}
-//   -[]interface{}
+//
+//	-map[interface{}]interface{}
+//	-map[string]interface{}
+//	-[]interface{}
 //
 // When converting map[interface{}]interface{} to map[string]interface{},
 // fmt.Sprint() with default formatting is used to convert the key to a string key.

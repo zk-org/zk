@@ -12,7 +12,7 @@ jobs:
         tag: [linux-amd64, linux-i386]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -37,7 +37,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -71,7 +71,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
@@ -83,7 +83,7 @@ jobs:
         tag: [alpine-amd64, alpine-i386]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -108,7 +108,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -142,7 +142,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
@@ -151,14 +151,14 @@ jobs:
     runs-on: macos-13
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set vars
         id: vars
         run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
       - name: Setup go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version: 1.23
       - name: Build
@@ -166,7 +166,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz zk
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
@@ -177,14 +177,14 @@ jobs:
       GOARCH: arm64
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set vars
         id: vars
         run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
       - name: Setup go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version: 1.23
       - name: Build
@@ -194,7 +194,7 @@ jobs:
       - name: Compress for upload.
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz zk
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
@@ -203,7 +203,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set vars
@@ -211,7 +211,7 @@ jobs:
         run: echo "version=$(git describe --tags --match v[0-9]* 2> $null)" >> $env:GITHUB_OUTPUT
         shell: pwsh
       - name: Setup go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version: 1.23
       - name: Build
@@ -219,7 +219,7 @@ jobs:
       - name: Compress for upload
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz zk.exe
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz

@@ -3,8 +3,8 @@ $ cd blank
 # Setup note fixtures.
 $ mkdir "red planet"
 $ touch "without-title.md"
-$ echo "---\ncolor: yellow\n---\n# Yellow sun" > "yellow-sun.md"
-$ echo "# Blue moon" > "red planet/blue moon.md"
+$ echo -e "---\ncolor: yellow\n---\n# Yellow sun" > "yellow-sun.md"
+$ echo -e "# Blue moon" > "red planet/blue moon.md"
 
 # Default link format is `markdown`, without extension.
 $ zk list -qflink
@@ -13,7 +13,7 @@ $ zk list -qflink
 >[Yellow sun](yellow-sun)
 
 # Use `wiki` link format.
-$ echo "[format.markdown] link-format = 'wiki'" > .zk/config.toml
+$ echo -e "[format.markdown] link-format = 'wiki'" > .zk/config.toml
 $ zk list -qflink
 >[[without-title]]
 >[[red planet/blue moon]]
@@ -21,7 +21,7 @@ $ zk list -qflink
 
 # Use a custom link format.
 # {{json .}} will print the whole template context.
-$ echo "[format.markdown] link-format = '\{{json .}}'" > .zk/config.toml
+$ echo -e "[format.markdown] link-format = '\{{json .}}'" > .zk/config.toml
 $ zk list -qflink
 >{"filename":"without-title","path":"without-title","absPath":"{{working-dir}}/without-title","relPath":"without-title","title":"","metadata":{}}
 >{"filename":"blue moon","path":"red planet/blue moon","absPath":"{{working-dir}}/red planet/blue moon","relPath":"red planet/blue moon","title":"Blue moon","metadata":{}}
@@ -34,27 +34,27 @@ $ zk list -qflink -W "red planet"
 >{"filename":"yellow-sun","path":"yellow-sun","absPath":"{{working-dir}}/yellow-sun","relPath":"../yellow-sun","title":"Yellow sun","metadata":{"color":"yellow"}}
 
 # Don't drop the extension.
-$ echo "link-drop-extension = false" >> .zk/config.toml
+$ echo -e "link-drop-extension = false" >> .zk/config.toml
 $ zk list -qflink
 >{"filename":"without-title.md","path":"without-title.md","absPath":"{{working-dir}}/without-title.md","relPath":"without-title.md","title":"","metadata":{}}
 >{"filename":"blue moon.md","path":"red planet/blue moon.md","absPath":"{{working-dir}}/red planet/blue moon.md","relPath":"red planet/blue moon.md","title":"Blue moon","metadata":{}}
 >{"filename":"yellow-sun.md","path":"yellow-sun.md","absPath":"{{working-dir}}/yellow-sun.md","relPath":"yellow-sun.md","title":"Yellow sun","metadata":{"color":"yellow"}}
 
 # Encode paths.
-$ echo "link-encode-path = true" >> .zk/config.toml
+$ echo -e "link-encode-path = true" >> .zk/config.toml
 $ zk list -qflink
 >{"filename":"without-title.md","path":"without-title.md","absPath":"{{working-dir}}/without-title.md","relPath":"without-title.md","title":"","metadata":{}}
 >{"filename":"blue%20moon.md","path":"red%20planet/blue%20moon.md","absPath":"{{working-dir}}/red%20planet/blue%20moon.md","relPath":"red%20planet/blue%20moon.md","title":"Blue moon","metadata":{}}
 >{"filename":"yellow-sun.md","path":"yellow-sun.md","absPath":"{{working-dir}}/yellow-sun.md","relPath":"yellow-sun.md","title":"Yellow sun","metadata":{"color":"yellow"}}
 
 # Test individual template variables.
-$ echo "[format.markdown] link-format = '\{{filename}} \{{title}} \{{json metadata}}'" > .zk/config.toml
+$ echo -e "[format.markdown] link-format = '\{{filename}} \{{title}} \{{json metadata}}'" > .zk/config.toml
 $ zk list -qflink
 >without-title  {}
 >blue moon Blue moon {}
 >yellow-sun Yellow sun {"color":"yellow"}
 
-$ echo "[format.markdown] link-format = '\{{path}} \{{rel-path}} \{{abs-path}}'" > .zk/config.toml
+$ echo -e "[format.markdown] link-format = '\{{path}} \{{rel-path}} \{{abs-path}}'" > .zk/config.toml
 $ zk list -qflink -W red\ planet
 >without-title ../without-title {{working-dir}}/without-title
 >red planet/blue moon blue moon {{working-dir}}/red planet/blue moon

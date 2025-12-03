@@ -1,13 +1,13 @@
 $ cd blank
 
-$ echo "[note]\n filename = '\{{title}}'" > .zk/config.toml
+$ echo -e "[note]\n filename = '\{{title}}'" > .zk/config.toml
 
 # The default title is Untitled.
 $ zk new --dry-run
 2>{{working-dir}}/Untitled.md
 
 # Set a custom default title.
-$ echo "default-title = 'Sans titre'" >> .zk/config.toml
+$ echo -e "default-title = 'Sans titre'" >> .zk/config.toml
 $ zk new --dry-run
 2>{{working-dir}}/Sans titre.md
 

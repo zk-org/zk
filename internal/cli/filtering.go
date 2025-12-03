@@ -16,29 +16,30 @@ import (
 type Filtering struct {
 	Path []string `kong:"group='filter',arg,optional,placeholder='PATH',help='Find notes matching the given path, including its descendants.'" json:"hrefs"`
 
-	Interactive    bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
-	Limit          int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
-	Match          []string `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
-	MatchStrategy  string   `kong:"group='filter',short='M',default='fts',placeholder='STRATEGY',help='Text matching strategy among: fts, re, exact.'" json:"matchStrategy"`
-	Exclude        []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
-	Tag            []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
-	Mention        []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
-	MentionedBy    []string `kong:"group='filter',placeholder='PATH',help='Find notes whose title is mentioned in the given ones.'" json:"mentionedBy"`
-	LinkTo         []string `kong:"group='filter',short='l',placeholder='PATH',help='Find notes which are linking to the given ones.'" json:"linkTo"`
-	NoLinkTo       []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linking to the given notes.'" json:"-"`
-	LinkedBy       []string `kong:"group='filter',short='L',placeholder='PATH',help='Find notes which are linked by the given ones.'" json:"linkedBy"`
-	NoLinkedBy     []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linked by the given ones.'" json:"-"`
-	Orphan         bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
-	Tagless        bool     `kong:"group='filter',help='Find notes which have no tags.'" json:"tagless"`
-	Related        []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
-	MaxDistance    int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
-	Recursive      bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
-	Created        string   `kong:"group='filter',placeholder='DATE',help:'Find notes created on the given date.'" json:"created"`
-	CreatedBefore  string   `kong:"group='filter',placeholder='DATE',help='Find notes created before the given date.'" json:"createdBefore"`
-	CreatedAfter   string   `kong:"group='filter',placeholder='DATE',help='Find notes created after the given date.'" json:"createdAfter"`
-	Modified       string   `kong:"group='filter',placeholder='DATE',help='Find notes modified on the given date.'" json:"modified"`
-	ModifiedBefore string   `kong:"group='filter',placeholder='DATE',help='Find notes modified before the given date.'" json:"modifiedBefore"`
-	ModifiedAfter  string   `kong:"group='filter',placeholder='DATE',help='Find notes modified after the given date.'" json:"modifiedAfter"`
+	Interactive     bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
+	Limit           int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
+	Match           []string `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
+	MatchStrategy   string   `kong:"group='filter',short='M',default='fts',placeholder='STRATEGY',help='Text matching strategy among: fts, re, exact.'" json:"matchStrategy"`
+	Exclude         []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
+	Tag             []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
+	Mention         []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
+	MentionedBy     []string `kong:"group='filter',placeholder='PATH',help='Find notes whose title is mentioned in the given ones.'" json:"mentionedBy"`
+	LinkTo          []string `kong:"group='filter',short='l',placeholder='PATH',help='Find notes which are linking to the given ones.'" json:"linkTo"`
+	NoLinkTo        []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linking to the given notes.'" json:"-"`
+	LinkedBy        []string `kong:"group='filter',short='L',placeholder='PATH',help='Find notes which are linked by the given ones.'" json:"linkedBy"`
+	NoLinkedBy      []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linked by the given ones.'" json:"-"`
+	Orphan          bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
+	Tagless         bool     `kong:"group='filter',help='Find notes which have no tags.'" json:"tagless"`
+	MissingBacklink bool     `kong:"group='filter',help='Find notes with at least one missing backlink.'" json:"missingBacklink"`
+	Related         []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
+	MaxDistance     int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
+	Recursive       bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
+	Created         string   `kong:"group='filter',placeholder='DATE',help:'Find notes created on the given date.'" json:"created"`
+	CreatedBefore   string   `kong:"group='filter',placeholder='DATE',help='Find notes created before the given date.'" json:"createdBefore"`
+	CreatedAfter    string   `kong:"group='filter',placeholder='DATE',help='Find notes created after the given date.'" json:"createdAfter"`
+	Modified        string   `kong:"group='filter',placeholder='DATE',help='Find notes modified on the given date.'" json:"modified"`
+	ModifiedBefore  string   `kong:"group='filter',placeholder='DATE',help='Find notes modified before the given date.'" json:"modifiedBefore"`
+	ModifiedAfter   string   `kong:"group='filter',placeholder='DATE',help='Find notes modified after the given date.'" json:"modifiedAfter"`
 
 	Sort []string `kong:"group='sort',short='s',placeholder='TERM',help='Order the notes by the given criterion.'" json:"sort"`
 
@@ -91,6 +92,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			f.Interactive = f.Interactive || parsedFilter.Interactive
 			f.Orphan = f.Orphan || parsedFilter.Orphan
 			f.Tagless = f.Tagless || parsedFilter.Tagless
+			f.MissingBacklink = f.MissingBacklink || parsedFilter.MissingBacklink
 			f.Recursive = f.Recursive || parsedFilter.Recursive
 
 			if f.Limit == 0 {
@@ -206,6 +208,7 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 
 	opts.Orphan = f.Orphan
 	opts.Tagless = f.Tagless
+	opts.MissingBacklink = f.MissingBacklink
 
 	if f.Created != "" {
 		start, end, err := parseDayRange(f.Created)
@@ -283,8 +286,8 @@ func parseDayRange(date string) (start time.Time, end time.Time, err error) {
 		return
 	}
 
-    // we add -1 second so that the day range ends at 23:59:59
-    // i.e, the 'new day' begins at 00:00:00
+	// we add -1 second so that the day range ends at 23:59:59
+	// i.e, the 'new day' begins at 00:00:00
 	start = startOfDay(day).Add(time.Second * -1)
 	end = start.AddDate(0, 0, 1)
 	return start, end, nil

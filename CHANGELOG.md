@@ -6,9 +6,14 @@ Format: `<description> (<contributor>, <commit>)`
 
 ## Unreleased
 
+## Added
+
+- Find notes with missing backlinks using `zk list --missing-backlink`
+
 ## Fixed
 
 - Release tarballs now output the program version (by @WhyNotHugo, 344b99f)
+- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, ff0288b)
 
 ...
 

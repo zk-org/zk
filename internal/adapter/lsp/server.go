@@ -8,16 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
-	"github.com/zk-org/zk/internal/util/opt"
-	strutil "github.com/zk-org/zk/internal/util/strings"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	glspserv "github.com/tliron/glsp/server"
 	"github.com/tliron/kutil/logging"
 	_ "github.com/tliron/kutil/logging/simple"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/opt"
+	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 // Server holds the state of the Language Server.

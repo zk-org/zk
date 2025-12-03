@@ -8,7 +8,6 @@ import (
 // strings.
 //
 // {{concat '> ' 'A quote'}} -> "> A quote"
-//
 func RegisterConcat() {
 	raymond.RegisterHelper("concat", func(a, b string) string {
 		return a + b

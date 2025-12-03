@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 const cmdLink = "zk.link"
@@ -52,11 +52,11 @@ func executeCommandLink(notebook *core.Notebook, documents *documentStore, conte
 		title:    opts.Title,
 	}
 
-    err = linkNote(notebook, documents, context, info)
+	err = linkNote(notebook, documents, context, info)
 
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
 	return map[string]interface{}{
 		"path": filepath.Join(notebook.Path, note.Path),

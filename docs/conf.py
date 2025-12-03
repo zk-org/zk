@@ -9,7 +9,11 @@
 project = "zk"
 copyright = "2024, zk-org"
 author = "zk-org"
-release = "0.15.1"
+try:
+    with open('version.txt', 'r') as file:
+        release = file.read()
+except FileNotFoundError:
+    release = "dev"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
