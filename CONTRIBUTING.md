@@ -134,11 +134,10 @@ When `zk` is ready to be released, follow these steps in order:
 
 1. Update the `CHANGELOG.md`
    ([for example](https://github.com/zk-org/zk/commit/ea4457ad671aa85a6b15747460c6f2c9ad61bf73)).
-2. Update the docs version in `docs/conf.py`
-3. Commit the changes above with `git commit` (no `-m`). In the first line of
+2. Commit the changes above with `git commit` (no `-m`). In the first line of
    the commit, provide "Release <the-version>". List any necessary detail on
    subsequent lines.
-4. Finally, create a new Git version tag with `git tag -a <version>`(syntax
+3. Finally, create a new Git version tag with `git tag -a <version>`(syntax
    example: `v0.13.0`). Make sure you follow the
    [Semantic Versioning](https://semver.org) scheme.
 

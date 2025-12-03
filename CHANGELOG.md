@@ -1,14 +1,19 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. Pull
+requests can be viewed online at https://github.com/zk-org/zk/pulls
 
-Format: `<description> (<contributor>, <commit>)`
+Format: `<description> (by <contributor>, <pr number>)`
 
 ## Unreleased
 
 ## Added
 
-- Find notes with missing backlinks using `zk list --missing-backlink`
+- Find notes with missing backlinks using `zk list --missing-backlink` (by
+  @WhyNotHugo, 578)
+- LSP diagnostic for missing backlinks when other notes link to current note
+  without reciprocal links (by @WhyNotHugo, 577)
+- Code action to add missing backlinks (by @WhyNotHugo, 581)
 
 ## Fixed
 
@@ -27,16 +32,17 @@ Format: `<description> (<contributor>, <commit>)`
 
 ## Added
 
-- Set group path rule for any directory with the same name (by @mcDevnagh, 09d0621)
+- Set group path rule for any directory with the same name (by @mcDevnagh,
+  09d0621)
   - See docs: `./docs/config/config-group.md`
 
 ## Fixed
 
 - LSP crashes when adjusting code fences (by @dandeandean, f4d3dc7)
-- Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh, 64ad7f4)
+- Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh,
+  64ad7f4)
 - Ctrl-E no longer created notes from fzf picker (by @gyorb, e939463)
 - zk.list.tags LSP error message correction (by @mcDevnagh, f581447)
-
 
 ## 0.14.2
 
