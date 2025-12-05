@@ -327,6 +327,11 @@ multiword-tags = false
 #wiki-title = "hint"
 # Warn for dead links between notes.
 dead-link = "error"
+# Warn when a note links to itself.
+#self-link = "warning"
+# Report missing backlinks
+#missing-backlink = { level = "hint", position = "bottom" }
+
 
 [lsp.completion]
 # Customize the completion pop-up of your LSP client.

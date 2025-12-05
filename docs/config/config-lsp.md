@@ -81,8 +81,8 @@ wiki-title = "hint"
 dead-link = "error"
 # Warn when a note links to itself.
 self-link = "warning"
-# Warn when notes link here without backlinks (shown at end of file).
-missing-backlink = { level = "warning", position = "bottom" }
+# Report if backlinks are missing (shown at end of file).
+missing-backlink = { level = "hint", position = "bottom" }
 
 [lsp.completion]
 # Show the note title in the completion pop-up, or fallback on its path if empty.

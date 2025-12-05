@@ -14,6 +14,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 - LSP diagnostic for missing backlinks when other notes link to current note
   without reciprocal links (by @WhyNotHugo, 577)
 - Code action to add missing backlinks (by @WhyNotHugo, 581)
+- LSP diagnostic for self-referential links (by @WhyNotHugo, 622)
 
 ## Fixed
 
