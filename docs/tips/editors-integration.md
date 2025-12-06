@@ -112,6 +112,32 @@ end })
 
 </details>
 
+#### Helix
+
+Add the following to your `languages.toml` file:
+
+<details><summary><tt>~/.config/helix/languages.toml</tt></summary>
+
+```toml
+[language-server.zk]
+command = "zk"
+args = ["lsp"]
+
+[[language]]
+name = "markdown"
+roots = [".zk"]
+language-servers = ["zk"]
+```
+
+<!-- prettier-ignore -->
+:::{note}
+This configuration disables Helix's
+[default language servers](https://docs.helix-editor.com/lang-support.html) for
+Markdown.
+:::
+
+</details>
+
 #### Sublime Text
 
 Install the [Sublime LSP](https://github.com/sublimelsp/LSP) package, then run
