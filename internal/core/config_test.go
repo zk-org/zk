@@ -56,7 +56,7 @@ func TestParseDefaultConfig(t *testing.T) {
 		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
-		Extra:   make(map[string]string),
+		Extra:   make(map[string]any),
 	})
 }
 
@@ -180,7 +180,7 @@ func TestParseComplete(t *testing.T) {
 					DefaultTitle: "Ohne Titel",
 					Exclude:      []string{"ignored", ".git", "new-ignored"},
 				},
-				Extra: map[string]string{
+				Extra: map[string]any{
 					"hello":   "world",
 					"salut":   "le monde",
 					"log-ext": "value",
@@ -201,7 +201,7 @@ func TestParseComplete(t *testing.T) {
 					DefaultTitle: "Sans titre",
 					Exclude:      []string{"ignored", ".git"},
 				},
-				Extra: map[string]string{
+				Extra: map[string]any{
 					"hello": "world",
 					"salut": "le monde",
 				},
@@ -221,7 +221,7 @@ func TestParseComplete(t *testing.T) {
 					DefaultTitle: "Sans titre",
 					Exclude:      []string{"ignored", ".git"},
 				},
-				Extra: map[string]string{
+				Extra: map[string]any{
 					"hello": "world",
 					"salut": "le monde",
 				},
@@ -268,7 +268,7 @@ func TestParseComplete(t *testing.T) {
 			"ls": "zk list $@",
 			"ed": "zk edit $@",
 		},
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"hello": "world",
 			"salut": "le monde",
 		},
@@ -386,7 +386,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 					DefaultTitle: "Sans titre",
 					Exclude:      []string{"ignored", ".git"},
 				},
-				Extra: map[string]string{
+				Extra: map[string]any{
 					"hello":   "override",
 					"salut":   "le monde",
 					"log-ext": "value",
@@ -407,7 +407,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 					DefaultTitle: "Sans titre",
 					Exclude:      []string{"ignored", ".git"},
 				},
-				Extra: map[string]string{
+				Extra: map[string]any{
 					"hello": "world",
 					"salut": "le monde",
 				},
@@ -438,7 +438,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"hello": "world",
 			"salut": "le monde",
 		},
@@ -607,7 +607,7 @@ func TestGroupConfigClone(t *testing.T) {
 			DefaultTitle: "Sans titre",
 			Exclude:      []string{"ignored", ".git"},
 		},
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"hello": "world",
 		},
 	}
@@ -644,7 +644,7 @@ func TestGroupConfigClone(t *testing.T) {
 			DefaultTitle: "Sans titre",
 			Exclude:      []string{"ignored", ".git"},
 		},
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"hello": "world",
 		},
 	})

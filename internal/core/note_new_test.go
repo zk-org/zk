@@ -20,7 +20,7 @@ func TestNotebookNewNote(t *testing.T) {
 	note, err := test.run(NewNoteOpts{
 		Title:   opt.NewString("Note title"),
 		Content: "Note content",
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"add-extra": "ec83da",
 		},
 		Date: now,
@@ -45,7 +45,7 @@ func TestNotebookNewNote(t *testing.T) {
 			Dir:          "",
 			Filename:     "",
 			FilenameStem: "",
-			Extra:        map[string]string{"add-extra": "ec83da", "conf-extra": "38srnw"},
+			Extra:        map[string]any{"add-extra": "ec83da", "conf-extra": "38srnw"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -58,7 +58,7 @@ func TestNotebookNewNote(t *testing.T) {
 			Dir:          "",
 			Filename:     "filename.ext",
 			FilenameStem: "filename",
-			Extra:        map[string]string{"add-extra": "ec83da", "conf-extra": "38srnw"},
+			Extra:        map[string]any{"add-extra": "ec83da", "conf-extra": "38srnw"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -80,7 +80,7 @@ func TestNotebookNewNoteWithDefaultTitle(t *testing.T) {
 		newNoteTemplateContext{
 			ID:    "id",
 			Title: "Titre par défaut",
-			Extra: map[string]string{"conf-extra": "38srnw"},
+			Extra: map[string]any{"conf-extra": "38srnw"},
 			Now:   now,
 			Env:   map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -128,7 +128,7 @@ func TestNotebookNewNoteInDir(t *testing.T) {
 			Dir:          "a-dir",
 			Filename:     "",
 			FilenameStem: "",
-			Extra:        map[string]string{"conf-extra": "38srnw"},
+			Extra:        map[string]any{"conf-extra": "38srnw"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -141,7 +141,7 @@ func TestNotebookNewNoteInDir(t *testing.T) {
 			Dir:          "a-dir",
 			Filename:     "filename.ext",
 			FilenameStem: "filename",
-			Extra:        map[string]string{"conf-extra": "38srnw"},
+			Extra:        map[string]any{"conf-extra": "38srnw"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -165,7 +165,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 				Case:    CaseMixed,
 			},
 		},
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"group-extra": "e48rs",
 		},
 	}
@@ -204,7 +204,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 			Dir:          "a-dir",
 			Filename:     "",
 			FilenameStem: "",
-			Extra:        map[string]string{"group-extra": "e48rs"},
+			Extra:        map[string]any{"group-extra": "e48rs"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -217,7 +217,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 			Dir:          "a-dir",
 			Filename:     "group-filename.group-ext",
 			FilenameStem: "group-filename",
-			Extra:        map[string]string{"group-extra": "e48rs"},
+			Extra:        map[string]any{"group-extra": "e48rs"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -240,7 +240,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 				Case:    CaseMixed,
 			},
 		},
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"group-extra": "e48rs",
 		},
 	}
@@ -279,7 +279,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 			Dir:          "",
 			Filename:     "",
 			FilenameStem: "",
-			Extra:        map[string]string{"group-extra": "e48rs"},
+			Extra:        map[string]any{"group-extra": "e48rs"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -292,7 +292,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 			Dir:          "",
 			Filename:     "group-filename.group-ext",
 			FilenameStem: "group-filename",
-			Extra:        map[string]string{"group-extra": "e48rs"},
+			Extra:        map[string]any{"group-extra": "e48rs"},
 			Now:          now,
 			Env:          map[string]string{"KEY1": "foo", "KEY2": "bar"},
 		},
@@ -459,7 +459,7 @@ func (t *newNoteTest) setup() {
 			},
 		},
 		Groups: t.groups,
-		Extra: map[string]string{
+		Extra: map[string]any{
 			"conf-extra": "38srnw",
 		},
 	}

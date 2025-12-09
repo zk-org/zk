@@ -22,7 +22,7 @@ type Config struct {
 	LSP      LSPConfig
 	Filters  map[string]string
 	Aliases  map[string]string
-	Extra    map[string]string
+	Extra    map[string]any
 }
 
 // NOTE: config generation occurs in core.Init. The below function is used
@@ -74,7 +74,7 @@ func NewDefaultConfig() Config {
 		},
 		Filters: map[string]string{},
 		Aliases: map[string]string{},
-		Extra:   map[string]string{},
+		Extra:   map[string]any{},
 	}
 }
 
@@ -237,7 +237,7 @@ type NoteConfig struct {
 type GroupConfig struct {
 	Paths []string
 	Note  NoteConfig
-	Extra map[string]string
+	Extra map[string]any
 }
 
 // ExcludeGlobs returns all the Note.Exclude path globs for the group paths,
@@ -263,7 +263,7 @@ func (c GroupConfig) Clone() GroupConfig {
 	clone.Paths = make([]string, len(c.Paths))
 	copy(clone.Paths, c.Paths)
 
-	clone.Extra = make(map[string]string)
+	clone.Extra = map[string]any{}
 	for k, v := range c.Extra {
 		clone.Extra[k] = v
 	}
@@ -521,7 +521,7 @@ type tomlConfig struct {
 	Format   tomlFormatConfig
 	Tool     tomlToolConfig
 	LSP      tomlLSPConfig
-	Extra    map[string]string
+	Extra    map[string]any
 	Filters  map[string]string `toml:"filter"`
 	Aliases  map[string]string `toml:"alias"`
 }
@@ -546,7 +546,7 @@ type tomlNoteConfig struct {
 type tomlGroupConfig struct {
 	Paths []string
 	Note  tomlNoteConfig
-	Extra map[string]string
+	Extra map[string]any
 }
 
 type tomlFormatConfig struct {
