@@ -19,7 +19,7 @@ jobs:
     needs: [build-binaries]
     steps:
       - name: Download artifacts from 'build binaries' workflow
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: ~/downloaded
           merge-multiple: true
