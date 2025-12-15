@@ -3,6 +3,7 @@
 There are several extensions available to integrate `zk` in your favorite
 editor:
 
+- [`zk-emacs`](https://codeberg.org/mcookly/zk-emacs) for Emacs
 - [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim.
 - [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
 
