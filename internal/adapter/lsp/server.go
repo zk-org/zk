@@ -321,7 +321,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		target, err := server.noteForLink(*link, notebook)
-		if link == nil || target == nil || err != nil {
+		if target == nil || err != nil {
 			return nil, err
 		}
 
