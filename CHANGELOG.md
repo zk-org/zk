@@ -6,6 +6,8 @@ Format: `<description> (<contributor>, <commit>)`
 
 ## Unreleased
 
+- Add --extra-json flag (by @mcDevnagh, #633)
+
 ## Fixed
 
 - Release tarballs now output the program version (by @WhyNotHugo, 344b99f)
