@@ -325,9 +325,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		// FIXME: Waiting for https://github.com/tliron/glsp/pull/3 to be
-		// merged before using LocationLink.
-		if false && isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
