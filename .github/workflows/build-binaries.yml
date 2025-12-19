@@ -157,7 +157,7 @@ jobs:
           path: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
 
   build-mac-intel:
-    runs-on: macos-13
+    runs-on: macos-15-intel # NOTE: This is the last planned mac intel runner to be supported. See https://github.com/actions/runner-images/issues/13046
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
