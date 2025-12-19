@@ -1,4 +1,4 @@
-name: Build and Test
+name: Test
 
 on:
   push:
@@ -24,9 +24,6 @@ jobs:
     - name: Install dependencies
       run: |
         go install github.com/mickael-menu/tesh@latest
-
-    - name: Build
-      run: make build
 
     - name: Test
       run: make test
