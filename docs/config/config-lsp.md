@@ -43,6 +43,7 @@ reported to your editors. Each diagnostic setting can be:
 | ------------------ | --------- | ------------------------------------------------------------------------- |
 | `wiki-title`       | `"none"`  | Report titles of wiki-links, which is useful if you use IDs for filenames |
 | `dead-link`        | `"error"` | Warn for dead links between notes                                         |
+| `self-link`        | `"none"`  | Warn when a note links to itself                                          |
 | `missing-backlink` | `"none"`  | Warn when another notes link to current note without reciprocal backlinks |
 
 ### Missing backlink diagnostic
@@ -78,8 +79,10 @@ missing-backlink = { level = "warning", position = "bottom" }
 wiki-title = "hint"
 # Warn for dead links between notes.
 dead-link = "error"
-# Warn when notes link here without backlinks (shown at end of file).
-missing-backlink = { level = "warning", position = "bottom" }
+# Warn when a note links to itself.
+self-link = "warning"
+# Report if backlinks are missing (shown at end of file).
+missing-backlink = { level = "hint", position = "bottom" }
 
 [lsp.completion]
 # Show the note title in the completion pop-up, or fallback on its path if empty.

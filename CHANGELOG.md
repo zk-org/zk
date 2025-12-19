@@ -7,36 +7,43 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ## Unreleased
 
-## Added
+### Added
+
+### Fixed
+
+...
+
+## 0.15.2
+
+### Added
 
 - Find notes with missing backlinks using `zk list --missing-backlink` (by
   @WhyNotHugo, 578)
 - LSP diagnostic for missing backlinks when other notes link to current note
   without reciprocal links (by @WhyNotHugo, 577)
 - Code action to add missing backlinks (by @WhyNotHugo, 581)
+- LSP diagnostic for self-referential links (by @WhyNotHugo, 622)
 
-## Fixed
+### Fixed
 
-- Release tarballs now output the program version (by @WhyNotHugo, 344b99f)
-- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, ff0288b)
-
-...
+- Release tarballs now output the program version (by @WhyNotHugo, 556)
+- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, 575)
 
 ## 0.15.1
 
-## Fixed
+### Fixed
 
 - Better mac tar compress command compatibility (by @williambowman, 8931553)
 
 ## 0.15.0
 
-## Added
+### Added
 
 - Set group path rule for any directory with the same name (by @mcDevnagh,
   09d0621)
   - See docs: `./docs/config/config-group.md`
 
-## Fixed
+### Fixed
 
 - LSP crashes when adjusting code fences (by @dandeandean, f4d3dc7)
 - Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh,
@@ -46,13 +53,13 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ## 0.14.2
 
-## Added
+### Added
 
 - Path in .zk/config.toml for the default note template now accepts UNIX
   "~/paths" (by @WhyNotHugo, a50d533)
 - Find notes without tags with `zk list --tagless` (by @njnygaard, 0787930)
 
-## Fixed
+### Fixed
 
 - LSP ignores magnet links as links to notes (by @billymosis, 53df879)
 - Compilation robustness for Alpine package builds (by @nmeum, 00a4361)

@@ -619,6 +619,12 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 				}
 				severity = protocol.DiagnosticSeverity(diagConfig.DeadLink)
 				message = "not found"
+			} else if target.URI == doc.URI {
+				if diagConfig.SelfLink == core.LSPDiagnosticNone {
+					continue
+				}
+				severity = protocol.DiagnosticSeverity(diagConfig.SelfLink)
+				message = "self-referential link"
 			} else {
 				if diagConfig.WikiTitle == core.LSPDiagnosticNone {
 					continue
@@ -747,6 +753,12 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 	var items []protocol.CompletionItem
 	for _, note := range notes {
+		// Exclude current note from completion results.
+		notePath := filepath.Join(notebook.Path, note.Path)
+		if notePath == doc.Path {
+			continue
+		}
+
 		item, err := s.newCompletionItem(notebook, note, doc, position, linkFormatter, templates)
 		if err != nil {
 			s.logger.Err(err)

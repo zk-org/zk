@@ -190,14 +190,25 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 	return nil, nil
 }
 
-// Recursive function to check whether a link is within inline code.
-func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
-	if backtickId := strings.Index(strBuffer, "`"); backtickId >= 0 && backtickId < linkEnd {
-		return linkWithinInlineCode(strBuffer[backtickId+1:],
-			linkStart-backtickId-1, linkEnd-backtickId-1, !insideInline)
-	} else {
-		return insideInline
+// countUnescapedBackticks counts backticks that are not preceded by a backslash.
+func countUnescapedBackticks(s string) int {
+	count := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '`' && (i == 0 || s[i-1] != '\\') {
+			count++
+		}
 	}
+	return count
+}
+
+// linkWithinInlineCode checks whether a link is within inline code.
+func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
+	for i := 0; i < len(strBuffer) && i < linkEnd; i++ {
+		if strBuffer[i] == '`' && (i == 0 || strBuffer[i-1] != '\\') {
+			insideInline = !insideInline
+		}
+	}
+	return insideInline
 }
 
 var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
@@ -340,7 +351,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 			hasTitle := match[4] != -1
 			appendLink(href, match[0], match[1], hasTitle, true)
 		}
-		if strings.Count(line, "`")%2 == 1 {
+		if countUnescapedBackticks(line)%2 == 1 {
 			insideInline = !insideInline
 		}
 	}
