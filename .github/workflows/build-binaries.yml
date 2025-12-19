@@ -75,7 +75,7 @@ jobs:
             ghcr.io/zk-org/zk-xcompile:linux-arm64 \
             /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
       - name: upload artifact
         uses: actions/upload-artifact@v6
@@ -113,7 +113,7 @@ jobs:
             ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }} \
             /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
         uses: actions/upload-artifact@v6
@@ -148,7 +148,7 @@ jobs:
             ghcr.io/zk-org/zk-xcompile:alpine-arm64 \
             /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
       - name: upload artifact
         uses: actions/upload-artifact@v6
@@ -173,7 +173,7 @@ jobs:
       - name: Build
         run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz zk
       - name: upload artifact
         uses: actions/upload-artifact@v6
@@ -202,7 +202,7 @@ jobs:
           GOARCH: arm64
         run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz zk
       - name: upload artifact
         uses: actions/upload-artifact@v6
@@ -228,7 +228,7 @@ jobs:
       - name: Build
         run: go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"
       - name: Compress for upload
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz zk.exe
       - name: Upload artifact
         uses: actions/upload-artifact@v6
