@@ -1,4 +1,9 @@
-name: Build Binaries
+# Builds on multiple architectures.
+# Also uploads artifacts in the presence of a v*.*.* tag.
+# This occurs when release.yml calls this workflow, as release.yml is
+# triggered by pushing tags.
+
+name: Build (multi-architecture)
 on:
   workflow_dispatch:
   workflow_call:
