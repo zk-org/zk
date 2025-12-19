@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/fatih/color"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/cli/cmd"
 	"github.com/zk-org/zk/internal/core"
@@ -31,10 +30,9 @@ var root struct {
 	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
 	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
 
-	NotebookDir string     `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
-	WorkingDir  string     `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
-	NoInput     NoInput    `help:"Never prompt or ask for confirmation."`
-	Color       ForceColor `help:"Force colored output"`
+	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
+	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
+	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
 	// ForceInput is a debugging flag overriding the default value of interaction prompts.
 	ForceInput string `hidden xor:"input"`
 	Debug      bool   `default:"0" hidden help:"Print a debug stacktrace on SIGINT."`
@@ -50,14 +48,6 @@ type NoInput bool
 
 func (f NoInput) BeforeApply(container *cli.Container) error {
 	container.Terminal.NoInput = true
-	return nil
-}
-
-// When enabled, output colored text even if stdout is not a tty.
-type ForceColor bool
-
-func (c ForceColor) BeforeApply() error {
-	color.NoColor = false
 	return nil
 }
 
