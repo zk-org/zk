@@ -37,7 +37,7 @@ jobs:
             ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }} \
             /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
-        if: github.ref == 'refs/heads/main' && startsWith(steps.vars.outputs.version, 'v')
+        if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
         uses: actions/upload-artifact@v5
