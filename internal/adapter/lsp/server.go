@@ -322,13 +322,11 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		target, err := server.noteForLink(*link, notebook)
-		if link == nil || target == nil || err != nil {
+		if target == nil || err != nil {
 			return nil, err
 		}
 
-		// FIXME: Waiting for https://github.com/tliron/glsp/pull/3 to be
-		// merged before using LocationLink.
-		if false && isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
@@ -341,7 +339,6 @@ func NewServer(opts ServerOpts) *Server {
 	}
 
 	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
-
 		openNotebook := func() (*core.Notebook, error) {
 			args := params.Arguments
 			if len(args) == 0 {
