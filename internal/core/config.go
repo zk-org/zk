@@ -57,6 +57,10 @@ func NewDefaultConfig() Config {
 				LinkFormat:        "markdown",
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
+                Frontmatter:       YamlFrontmatterConfig{
+                    CreationDate:     "date",
+                    ModificationDate: opt.NullString,
+                },
 			},
 		},
 		LSP: LSPConfig{
@@ -162,6 +166,18 @@ type MarkdownConfig struct {
 	LinkEncodePath bool
 	// Indicates whether a link's path file extension will be removed.
 	LinkDropExtension bool
+
+	// Frontmatter determines the keys used in the frontmatter
+	Frontmatter YamlFrontmatterConfig
+}
+
+// YamlFrontmatterConfig holds the configuration for Yaml frontmatter.
+type YamlFrontmatterConfig struct {
+	// CreationDate is the key for the creation date has. Default is "date"
+	CreationDate     string
+	// ModificationDate is the key for the modification date has. If not present,
+	// the filesystems modification time is used.
+	ModificationDate opt.String
 }
 
 // ToolConfig holds the external tooling configuration.
@@ -416,6 +432,21 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Format.Markdown.LinkDropExtension = *markdown.LinkDropExtension
 	}
 
+    // Frontmatter
+    frontmatter := markdown.Frontmatter
+    if frontmatter.CreationDate != nil && *frontmatter.CreationDate == "" {
+        *frontmatter.CreationDate = "date"
+    }
+    if frontmatter.CreationDate != nil {
+        config.Format.Markdown.Frontmatter.CreationDate = *frontmatter.CreationDate
+    }
+    if frontmatter.ModificationDate != nil && *frontmatter.ModificationDate == "" {
+        frontmatter.ModificationDate = nil
+    }
+    if frontmatter.ModificationDate != nil {
+        config.Format.Markdown.Frontmatter.ModificationDate = opt.NewString(*frontmatter.ModificationDate)
+    }
+
 	// Tool
 	tool := tomlConf.Tool
 	if tool.Editor != nil {
@@ -595,12 +626,18 @@ type tomlFormatConfig struct {
 }
 
 type tomlMarkdownConfig struct {
-	Hashtags          *bool   `toml:"hashtags"`
-	ColonTags         *bool   `toml:"colon-tags"`
-	MultiwordTags     *bool   `toml:"multiword-tags"`
-	LinkFormat        *string `toml:"link-format"`
-	LinkEncodePath    *bool   `toml:"link-encode-path"`
-	LinkDropExtension *bool   `toml:"link-drop-extension"`
+	Hashtags          *bool                     `toml:"hashtags"`
+	ColonTags         *bool                     `toml:"colon-tags"`
+	MultiwordTags     *bool                     `toml:"multiword-tags"`
+	LinkFormat        *string                   `toml:"link-format"`
+	LinkEncodePath    *bool                     `toml:"link-encode-path"`
+	LinkDropExtension *bool                     `toml:"link-drop-extension"`
+	Frontmatter       tomlYamlFrontmatterConfig `toml:"frontmatter"`
+}
+
+type tomlYamlFrontmatterConfig struct {
+	CreationDate     *string `toml:"creation-date-key"`
+	ModificationDate *string `toml:"modification-date-key"`
 }
 
 type tomlToolConfig struct {
