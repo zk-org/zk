@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,7 +15,7 @@ import (
 // AliasList lists all the aliases.
 type Config struct {
 	List       string `short:l placeholder:OBJECT 				   help:"List configuration objects. Listable ojects are: aliases, filters and extras."`
-	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: short, full, json, jsonl."`
+	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: short, full, json."`
 	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
 	Footer     string `group:format default:\n                     help:"Arbitrary text printed at the end of the list."`
 	Delimiter  string "group:format short:d default:\n             help:\"Print tags delimited by the given separator.\""
@@ -43,7 +44,7 @@ func (cmd *Config) Run(container *cli.Container) error {
 		cmd.Footer = "\x00"
 	}
 
-	if cmd.Format == "json" || cmd.Format == "jsonl" {
+	if cmd.Format == "json" {
 		if cmd.Header != "" {
 			return errors.New("--header can't be used with JSON format")
 		}
@@ -54,18 +55,10 @@ func (cmd *Config) Run(container *cli.Container) error {
 			return errors.New("--delimiter can't be used with JSON format")
 		}
 
-		switch cmd.Format {
-		case "json":
+		if cmd.Format == "json" {
 			cmd.Delimiter = ","
-			cmd.Header = "["
-			cmd.Footer = "]\n"
-
-		case "jsonl":
-			// > The last character in the file may be a line separator, and it
-			// > will be treated the same as if there was no line separator
-			// > present.
-			// > https://jsonlines.org/
-			cmd.Footer = "\n"
+			cmd.Header = "{"
+			cmd.Footer = "}\n"
 		}
 	}
 
@@ -105,6 +98,13 @@ func (cmd *Config) Run(container *cli.Container) error {
 			}
 			if cmd.Format == "" || cmd.Format == "short" {
 				fmt.Fprintf(out, format, o)
+			} else if cmd.Format == "json" {
+				jsonData, err := json.Marshal(objects[o])
+				if err != nil {
+					fmt.Println("Error marshaling JSON:", err)
+					os.Exit(1)
+				}
+				fmt.Fprintf(out, format, o, jsonData)
 			} else {
 				fmt.Fprintf(out, format, o, objects[o])
 			}
@@ -138,8 +138,7 @@ func (cmd *Config) mapTemplate() string {
 }
 
 var defaultMapFormats = map[string]string{
-	"json":  `{"%s":"%s"}`,
-	"jsonl": `{"%s":"%s"}`,
+	"json":  `"%s":%s`,
 	"short": `%s`,
 	"full":  `%12s    %s`,
 }
