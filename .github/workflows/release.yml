@@ -1,39 +1,33 @@
+# Create a release by pushing a tag to remote.
+# If the same tag is pushed again, the artifacts will be updated in the
+# respective release on GitHub.
+
 name: Release
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
+    tags: ['v*.*.*']
 
 jobs:
-  build-binaries:
-    uses: ./.github/workflows/build-binaries-debug.yml
+  build:
+    uses: ./.github/workflows/build.yml
 
   create-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write # required for release creation
-    needs: [build-binaries]
+    needs: [build]
     steps:
-      - name: Download artifacts from 'build binaries' workflow
-        uses: actions/download-artifact@v4
+      - name: Download artifacts from 'build' workflow
+        uses: actions/download-artifact@v7
         with:
+          path: ~/downloaded
           merge-multiple: true
-      - name: Find downloaded artifacts
-        run: find . -name '*.gz'
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: /home/runner/work/zk/zk/*
-          # files: |
-          #   zk-${{ github.ref_name }}-linux-amd64.tar.gz
-          #   zk-${{ github.ref_name }}-linux-i386.tar.gz
-          #   zk-${{ github.ref_name }}-linux-arm64.tar.gz
-          #   zk-${{ github.ref_name }}-alpine-amd64.tar.gz
-          #   zk-${{ github.ref_name }}-alpine-i386.tar.gz
-          #   zk-${{ github.ref_name }}-macos-x86_64.tar.gz
-          #   zk-${{ github.ref_name }}-macos_arm64.tar.gz
-          #   zk-${{ github.ref_name }}-windows_x64_86.tar.gz
+          files: /home/runner/downloaded/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
