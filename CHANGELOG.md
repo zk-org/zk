@@ -1,49 +1,66 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+Pull requests can be viewed online at https://github.com/zk-org/zk/pulls
 
-Format: `<description> (<contributor>, <commit>)`
+Format: `<description> (by <contributor>, <pr number>)`
 
 ## Unreleased
 
+### Added
 - Add --extra-json flag (by @mcDevnagh, #633)
 
-## Fixed
-
-- Release tarballs now output the program version (by @WhyNotHugo, 344b99f)
+### Fixed
 
 ...
 
+## 0.15.2
+
+### Added
+
+- Find notes with missing backlinks using `zk list --missing-backlink` (by
+  @WhyNotHugo, 578)
+- LSP diagnostic for missing backlinks when other notes link to current note
+  without reciprocal links (by @WhyNotHugo, 577)
+- Code action to add missing backlinks (by @WhyNotHugo, 581)
+- LSP diagnostic for self-referential links (by @WhyNotHugo, 622)
+
+### Fixed
+
+- Release tarballs now output the program version (by @WhyNotHugo, 556)
+- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, 575)
+
 ## 0.15.1
 
-## Fixed
+### Fixed
 
 - Better mac tar compress command compatibility (by @williambowman, 8931553)
 
 ## 0.15.0
 
-## Added
+### Added
 
-- Set group path rule for any directory with the same name (by @mcDevnagh, 09d0621)
+- Set group path rule for any directory with the same name (by @mcDevnagh,
+  09d0621)
   - See docs: `./docs/config/config-group.md`
 
-## Fixed
+### Fixed
 
 - LSP crashes when adjusting code fences (by @dandeandean, f4d3dc7)
-- Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh, 64ad7f4)
+- Editor not opening via zk commands on Windows (by @apraga and @mcDevnagh,
+  64ad7f4)
 - Ctrl-E no longer created notes from fzf picker (by @gyorb, e939463)
 - zk.list.tags LSP error message correction (by @mcDevnagh, f581447)
 
-
 ## 0.14.2
 
-## Added
+### Added
 
 - Path in .zk/config.toml for the default note template now accepts UNIX
   "~/paths" (by @WhyNotHugo, a50d533)
 - Find notes without tags with `zk list --tagless` (by @njnygaard, 0787930)
 
-## Fixed
+### Fixed
 
 - LSP ignores magnet links as links to notes (by @billymosis, 53df879)
 - Compilation robustness for Alpine package builds (by @nmeum, 00a4361)
@@ -123,7 +140,8 @@ Format: `<description> (<contributor>, <commit>)`
 ### Changed
 
 - **Breaking change:** The `{{date}}` template helper was renamed to
-  `{{format-date}}`. You might need to update your configuration and templates.
+  `{{format-date}}`.
+  You might need to update your configuration and templates.
 
 ### Fixed
 
@@ -138,7 +156,7 @@ Format: `<description> (<contributor>, <commit>)`
 
 - `zk new` now requires the `--interactive`/`-i` flag to read the note body from
   a pipe or standard input.
-  [See rational](https://github.com/zk-org/zk/pull/242#issuecomment-1182602001).
+  [See rational](https://github.com/zk-org/zk/pull/242#issuecomment-1182602001).
 
 ### Fixed
 
@@ -159,8 +177,8 @@ Format: `<description> (<contributor>, <commit>)`
 
 ### Changed
 
-- The flags `--exact-match`/`-e` are deprecated in favor of
-  `--match-strategy exact`/`-Me`.
+- The flags `--exact-match`/`-e` are deprecated in favor of `--match-strategy
+  exact`/`-Me`.
 
 ### Deprecated
 
@@ -205,7 +223,7 @@ Format: `<description> (<contributor>, <commit>)`
   doesn't use `additionalTextEdits` anymore to remove the trigger characters
   when completing links.
   - You can customize the default behavior with the
-    [`use-additional-text-edits` configuration key](docs/config-lsp.md).
+    [`use-additional-text-edits` configuration key](docs/config-lsp.md).
 - [#163](https://github.com/zk-org/zk/issues/163) Use the `ZK_SHELL` environment
   variable to override the shell for `zk` only.
 - [#173](https://github.com/zk-org/zk/issues/173) Support for double star
@@ -221,9 +239,9 @@ Format: `<description> (<contributor>, <commit>)`
 
 ### Changed
 
-- The default `fzf` key binding to create a new note with
-  `zk edit --interactive` was changed to `Ctrl-E`, to avoid conflict with the
-  default `Ctrl-N` binding.
+- The default `fzf` key binding to create a new note with `zk edit
+  --interactive` was changed to `Ctrl-E`, to avoid conflict with the default
+  `Ctrl-N` binding.
 
 ### Fixed
 
@@ -267,7 +285,7 @@ Format: `<description> (<contributor>, <commit>)`
   (e.g. with `zk list --format`) and for the [`fzf-line`](docs/tool-fzf.md)
   config key.
 - Customize how LSP completion items appear in your editor when auto-completing
-  links with the [`[lsp.completion]` configuration section](docs/config-lsp.md).
+  links with the [`[lsp.completion]` configuration section](docs/config-lsp.md).
   ```toml
   [lsp.completion]
   # Show the note title in the completion pop-up, or fallback on its path if empty.
@@ -281,7 +299,7 @@ Format: `<description> (<contributor>, <commit>)`
   generated note instead of saving it to the file system.
 - New `--verbose` flag for `zk index` which prints detailed information about
   the indexing process.
-- You can now filter through the [YAML frontmatter](docs/note-frontmatter.md)
+- You can now filter through the [YAML frontmatter](docs/note-frontmatter.md)
   with `zk list --interactive`.
 
 ### Fixed
@@ -300,11 +318,12 @@ Format: `<description> (<contributor>, <commit>)`
 
 - List the tags found in your notebook with `zk tag list`.
   - Many options are available to customize the output, including JSON
-    serialization. See `zk tag list --help`.
+    serialization.
+    See `zk tag list --help`.
 - Support for LSP references to browse the backlinks of the current note, if the
   caret is not over a link.
 - New template variables are available when
-  [generating custom Markdown links with `link-format`](docs/note-format.md).
+  [generating custom Markdown links with `link-format`](docs/note-format.md).
   - `filename`, `path`, `abs-path` and `rel-path` for many path flavors.
   - `metadata` to use information (e.g. `id`) from the YAML frontmatter.
 - The LSP server is now matching wiki links to any part of a note's path or its
@@ -317,7 +336,7 @@ Format: `<description> (<contributor>, <commit>)`
     [[Information Graphics]]
     ```
 - Use the `{{abs-path}}` template variable when
-  [formatting notes](docs/template-format.md) to print the absolute path to the
+  [formatting notes](docs/template-format.md) to print the absolute path to the
   note (contributed by [@pstuifzand](https://github.com/zk-org/zk/pull/60)).
 - A new `{{substring s index length}}` template helper extracts a portion of a
   given string, e.g.:
@@ -340,7 +359,7 @@ Format: `<description> (<contributor>, <commit>)`
 - Use JSON formats with `zk list` for easy post-processing:
   - `--format json` prints a plain JSON array.
   - `--format jsonl` prints one JSON note object per line, according to
-    [JSON Lines](https://jsonlines.org/).
+    [JSON Lines](https://jsonlines.org/).
 - The new `{{json}}` template helper serializes any template context variable
   into a valid JSON value, e.g.:
   - `{{json title}}` prints with quotes `"An interesting note"`
@@ -363,21 +382,22 @@ Format: `<description> (<contributor>, <commit>)`
 
 - [#16](https://github.com/zk-org/zk/issues/16) Links with section anchors, e.g.
   `[[filename#section]]`.
-- Unicode support in wiki links. If you use accents or ideograms, please run
-  `zk index --force` after upgrading to fix your index.
+- Unicode support in wiki links.
+  If you use accents or ideograms, please run `zk index --force` after upgrading
+  to fix your index.
 
 ## 0.5.0
 
 ### Added
 
-- [Editor integration through LSP](https://github.com/zk-org/zk/issues/22):
+- [Editor integration through LSP](https://github.com/zk-org/zk/issues/22):
   - New code actions to create a note using the current selection as title.
   - Custom commands to
-    [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
-  - Diagnostics to [report dead links or wiki link titles](docs/config-lsp.md).
+    [run `new` and `index` from your editor](docs/editors-integration.md#custom-commands).
+  - Diagnostics to [report dead links or wiki link titles](docs/config-lsp.md).
   - Auto-complete only the path of a Markdown link by typing `[custom title]((`.
 - Customize the format of `fzf`'s lines
-  [with your own template](docs/tool-fzf.md).
+  [with your own template](docs/tool-fzf.md).
   ```toml
   [tool]
   fzf-line = "{{style 'green' path}}{{#each tags}} #{{this}}{{/each}} {{style 'black' body}}"
@@ -402,12 +422,12 @@ Format: `<description> (<contributor>, <commit>)`
 - Interactive wizard for the `zk init` command.
 - An experimental Language Server for LSP-compatible editors:
   - Auto-complete Markdown links with `[[` (setup wiki links in the
-    [note formats configuration](docs/note-format.md))
-  - Auto-complete [hashtags and colon-separated tags](docs/tags.md).
+    [note formats configuration](docs/note-format.md))
+  - Auto-complete [hashtags and colon-separated tags](docs/tags.md).
   - Preview the content of a note when hovering a link.
   - Navigate in your notes by following internal links.
-  - [And more to come...](https://github.com/zk-org/zk/issues/22)
-  - See [the documentation](docs/editors-integration.md) for configuration
+  - [And more to come...](https://github.com/zk-org/zk/issues/22)
+  - See [the documentation](docs/editors-integration.md) for configuration
     samples.
 - Pair `--match` with `--exact-match` / `-e` to search for (case insensitive)
   exact occurrences in your notes.
@@ -415,28 +435,29 @@ Format: `<description> (<contributor>, <commit>)`
     as `[[name]]`.
 - Generating links to notes.
   - Use the `{{link}}` template variable when
-    [formatting notes](docs/template-format.md) to print a link to the note,
+    [formatting notes](docs/template-format.md) to print a link to the note,
     relative to the working directory.
   - Use the `{{format-link path title}}` template helper to render a custom
     link.
   - Customize the link format from the
-    [note formats settings](docs/note-format.md). You can for example choose
-    regular Markdown links, wiki links or a custom format.
+    [note formats settings](docs/note-format.md).
+    You can for example choose regular Markdown links, wiki links or a custom
+    format.
 
 ### Changed
 
 - The local configuration file (`.zk/config.toml`) is not required anymore in a
   notebook's `.zk` directory.
 - `--notebook-dir` does not change the working directory anymore, instead it
-  sets manually the current notebook and disable auto-discovery. Use the new
-  `--working-dir`/`-W` flag to run `zk` as if it was started from this path
-  instead of the current working directory.
+  sets manually the current notebook and disable auto-discovery.
+  Use the new `--working-dir`/`-W` flag to run `zk` as if it was started from
+  this path instead of the current working directory.
   - For convenience, `ZK_NOTEBOOK_DIR` behaves like setting a `--working-dir`
-    fallback, instead of `--notebook-dir`. This way, paths will be relative to
-    the root of the notebook.
-  - A practical use case is to use `zk list -W .` when outside a notebook. This
-    will list the notes in `ZK_NOTEBOOK_DIR` but print paths relative to the
-    current directory, making them actionable from your terminal emulator.
+    fallback, instead of `--notebook-dir`.
+    This way, paths will be relative to the root of the notebook.
+  - A practical use case is to use `zk list -W .` when outside a notebook.
+    This will list the notes in `ZK_NOTEBOOK_DIR` but print paths relative to
+    the current directory, making them actionable from your terminal emulator.
 
 ## 0.3.0
 
@@ -445,7 +466,7 @@ Format: `<description> (<contributor>, <commit>)`
 - Global `zk` configuration at `~/.config/zk/config.toml`.
   - Useful to share aliases or default settings across several
     [notebooks](docs/notebook.md).
-  - This is the same format as a notebook [configuration file](docs/config.md).
+  - This is the same format as a notebook [configuration file](docs/config.md).
   - Shared templates can be stored in `~/.config/zk/templates/`.
   - `XDG_CONFIG_HOME` is taken into account.
 - Use `--notebook-dir` or set `ZK_NOTEBOOK_DIR` to run `zk` as if it was started
@@ -459,13 +480,13 @@ Format: `<description> (<contributor>, <commit>)`
 - Find every note whose title is mentioned in the note you are working on with
   `--mentioned-by file.md`.
   - To refer to a note using several names, you can use the
-    [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
-    For example the note titled "Artificial Intelligence" might have:
-    `aliases: [AI, robot]`
+    [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
+    For example the note titled "Artificial Intelligence" might have: `aliases:
+    [AI, robot]`
   - To find only unlinked mentions, pair it with `--no-linked-by`, e.g.
     `--mentioned-by file.md --no-linked-by file.md`.
-- Declare [named filters](docs/config-filter.md) in the configuration file to
-  reuse [note filtering options](docs/note-filtering.md) used frequently
+- Declare [named filters](docs/config-filter.md) in the configuration file to
+  reuse [note filtering options](docs/note-filtering.md) used frequently
   together, for example:
   ```toml
   [filter]
@@ -501,20 +522,21 @@ Format: `<description> (<contributor>, <commit>)`
     - Use glob patterns to match multiple tags, e.g. `--tag "book-*"`.
   - Many tag flavors are supported: `#hashtags`, `:colon:separated:tags:`
     ([opt-in](docs/note-format.md)) and even Bear's
-    [`#multi-word tags#`](https://blog.bear.app/2017/11/bear-tips-how-to-create-multi-word-tags/)
-    ([opt-in](docs/note-format.md)). If you prefer to use a YAML frontmatter,
-    list your tags with the key `tags` or `keywords`.
+    [`#multi-word tags#`](https://blog.bear.app/2017/11/bear-tips-how-to-create-multi-word-tags/)
+    ([opt-in](docs/note-format.md)).
+    If you prefer to use a YAML frontmatter, list your tags with the key `tags`
+    or `keywords`.
 - Find every mention of a note in your notebook with `--mention file.md`.
   - This will look for occurrences of the note's title in other notes.
   - To refer to a note using several names, you can use the
-    [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
-    For example the note titled "Artificial Intelligence" might have:
-    `aliases: [AI, robot]`
-  - To find only unlinked mentions, pair it with `--no-link-to`, e.g.
-    `--mention file.md --no-link-to file.md`.
-- Print metadata from the [YAML frontmatter](docs/note-frontmatter.md) in `list`
-  output using `{{metadata.<key>}}`, e.g. `{{metadata.description}}`. Keys are
-  normalized to lower case.
+    [YAML frontmatter key `aliases`](https://publish.obsidian.md/help/How+to/Add+aliases+to+note).
+    For example the note titled "Artificial Intelligence" might have: `aliases:
+    [AI, robot]`
+  - To find only unlinked mentions, pair it with `--no-link-to`, e.g. `--mention
+    file.md --no-link-to file.md`.
+- Print metadata from the [YAML frontmatter](docs/note-frontmatter.md) in `list`
+  output using `{{metadata.<key>}}`, e.g. `{{metadata.description}}`.
+  Keys are normalized to lower case.
 - Use the YAML frontmatter key `date` for the note creation date, when provided.
 - Access environment variables from note templates with the `env.<key>` template
   variable, e.g. `{{env.PATH}}`.

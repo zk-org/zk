@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/schollz/progressbar/v3"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util/paths"
-	"github.com/schollz/progressbar/v3"
 )
 
 // Index indexes the content of all the notes in the notebook.

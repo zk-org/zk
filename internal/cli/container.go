@@ -172,6 +172,9 @@ func locateGlobalConfig() (string, error) {
 
 // globalConfigDir returns the parent directory of the global configuration file.
 func globalConfigDir() string {
+	if path, ok := os.LookupEnv("ZK_CONFIG_DIR"); ok && path != "" {
+		return path
+	}
 	path, ok := os.LookupEnv("XDG_CONFIG_HOME")
 	if !ok {
 		home, ok := os.LookupEnv("HOME")

@@ -285,6 +285,15 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 
 	href = regexp.QuoteMeta(href)
 
+	// Prioritise exact match with extension
+	exactWithMdIds, err := d.findIdsByPathRegex("^" + href + "\\.md$")
+	if err != nil {
+		return nil, err
+	}
+	if len(exactWithMdIds) > 0 {
+		return exactWithMdIds, nil
+	}
+
 	if allowPartialHref {
 		ids, err := d.findIdsByPathRegex("^(.*/)?[^/]*" + href + "[^/]*$")
 		if len(ids) > 0 || err != nil {
@@ -389,7 +398,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 		return opts, err
 	}
 	if len(ids) == 0 {
-		return opts, fmt.Errorf("could not find notes at: " + strings.Join(opts.Mention, ", "))
+		return opts, fmt.Errorf("could not find notes at: %s", strings.Join(opts.Mention, ", "))
 	}
 
 	// Exclude the mentioned notes from the results.
@@ -451,7 +460,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 			return err
 		}
 		if len(ids) == 0 {
-			return fmt.Errorf("could not find notes at: " + strings.Join(hrefs, ", "))
+			return fmt.Errorf("could not find notes at: %s", strings.Join(hrefs, ", "))
 		}
 		idsList := "(" + joinNoteIDs(ids, ",") + ")"
 
@@ -610,7 +619,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 			return nil, err
 		}
 		if len(ids) == 0 {
-			return nil, fmt.Errorf("could not find notes at: " + strings.Join(opts.MentionedBy, ", "))
+			return nil, fmt.Errorf("could not find notes at: %s", strings.Join(opts.MentionedBy, ", "))
 		}
 
 		// Exclude the mentioning notes from the results.
@@ -655,6 +664,19 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 
 	if opts.Tagless {
 		whereExprs = append(whereExprs, `tags IS NULL`)
+	}
+
+	if opts.MissingBacklink {
+		whereExprs = append(whereExprs, `n.id IN (
+			SELECT DISTINCT incoming.target_id
+			FROM links incoming
+			LEFT JOIN links outgoing ON (
+				outgoing.source_id = incoming.target_id
+				AND outgoing.target_id = incoming.source_id
+			)
+			WHERE incoming.target_id IS NOT NULL
+			  AND outgoing.source_id IS NULL
+		)`)
 	}
 
 	if opts.CreatedStart != nil {

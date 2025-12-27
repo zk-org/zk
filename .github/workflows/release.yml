@@ -5,21 +5,21 @@
 name: Release
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
+    tags: ['v*.*.*']
 
 jobs:
-  build-binaries:
-    uses: ./.github/workflows/build-binaries.yml
+  build:
+    uses: ./.github/workflows/build.yml
 
   create-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write # required for release creation
-    needs: [build-binaries]
+    needs: [build]
     steps:
-      - name: Download artifacts from 'build binaries' workflow
-        uses: actions/download-artifact@v5
+      - name: Download artifacts from 'build' workflow
+        uses: actions/download-artifact@v7
         with:
           path: ~/downloaded
           merge-multiple: true

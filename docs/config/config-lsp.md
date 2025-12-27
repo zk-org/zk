@@ -39,10 +39,35 @@ reported to your editors. Each diagnostic setting can be:
 - `hint`, `info`, `warning` or `error` to enable and set the severity of the
   diagnostic.
 
-| Setting      | Default   | Description                                                               |
-| ------------ | --------- | ------------------------------------------------------------------------- |
-| `wiki-title` | `"none"`  | Report titles of wiki-links, which is useful if you use IDs for filenames |
-| `dead-link`  | `"error"` | Warn for dead links between notes                                         |
+| Setting            | Default   | Description                                                               |
+| ------------------ | --------- | ------------------------------------------------------------------------- |
+| `wiki-title`       | `"none"`  | Report titles of wiki-links, which is useful if you use IDs for filenames |
+| `dead-link`        | `"error"` | Warn for dead links between notes                                         |
+| `self-link`        | `"none"`  | Warn when a note links to itself                                          |
+| `missing-backlink` | `"none"`  | Warn when another notes link to current note without reciprocal backlinks |
+
+### Missing backlink diagnostic
+
+The `missing-backlink` diagnostic warns when other notes link to the current
+note but the current note doesn't link back to them. Unlike other diagnostics,
+this one requires a table with two fields:
+
+- `level`: The severity (`hint`, `info`, `warning`, or `error`)
+- `position`: Where to display the diagnostic (`top`, `bottom`, or
+  `last-section`)
+
+The `position` values are:
+
+- `top`: First line of the note.
+- `bottom`: Last line of the note.
+- `last-section`: The last section heading (falls back to `"top"`).
+
+Example:
+
+```toml
+[lsp.diagnostics]
+missing-backlink = { level = "warning", position = "bottom" }
+```
 
 ## Complete example
 
@@ -54,6 +79,10 @@ reported to your editors. Each diagnostic setting can be:
 wiki-title = "hint"
 # Warn for dead links between notes.
 dead-link = "error"
+# Warn when a note links to itself.
+self-link = "warning"
+# Report if backlinks are missing (shown at end of file).
+missing-backlink = { level = "hint", position = "bottom" }
 
 [lsp.completion]
 # Show the note title in the completion pop-up, or fallback on its path if empty.

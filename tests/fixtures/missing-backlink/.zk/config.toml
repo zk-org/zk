@@ -1,0 +1,11 @@
+[note]
+
+template = "default.md"
+
+[format.markdown]
+
+link-format = "wiki"
+hashtags = true
+colon-tags = false
+multiword-tags = false
+

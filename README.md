@@ -27,6 +27,7 @@ video,
   mentions
 - [Integration with your favorite editors](https://zk-org.github.io/zk/tips/editors-integration.html):
   - [Any LSP-compatible editor](https://zk-org.github.io/zk/tips/editors-integration.html)
+  - [`zk-emacs`](https://codeberg.org/mcookly/zk-emacs) for Emacs
   - [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim 0.8+
   - [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
 - [Interactive browser](https://zk-org.github.io/zk/config/tool-fzf.html),

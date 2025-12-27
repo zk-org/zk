@@ -316,7 +316,7 @@ multiword-tags = false
 # LSP
 #
 #   Configure basic editor integration for LSP-compatible editors.
-#   See https://github.com/zk-org/zk/blob/main/docs/editors-integration.md
+#   See https://zk-org.github.io/zk/tips/editors-integration.html
 #
 [lsp]
 
@@ -327,6 +327,11 @@ multiword-tags = false
 #wiki-title = "hint"
 # Warn for dead links between notes.
 dead-link = "error"
+# Warn when a note links to itself.
+#self-link = "warning"
+# Report missing backlinks
+#missing-backlink = { level = "hint", position = "bottom" }
+
 
 [lsp.completion]
 # Customize the completion pop-up of your LSP client.

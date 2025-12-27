@@ -3,6 +3,7 @@
 There are several extensions available to integrate `zk` in your favorite
 editor:
 
+- [`zk-emacs`](https://codeberg.org/mcookly/zk-emacs) for Emacs
 - [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim.
 - [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
 
@@ -19,7 +20,7 @@ features are:
 - Preview the content of a note when hovering a link.
 - Navigate in your notes by following internal links.
 - Create a new note using the current selection as title.
-- Diagnostics for dead links and wiki-links titles.
+- Diagnostics for dead links, wiki-links titles, and missing backlinks.
 - [And more to come...](https://github.com/zk-org/zk/issues/22)
 
 You can configure some of these features in your notebook's
@@ -109,6 +110,32 @@ lspconfig.zk.setup({ on_attach = function(client, buffer)
   -- Add keybindings here, see https://github.com/neovim/nvim-lspconfig#keybindings-and-completion
 end })
 ```
+
+</details>
+
+#### Helix
+
+Add the following to your `languages.toml` file:
+
+<details><summary><tt>~/.config/helix/languages.toml</tt></summary>
+
+```toml
+[language-server.zk]
+command = "zk"
+args = ["lsp"]
+
+[[language]]
+name = "markdown"
+roots = [".zk"]
+language-servers = ["zk"]
+```
+
+<!-- prettier-ignore -->
+:::{note}
+This configuration disables Helix's
+[default language servers](https://docs.helix-editor.com/lang-support.html) for
+Markdown.
+:::
 
 </details>
 

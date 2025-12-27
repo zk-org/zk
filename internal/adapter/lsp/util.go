@@ -7,10 +7,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
+	"github.com/zk-org/zk/internal/core"
+	"github.com/zk-org/zk/internal/util/errors"
 )
 
 func pathToURI(path string) string {
@@ -62,7 +62,7 @@ func (b *jsonBoolean) UnmarshalJSON(data []byte) error {
 }
 
 type linkInfo struct {
-    note *core.MinimalNote
+	note     *core.MinimalNote
 	location *protocol.Location
 	title    *string
 }

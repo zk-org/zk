@@ -1,37 +1,242 @@
-name: Build and Test
+# Builds on multiple architectures.
+# Also uploads artifacts in the presence of a v*.*.* tag.
+# This occurs when release.yml calls this workflow, as release.yml is
+# triggered by pushing tags.
 
+name: Build (multi-architecture)
 on:
-  push:
-    branches: [ dev, main ]
+  workflow_dispatch:
+  workflow_call:
+  push: 
+    branches: [dev, main]
   pull_request:
-    branches: [ dev, main ]
+    branches: [dev, main]
 
+env:
+  CGO_ENABLED: 1
 jobs:
-
-  build:
+  build-linux-intel:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: [linux-amd64, linux-i386]
     steps:
-    - uses: actions/checkout@v5
-      with:
-        lfs: 'true'
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Pull docker image
+        run: docker pull ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }}
+      - name: Build
+        run: |
+          docker run --rm \
+            -v $(pwd):/usr/src/zk \
+            -w /usr/src/zk \
+            -u root \
+            ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }} \
+            /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
 
-    - name: Set up Go
-      uses: actions/setup-go@v6
-      with:
-        go-version-file: 'go.mod'
+  build-linux-arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Pull docker  image
+        run: docker pull ghcr.io/zk-org/zk-xcompile:linux-arm64
+      - name: Build
+        run: |
+          docker run --rm \
+            -v $(pwd):/usr/src/zk \
+            -w /usr/src/zk \
+            -u root \
+            ghcr.io/zk-org/zk-xcompile:linux-arm64 \
+            /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
 
-    - name: Install dependencies
-      run: |
-        go install github.com/mickael-menu/tesh@latest
+  build-alpine-intel:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: [alpine-amd64, alpine-i386]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Pull docker image
+        run: docker pull ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }}
+      - name: Build
+        run: |
+          docker run --rm \
+            -v $(pwd):/usr/src/zk \
+            -w /usr/src/zk \
+            -u root \
+            ghcr.io/zk-org/zk-xcompile:${{ matrix.tag }} \
+            /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
 
-    - name: Build
-      run: make build
+  build-alpine-arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Pull dockedr image
+        run: docker pull ghcr.io/zk-org/zk-xcompile:alpine-arm64
+      - name: Build
+        run: |
+          docker run --rm \
+            -v $(pwd):/usr/src/zk \
+            -w /usr/src/zk \
+            -u root \
+            ghcr.io/zk-org/zk-xcompile:alpine-arm64 \
+            /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-extldflags=-static -X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
 
-    - name: Test
-      run: make test
+  build-mac-intel:
+    runs-on: macos-15-intel # NOTE: This is the last planned mac intel runner to be supported. See https://github.com/actions/runner-images/issues/13046
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+      - name: Build
+        run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz zk
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
 
-    - name: Tesh
-      # See https://github.com/actions/runner/issues/241#issuecomment-924327172
-      shell: 'script --return --quiet --command "bash {0}"'
-      run: make tesh
+  build-mac-arm:
+    runs-on: macos-latest
+    env:
+      GOARCH: arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> /dev/null)" >> $GITHUB_OUTPUT
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+      - name: Build
+        env:
+          GOARCH: arm64
+        run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
+      - name: Compress for upload.
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz zk
+      - name: upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
 
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set vars
+        id: vars
+        run: echo "version=$(git describe --tags --match v[0-9]* 2> $null)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+      - name: Build
+        run: go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"
+      - name: Compress for upload
+        if: startsWith(steps.vars.outputs.version, 'v')
+        run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz zk.exe
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz
+          path: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz

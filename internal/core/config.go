@@ -25,7 +25,7 @@ type Config struct {
 	Extra    map[string]any
 }
 
-// NOTE: config generation occurs in core.Init. The below function is used
+// NOTE: config generation occurs in internal/core/notebook_store.go. The below function is used
 // for test cases and as a program level default if the user conf is missing or
 // has values missing.
 
@@ -68,8 +68,9 @@ func NewDefaultConfig() Config {
 				},
 			},
 			Diagnostics: LSPDiagnosticConfig{
-				WikiTitle: LSPDiagnosticNone,
-				DeadLink:  LSPDiagnosticError,
+				WikiTitle:       LSPDiagnosticNone,
+				DeadLink:        LSPDiagnosticError,
+				MissingBacklink: MissingBacklinkConfig{}, // Disabled by default (Level = LSPDiagnosticNone)
 			},
 		},
 		Filters: map[string]string{},
@@ -196,8 +197,18 @@ type LSPCompletionTemplates struct {
 
 // LSPDiagnosticConfig holds the LSP diagnostics configuration.
 type LSPDiagnosticConfig struct {
-	WikiTitle LSPDiagnosticSeverity
-	DeadLink  LSPDiagnosticSeverity
+	WikiTitle       LSPDiagnosticSeverity
+	DeadLink        LSPDiagnosticSeverity
+	SelfLink        LSPDiagnosticSeverity
+	MissingBacklink MissingBacklinkConfig
+}
+
+// IsEnabled returns true if at least one diagnostic is enabled.
+func (c LSPDiagnosticConfig) IsEnabled() bool {
+	return c.WikiTitle != LSPDiagnosticNone ||
+		c.DeadLink != LSPDiagnosticNone ||
+		c.SelfLink != LSPDiagnosticNone ||
+		c.MissingBacklink.Level != LSPDiagnosticNone
 }
 
 type LSPDiagnosticSeverity int
@@ -209,6 +220,20 @@ const (
 	LSPDiagnosticInfo    LSPDiagnosticSeverity = 3
 	LSPDiagnosticHint    LSPDiagnosticSeverity = 4
 )
+
+type LSPDiagnosticPosition int
+
+const (
+	LSPDiagnosticPositionTop LSPDiagnosticPosition = iota + 1
+	LSPDiagnosticPositionBottom
+	LSPDiagnosticPositionLastSection
+)
+
+// MissingBacklinkConfig holds the configuration for missing backlink diagnostics.
+type MissingBacklinkConfig struct {
+	Level    LSPDiagnosticSeverity
+	Position LSPDiagnosticPosition
+}
 
 // NotebookConfig holds configuration about the default notebook
 type NotebookConfig struct {
@@ -442,6 +467,22 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 			return config, wrap(err)
 		}
 	}
+	if lspDiags.SelfLink != nil {
+		config.LSP.Diagnostics.SelfLink, err = lspDiagnosticSeverityFromString(*lspDiags.SelfLink)
+		if err != nil {
+			return config, wrap(err)
+		}
+	}
+	if lspDiags.MissingBacklink != nil {
+		config.LSP.Diagnostics.MissingBacklink.Level, err = lspDiagnosticSeverityFromString(lspDiags.MissingBacklink.Level)
+		if err != nil {
+			return config, wrap(err)
+		}
+		config.LSP.Diagnostics.MissingBacklink.Position, err = lspDiagnosticPositionFromString(lspDiags.MissingBacklink.Position)
+		if err != nil {
+			return config, wrap(err)
+		}
+	}
 
 	// Filters
 	if tomlConf.Filters != nil {
@@ -580,9 +621,16 @@ type tomlLSPConfig struct {
 		UseAdditionalTextEdits *bool   `toml:"use-additional-text-edits"`
 	}
 	Diagnostics struct {
-		WikiTitle *string `toml:"wiki-title"`
-		DeadLink  *string `toml:"dead-link"`
+		WikiTitle       *string                    `toml:"wiki-title"`
+		DeadLink        *string                    `toml:"dead-link"`
+		SelfLink        *string                    `toml:"self-link"`
+		MissingBacklink *tomlMissingBacklinkConfig `toml:"missing-backlink"`
 	}
+}
+
+type tomlMissingBacklinkConfig struct {
+	Level    string `toml:"level"`
+	Position string `toml:"position"`
 }
 
 func charsetFromString(charset string) Charset {
@@ -627,5 +675,18 @@ func lspDiagnosticSeverityFromString(s string) (LSPDiagnosticSeverity, error) {
 		return LSPDiagnosticHint, nil
 	default:
 		return LSPDiagnosticNone, fmt.Errorf("%s: unknown LSP diagnostic severity - may be none, hint, info, warning or error", s)
+	}
+}
+
+func lspDiagnosticPositionFromString(s string) (LSPDiagnosticPosition, error) {
+	switch s {
+	case "top":
+		return LSPDiagnosticPositionTop, nil
+	case "bottom":
+		return LSPDiagnosticPositionBottom, nil
+	case "last-section":
+		return LSPDiagnosticPositionLastSection, nil
+	default:
+		return 0, fmt.Errorf("%s: unknown LSP diagnostic position - may be top, bottom, or last-section", s)
 	}
 }

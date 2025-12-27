@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches: [ dev, main ]
+  pull_request:
+    branches: [ dev, main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        lfs: 'true'
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: 'go.mod'
+
+    - name: Install dependencies
+      run: |
+        go install github.com/mickael-menu/tesh@latest
+
+    - name: Test
+      run: make test
+
+    - name: Tesh
+      # See https://github.com/actions/runner/issues/241#issuecomment-924327172
+      shell: 'script --return --quiet --command "bash {0}"'
+      run: make tesh
+
