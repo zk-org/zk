@@ -24,6 +24,8 @@ $ zk new --help
 >                               Takes precedence over the config of the
 >                               directory.
 >      --extra=KEY=VALUE,...    Extra variables passed to the templates.
+>      --extra-json=STRING      Extra variables passed to the templates, as a
+>                               JSON object
 >      --template=PATH          Custom template used to render the note.
 >  -p, --print-path             Print the path of the created note instead of
 >                               editing it.

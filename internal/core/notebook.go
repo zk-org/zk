@@ -96,7 +96,7 @@ type NewNoteOpts struct {
 	// Path to a custom template used to render the note.
 	Template opt.String
 	// Extra variables passed to the templates.
-	Extra map[string]string
+	Extra map[string]any
 	// Creation date provided to the templates.
 	Date time.Time
 	// Don't save the generated note on the file system.

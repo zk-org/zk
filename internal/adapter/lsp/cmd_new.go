@@ -20,7 +20,7 @@ type cmdNewOpts struct {
 	Dir                     string             `json:"dir"`
 	Group                   string             `json:"group"`
 	Template                string             `json:"template"`
-	Extra                   map[string]string  `json:"extra"`
+	Extra                   map[string]any     `json:"extra"`
 	Date                    string             `json:"date"`
 	Edit                    jsonBoolean        `json:"edit"`
 	DryRun                  jsonBoolean        `json:"dryRun"`
