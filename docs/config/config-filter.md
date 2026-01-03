@@ -59,3 +59,8 @@ $ zk list --sort created journal
 # With the filter
 $ zk list journal
 ```
+
+## Listing filters
+
+You can list all the filters found in your configuration file using
+`zk config --list filters`.
