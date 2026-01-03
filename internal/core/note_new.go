@@ -13,7 +13,7 @@ type newNoteTask struct {
 	title            string
 	content          string
 	date             time.Time
-	extra            map[string]string
+	extra            map[string]any
 	env              map[string]string
 	fs               FileStorage
 	filenameTemplate string
@@ -104,7 +104,7 @@ type newNoteTemplateContext struct {
 	Dir          string
 	Filename     string
 	FilenameStem string `handlebars:"filename-stem"`
-	Extra        map[string]string
+	Extra        map[string]any
 	Now          time.Time
 	Env          map[string]string
 }
