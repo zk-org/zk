@@ -67,19 +67,8 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 Create a Git pre-commit hook to automatically update modification dates before committing.
 Save this as `.git/hooks/pre-commit` in your notebook repository:
 
-```bash
-#!/bin/bash
-# Update modification date in frontmatter for all staged . md files
-
-for file in $(git diff --cached --name-only -- '*.md'); do
-  if [ -f "$file" ] && grep -q '^changed:' "$file"; then
-    sed -i. bak "s/^changed:.*/changed: $(date +'%Y-%m-%d %H:%M:%S')/" "$file"
-    rm -f "${file}.bak"
-    git add "$file"
-  fi
-done
-
-#!/usr/bin/env bash
+```sh
+#!/usr/bin/env sh
 
 git diff --cached --name-status | egrep -i "^(A|M).*\.(md)$" | while read a file; do
     sed --in-place "/---.*/,/---.*/s/^changed: [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}$/changed: $(date "+%Y-%m-%d %H:%M")/" $file
