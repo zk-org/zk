@@ -16,6 +16,9 @@ modification date in `.zk/config.toml`:
 modification-date-key = "changed"
 ```
 
+See the configuration of [Date Keys](../notes/note-frontmatter.md#date-keys)
+for more information.
+
 Then update your notes' frontmatter to include the key with a date value:
 
 ```markdown
