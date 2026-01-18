@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 
@@ -289,9 +290,7 @@ func (c GroupConfig) Clone() GroupConfig {
 	copy(clone.Paths, c.Paths)
 
 	clone.Extra = make(map[string]string)
-	for k, v := range c.Extra {
-		clone.Extra[k] = v
-	}
+	maps.Copy(clone.Extra, c.Extra)
 	return clone
 }
 
@@ -368,16 +367,10 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if note.DefaultTitle != "" {
 		config.Note.DefaultTitle = note.DefaultTitle
 	}
-	for _, v := range note.Exclude {
-		config.Note.Exclude = append(config.Note.Exclude, v)
-	}
-	for _, v := range note.Ignore {
-		config.Note.Exclude = append(config.Note.Exclude, v)
-	}
+	config.Note.Exclude = append(config.Note.Exclude, note.Exclude...)
+	config.Note.Exclude = append(config.Note.Exclude, note.Ignore...)
 	if tomlConf.Extra != nil {
-		for k, v := range tomlConf.Extra {
-			config.Extra[k] = v
-		}
+		maps.Copy(config.Extra, tomlConf.Extra)
 	}
 
 	// Groups
@@ -486,16 +479,12 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 
 	// Filters
 	if tomlConf.Filters != nil {
-		for k, v := range tomlConf.Filters {
-			config.Filters[k] = v
-		}
+		maps.Copy(config.Filters, tomlConf.Filters)
 	}
 
 	// Aliases
 	if tomlConf.Aliases != nil {
-		for k, v := range tomlConf.Aliases {
-			config.Aliases[k] = v
-		}
+		maps.Copy(config.Aliases, tomlConf.Aliases)
 	}
 
 	return config, nil
@@ -505,9 +494,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	res := c.Clone()
 
 	if tomlConf.Paths != nil {
-		for _, p := range tomlConf.Paths {
-			res.Paths = append(res.Paths, p)
-		}
+		res.Paths = append(res.Paths, tomlConf.Paths...)
 	} else {
 		// If no `paths` config property was given for this group, we assume
 		// that its name will be used as the path.
@@ -539,16 +526,10 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	if note.DefaultTitle != "" {
 		res.Note.DefaultTitle = note.DefaultTitle
 	}
-	for _, v := range note.Exclude {
-		res.Note.Exclude = append(res.Note.Exclude, v)
-	}
-	for _, v := range note.Ignore {
-		res.Note.Exclude = append(res.Note.Exclude, v)
-	}
+	res.Note.Exclude = append(res.Note.Exclude, note.Exclude...)
+	res.Note.Exclude = append(res.Note.Exclude, note.Ignore...)
 	if tomlConf.Extra != nil {
-		for k, v := range tomlConf.Extra {
-			res.Extra[k] = v
-		}
+		maps.Copy(res.Extra, tomlConf.Extra)
 	}
 
 	return res

@@ -201,9 +201,7 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 	// Parse #hashtags and :colon:tags:
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if tagsNode, ok := n.(*extensions.Tags); ok && entering {
-			for _, tag := range tagsNode.Tags {
-				tags = append(tags, tag)
-			}
+			tags = append(tags, tagsNode.Tags...)
 		}
 		return ast.WalkContinue, nil
 	})

@@ -45,9 +45,7 @@ func expandThemeAliases(rules []core.Style) []core.Style {
 		aliases, ok := themeAliases[rule]
 		if ok {
 			aliases = expandThemeAliases(aliases)
-			for _, alias := range aliases {
-				expanded = append(expanded, alias)
-			}
+			expanded = append(expanded, aliases...)
 
 		} else {
 			expanded = append(expanded, rule)
