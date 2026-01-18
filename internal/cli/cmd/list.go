@@ -79,7 +79,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		return err
 	}
 
-	findOpts, err := cmd.Filtering.NewNoteFindOpts(notebook)
+	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
 		return errors.Wrapf(err, "incorrect criteria")
 	}
