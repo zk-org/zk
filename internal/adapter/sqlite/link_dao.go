@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
@@ -80,11 +81,12 @@ func joinLinkRels(rels []core.LinkRelation) string {
 		return ""
 	}
 	delimiter := "\x01"
-	res := delimiter
+	var res strings.Builder
+	res.WriteString(delimiter)
 	for _, rel := range rels {
-		res += string(rel) + delimiter
+		res.WriteString(string(rel) + delimiter)
 	}
-	return res
+	return res.String()
 }
 
 // FindInternal returns all the links internal to the notebook.

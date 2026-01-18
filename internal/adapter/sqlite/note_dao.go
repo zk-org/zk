@@ -695,11 +695,11 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	orderTerms = append(orderTerms, additionalOrderTerms...)
 	orderTerms = append(orderTerms, `n.title ASC`)
 
-	query := ""
+	var query strings.Builder
 
 	// Credit to https://inviqa.com/blog/storing-graphs-database-sql-meets-social-network
 	if transitiveClosure {
-		query += `WITH RECURSIVE transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
+		query.WriteString(`WITH RECURSIVE transitive_closure(source_id, target_id, title, snippet, distance, path) AS (
     SELECT source_id, target_id, title, snippet,
            1 AS distance,
            '.' || source_id || '.' || target_id || '.' AS path
@@ -713,50 +713,50 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
       FROM links AS l
       JOIN transitive_closure AS tc
         ON l.source_id = tc.target_id
-     WHERE tc.path NOT LIKE '%.' || l.target_id || '.%'`
+     WHERE tc.path NOT LIKE '%.' || l.target_id || '.%'`)
 
 		if maxDistance != 0 {
-			query += fmt.Sprintf(" AND tc.distance < %d", maxDistance)
+			fmt.Fprintf(&query, " AND tc.distance < %d", maxDistance)
 		}
 
 		// Guard against infinite loops by limiting the number of recursions.
-		query += "\n     LIMIT 100000"
+		query.WriteString("\n     LIMIT 100000")
 
-		query += "\n)\n"
+		query.WriteString("\n)\n")
 	}
 
-	query += "SELECT n.id"
+	query.WriteString("SELECT n.id")
 	if selection != noteSelectionID {
-		query += ", n.path, n.title, n.metadata"
+		query.WriteString(", n.path, n.title, n.metadata")
 		if selection != noteSelectionMinimal {
-			query += fmt.Sprintf(", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet", snippetCol)
+			fmt.Fprintf(&query, ", n.lead, n.body, n.raw_content, n.word_count, n.created, n.modified, n.checksum, n.tags, %s AS snippet", snippetCol)
 		}
 	}
 
-	query += "\nFROM notes_with_metadata n\n"
+	query.WriteString("\nFROM notes_with_metadata n\n")
 
 	for _, clause := range joinClauses {
-		query += clause + "\n"
+		query.WriteString(clause + "\n")
 	}
 
 	if len(whereExprs) > 0 {
-		query += "WHERE " + strings.Join(whereExprs, "\nAND ") + "\n"
+		query.WriteString("WHERE " + strings.Join(whereExprs, "\nAND ") + "\n")
 	}
 
 	if groupBy != "" {
-		query += groupBy + "\n"
+		query.WriteString(groupBy + "\n")
 	}
 
-	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
+	query.WriteString("ORDER BY " + strings.Join(orderTerms, ", ") + "\n")
 
 	if opts.Limit > 0 {
-		query += fmt.Sprintf("LIMIT %d\n", opts.Limit)
+		fmt.Fprintf(&query, "LIMIT %d\n", opts.Limit)
 	}
 
 	// d.logger.Println(query)
 	// d.logger.Println(args)
 
-	return d.tx.Query(query, args...)
+	return d.tx.Query(query.String(), args...)
 }
 
 func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {

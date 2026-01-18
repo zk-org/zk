@@ -20,15 +20,15 @@ func RegisterList(supportsUTF8 bool) {
 	}
 
 	raymond.RegisterHelper("list", func(items []string) string {
-		res := ""
+		var res strings.Builder
 		for _, item := range items {
 			if item == "" {
 				continue
 			}
 
-			res += itemify(item) + "\n"
+			res.WriteString(itemify(item) + "\n")
 		}
 
-		return res
+		return res.String()
 	})
 }

@@ -150,16 +150,16 @@ func parseBody(startIndex int, source []byte) opt.String {
 
 // parseLead extracts the body content until the first blank line.
 func parseLead(body opt.String) opt.String {
-	lead := ""
+	var lead strings.Builder
 	scanner := bufio.NewScanner(strings.NewReader(body.String()))
 	for scanner.Scan() {
 		if strings.TrimSpace(scanner.Text()) == "" {
 			break
 		}
-		lead += scanner.Text() + "\n"
+		lead.WriteString(scanner.Text() + "\n")
 	}
 
-	return opt.NewNotEmptyString(strings.TrimSpace(lead))
+	return opt.NewNotEmptyString(strings.TrimSpace(lead.String()))
 }
 
 // parseTags extracts tags as #hashtags, :colon:tags: or from the YAML frontmatter.
