@@ -155,6 +155,7 @@ func (ni *NoteIndex) fixExistingLinks(dao *dao, id core.NoteID, path string) err
 			continue
 		}
 
+		// FIXME: err is never cheked
 		if matches, err := ni.linkMatchesPath(link, path); matches && err == nil {
 			err = dao.links.SetTargetID(link.ID, id)
 		}
