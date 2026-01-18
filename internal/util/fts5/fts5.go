@@ -86,6 +86,7 @@ func ConvertQuery(query string) string {
 		// FTS5's + is ignored because it doesn't bring much to the syntax,
 		// compared to explicit quotes.
 		case !inQuote && c == '+' && term == "":
+			// FIXME: ineffective break?
 			break
 
 		// Term separators outside explicit quotes terminates the current term.
