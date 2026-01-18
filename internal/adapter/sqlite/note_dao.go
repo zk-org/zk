@@ -28,9 +28,9 @@ type NoteDAO struct {
 	updateStmt                *LazyStmt
 	removeStmt                *LazyStmt
 	findIDByPathStmt          *LazyStmt
-	findIdsByFilenameLikeStmt *LazyStmt
-	findIdsByPathLikeStmt     *LazyStmt
-	findIdsByPathPrefixStmt   *LazyStmt
+	findIDsByFilenameLikeStmt *LazyStmt
+	findIDsByPathLikeStmt     *LazyStmt
+	findIDsByPathPrefixStmt   *LazyStmt
 	findByIDStmt              *LazyStmt
 }
 
@@ -73,21 +73,21 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		`),
 
 		// Find note IDs by filename LIKE pattern.
-		findIdsByFilenameLikeStmt: tx.PrepareLazy(`
+		findIDsByFilenameLikeStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE filename LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find note IDs by path LIKE pattern.
-		findIdsByPathLikeStmt: tx.PrepareLazy(`
+		findIDsByPathLikeStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE path LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find note IDs where href is a complete leading path component.
-		findIdsByPathPrefixStmt: tx.PrepareLazy(`
+		findIDsByPathPrefixStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE (path LIKE ? ESCAPE '\' AND path NOT LIKE ? ESCAPE '\')
 			    OR path LIKE ? ESCAPE '\'
@@ -234,23 +234,23 @@ func idForRow(row *sql.Row) (core.NoteID, error) {
 	}
 }
 
-func (d *NoteDAO) findIdsByFilenameLike(pattern string) ([]core.NoteID, error) {
-	return d.findIdsWithStmt(d.findIdsByFilenameLikeStmt, pattern)
+func (d *NoteDAO) findIDsByFilenameLike(pattern string) ([]core.NoteID, error) {
+	return d.findIDsWithStmt(d.findIDsByFilenameLikeStmt, pattern)
 }
 
-func (d *NoteDAO) findIdsByPathLike(pattern string) ([]core.NoteID, error) {
-	return d.findIdsWithStmt(d.findIdsByPathLikeStmt, pattern)
+func (d *NoteDAO) findIDsByPathLike(pattern string) ([]core.NoteID, error) {
+	return d.findIDsWithStmt(d.findIDsByPathLikeStmt, pattern)
 }
 
-func (d *NoteDAO) findIdsByPathPrefix(href string) ([]core.NoteID, error) {
+func (d *NoteDAO) findIDsByPathPrefix(href string) ([]core.NoteID, error) {
 	// Three params:
 	// 1. href% for prefix,
 	// 2. href%/% to exclude slashes after href,
 	// 3. href/% for directory
-	return d.findIdsWithStmt(d.findIdsByPathPrefixStmt, href+"%", href+"%/%", href+"/%")
+	return d.findIDsWithStmt(d.findIDsByPathPrefixStmt, href+"%", href+"%/%", href+"/%")
 }
 
-func (d *NoteDAO) findIdsWithStmt(stmt *LazyStmt, args ...any) ([]core.NoteID, error) {
+func (d *NoteDAO) findIDsWithStmt(stmt *LazyStmt, args ...any) ([]core.NoteID, error) {
 	ids := []core.NoteID{}
 	rows, err := stmt.Query(args...)
 	if err != nil {
@@ -279,7 +279,7 @@ func (d *NoteDAO) FindIDByHref(href string, allowPartialHref bool) (core.NoteID,
 	return ids[0], nil
 }
 
-func (d *NoteDAO) findIdsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core.NoteID, error) {
+func (d *NoteDAO) findIDsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core.NoteID, error) {
 	ids := make([]core.NoteID, 0)
 	for _, href := range hrefs {
 		cids, err := d.FindIdsByHref(href, allowPartialHrefs)
@@ -311,13 +311,13 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 	var ids []core.NoteID
 	if allowPartialHref {
 		// Filename (not path) contains 'href' anywhere.
-		ids, err = d.findIdsByFilenameLike("%" + href + "%")
+		ids, err = d.findIDsByFilenameLike("%" + href + "%")
 		if len(ids) > 0 || err != nil {
 			return ids, err
 		}
 
 		// Path contains 'href' anywhere.
-		ids, err = d.findIdsByPathLike("%" + href + "%")
+		ids, err = d.findIDsByPathLike("%" + href + "%")
 		if len(ids) > 0 || err != nil {
 			return ids, err
 		}
@@ -326,7 +326,7 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 	// Path either:
 	// 1. starts with 'href' and has no slash after href.
 	// 2. starts with 'href/', followed by more content.
-	ids, err = d.findIdsByPathPrefix(href)
+	ids, err = d.findIDsByPathPrefix(href)
 	if len(ids) > 0 || err != nil {
 		return ids, err
 	}
@@ -413,7 +413,7 @@ func (d *NoteDAO) expandMentionsIntoMatch(opts core.NoteFindOpts) (core.NoteFind
 	}
 
 	// Find the IDs for the mentioned paths.
-	ids, err := d.findIdsByHrefs(opts.Mention, true /* allowPartialHrefs */)
+	ids, err := d.findIDsByHrefs(opts.Mention, true /* allowPartialHrefs */)
 	if err != nil {
 		return opts, err
 	}
@@ -475,7 +475,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	maxDistance := 0
 
 	setupLinkFilter := func(tableAlias string, hrefs []string, direction int, negate, recursive bool) error {
-		ids, err := d.findIdsByHrefs(hrefs, true /* allowPartialHrefs */)
+		ids, err := d.findIDsByHrefs(hrefs, true /* allowPartialHrefs */)
 		if err != nil {
 			return err
 		}
@@ -569,7 +569,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	}
 
 	if opts.IncludeHrefs != nil {
-		ids, err := d.findIdsByHrefs(opts.IncludeHrefs, opts.AllowPartialHrefs)
+		ids, err := d.findIDsByHrefs(opts.IncludeHrefs, opts.AllowPartialHrefs)
 		if err != nil {
 			return nil, err
 		}
@@ -577,7 +577,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	}
 
 	if opts.ExcludeHrefs != nil {
-		ids, err := d.findIdsByHrefs(opts.ExcludeHrefs, opts.AllowPartialHrefs)
+		ids, err := d.findIDsByHrefs(opts.ExcludeHrefs, opts.AllowPartialHrefs)
 		if err != nil {
 			return nil, err
 		}
@@ -633,7 +633,7 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	}
 
 	if opts.MentionedBy != nil {
-		ids, err := d.findIdsByHrefs(opts.MentionedBy, true /* allowPartialHrefs */)
+		ids, err := d.findIDsByHrefs(opts.MentionedBy, true /* allowPartialHrefs */)
 		if err != nil {
 			return nil, err
 		}
