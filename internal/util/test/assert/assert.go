@@ -39,7 +39,7 @@ func isNil(value any) bool {
 }
 
 func Equal(t *testing.T, actual, expected any) {
-	if !(reflect.DeepEqual(actual, expected) || cmp.Equal(actual, expected)) {
+	if !reflect.DeepEqual(actual, expected) && !cmp.Equal(actual, expected) {
 		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
 		t.Errorf("\n---\n")
 		t.Errorf("But expected (type %v):\n% #v", reflect.TypeOf(expected), pretty.Formatter(expected))
