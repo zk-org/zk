@@ -158,7 +158,7 @@ func CopyList(list []string) []string {
 
 func ByteIndexToRuneIndex(s string, i int) int {
 	res := 0
-	for j, _ := range s {
+	for j := range s {
 		if j >= i {
 			break
 		}
