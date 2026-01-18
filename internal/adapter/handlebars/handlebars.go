@@ -51,7 +51,7 @@ type Loader struct {
 	files       map[string]*Template
 	lookupPaths []string
 	styler      core.Styler
-	helpers     map[string]interface{}
+	helpers     map[string]any
 }
 
 type LoaderOpts struct {
@@ -67,12 +67,12 @@ func NewLoader(opts LoaderOpts) *Loader {
 		files:       make(map[string]*Template),
 		lookupPaths: opts.LookupPaths,
 		styler:      opts.Styler,
-		helpers:     map[string]interface{}{},
+		helpers:     map[string]any{},
 	}
 }
 
 // RegisterHelper declares a new template helper to be used with this loader only.
-func (l *Loader) RegisterHelper(name string, helper interface{}) {
+func (l *Loader) RegisterHelper(name string, helper any) {
 	l.helpers[name] = helper
 }
 

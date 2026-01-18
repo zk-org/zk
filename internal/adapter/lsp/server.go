@@ -73,7 +73,7 @@ func NewServer(opts ServerOpts) *Server {
 
 	var clientCapabilities protocol.ClientCapabilities
 
-	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
+	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
 		clientCapabilities = params.Capabilities
 
 		// To see the logs with coc.nvim, run :CocCommand workspace.showOutput
@@ -190,7 +190,7 @@ func NewServer(opts ServerOpts) *Server {
 		return nil
 	}
 
-	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
+	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -305,7 +305,7 @@ func NewServer(opts ServerOpts) *Server {
 		return documentLinks, err
 	}
 
-	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
+	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -338,7 +338,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 	}
 
-	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
+	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (any, error) {
 		openNotebook := func() (*core.Notebook, error) {
 			args := params.Arguments
 			if len(args) == 0 {
@@ -393,7 +393,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 	}
 
-	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (interface{}, error) {
+	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -417,7 +417,7 @@ func NewServer(opts ServerOpts) *Server {
 					},
 				}
 
-				var jsonOpts map[string]interface{}
+				var jsonOpts map[string]any
 				err := unmarshalJSON(opts, &jsonOpts)
 				if err != nil {
 					return err
@@ -429,7 +429,7 @@ func NewServer(opts ServerOpts) *Server {
 					Command: &protocol.Command{
 						Title:     actionTitle,
 						Command:   cmdNew,
-						Arguments: []interface{}{wd, jsonOpts},
+						Arguments: []any{wd, jsonOpts},
 					},
 				})
 
@@ -851,7 +851,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 	return item, nil
 }
 
-func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
+func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (any, error) {
 	path := core.NotebookPath{
 		Path:       note.Path,
 		BasePath:   notebook.Path,
@@ -943,7 +943,7 @@ func stringPtr(v string) *string {
 	return &s
 }
 
-func unmarshalJSON(obj interface{}, v interface{}) error {
+func unmarshalJSON(obj any, v any) error {
 	js, err := json.Marshal(obj)
 	if err != nil {
 		return err
@@ -951,7 +951,7 @@ func unmarshalJSON(obj interface{}, v interface{}) error {
 	return json.Unmarshal(js, v)
 }
 
-func toBool(obj interface{}) bool {
+func toBool(obj any) bool {
 	s := strings.ToLower(fmt.Sprint(obj))
 	return s == "true" || s == "1"
 }

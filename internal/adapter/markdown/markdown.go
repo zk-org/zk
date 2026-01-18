@@ -318,8 +318,8 @@ func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error
 		return front, err
 	}
 
-	// The YAML parser parses nested maps as map[interface{}]interface{}
-	// instead of map[string]interface{}, which doesn't work with the JSON
+	// The YAML parser parses nested maps as map[any]any
+	// instead of map[string]any, which doesn't work with the JSON
 	// marshaller.
 	values = yaml.ConvertMapToJSONCompatible(values)
 
