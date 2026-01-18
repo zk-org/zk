@@ -11,7 +11,6 @@ import (
 var date1 = time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 var date2 = time.Date(2012, 10, 20, 12, 34, 58, 651387237, time.UTC)
 var date3 = time.Date(2014, 12, 10, 3, 34, 58, 651387237, time.UTC)
-var date4 = time.Date(2016, 13, 11, 4, 34, 58, 651387237, time.UTC)
 
 func TestDiffEmpty(t *testing.T) {
 	source := []Metadata{}

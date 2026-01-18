@@ -465,10 +465,6 @@ func (t *newNoteTest) setup() {
 	}
 }
 
-func (t *newNoteTest) parseContentAsNote(content string, note *NoteContent) {
-	t.parser.results[content] = note
-}
-
 func (t *newNoteTest) run(opts NewNoteOpts) (*Note, error) {
 	notebook := NewNotebook(t.rootDir, t.config, NotebookPorts{
 		TemplateLoaderFactory: func(language string) (TemplateLoader, error) {

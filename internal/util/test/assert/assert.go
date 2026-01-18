@@ -1,7 +1,6 @@
 package assert
 
 import (
-	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -59,13 +58,6 @@ func NotEqual(t *testing.T, actual, other any) {
 		t.Errorf("Expected to be different from (type %v):\n% #v", reflect.TypeOf(other), pretty.Formatter(other))
 		t.Errorf("\n---\n")
 	}
-}
-
-func toJSON(t *testing.T, obj interface{}) string {
-	json, err := json.Marshal(obj)
-	// json, err := json.MarshalIndent(obj, "", "  ")
-	Nil(t, err)
-	return string(json)
 }
 
 func Err(t *testing.T, err error, expected string) {

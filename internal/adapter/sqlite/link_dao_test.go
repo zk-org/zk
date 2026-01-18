@@ -5,15 +5,8 @@ import (
 	"testing"
 
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
-
-func testLinkDAO(t *testing.T, callback func(tx Transaction, dao *LinkDAO)) {
-	testTransaction(t, func(tx Transaction) {
-		callback(tx, NewLinkDAO(tx, &util.NullLogger))
-	})
-}
 
 type linkRow struct {
 	SourceID                         core.NoteID

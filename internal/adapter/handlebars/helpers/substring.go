@@ -21,10 +21,3 @@ func RegisterSubstring() {
 		return str[index:end]
 	})
 }
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
