@@ -23,6 +23,12 @@ teshb: build
 tesh-update: build
 	PATH=".:$(shell pwd):$(PATH)" tesh -u tests tests/fixtures
 
+testdata:
+	$(call go,build,-o gentestdata ./cmd/gentestdata)
+	./gentestdata -output testdata -notes 3000
+	rm -f gentestdata
+	echo "Use with: zk testdata && ../zk…"
+
 alpine:
 	$(call alpine,build)
 
@@ -30,6 +36,7 @@ alpine:
 clean:
 	rm -rf zk*
 	rm -rf docs-build
+	rm -rf testdata
 
 VERSION ?= $(shell \
 	if grep -vq '^\$$Format' VERSION.txt 2>/dev/null; then \

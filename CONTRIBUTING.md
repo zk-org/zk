@@ -154,3 +154,12 @@ again manually download and attach the binaries.
 In both cases the description of the release can be edited after the release is
 created (i.e, adding or editing the changelog).
 
+## Benchmarks
+
+Use `make testdata` to generate test notes in `testdata`, usable for
+reproducing test benchmarks on a notebook with 3k notes and ~15k links.
+
+When testing indexing or similar processes, be sure to test two approaches:
+
+- Indexing the entire database, by deleting `./testdata/.zk/notebook.db` first.
+- Indexing an incremental update, by `touch`ing a single note first.
