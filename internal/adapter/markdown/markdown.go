@@ -176,7 +176,7 @@ func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string,
 		} else if tags := frontmatter.getString(key); !tags.IsNull() {
 			// Parse a space-separated string list
 			res := []string{}
-			for _, s := range strings.Fields(tags.Unwrap()) {
+			for s := range strings.FieldsSeq(tags.Unwrap()) {
 				s = strings.TrimSpace(s)
 				if len(s) > 0 {
 					res = append(res, s)

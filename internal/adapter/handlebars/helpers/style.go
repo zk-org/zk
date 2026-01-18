@@ -16,7 +16,7 @@ import (
 func NewStyleHelper(styler core.Styler, logger util.Logger) any {
 	style := func(keys string, text string) string {
 		rules := make([]core.Style, 0)
-		for _, key := range strings.Fields(keys) {
+		for key := range strings.FieldsSeq(keys) {
 			rules = append(rules, core.Style(key))
 		}
 		res, err := styler.Style(text, rules...)
