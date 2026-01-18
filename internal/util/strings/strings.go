@@ -116,8 +116,8 @@ func RemoveBlank(strs []string) []string {
 	return res
 }
 
-// Expand literal escaped whitespace characters in the given string to their
-// actual character.
+// ExpandWhitespaceLiterals expands literal escaped whitespace characters in
+// the given string to their actual character.
 func ExpandWhitespaceLiterals(s string) string {
 	s = strings.ReplaceAll(s, `\n`, "\n")
 	s = strings.ReplaceAll(s, `\t`, "\t")

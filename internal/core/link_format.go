@@ -9,7 +9,7 @@ import (
 	"github.com/zk-org/zk/internal/util/paths"
 )
 
-// Metadata used to generate a link.
+// LinkFormatterContext contains metadata used to generate a link.
 type LinkFormatterContext struct {
 	// Filename of the note
 	Filename string `json:"filename"`

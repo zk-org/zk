@@ -80,7 +80,7 @@ func WriteString(path string, content string) error {
 	return err
 }
 
-// Expands environment variables and `~`, returning an absolute path.
+// ExpandPath environment variables and `~`, returning an absolute path.
 func ExpandPath(path string) (string, error) {
 
 	if strings.HasPrefix(path, "~") {
