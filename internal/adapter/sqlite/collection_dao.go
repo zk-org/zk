@@ -87,11 +87,10 @@ func (d *CollectionDAO) FindAll(kind core.CollectionKind, sorters []core.Collect
 	`
 
 	orderTerms := []string{}
-	if sorters != nil {
-		for _, sorter := range sorters {
-			orderTerms = append(orderTerms, collectionOrderTerm(sorter))
-		}
+	for _, sorter := range sorters {
+		orderTerms = append(orderTerms, collectionOrderTerm(sorter))
 	}
+
 	orderTerms = append(orderTerms, `c.name ASC`)
 	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
 
