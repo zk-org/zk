@@ -178,10 +178,10 @@ func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.Coll
 
 // Associate creates a new association between a note and a collection, if it
 // does not already exist.
-func (d *CollectionDAO) Associate(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	wrap := errors.Wrapperf("failed to associate note %d to collection %d", noteId, collectionId)
+func (d *CollectionDAO) Associate(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	wrap := errors.Wrapperf("failed to associate note %d to collection %d", noteID, collectionID)
 
-	id, err := d.findAssociation(noteId, collectionId)
+	id, err := d.findAssociation(noteID, collectionID)
 
 	switch {
 	case err != nil:
@@ -189,17 +189,17 @@ func (d *CollectionDAO) Associate(noteId core.NoteID, collectionId core.Collecti
 	case id.IsValid():
 		return id, nil
 	default:
-		id, err = d.createAssociation(noteId, collectionId)
+		id, err = d.createAssociation(noteID, collectionID)
 		return id, wrap(err)
 	}
 }
 
-func (d *CollectionDAO) findAssociation(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	if !noteId.IsValid() || !collectionId.IsValid() {
-		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteId, collectionId)
+func (d *CollectionDAO) findAssociation(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	if !noteID.IsValid() || !collectionID.IsValid() {
+		return 0, fmt.Errorf("note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
 	}
 
-	row, err := d.findAssociationStmt.QueryRow(noteId, collectionId)
+	row, err := d.findAssociationStmt.QueryRow(noteID, collectionID)
 	if err != nil {
 		return 0, err
 	}
@@ -217,12 +217,12 @@ func (d *CollectionDAO) findAssociation(noteId core.NoteID, collectionId core.Co
 	}
 }
 
-func (d *CollectionDAO) createAssociation(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	if !noteId.IsValid() || !collectionId.IsValid() {
-		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteId, collectionId)
+func (d *CollectionDAO) createAssociation(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	if !noteID.IsValid() || !collectionID.IsValid() {
+		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
 	}
 
-	res, err := d.createAssociationStmt.Exec(noteId, collectionId)
+	res, err := d.createAssociationStmt.Exec(noteID, collectionID)
 	if err != nil {
 		return 0, err
 	}
@@ -236,14 +236,14 @@ func (d *CollectionDAO) createAssociation(noteId core.NoteID, collectionId core.
 }
 
 // RemoveAssociations deletes all associations with the given note.
-func (d *CollectionDAO) RemoveAssociations(noteId core.NoteID) error {
-	if !noteId.IsValid() {
-		return fmt.Errorf("Note ID (%d) not valid", noteId)
+func (d *CollectionDAO) RemoveAssociations(noteID core.NoteID) error {
+	if !noteID.IsValid() {
+		return fmt.Errorf("Note ID (%d) not valid", noteID)
 	}
 
-	_, err := d.removeAssociationsStmt.Exec(noteId)
+	_, err := d.removeAssociationsStmt.Exec(noteID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove associations of note %d", noteId)
+		return errors.Wrapf(err, "failed to remove associations of note %d", noteID)
 	}
 
 	return nil

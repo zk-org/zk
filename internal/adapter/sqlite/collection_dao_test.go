@@ -92,24 +92,24 @@ func TestCollectionDAOAssociate(t *testing.T) {
 		assert.Equal(t, id, core.NoteCollectionID(2))
 
 		// Creates a new association if missing
-		noteId := core.NoteID(5)
-		collectionId := core.CollectionID(3)
+		noteID := core.NoteID(5)
+		collectionID := core.CollectionID(3)
 		sql := "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id = ?"
-		assertNotExistTx(t, tx, sql, noteId, collectionId)
-		_, err = dao.Associate(noteId, collectionId)
+		assertNotExistTx(t, tx, sql, noteID, collectionID)
+		_, err = dao.Associate(noteID, collectionID)
 		assert.Nil(t, err)
-		assertExistTx(t, tx, sql, noteId, collectionId)
+		assertExistTx(t, tx, sql, noteID, collectionID)
 	})
 }
 
 func TestCollectionDAORemoveAssociations(t *testing.T) {
 	testCollectionDAO(t, func(tx Transaction, dao *CollectionDAO) {
-		noteId := core.NoteID(1)
+		noteID := core.NoteID(1)
 		sql := "SELECT id FROM notes_collections WHERE note_id = ?"
-		assertExistTx(t, tx, sql, noteId)
-		err := dao.RemoveAssociations(noteId)
+		assertExistTx(t, tx, sql, noteID)
+		err := dao.RemoveAssociations(noteID)
 		assert.Nil(t, err)
-		assertNotExistTx(t, tx, sql, noteId)
+		assertNotExistTx(t, tx, sql, noteID)
 
 		// Removes associations of note without any.
 		err = dao.RemoveAssociations(core.NoteID(999))

@@ -26,9 +26,9 @@ type NoteDAO struct {
 	addStmt                *LazyStmt
 	updateStmt             *LazyStmt
 	removeStmt             *LazyStmt
-	findIdByPathStmt       *LazyStmt
+	findIDByPathStmt       *LazyStmt
 	findIdsByPathRegexStmt *LazyStmt
-	findByIdStmt           *LazyStmt
+	findByIDStmt           *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -64,7 +64,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		`),
 
 		// Find a note ID from its exact path.
-		findIdByPathStmt: tx.PrepareLazy(`
+		findIDByPathStmt: tx.PrepareLazy(`
 			SELECT id FROM notes
 			 WHERE path = ?
 		`),
@@ -79,7 +79,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger) *NoteDAO {
 		`),
 
 		// Find a note from its ID.
-		findByIdStmt: tx.PrepareLazy(`
+		findByIDStmt: tx.PrepareLazy(`
 			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
 			  FROM notes_with_metadata
 			 WHERE id = ?
@@ -144,17 +144,17 @@ func (d *NoteDAO) Add(note core.Note) (core.NoteID, error) {
 		return 0, err
 	}
 
-	lastId, err := res.LastInsertId()
+	lastID, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	return core.NoteID(lastId), err
+	return core.NoteID(lastID), err
 }
 
 // Update modifies an existing note.
 func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
-	id, err := d.FindIdByPath(note.Path)
+	id, err := d.FindIDByPath(note.Path)
 	if err != nil {
 		return 0, err
 	}
@@ -183,7 +183,7 @@ func (d *NoteDAO) metadataToJSON(note core.Note) string {
 
 // Remove deletes the note with the given path from the index.
 func (d *NoteDAO) Remove(path string) error {
-	id, err := d.FindIdByPath(path)
+	id, err := d.FindIDByPath(path)
 	if err != nil {
 		return err
 	}
@@ -195,8 +195,8 @@ func (d *NoteDAO) Remove(path string) error {
 	return err
 }
 
-func (d *NoteDAO) FindIdByPath(path string) (core.NoteID, error) {
-	row, err := d.findIdByPathStmt.QueryRow(path)
+func (d *NoteDAO) FindIDByPath(path string) (core.NoteID, error) {
+	row, err := d.findIDByPathStmt.QueryRow(path)
 	if err != nil {
 		return core.NoteID(0), err
 	}
@@ -238,26 +238,7 @@ func (d *NoteDAO) findIdsByPathRegex(regex string) ([]core.NoteID, error) {
 	return ids, nil
 }
 
-func (d *NoteDAO) findIdWithStmt(stmt *LazyStmt, args ...interface{}) (core.NoteID, error) {
-	row, err := stmt.QueryRow(args...)
-	if err != nil {
-		return core.NoteID(0), err
-	}
-
-	var id sql.NullInt64
-	err = row.Scan(&id)
-
-	switch {
-	case err == sql.ErrNoRows:
-		return 0, nil
-	case err != nil:
-		return 0, err
-	default:
-		return core.NoteID(id.Int64), nil
-	}
-}
-
-func (d *NoteDAO) FindIdByHref(href string, allowPartialHref bool) (core.NoteID, error) {
+func (d *NoteDAO) FindIDByHref(href string, allowPartialHref bool) (core.NoteID, error) {
 	ids, err := d.FindIdsByHref(href, allowPartialHref)
 	if len(ids) == 0 || err != nil {
 		return 0, err

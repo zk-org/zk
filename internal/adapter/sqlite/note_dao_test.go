@@ -213,7 +213,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 		assert.Equal(t, len(links) > 0, true)
 
 		links = queryLinkRows(t, tx, `id = 4`)
-		assert.Equal(t, *links[0].TargetId, core.NoteID(1))
+		assert.Equal(t, *links[0].TargetID, core.NoteID(1))
 
 		err := dao.Remove("log/2021-01-03.md")
 		assert.Nil(t, err)
@@ -222,7 +222,7 @@ func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 		assert.Equal(t, len(links), 0)
 
 		links = queryLinkRows(t, tx, `id = 4`)
-		assert.Nil(t, links[0].TargetId)
+		assert.Nil(t, links[0].TargetID)
 	})
 }
 
@@ -259,9 +259,9 @@ func TestNoteDAOFindIdsByHrefPrefixBug(t *testing.T) {
 			Modified: time.Date(2024, 8, 27, 11, 0, 0, 0, time.UTC),
 		}
 
-		shorterId, err := dao.Add(shorterNote)
+		shorterID, err := dao.Add(shorterNote)
 		assert.Nil(t, err)
-		longerId, err := dao.Add(longerNote)
+		longerID, err := dao.Add(longerNote)
 		assert.Nil(t, err)
 
 		// Test partial matching like wiki links would use
@@ -272,11 +272,11 @@ func TestNoteDAOFindIdsByHrefPrefixBug(t *testing.T) {
 		}
 
 		t.Logf("Partial: Found %d matches for '2024-08-27': %v", len(ids), ids)
-		t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterId, longerId)
-		t.Logf("Expected first ID: %d (2024-08-27.md), Actual first ID: %d", shorterId, ids[0])
+		t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterID, longerID)
+		t.Logf("Expected first ID: %d (2024-08-27.md), Actual first ID: %d", shorterID, ids[0])
 
-		if ids[0] != shorterId {
-			t.Errorf("Expected exact match '2024-08-27.md' (ID %d) but got ID %d. This demonstrates the prefix matching bug.", shorterId, ids[0])
+		if ids[0] != shorterID {
+			t.Errorf("Expected exact match '2024-08-27.md' (ID %d) but got ID %d. This demonstrates the prefix matching bug.", shorterID, ids[0])
 		}
 
 		// Also test exact matching
@@ -288,8 +288,8 @@ func TestNoteDAOFindIdsByHrefPrefixBug(t *testing.T) {
 
 		t.Logf("Exact: Found %d matches for '2024-08-27.md': %v", len(exactIds), exactIds)
 
-		if exactIds[0] != shorterId {
-			t.Errorf("Exact matching failed: Expected '2024-08-27.md' (ID %d) but got ID %d. This affects LSP markdown links.", shorterId, exactIds[0])
+		if exactIds[0] != shorterID {
+			t.Errorf("Exact matching failed: Expected '2024-08-27.md' (ID %d) but got ID %d. This affects LSP markdown links.", shorterID, exactIds[0])
 		}
 	})
 }

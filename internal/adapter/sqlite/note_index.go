@@ -74,7 +74,7 @@ func (ni *NoteIndex) findLinkMatch(dao *dao, baseDir string, href string, linkTy
 	}
 
 	allowPartialMatch := (linkType == core.LinkTypeWikiLink)
-	return dao.notes.FindIdByHref(href, allowPartialMatch)
+	return dao.notes.FindIDByHref(href, allowPartialMatch)
 }
 
 func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.NoteID, error) {
@@ -82,7 +82,7 @@ func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.
 	if err != nil {
 		return 0, err
 	}
-	return dao.notes.FindIdByHref(href, false)
+	return dao.notes.FindIDByHref(href, false)
 }
 
 // FindLinksBetweenNotes implements core.NoteIndex.
@@ -246,13 +246,13 @@ func (ni *NoteIndex) Update(note core.Note) error {
 	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
 }
 
-func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteId core.NoteID, tags []string) error {
+func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteID core.NoteID, tags []string) error {
 	for _, tag := range tags {
-		tagId, err := collections.FindOrCreate(core.CollectionKindTag, tag)
+		tagID, err := collections.FindOrCreate(core.CollectionKindTag, tag)
 		if err != nil {
 			return err
 		}
-		_, err = collections.Associate(noteId, tagId)
+		_, err = collections.Associate(noteID, tagID)
 		if err != nil {
 			return err
 		}

@@ -51,15 +51,15 @@ func TestNoteIndexAddWithLinks(t *testing.T) {
 	rows := queryLinkRows(t, db.db, fmt.Sprintf("source_id = %d", id))
 	assert.Equal(t, rows, []linkRow{
 		{
-			SourceId: id,
-			TargetId: idPointer(2),
+			SourceID: id,
+			TargetID: idPointer(2),
 			Title:    "Same dir",
 			Href:     "log/2021-01-04",
 			Rels:     "\x01rel-1\x01rel-2\x01",
 		},
 		{
-			SourceId:     id,
-			TargetId:     idPointer(4),
+			SourceID:     id,
+			TargetID:     idPointer(4),
 			Title:        "Relative",
 			Href:         "f39c8",
 			Rels:         "",
@@ -68,22 +68,22 @@ func TestNoteIndexAddWithLinks(t *testing.T) {
 			SnippetEnd:   100,
 		},
 		{
-			SourceId: id,
-			TargetId: idPointer(4),
+			SourceID: id,
+			TargetID: idPointer(4),
 			Title:    "Second is added",
 			Href:     "f39c8#anchor",
 			Rels:     "\x01second\x01",
 		},
 		{
-			SourceId: id,
-			TargetId: nil,
+			SourceID: id,
+			TargetID: nil,
 			Title:    "Unknown",
 			Href:     "unknown",
 			Rels:     "",
 		},
 		{
-			SourceId:   id,
-			TargetId:   nil,
+			SourceID:   id,
+			TargetID:   nil,
 			Title:      "URL",
 			Href:       "http://example.com",
 			IsExternal: true,
@@ -104,8 +104,8 @@ func TestNoteIndexAddFillsLinksMissingTargetId(t *testing.T) {
 	rows := queryLinkRows(t, db.db, fmt.Sprintf("target_id = %d", id))
 	assert.Equal(t, rows, []linkRow{
 		{
-			SourceId: 3,
-			TargetId: &id,
+			SourceID: 3,
+			TargetID: &id,
 			Title:    "Missing target",
 			Href:     "missing",
 			Snippet:  "There's a Missing target",
@@ -119,15 +119,15 @@ func TestNoteIndexUpdateWithLinks(t *testing.T) {
 	links := queryLinkRows(t, db.db, "source_id = 1")
 	assert.Equal(t, links, []linkRow{
 		{
-			SourceId: 1,
-			TargetId: idPointer(2),
+			SourceID: 1,
+			TargetID: idPointer(2),
 			Title:    "An internal link",
 			Href:     "log/2021-01-04.md",
 			Snippet:  "[[An internal link]]",
 		},
 		{
-			SourceId:   1,
-			TargetId:   nil,
+			SourceID:   1,
+			TargetID:   nil,
 			Title:      "An external link",
 			Href:       "https://domain.com",
 			IsExternal: true,
@@ -160,8 +160,8 @@ func TestNoteIndexUpdateWithLinks(t *testing.T) {
 	links = queryLinkRows(t, db.db, "source_id = 1")
 	assert.Equal(t, links, []linkRow{
 		{
-			SourceId: 1,
-			TargetId: idPointer(3),
+			SourceID: 1,
+			TargetID: idPointer(3),
 			Title:    "A new link",
 			Href:     "index",
 			Type:     "wiki-link",
@@ -169,8 +169,8 @@ func TestNoteIndexUpdateWithLinks(t *testing.T) {
 			Snippet:  "[[A new link]]",
 		},
 		{
-			SourceId:   1,
-			TargetId:   nil,
+			SourceID:   1,
+			TargetID:   nil,
 			Title:      "An external link",
 			Href:       "https://domain.com",
 			Type:       "markdown",
@@ -227,6 +227,6 @@ func assertTagExistsOrNot(t *testing.T, db *DB, shouldExist bool, tag string) {
 	assertExistOrNot(t, db, shouldExist, "SELECT id FROM collections WHERE kind = 'tag' AND name = ?", tag)
 }
 
-func assertTaggedOrNot(t *testing.T, db *DB, shouldBeTagged bool, noteId core.NoteID, tag string) {
-	assertExistOrNot(t, db, shouldBeTagged, "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id IS (SELECT id FROM collections WHERE kind = 'tag' AND name = ?)", noteId, tag)
+func assertTaggedOrNot(t *testing.T, db *DB, shouldBeTagged bool, noteID core.NoteID, tag string) {
+	assertExistOrNot(t, db, shouldBeTagged, "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id IS (SELECT id FROM collections WHERE kind = 'tag' AND name = ?)", noteID, tag)
 }

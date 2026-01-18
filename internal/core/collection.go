@@ -58,7 +58,7 @@ type CollectionRepository interface {
 
 	// RemoveNoteCollections deletes all collection associations with the given
 	// note.
-	RemoveNoteAssociations(noteId NoteID) error
+	RemoveNoteAssociations(noteID NoteID) error
 }
 
 // CollectionSorter represents an order term used to sort a list of collections.
