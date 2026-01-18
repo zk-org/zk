@@ -759,19 +759,6 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	return d.tx.Query(query, args...)
 }
 
-func (d *NoteDAO) scanNoteID(row RowScanner) (core.NoteID, error) {
-	var id int
-	err := row.Scan(&id)
-	switch {
-	case err == sql.ErrNoRows:
-		return 0, nil
-	case err != nil:
-		return 0, err
-	default:
-		return core.NoteID(id), nil
-	}
-}
-
 func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
 	var (
 		id                        int
