@@ -90,7 +90,7 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	}
 	body := parseBody(bodyStart, bytes)
 
-	tags, err := parseTags(frontmatter, root, bytes)
+	tags, err := parseTags(frontmatter, root)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func parseLead(body opt.String) opt.String {
 }
 
 // parseTags extracts tags as #hashtags, :colon:tags: or from the YAML frontmatter.
-func parseTags(frontmatter frontmatter, root ast.Node, source []byte) ([]string, error) {
+func parseTags(frontmatter frontmatter, root ast.Node) ([]string, error) {
 	tags := make([]string, 0)
 
 	// Parse from YAML frontmatter, either:
