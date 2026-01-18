@@ -75,7 +75,7 @@ func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.C
 	// Get current document to edit
 	doc, ok := documents.Get(info.location.URI)
 	if !ok {
-		return fmt.Errorf("Cannot insert link in '%s'", info.location.URI)
+		return fmt.Errorf("cannot insert link in '%s'", info.location.URI)
 	}
 
 	formatter, err := notebook.NewLinkFormatter()

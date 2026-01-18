@@ -219,7 +219,7 @@ func (d *CollectionDAO) findAssociation(noteID core.NoteID, collectionID core.Co
 
 func (d *CollectionDAO) createAssociation(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
 	if !noteID.IsValid() || !collectionID.IsValid() {
-		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
+		return 0, fmt.Errorf("note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
 	}
 
 	res, err := d.createAssociationStmt.Exec(noteID, collectionID)
@@ -238,7 +238,7 @@ func (d *CollectionDAO) createAssociation(noteID core.NoteID, collectionID core.
 // RemoveAssociations deletes all associations with the given note.
 func (d *CollectionDAO) RemoveAssociations(noteID core.NoteID) error {
 	if !noteID.IsValid() {
-		return fmt.Errorf("Note ID (%d) not valid", noteID)
+		return fmt.Errorf("note ID (%d) not valid", noteID)
 	}
 
 	_, err := d.removeAssociationsStmt.Exec(noteID)
