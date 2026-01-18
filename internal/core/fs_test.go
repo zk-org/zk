@@ -1,8 +1,8 @@
 package core
 
 import (
-	"os"
 	"path/filepath"
+	"slices"
 )
 
 // fileStorageMock implements an in-memory FileStorage for testing purposes.
@@ -54,10 +54,8 @@ func (fs *fileStorageMock) FileExists(path string) (bool, error) {
 }
 
 func (fs *fileStorageMock) DirExists(path string) (bool, error) {
-	for _, dir := range fs.dirs {
-		if dir == path {
-			return true, nil
-		}
+	if slices.Contains(fs.dirs, path) {
+		return true, nil
 	}
 	return false, nil
 }

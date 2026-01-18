@@ -89,7 +89,7 @@ func (s String) String() string {
 }
 
 func (s String) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%v"`, s)), nil
+	return fmt.Appendf(nil, `"%v"`, s), nil
 }
 
 // Bool holds an optional boolean value.

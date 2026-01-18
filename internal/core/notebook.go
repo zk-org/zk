@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 	"time"
@@ -133,9 +134,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 	}
 
 	extra := config.Extra
-	for k, v := range opts.Extra {
-		extra[k] = v
-	}
+	maps.Copy(extra, opts.Extra)
 
 	templates, err := n.templateLoaderFactory(config.Note.Lang)
 	if err != nil {
