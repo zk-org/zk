@@ -10,6 +10,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	gmext "github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 	"github.com/zk-org/zk/internal/adapter/markdown/extensions"
@@ -197,6 +198,7 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 // documentParser is a goldmark parser configured for extracting links.
 var documentParser = goldmark.New(
 	goldmark.WithExtensions(
+		gmext.Footnote,
 		extensions.WikiLinkExt,
 		extensions.MarkdownLinkExt,
 	),

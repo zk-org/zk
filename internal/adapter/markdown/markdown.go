@@ -43,6 +43,7 @@ func NewParser(options ParserOpts, logger util.Logger) *Parser {
 		md: goldmark.New(
 			goldmark.WithExtensions(
 				meta.Meta,
+				extension.Footnote,
 				extension.NewLinkify(
 					extension.WithLinkifyAllowedProtocols([][]byte{
 						[]byte("http:"),

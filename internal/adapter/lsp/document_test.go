@@ -81,6 +81,58 @@ func TestDocumentLinks_EscapedBackticks(t *testing.T) {
 	}
 }
 
+// Test that links inside footnotes are be detected as wiki-links.
+// See https://github.com/zk-org/zk/issues/574
+func TestDocumentLinks_FootnoteWikiLinks(t *testing.T) {
+	tests := []struct {
+		name          string
+		content       string
+		expectedHrefs []string
+	}{
+		{
+			name:          "wiki link only in footnote",
+			content:       "# Title note 2\n\nsome content[^1]\n\n[^1]: [[note1]]",
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "wiki link with surrounding text",
+			content:       "Text[^1].\n\n[^1]: See [[note1]] for details.",
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "multiple wiki links in footnote",
+			content:       "Text[^1].\n\n[^1]: See [[note1]] and [[note2]].",
+			expectedHrefs: []string{"note1", "note2"},
+		},
+		{
+			name:          "markdown link in footnote",
+			content:       "Text[^1].\n\n[^1]: See [docs](readme.md).",
+			expectedHrefs: []string{"readme.md"},
+		},
+		{
+			name:          "wiki link with title in footnote",
+			content:       "Text[^1].\n\n[^1]: [[note1|Note Title]]",
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "multiple footnotes with links",
+			content:       "A[^1] and B[^2].\n\n[^1]: [[note1]]\n[^2]: [[note2]]",
+			expectedHrefs: []string{"note1", "note2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			hrefs := extractHrefs(doc)
+			assert.Equal(t, hrefs, tt.expectedHrefs)
+		})
+	}
+}
+
 func TestDocumentLinks_HTMLComments(t *testing.T) {
 	tests := []struct {
 		name          string

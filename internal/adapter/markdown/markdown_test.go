@@ -597,6 +597,68 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 	})
 }
 
+// Test for https://github.com/zk-org/zk/issues/574
+// Test that links inside footnotes are properly detected.
+func TestParseLinkInFootnote(t *testing.T) {
+	tests := []struct {
+		name          string
+		source        string
+		expectedType  core.LinkType
+		expectedHrefs []string
+	}{
+		{
+			name:          "wiki link only in footnote",
+			source:        "Text[^1].\n\n[^1]: [[note1]]",
+			expectedType:  core.LinkTypeWikiLink,
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "wiki link with surrounding text",
+			source:        "Text[^1].\n\n[^1]: See [[note1]] for details.",
+			expectedType:  core.LinkTypeWikiLink,
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "multiple wiki links in footnote",
+			source:        "Text[^1].\n\n[^1]: See [[note1]] and [[note2]].",
+			expectedType:  core.LinkTypeWikiLink,
+			expectedHrefs: []string{"note1", "note2"},
+		},
+		{
+			name:          "markdown link in footnote",
+			source:        "Text[^1].\n\n[^1]: See [docs](readme.md).",
+			expectedType:  core.LinkTypeMarkdown,
+			expectedHrefs: []string{"readme.md"},
+		},
+		{
+			name:          "wiki link with title in footnote",
+			source:        "Text[^1].\n\n[^1]: [[note1|Note Title]]",
+			expectedType:  core.LinkTypeWikiLink,
+			expectedHrefs: []string{"note1"},
+		},
+		{
+			name:          "multiple footnotes with links",
+			source:        "A[^1] and B[^2].\n\n[^1]: [[note1]]\n[^2]: [[note2]]",
+			expectedType:  core.LinkTypeWikiLink,
+			expectedHrefs: []string{"note1", "note2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content := parse(t, tt.source)
+			if len(content.Links) != len(tt.expectedHrefs) {
+				t.Errorf("expected %d links, got %d: %v", len(tt.expectedHrefs), len(content.Links), content.Links)
+				return
+			}
+			for i, link := range content.Links {
+				assert.Equal(t, link.Href, tt.expectedHrefs[i])
+				assert.Equal(t, link.Type, tt.expectedType)
+			}
+		})
+	}
+}
+
 func TestParseMetadataFromFrontmatter(t *testing.T) {
 	test := func(source string, expectedMetadata map[string]interface{}) {
 		content := parse(t, source)
