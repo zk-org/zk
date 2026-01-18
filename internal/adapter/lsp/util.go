@@ -51,11 +51,12 @@ type jsonBoolean bool
 
 func (b *jsonBoolean) UnmarshalJSON(data []byte) error {
 	s := string(data)
-	if s == "1" || s == "true" {
+	switch s {
+	case "1", "true":
 		*b = true
-	} else if s == "0" || s == "false" {
+	case "0", "false":
 		*b = false
-	} else {
+	default:
 		return fmt.Errorf("%s: failed to unmarshal as boolean", s)
 	}
 	return nil
