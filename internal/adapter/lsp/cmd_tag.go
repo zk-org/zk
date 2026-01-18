@@ -14,10 +14,10 @@ type cmdTagListOpts struct {
 	Sort []string `json:"sort"`
 }
 
-func executeCommandTagList(logger util.Logger, notebook *core.Notebook, args []interface{}) (interface{}, error) {
+func executeCommandTagList(logger util.Logger, notebook *core.Notebook, args []any) (any, error) {
 	var opts cmdTagListOpts
 	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
+		arg, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdTagList, args[1])
 		}

@@ -598,14 +598,14 @@ A link can have [one relation](one "rel-1") or [several relations](several "rel-
 }
 
 func TestParseMetadataFromFrontmatter(t *testing.T) {
-	test := func(source string, expectedMetadata map[string]interface{}) {
+	test := func(source string, expectedMetadata map[string]any) {
 		content := parse(t, source)
 		assert.Equal(t, content.Metadata, expectedMetadata)
 	}
 
-	test("", map[string]interface{}{})
-	test("# A title", map[string]interface{}{})
-	test("---\n---\n# A title", map[string]interface{}{})
+	test("", map[string]any{})
+	test("# A title", map[string]any{})
+	test("---\n---\n# A title", map[string]any{})
 	test(`---
 title: A title
 tags:
@@ -616,10 +616,10 @@ nested:
 ---
 
 Paragraph
-`, map[string]interface{}{
+`, map[string]any{
 		"title": "A title",
-		"tags":  []interface{}{"tag1", "tag 2"},
-		"nested": map[string]interface{}{
+		"tags":  []any{"tag1", "tag 2"},
+		"nested": map[string]any{
 			"key": "value",
 		},
 	})

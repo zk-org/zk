@@ -7,11 +7,11 @@ type Template interface {
 	Styler() Styler
 
 	// Render generates this template using the given variable context.
-	Render(context interface{}) (string, error)
+	Render(context any) (string, error)
 }
 
 // TemplateFunc is an adapter to use a function as a Template.
-type TemplateFunc func(context interface{}) (string, error)
+type TemplateFunc func(context any) (string, error)
 
 // Styler implements Template.
 func (f TemplateFunc) Styler() Styler {
@@ -19,7 +19,7 @@ func (f TemplateFunc) Styler() Styler {
 }
 
 // Render implements Template.
-func (f TemplateFunc) Render(context interface{}) (string, error) {
+func (f TemplateFunc) Render(context any) (string, error) {
 	return f(context)
 }
 
@@ -32,7 +32,7 @@ func (t nullTemplate) Styler() Styler {
 	return NullStyler
 }
 
-func (t nullTemplate) Render(context interface{}) (string, error) {
+func (t nullTemplate) Render(context any) (string, error) {
 	return "", nil
 }
 

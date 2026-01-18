@@ -8,10 +8,10 @@ import (
 
 const cmdIndex = "zk.index"
 
-func executeCommandIndex(notebook *core.Notebook, args []interface{}) (interface{}, error) {
+func executeCommandIndex(notebook *core.Notebook, args []any) (any, error) {
 	opts := core.NoteIndexOpts{}
 	if len(args) == 2 {
-		options, ok := args[1].(map[string]interface{})
+		options, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("zk.index expects a dictionary of options as second argument, got: %v", args[1])
 		}

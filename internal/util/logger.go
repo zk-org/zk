@@ -8,8 +8,8 @@ import (
 // Logger can be used to report logging messages.
 // The native log.Logger type implements this interface.
 type Logger interface {
-	Printf(format string, v ...interface{})
-	Println(v ...interface{})
+	Printf(format string, v ...any)
+	Println(v ...any)
 	Err(error)
 }
 
@@ -18,9 +18,9 @@ var NullLogger = nullLogger{}
 
 type nullLogger struct{}
 
-func (n *nullLogger) Printf(format string, v ...interface{}) {}
+func (n *nullLogger) Printf(format string, v ...any) {}
 
-func (n *nullLogger) Println(v ...interface{}) {}
+func (n *nullLogger) Println(v ...any) {}
 
 func (n *nullLogger) Err(err error) {}
 
@@ -49,11 +49,11 @@ func NewProxyLogger(logger Logger) *ProxyLogger {
 	return &ProxyLogger{logger}
 }
 
-func (l *ProxyLogger) Printf(format string, v ...interface{}) {
+func (l *ProxyLogger) Printf(format string, v ...any) {
 	l.Logger.Printf(format, v...)
 }
 
-func (l *ProxyLogger) Println(v ...interface{}) {
+func (l *ProxyLogger) Println(v ...any) {
 	l.Logger.Println(v...)
 }
 

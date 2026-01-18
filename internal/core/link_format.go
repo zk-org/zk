@@ -22,10 +22,10 @@ type LinkFormatterContext struct {
 	// Title of the note.
 	Title string `json:"title"`
 	// Metadata extracted from the YAML frontmatter.
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]any `json:"metadata"`
 }
 
-func NewLinkFormatterContext(path NotebookPath, title string, metadata map[string]interface{}) (LinkFormatterContext, error) {
+func NewLinkFormatterContext(path NotebookPath, title string, metadata map[string]any) (LinkFormatterContext, error) {
 	relPath, err := path.PathRelToWorkingDir()
 	if err != nil {
 		return LinkFormatterContext{}, err

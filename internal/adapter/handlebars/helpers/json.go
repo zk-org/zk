@@ -11,7 +11,7 @@ import (
 // RegisterJSON registers a {{json}} template helper which serializes its
 // parameter to a JSON value.
 func RegisterJSON(logger util.Logger) {
-	raymond.RegisterHelper("json", func(arg interface{}) string {
+	raymond.RegisterHelper("json", func(arg any) string {
 		jsonBytes, err := json.Marshal(arg)
 		if err != nil {
 			logger.Err(errors.Wrapf(err, "%v: not a serializable argument for {{json}}", arg))

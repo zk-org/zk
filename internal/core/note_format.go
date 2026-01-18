@@ -66,23 +66,23 @@ var noteTermRegex = regexp.MustCompile(`<zk:match>(.*?)</zk:match>`)
 // noteFormatRenderContext holds the variables available to the note formatting
 // templates.
 type noteFormatRenderContext struct {
-	Filename     string                 `json:"filename"`
-	FilenameStem string                 `json:"filenameStem" handlebars:"filename-stem"`
-	Path         string                 `json:"path"`
-	AbsPath      string                 `json:"absPath" handlebars:"abs-path"`
-	Title        string                 `json:"title"`
-	Link         fmt.Stringer           `json:"link"`
-	Lead         string                 `json:"lead"`
-	Body         string                 `json:"body"`
-	Snippets     []string               `json:"snippets"`
-	RawContent   string                 `json:"rawContent" handlebars:"raw-content"`
-	WordCount    int                    `json:"wordCount" handlebars:"word-count"`
-	Tags         []string               `json:"tags"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	Created      time.Time              `json:"created"`
-	Modified     time.Time              `json:"modified"`
-	Checksum     string                 `json:"checksum"`
-	Env          map[string]string      `json:"-"`
+	Filename     string            `json:"filename"`
+	FilenameStem string            `json:"filenameStem" handlebars:"filename-stem"`
+	Path         string            `json:"path"`
+	AbsPath      string            `json:"absPath" handlebars:"abs-path"`
+	Title        string            `json:"title"`
+	Link         fmt.Stringer      `json:"link"`
+	Lead         string            `json:"lead"`
+	Body         string            `json:"body"`
+	Snippets     []string          `json:"snippets"`
+	RawContent   string            `json:"rawContent" handlebars:"raw-content"`
+	WordCount    int               `json:"wordCount" handlebars:"word-count"`
+	Tags         []string          `json:"tags"`
+	Metadata     map[string]any    `json:"metadata"`
+	Created      time.Time         `json:"created"`
+	Modified     time.Time         `json:"modified"`
+	Checksum     string            `json:"checksum"`
+	Env          map[string]string `json:"-"`
 }
 
 func (c noteFormatRenderContext) Equal(other noteFormatRenderContext) bool {

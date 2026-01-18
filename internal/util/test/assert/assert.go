@@ -22,24 +22,24 @@ func False(t *testing.T, value bool) {
 	}
 }
 
-func Nil(t *testing.T, value interface{}) {
+func Nil(t *testing.T, value any) {
 	if !isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to be nil", value, reflect.TypeOf(value))
 	}
 }
 
-func NotNil(t *testing.T, value interface{}) {
+func NotNil(t *testing.T, value any) {
 	if isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to not be nil", value, reflect.TypeOf(value))
 	}
 }
 
-func isNil(value interface{}) bool {
+func isNil(value any) bool {
 	return value == nil ||
-		(reflect.ValueOf(value).Kind() == reflect.Ptr && reflect.ValueOf(value).IsNil())
+		(reflect.ValueOf(value).Kind() == reflect.Pointer && reflect.ValueOf(value).IsNil())
 }
 
-func Equal(t *testing.T, actual, expected interface{}) {
+func Equal(t *testing.T, actual, expected any) {
 	if !(reflect.DeepEqual(actual, expected) || cmp.Equal(actual, expected)) {
 		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
 		t.Errorf("\n---\n")
@@ -52,7 +52,7 @@ func Equal(t *testing.T, actual, expected interface{}) {
 	}
 }
 
-func NotEqual(t *testing.T, actual, other interface{}) {
+func NotEqual(t *testing.T, actual, other any) {
 	if reflect.DeepEqual(actual, other) || cmp.Equal(actual, other) {
 		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
 		t.Errorf("\n---\n")

@@ -16,7 +16,7 @@ func newGlspLogger(log logging.Logger) *glspLogger {
 	return &glspLogger{log}
 }
 
-func (l *glspLogger) Printf(format string, v ...interface{}) {
+func (l *glspLogger) Printf(format string, v ...any) {
 	l.log.Debugf("zk: "+format, v...)
 }
 

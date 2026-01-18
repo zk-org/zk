@@ -31,7 +31,7 @@ func (s *LazyStmt) Stmt() (*sql.Stmt, error) {
 	return s.stmt, s.wrapErr(s.err)
 }
 
-func (s *LazyStmt) Exec(args ...interface{}) (sql.Result, error) {
+func (s *LazyStmt) Exec(args ...any) (sql.Result, error) {
 	stmt, err := s.Stmt()
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (s *LazyStmt) Exec(args ...interface{}) (sql.Result, error) {
 	return res, s.wrapErr(err)
 }
 
-func (s *LazyStmt) Query(args ...interface{}) (*sql.Rows, error) {
+func (s *LazyStmt) Query(args ...any) (*sql.Rows, error) {
 	stmt, err := s.Stmt()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s *LazyStmt) Query(args ...interface{}) (*sql.Rows, error) {
 	return rows, s.wrapErr(err)
 }
 
-func (s *LazyStmt) QueryRow(args ...interface{}) (*sql.Row, error) {
+func (s *LazyStmt) QueryRow(args ...any) (*sql.Row, error) {
 	stmt, err := s.Stmt()
 	if err != nil {
 		return nil, err

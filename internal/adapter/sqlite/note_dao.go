@@ -448,7 +448,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 	joinClauses := []string{}
 	whereExprs := []string{}
 	additionalOrderTerms := []string{}
-	args := []interface{}{}
+	args := []any{}
 	groupBy := ""
 
 	transitiveClosure := false
@@ -910,7 +910,7 @@ func buildMentionQuery(title, metadataJSON string) string {
 	if err == nil {
 		if aliases, ok := metadata["aliases"]; ok {
 			switch aliases := aliases.(type) {
-			case []interface{}:
+			case []any:
 				for _, alias := range aliases {
 					appendTitle(fmt.Sprint(alias))
 				}

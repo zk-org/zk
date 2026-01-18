@@ -12,15 +12,15 @@ import (
 //
 //	[[path/to/note]]
 //	[An interesting subject](path/to/note)
-func NewLinkHelper(formatter core.LinkFormatter, logger util.Logger) interface{} {
-	return func(path string, opt interface{}) string {
+func NewLinkHelper(formatter core.LinkFormatter, logger util.Logger) any {
+	return func(path string, opt any) string {
 		title, _ := opt.(string)
 		link, err := formatter(core.LinkFormatterContext{
 			Path:     path,
 			RelPath:  path,
 			AbsPath:  path,
 			Title:    title,
-			Metadata: map[string]interface{}{},
+			Metadata: map[string]any{},
 		})
 		if err != nil {
 			logger.Err(err)

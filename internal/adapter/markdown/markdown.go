@@ -295,7 +295,7 @@ func extractLines(n ast.Node, source []byte) (content string, start, end int) {
 
 // frontmatter contains metadata parsed from a YAML frontmatter.
 type frontmatter struct {
-	values map[string]interface{}
+	values map[string]any
 	start  int
 	end    int
 }
@@ -304,7 +304,7 @@ var frontmatterRegex = regexp.MustCompile(`(?ms)^\s*-+\s*$.*?^\s*-+\s*$`)
 
 func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error) {
 	var front frontmatter
-	front.values = map[string]interface{}{}
+	front.values = map[string]any{}
 
 	index := frontmatterRegex.FindIndex(source)
 	if index == nil {
@@ -358,7 +358,7 @@ func (m frontmatter) getStrings(keys ...string) ([]string, bool) {
 	for _, key := range keys {
 		key = strings.ToLower(key)
 		if val, ok := m.values[key]; ok {
-			if val, ok := val.([]interface{}); ok {
+			if val, ok := val.([]any); ok {
 				strs := []string{}
 				for _, v := range val {
 					s := strings.TrimSpace(fmt.Sprint(v))

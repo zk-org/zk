@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func Wrapperf(format string, args ...interface{}) func(error) error {
+func Wrapperf(format string, args ...any) func(error) error {
 	return Wrapper(fmt.Sprintf(format, args...))
 }
 
@@ -15,7 +15,7 @@ func Wrapper(msg string) func(error) error {
 	}
 }
 
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	return Wrap(err, fmt.Sprintf(format, args...))
 }
 
@@ -30,6 +30,6 @@ func New(text string) error {
 	return errors.New(text)
 }
 
-func As(err error, target interface{}) bool {
+func As(err error, target any) bool {
 	return errors.As(err, target)
 }

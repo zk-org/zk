@@ -34,7 +34,7 @@ func (s *styler) MustStyle(text string, rules ...core.Style) string {
 	return text
 }
 
-func testString(t *testing.T, template string, context interface{}, expected string) {
+func testString(t *testing.T, template string, context any, expected string) {
 	sut := testLoader(LoaderOpts{})
 
 	templ, err := sut.LoadTemplate(template)
@@ -45,7 +45,7 @@ func testString(t *testing.T, template string, context interface{}, expected str
 	assert.Equal(t, actual, expected)
 }
 
-func testFile(t *testing.T, name string, context interface{}, expected string) {
+func testFile(t *testing.T, name string, context any, expected string) {
 	sut := testLoader(LoaderOpts{})
 
 	templ, err := sut.LoadTemplateAt(fixtures.Path(name))
@@ -147,7 +147,7 @@ func TestSubstringHelper(t *testing.T) {
 
 func TestJoinHelper(t *testing.T) {
 	test := func(items []string, expected string) {
-		context := map[string]interface{}{"items": items}
+		context := map[string]any{"items": items}
 		testString(t, "{{join items '-'}}", context, expected)
 	}
 
@@ -164,8 +164,8 @@ type testJSONObject struct {
 }
 
 func TestJSONHelper(t *testing.T) {
-	test := func(value interface{}, expected string) {
-		context := map[string]interface{}{"value": value}
+	test := func(value any, expected string) {
+		context := map[string]any{"value": value}
 		testString(t, "{{json value}}", context, expected)
 	}
 
@@ -190,7 +190,7 @@ func TestPrependHelper(t *testing.T) {
 
 func TestListHelper(t *testing.T) {
 	test := func(items []string, expected string) {
-		context := map[string]interface{}{"items": items}
+		context := map[string]any{"items": items}
 		testString(t, "{{list items}}", context, expected)
 	}
 	test([]string{}, "")
@@ -206,7 +206,7 @@ func TestLinkHelper(t *testing.T) {
 	templ, err := sut.LoadTemplate(`{{format-link "path/to note.md" "An interesting subject"}}`)
 	assert.Nil(t, err)
 
-	actual, err := templ.Render(map[string]interface{}{})
+	actual, err := templ.Render(map[string]any{})
 	assert.Nil(t, err)
 	assert.Equal(t, actual, "path/to note.md - An interesting subject")
 }
@@ -227,7 +227,7 @@ func TestSlugHelper(t *testing.T) {
 }
 
 func TestFormatDateHelper(t *testing.T) {
-	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	context := map[string]any{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date now}}", context, "2009-11-17")
 	testString(t, "{{format-date now 'short'}}", context, "11/17/2009")
 	testString(t, "{{format-date now 'medium'}}", context, "Nov 17, 2009")
@@ -244,7 +244,7 @@ func TestFormatDateHelperElapsedYear(t *testing.T) {
 	year := time.Now().UTC().Year() - 14
 	month := time.Now().UTC().Month() + 1
 	day := time.Now().UTC().Day()
-	context := map[string]interface{}{"now": time.Date(year, month, day, 20, 34, 58, 651387237, time.UTC)}
+	context := map[string]any{"now": time.Date(year, month, day, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date now 'elapsed'}}", context, "14 years ago")
 }
 
@@ -343,7 +343,7 @@ func TestFormatDateHelperElapsedViaTimeMultiplication(t *testing.T) {
 
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d_%s", i, tc.want), func(t *testing.T) {
-			templateContext := map[string]interface{}{"now": time.Now().Add(-tc.elapsed)}
+			templateContext := map[string]any{"now": time.Now().Add(-tc.elapsed)}
 
 			testString(t, "{{format-date now 'elapsed'}}", templateContext, tc.want)
 		})
@@ -351,7 +351,7 @@ func TestFormatDateHelperElapsedViaTimeMultiplication(t *testing.T) {
 }
 
 func TestDateHelper(t *testing.T) {
-	context := map[string]interface{}{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
+	context := map[string]any{"now": time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)}
 	testString(t, "{{format-date (date \"2009-11-17T20:34:58\") 'timestamp'}}", context, "200911172034")
 }
 

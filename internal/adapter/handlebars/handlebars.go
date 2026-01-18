@@ -37,7 +37,7 @@ func (t *Template) Styler() core.Styler {
 }
 
 // Render implements core.Template.
-func (t *Template) Render(context interface{}) (string, error) {
+func (t *Template) Render(context any) (string, error) {
 	res, err := t.template.Exec(context)
 	if err != nil {
 		return "", errors.Wrap(err, "render template failed")

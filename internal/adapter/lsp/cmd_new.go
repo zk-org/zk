@@ -28,10 +28,10 @@ type cmdNewOpts struct {
 	InsertContentAtLocation *protocol.Location `json:"insertContentAtLocation"`
 }
 
-func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
+func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []any) (any, error) {
 	var opts cmdNewOpts
 	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
+		arg, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdNew, args[1])
 		}
@@ -105,7 +105,7 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		}, nil)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"path":    absPath,
 		"content": note.RawContent,
 	}, nil

@@ -19,10 +19,10 @@ type cmdListOpts struct {
 	cli.Filtering
 }
 
-func executeCommandList(logger util.Logger, notebook *core.Notebook, args []interface{}) (interface{}, error) {
+func executeCommandList(logger util.Logger, notebook *core.Notebook, args []any) (any, error) {
 	var opts cmdListOpts
 	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
+		arg, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdList, args[1])
 		}
@@ -144,19 +144,19 @@ func newListNote(note core.ContextualNote, selection listSelection, basePath str
 }
 
 type listNote struct {
-	Filename     string                 `json:"filename,omitempty"`
-	FilenameStem string                 `json:"filenameStem,omitempty"`
-	Path         string                 `json:"path,omitempty"`
-	AbsPath      string                 `json:"absPath,omitempty"`
-	Title        string                 `json:"title,omitempty"`
-	Lead         string                 `json:"lead,omitempty"`
-	Body         string                 `json:"body,omitempty"`
-	Snippets     []string               `json:"snippets,omitempty"`
-	RawContent   string                 `json:"rawContent,omitempty"`
-	WordCount    int                    `json:"wordCount,omitempty"`
-	Tags         []string               `json:"tags,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Created      *time.Time             `json:"created,omitempty"`
-	Modified     *time.Time             `json:"modified,omitempty"`
-	Checksum     string                 `json:"checksum,omitempty"`
+	Filename     string         `json:"filename,omitempty"`
+	FilenameStem string         `json:"filenameStem,omitempty"`
+	Path         string         `json:"path,omitempty"`
+	AbsPath      string         `json:"absPath,omitempty"`
+	Title        string         `json:"title,omitempty"`
+	Lead         string         `json:"lead,omitempty"`
+	Body         string         `json:"body,omitempty"`
+	Snippets     []string       `json:"snippets,omitempty"`
+	RawContent   string         `json:"rawContent,omitempty"`
+	WordCount    int            `json:"wordCount,omitempty"`
+	Tags         []string       `json:"tags,omitempty"`
+	Metadata     map[string]any `json:"metadata,omitempty"`
+	Created      *time.Time     `json:"created,omitempty"`
+	Modified     *time.Time     `json:"modified,omitempty"`
+	Checksum     string         `json:"checksum,omitempty"`
 }

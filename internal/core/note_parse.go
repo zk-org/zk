@@ -37,7 +37,7 @@ type NoteContent struct {
 	// Links is the list of outbound links found in the note.
 	Links []Link
 	// Additional metadata. For example, extracted from a YAML frontmatter.
-	Metadata map[string]interface{}
+	Metadata map[string]any
 }
 
 // ParseNoteAt implements NoteParser.
@@ -101,7 +101,7 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	return &note, nil
 }
 
-func creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+func creationDateFrom(metadata map[string]any, times times.Timespec) time.Time {
 	// Read the creation date from the YAML frontmatter `date` key.
 	if dateVal, ok := metadata["date"]; ok {
 		if dateStr, ok := dateVal.(string); ok {
