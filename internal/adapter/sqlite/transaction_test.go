@@ -77,15 +77,6 @@ func exists(t *testing.T, db *DB, sql string, args ...any) bool {
 	return exists == 1
 }
 
-// FIXME: Migrate to DB-based versions?
-func assertExistOrNotTx(t *testing.T, tx Transaction, shouldExist bool, sql string, args ...any) {
-	if shouldExist {
-		assertExistTx(t, tx, sql, args...)
-	} else {
-		assertNotExistTx(t, tx, sql, args...)
-	}
-}
-
 func assertExistTx(t *testing.T, tx Transaction, sql string, args ...any) {
 	if !existsTx(t, tx, sql, args...) {
 		t.Errorf("SQL query did not return any result: %s, with arguments %v", sql, args)
