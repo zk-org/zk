@@ -148,7 +148,7 @@ func fatalIfError(err error) {
 }
 
 func setupDebugMode() {
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	go func() {
 		stacktrace := make([]byte, 8192)
 		for range c {
