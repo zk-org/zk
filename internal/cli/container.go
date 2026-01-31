@@ -74,16 +74,6 @@ func NewContainer(version string) (*Container, error) {
 		}
 	}
 
-	// Set the default notebook if not already set
-	// might be overrided if --notebook-dir flag is present
-	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR").IsNull() && !config.Notebook.Dir.IsNull() {
-		notebookDir, err := paths.ExpandPath(config.Notebook.Dir.Unwrap())
-		if err != nil {
-			return nil, wrap(err)
-		}
-		os.Setenv("ZK_NOTEBOOK_DIR", notebookDir)
-	}
-
 	// Set the default shell if not already set
 	if osutil.GetOptEnv("ZK_SHELL").IsNull() && !config.Tool.Shell.IsEmpty() {
 		os.Setenv("ZK_SHELL", config.Tool.Shell.Unwrap())

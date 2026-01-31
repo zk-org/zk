@@ -16,6 +16,7 @@ import (
 	"github.com/zk-org/zk/internal/cli/cmd"
 	"github.com/zk-org/zk/internal/core"
 	executil "github.com/zk-org/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 var Version = "dev"
@@ -76,7 +77,7 @@ func main() {
 	// Open the notebook if there's any.
 	dirs, args, err := parseDirs(args)
 	fatalIfError(err)
-	searchDirs, err := notebookSearchDirs(dirs)
+	searchDirs, err := notebookSearchDirs(dirs, container)
 	fatalIfError(err)
 	err = container.SetCurrentNotebook(searchDirs)
 	fatalIfError(err)
@@ -207,7 +208,9 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 //  1. --notebook-dir flag
 //  2. current working directory
 //  3. ZK_NOTEBOOK_DIR environment variable
-func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
+//  4. context-based discovery (project directory)
+//  5. default notebook from config
+func notebookSearchDirs(dirs cli.Dirs, container *cli.Container) ([]cli.Dirs, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -241,6 +244,29 @@ func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 			dirs.WorkingDir = notebookDir
 		}
 		candidates = append(candidates, dirs)
+	}
+
+	// 4. Resolve from context (project directory -> notebook)
+	if notebookDir, found, err := container.Notebooks.ResolveNotebookFromContext(wdDirs.WorkingDir); err == nil && found {
+		dirs := dirs
+		dirs.NotebookDir = notebookDir
+		if dirs.WorkingDir == "" {
+			dirs.WorkingDir = notebookDir
+		}
+		candidates = append(candidates, dirs)
+	}
+
+	// 5. Default notebook from config
+	if !container.Config.Notebook.Dir.IsNull() {
+		notebookDir, err := paths.ExpandPath(container.Config.Notebook.Dir.Unwrap())
+		if err == nil {
+			dirs := dirs
+			dirs.NotebookDir = notebookDir
+			if dirs.WorkingDir == "" {
+				dirs.WorkingDir = notebookDir
+			}
+			candidates = append(candidates, dirs)
+		}
 	}
 
 	return candidates, nil
