@@ -2,16 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 	"os"
+	"path/filepath"
 
-	"github.com/zk-org/zk/internal/cli"
 	"github.com/pelletier/go-toml"
+	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // Notebook is the command group for notebook operations.
 type Notebook struct {
-	Context ContextCmd `cmd group:"notebook" help:"Manage notebook contexts."`
+	Context  ContextCmd       `cmd group:"notebook" help:"Manage notebook contexts."`
+	Register NotebookRegister `cmd help:"Register a notebook in the global configuration."`
+	List     NotebookList     `cmd help:"List registered notebooks."`
+	Status   NotebookStatus   `cmd help:"Show the current notebook status."`
 }
 
 // ContextCmd is the command group for context operations.
@@ -37,9 +41,6 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 
 	configPath := filepath.Join(notebook.Path, ".zk", "config.toml")
 	
-	// Load the config file using toml.Tree to preserve as much as possible
-	// (though go-toml v1 might still struggle with comments if we rewrite the whole tree, 
-	// but using Tree is better than struct marshaling)
 	configContent, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
@@ -50,7 +51,6 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 		return fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Get current contexts
 	var contexts []string
 	if tree.Has("notebook.contexts") {
 		currentContexts := tree.Get("notebook.contexts")
@@ -63,7 +63,6 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 		}
 	}
 
-	// Check if already exists
 	for _, c := range contexts {
 		if c == targetPath {
 			fmt.Printf("Context already exists: %s\n", targetPath)
@@ -71,15 +70,9 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 		}
 	}
 
-	// Add new context
 	contexts = append(contexts, targetPath)
-	
-	// Update tree
-	// go-toml v1 Set needs the full key path.
-	// We might need to ensure [notebook] table exists, but it usually does.
 	tree.Set("notebook.contexts", contexts)
 
-	// Write back
 	f, err := os.Create(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to open config file for writing: %w", err)
@@ -92,5 +85,142 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 	}
 
 	fmt.Printf("Added context: %s\n", targetPath)
+	return nil
+}
+
+// NotebookRegister registers a notebook path in the global configuration.
+type NotebookRegister struct {
+	Path string `arg optional type:"path" default:"." help:"Notebook path to register."`
+}
+
+func (cmd *NotebookRegister) Run(container *cli.Container) error {
+	targetPath, err := filepath.Abs(cmd.Path)
+	if err != nil {
+		return fmt.Errorf("failed to resolve path: %w", err)
+	}
+
+	info, err := os.Stat(targetPath)
+	if err != nil {
+		return fmt.Errorf("path does not exist: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("path is not a directory: %s", targetPath)
+	}
+
+	// Check for .zk directory
+	zkDir := filepath.Join(targetPath, ".zk")
+	zkInfo, err := os.Stat(zkDir)
+	if err != nil || !zkInfo.IsDir() {
+		return fmt.Errorf("not a valid notebook: %s/.zk directory missing", targetPath)
+	}
+
+	configPath, err := container.GlobalConfigPath()
+	if err != nil {
+		return fmt.Errorf("failed to locate global config: %w", err)
+	}
+
+	var tree *toml.Tree
+	configContent, err := os.ReadFile(configPath)
+	if err == nil {
+		tree, err = toml.LoadBytes(configContent)
+		if err != nil {
+			return fmt.Errorf("failed to parse global config file: %w", err)
+		}
+	} else if os.IsNotExist(err) {
+		tree, _ = toml.Load("")
+	} else {
+		return fmt.Errorf("failed to read global config file: %w", err)
+	}
+
+	var notebooks []string
+	if tree.Has("notebooks") {
+		currentNotebooks := tree.Get("notebooks")
+		if cArr, ok := currentNotebooks.([]interface{}); ok {
+			for _, c := range cArr {
+				if s, ok := c.(string); ok {
+					notebooks = append(notebooks, s)
+				}
+			}
+		}
+	}
+
+	for _, n := range notebooks {
+		if n == targetPath {
+			fmt.Printf("Notebook already registered: %s\n", targetPath)
+			return nil
+		}
+	}
+
+	notebooks = append(notebooks, targetPath)
+	tree.Set("notebooks", notebooks)
+
+	f, err := os.Create(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to open global config file for writing: %w", err)
+	}
+	defer f.Close()
+
+	_, err = tree.WriteTo(f)
+	if err != nil {
+		return fmt.Errorf("failed to write global config file: %w", err)
+	}
+
+	fmt.Printf("Registered notebook: %s\n", targetPath)
+	return nil
+}
+
+// NotebookList lists registered notebooks.
+type NotebookList struct {}
+
+func (cmd *NotebookList) Run(container *cli.Container) error {
+	notebooks := container.Config.Notebooks
+	if len(notebooks) == 0 {
+		fmt.Println("No notebooks registered.")
+		return nil
+	}
+
+	for _, path := range notebooks {
+		exists, _ := paths.Exists(path)
+		status := ""
+		if !exists {
+			status = " (missing)"
+		}
+		fmt.Printf("%s%s\n", path, status)
+	}
+	return nil
+}
+
+// NotebookStatus shows the current notebook and discovery reason.
+type NotebookStatus struct {}
+
+func (cmd *NotebookStatus) Run(container *cli.Container) error {
+	notebook, err := container.CurrentNotebook()
+	if err != nil {
+		fmt.Println("No active notebook.")
+		return nil
+	}
+
+	fmt.Printf("Active Notebook: %s\n", notebook.Path)
+
+	wd, _ := os.Getwd()
+	foundPath, found, _ := container.Notebooks.ResolveNotebookFromContext(wd)
+	
+	// Determine the most likely source
+	source := "Manual selection / Environment"
+	
+	if found && foundPath == notebook.Path {
+		source = fmt.Sprintf("Context discovery (project: %s)", wd)
+	} else if !container.Config.Notebook.Dir.IsNull() {
+		defaultDir, _ := paths.ExpandPath(container.Config.Notebook.Dir.Unwrap())
+		if defaultDir == notebook.Path {
+			source = "Default configuration"
+		}
+	}
+	
+	if wd == notebook.Path {
+		source = "Current directory"
+	}
+
+	fmt.Printf("Source: %s\n", source)
 	return nil
 }

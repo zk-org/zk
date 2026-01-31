@@ -179,6 +179,16 @@ func globalConfigDir() string {
 	return filepath.Join(path, "zk")
 }
 
+// GlobalConfigPath returns the path to the global configuration file.
+// It ensures the parent directory exists.
+func (c *Container) GlobalConfigPath() (string, error) {
+	dir := globalConfigDir()
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "config.toml"), nil
+}
+
 // SetCurrentNotebook sets the first notebook found in the given search paths
 // as the current default one.
 func (c *Container) SetCurrentNotebook(searchDirs []Dirs) error {
