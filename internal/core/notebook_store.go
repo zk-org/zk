@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/zk-org/zk/internal/util/errors"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // NotebookStore retrieves or creates new notebooks.
@@ -402,3 +403,48 @@ const defaultTemplate = `# {{title}}
 
 {{content}}
 `
+
+// ResolveNotebookFromContext tries to find a notebook matching the given
+// current working directory using the configured notebooks contexts.
+func (ns *NotebookStore) ResolveNotebookFromContext(cwd string) (string, bool, error) {
+	var bestMatch string
+	var bestMatchLen int
+
+	for _, notebookPath := range ns.config.Notebooks {
+		absNotebookPath, err := paths.ExpandPath(notebookPath)
+		if err != nil {
+			continue
+		}
+
+		configPath := filepath.Join(absNotebookPath, ".zk", "config.toml")
+		nbConfig, err := OpenConfig(configPath, NewDefaultConfig(), ns.fs, false)
+		if err != nil {
+			continue
+		}
+
+		for _, ctx := range nbConfig.Notebook.Contexts {
+			absCtx, err := paths.ExpandPath(ctx)
+			if err != nil {
+				continue
+			}
+
+			absCtx, err = ns.fs.Abs(absCtx)
+			if err != nil {
+				continue
+			}
+
+			isDesc, err := ns.fs.IsDescendantOf(absCtx, cwd)
+			if err == nil && isDesc {
+				if len(absCtx) > bestMatchLen {
+					bestMatch = absNotebookPath
+					bestMatchLen = len(absCtx)
+				}
+			}
+		}
+	}
+
+	if bestMatch != "" {
+		return bestMatch, true, nil
+	}
+	return "", false, nil
+}
