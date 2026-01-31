@@ -24,6 +24,8 @@ type Config struct {
 	Filters  map[string]string
 	Aliases  map[string]string
 	Extra    map[string]string
+	// Registered notebook paths for global discovery
+	Notebooks []string
 }
 
 // NOTE: config generation occurs in internal/core/notebook_store.go. The below function is used
@@ -34,8 +36,10 @@ type Config struct {
 func NewDefaultConfig() Config {
 	return Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir:      opt.NullString,
+			Contexts: []string{},
 		},
+		Notebooks: []string{},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
@@ -238,7 +242,8 @@ type MissingBacklinkConfig struct {
 
 // NotebookConfig holds configuration about the default notebook
 type NotebookConfig struct {
-	Dir opt.String
+	Dir      opt.String
+	Contexts []string
 }
 
 // NoteConfig holds the user configuration used when generating new notes.
@@ -327,6 +332,10 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		return config, wrap(err)
 	}
 
+	if len(tomlConf.Notebooks) > 0 {
+		config.Notebooks = append(config.Notebooks, tomlConf.Notebooks...)
+	}
+
 	// Notebook
 	notebook := tomlConf.Notebook
 	if notebook.Dir != "" {
@@ -335,6 +344,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		} else {
 			return config, wrap(errors.New("notebook.dir should not be set on local configuration"))
 		}
+	}
+	if len(notebook.Contexts) > 0 {
+		config.Notebook.Contexts = append(config.Notebook.Contexts, notebook.Contexts...)
 	}
 
 	// Note
@@ -537,19 +549,21 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 
 // tomlConfig holds the TOML representation of Config
 type tomlConfig struct {
-	Notebook tomlNotebookConfig
-	Note     tomlNoteConfig
-	Groups   map[string]tomlGroupConfig `toml:"group"`
-	Format   tomlFormatConfig
-	Tool     tomlToolConfig
-	LSP      tomlLSPConfig
-	Extra    map[string]string
-	Filters  map[string]string `toml:"filter"`
-	Aliases  map[string]string `toml:"alias"`
+	Notebook  tomlNotebookConfig
+	Note      tomlNoteConfig
+	Groups    map[string]tomlGroupConfig `toml:"group"`
+	Format    tomlFormatConfig
+	Tool      tomlToolConfig
+	LSP       tomlLSPConfig
+	Extra     map[string]string
+	Filters   map[string]string `toml:"filter"`
+	Aliases   map[string]string `toml:"alias"`
+	Notebooks []string          `toml:"notebooks"`
 }
 
 type tomlNotebookConfig struct {
-	Dir string
+	Dir      string
+	Contexts []string `toml:"contexts"`
 }
 
 type tomlNoteConfig struct {

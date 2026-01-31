@@ -15,7 +15,8 @@ func TestParseDefaultConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir:      opt.NullString,
+			Contexts: []string{},
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
@@ -57,7 +58,8 @@ func TestParseDefaultConfig(t *testing.T) {
 		},
 		Filters: make(map[string]string),
 		Aliases: make(map[string]string),
-		Extra:   make(map[string]string),
+		Extra:     make(map[string]string),
+		Notebooks: []string{},
 	})
 }
 
@@ -150,7 +152,8 @@ func TestParseComplete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NewString("~/notebook"),
+			Dir:      opt.NewString("~/notebook"),
+			Contexts: []string{},
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
@@ -274,6 +277,7 @@ func TestParseComplete(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
+		Notebooks: []string{},
 	})
 }
 
@@ -359,6 +363,10 @@ func TestParseMergesGroupConfig(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Dir:      opt.NullString,
+			Contexts: []string{},
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "root-filename",
 			Extension:        "txt",
@@ -445,6 +453,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			"hello": "world",
 			"salut": "le monde",
 		},
+		Notebooks: []string{},
 	})
 }
 
