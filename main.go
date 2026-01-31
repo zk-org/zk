@@ -31,6 +31,8 @@ var root struct {
 	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
 	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
 
+	Notebook cmd.Notebook `cmd group:"notebook" help:"Manage notebooks."`
+
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
 	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
 	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
