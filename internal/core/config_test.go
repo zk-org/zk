@@ -56,8 +56,8 @@ func TestParseDefaultConfig(t *testing.T) {
 				MissingBacklink: MissingBacklinkConfig{},
 			},
 		},
-		Filters: make(map[string]string),
-		Aliases: make(map[string]string),
+		Filters:   make(map[string]string),
+		Aliases:   make(map[string]string),
 		Extra:     make(map[string]string),
 		Notebooks: []string{},
 	})

@@ -22,16 +22,16 @@ func TestDiscoveryPrecedence(t *testing.T) {
 	notebookEnv := filepath.Join(rootDir, "notebook-env")
 	notebookContext := filepath.Join(rootDir, "notebook-context")
 	notebookConfig := filepath.Join(rootDir, "notebook-config")
-	
+
 	projectDir := filepath.Join(rootDir, "project")
-	
+
 	// Create directories
 	dirs := []string{notebookFlag, notebookCwd, notebookEnv, notebookContext, notebookConfig, projectDir}
 	for _, d := range dirs {
 		if err := os.MkdirAll(d, 0755); err != nil {
 			t.Fatal(err)
 		}
-		// Initialize notebooks (create .zk config to mark them valid if needed, 
+		// Initialize notebooks (create .zk config to mark them valid if needed,
 		// though zk often treats any dir with notes as notebook, strict mode might require init)
 		// We'll just create a unique file in each to identify them.
 	}
@@ -45,15 +45,15 @@ func TestDiscoveryPrecedence(t *testing.T) {
 	// Setup Config for Context and Default
 	// We need a global config file. zk looks in ~/.config/zk/config.toml or similar.
 	// We can point ZK_CONFIG_DIR or similar?
-	// Looking at code (not shown yet), zk uses standard config paths. 
+	// Looking at code (not shown yet), zk uses standard config paths.
 	// internal/cli/container.go usually handles this.
 	// I might need to mock the config file by setting XDG_CONFIG_HOME.
-	
+
 	configDir := filepath.Join(rootDir, "config")
 	if err := os.MkdirAll(filepath.Join(configDir, "zk"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// config.toml content (Global Config)
 	// 1. Register notebookContext in the list of known notebooks.
 	// 2. Set notebookConfig as the default notebook.
@@ -113,15 +113,14 @@ contexts = ["` + escapePath(projectDir) + `"]
 		}
 	}
 
-
 	// Helper to run zk
 	runZk := func(t *testing.T, workDir string, envVarNotebook string, extraArgs ...string) string {
 		cmdArgs := []string{"list", "--format", "{{path}}", "--quiet"}
 		cmdArgs = append(cmdArgs, extraArgs...)
-		
+
 		cmd := exec.Command(zkBin, cmdArgs...)
 		cmd.Dir = workDir
-		
+
 		env := os.Environ()
 		// Filter out existing ZK envs to avoid pollution
 		cleanEnv := []string{}
@@ -130,14 +129,14 @@ contexts = ["` + escapePath(projectDir) + `"]
 				cleanEnv = append(cleanEnv, e)
 			}
 		}
-		
+
 		cleanEnv = append(cleanEnv, "XDG_CONFIG_HOME="+configDir)
 		if envVarNotebook != "" {
 			cleanEnv = append(cleanEnv, "ZK_NOTEBOOK_DIR="+envVarNotebook)
 		}
-		
+
 		cmd.Env = cleanEnv
-		
+
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("zk command failed: %v\nOutput: %s", err, out)
@@ -201,7 +200,7 @@ contexts = ["` + escapePath(projectDir) + `"]
 		t.Fatal(err)
 	}
 	createFile(t, notebookAdd, "add.md")
-	
+
 	// Init notebook-add
 	initCmd := exec.Command(zkBin, "init", notebookAdd, "--no-input")
 	if out, err := initCmd.CombinedOutput(); err != nil {
@@ -214,12 +213,12 @@ contexts = ["` + escapePath(projectDir) + `"]
 		cmd := exec.Command(zkBin, "notebook", "context", "add", projectAdd)
 		cmd.Dir = notebookAdd
 		cmd.Env = append(os.Environ(), "XDG_CONFIG_HOME="+configDir) // Use same config env
-		
+
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("Failed to add context: %v\n%s", err, out)
 		}
-		
+
 		// 3. Verify config file content
 		configPath := filepath.Join(notebookAdd, ".zk", "config.toml")
 		content, err := os.ReadFile(configPath)
@@ -234,10 +233,10 @@ contexts = ["` + escapePath(projectDir) + `"]
 		// We need to register notebookAdd in global config so discovery sees it.
 		// We can append it to the global config file we created earlier.
 		// But wait, the global config is static in this test.
-		// We can overwrite it or assume discovery works if we use `zk list`? 
+		// We can overwrite it or assume discovery works if we use `zk list`?
 		// Discovery iterates `notebooks` list in global config.
 		// So we MUST add `notebookAdd` to `config.toml` (global).
-		
+
 		// Update global config to include notebookAdd
 		fullConfigContent := `
 notebooks = ["` + escapePath(notebookContext) + `", "` + escapePath(notebookAdd) + `"]

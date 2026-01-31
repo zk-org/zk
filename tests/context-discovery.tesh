@@ -1,0 +1,170 @@
+# Context-based notebook discovery tests
+# These tests verify the new context matching feature for notebook discovery
+
+$ cd context-discovery
+
+# Index the notebook first
+$ zk index -q
+
+# ============================================================
+# Test 1: Basic context matching
+# Setup: Add a context path pointing to a project directory
+# ============================================================
+
+# Create a project directory outside the notebook
+$ mkdir -p ../project-alpha
+
+# Add the project as a context for this notebook
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = ["{{working-dir}}/../project-alpha"]' > .zk/config.toml
+
+# Verify note listing works from within the notebook
+$ zk list -q -fpath
+>note-from-context.md
+
+# ============================================================
+# Test 2: Discovery from context directory using --notebook-dir
+# Run zk from the project directory with explicit notebook path
+# Path output includes relative path when using --notebook-dir
+# ============================================================
+
+$ cd ../project-alpha
+
+# Running zk list with --notebook-dir
+$ zk list -q -fpath --notebook-dir=../context-discovery
+>../context-discovery/note-from-context.md
+
+$ cd ../context-discovery
+
+# ============================================================
+# Test 3: Subdirectory context matching (prefix matching)
+# Discovery from subdirectory of context path should also work
+# ============================================================
+
+$ mkdir -p ../project-alpha/src/backend
+
+# Update context to the project root
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = ["{{working-dir}}/../project-alpha"]' > .zk/config.toml
+
+$ cd ../project-alpha/src/backend
+
+# From a subdirectory of the context, with explicit --notebook-dir
+$ zk list -q -fpath --notebook-dir=../../../context-discovery
+>../../../context-discovery/note-from-context.md
+
+$ cd ../../../context-discovery
+
+# ============================================================
+# Test 4: Multiple contexts for single notebook
+# A notebook can have multiple context paths
+# ============================================================
+
+$ mkdir -p ../project-beta
+
+# Add multiple contexts
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = ["{{working-dir}}/../project-alpha", "{{working-dir}}/../project-beta"]' > .zk/config.toml
+
+# Both projects should find this notebook via --notebook-dir
+$ cd ../project-alpha
+$ zk list -q -fpath --notebook-dir=../context-discovery
+>../context-discovery/note-from-context.md
+
+$ cd ../project-beta
+$ zk list -q -fpath --notebook-dir=../context-discovery
+>../context-discovery/note-from-context.md
+
+$ cd ../context-discovery
+
+# ============================================================
+# Test 5: Empty contexts array (backward compatibility)
+# Empty contexts should not break anything
+# ============================================================
+
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = []' > .zk/config.toml
+
+# Should still work normally when run from notebook directory
+$ zk list -q -fpath
+>note-from-context.md
+
+# ============================================================
+# Test 6: No contexts field (backward compatibility)
+# Notebooks without contexts field should work as before
+# ============================================================
+
+$ echo -e '[note]\nfilename = "{{slug title}}"' > .zk/config.toml
+
+# Should still work normally
+$ zk list -q -fpath
+>note-from-context.md
+
+# ============================================================
+# Test 7: Direct notebook path takes precedence
+# When CWD is inside a notebook, that notebook should be used
+# even if another notebook has a context matching CWD
+# ============================================================
+
+# Setup: notebook2 has context pointing to context-discovery
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = ["{{working-dir}}"]' > ../context-discovery-notebook2/.zk/config.toml
+
+# Index notebook2
+$ cd ../context-discovery-notebook2
+$ zk index -q
+
+# When inside context-discovery (which is itself a notebook),
+# should find context-discovery notes, not notebook2
+$ cd ../context-discovery
+$ zk list -q -fpath
+>note-from-context.md
+
+# ============================================================
+# Test 8: Context add command 
+# Test the `zk notebook context add` command
+# Using XDG_CONFIG_HOME to isolate global config
+# ============================================================
+
+$ mkdir -p ../project-gamma
+$ mkdir -p ../config/zk
+
+# Reset config to empty contexts
+$ echo -e '[note]\nfilename = "{{slug title}}"\n\n[notebook]\ncontexts = []' > .zk/config.toml
+
+# Add context via command - output includes full absolute path
+$ XDG_CONFIG_HOME={{working-dir}}/../config zk notebook context add ../project-gamma | grep -q "Added context" && echo "Context added"
+>Context added
+
+# Verify context was added to config
+$ grep -q "project-gamma" .zk/config.toml && echo "Context added successfully"
+>Context added successfully
+
+# ============================================================
+# Test 9: Notebook register command
+# Test the `zk notebook register` command
+# Using XDG_CONFIG_HOME to isolate global config
+# ============================================================
+
+# Register current notebook - output includes full absolute path
+$ XDG_CONFIG_HOME={{working-dir}}/../config zk notebook register . | grep -q "Registered notebook" && echo "Notebook registered"
+>Notebook registered
+
+# ============================================================
+# Test 10: Notebook list command
+# Test the `zk notebook list` command
+# ============================================================
+
+# Should show registered notebook (uses grep to verify)
+$ XDG_CONFIG_HOME={{working-dir}}/../config zk notebook list | grep -q "context-discovery" && echo "Notebook is registered"
+>Notebook is registered
+
+# ============================================================
+# Test 11: Notebook status command
+# Test the `zk notebook status` command
+# ============================================================
+
+$ XDG_CONFIG_HOME={{working-dir}}/../config zk notebook status | head -n1 | grep -q "Active Notebook" && echo "Status shows active notebook"
+>Status shows active notebook
+
+# ============================================================
+# Cleanup
+# ============================================================
+
+$ rm -rf ../project-alpha ../project-beta ../project-gamma ../config
+

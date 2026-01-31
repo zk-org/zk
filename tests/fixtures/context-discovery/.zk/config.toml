@@ -1,0 +1,6 @@
+
+[note]
+  filename = "{{slug title}}"
+
+[notebook]
+  contexts = ["/tmp/test-context"]

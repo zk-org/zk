@@ -40,12 +40,12 @@ func (cmd *ContextAdd) Run(container *cli.Container) error {
 	}
 
 	configPath := filepath.Join(notebook.Path, ".zk", "config.toml")
-	
+
 	configContent, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	tree, err := toml.LoadBytes(configContent)
 	if err != nil {
 		return fmt.Errorf("failed to parse config file: %w", err)
@@ -170,7 +170,7 @@ func (cmd *NotebookRegister) Run(container *cli.Container) error {
 }
 
 // NotebookList lists registered notebooks.
-type NotebookList struct {}
+type NotebookList struct{}
 
 func (cmd *NotebookList) Run(container *cli.Container) error {
 	notebooks := container.Config.Notebooks
@@ -191,7 +191,7 @@ func (cmd *NotebookList) Run(container *cli.Container) error {
 }
 
 // NotebookStatus shows the current notebook and discovery reason.
-type NotebookStatus struct {}
+type NotebookStatus struct{}
 
 func (cmd *NotebookStatus) Run(container *cli.Container) error {
 	notebook, err := container.CurrentNotebook()
@@ -204,10 +204,10 @@ func (cmd *NotebookStatus) Run(container *cli.Container) error {
 
 	wd, _ := os.Getwd()
 	foundPath, found, _ := container.Notebooks.ResolveNotebookFromContext(wd)
-	
+
 	// Determine the most likely source
 	source := "Manual selection / Environment"
-	
+
 	if found && foundPath == notebook.Path {
 		source = fmt.Sprintf("Context discovery (project: %s)", wd)
 	} else if !container.Config.Notebook.Dir.IsNull() {
@@ -216,7 +216,7 @@ func (cmd *NotebookStatus) Run(container *cli.Container) error {
 			source = "Default configuration"
 		}
 	}
-	
+
 	if wd == notebook.Path {
 		source = "Current directory"
 	}

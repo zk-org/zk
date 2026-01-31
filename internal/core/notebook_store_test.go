@@ -11,7 +11,7 @@ func TestResolveNotebookFromContext(t *testing.T) {
 		"/home/user/personal",
 		"/home/user/personal/.zk",
 	})
-	
+
 	// Notebook 1: matches /home/user/project
 	fs.Write("/home/user/notes/.zk/config.toml", []byte(`
 [notebook]

@@ -1,0 +1,5 @@
+[note]
+filename = "{{slug title}}"
+
+[notebook]
+contexts = []
