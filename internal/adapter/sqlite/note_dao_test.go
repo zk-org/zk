@@ -206,6 +206,38 @@ func TestNoteDAORemoveUnknown(t *testing.T) {
 	})
 }
 
+func TestNoteDAORemoveEmbeddingsWithoutVecTable(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		noteID, err := dao.Add(core.Note{
+			Path:       "log/emb.md",
+			Title:      "Embeddings note",
+			Body:       "Body",
+			RawContent: "# Embeddings note\nBody",
+			Created:    time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+			Modified:   time.Date(2020, 11, 22, 16, 27, 45, 0, time.UTC),
+		})
+		assert.Nil(t, err)
+
+		_, err = tx.Exec(`
+			INSERT INTO note_chunks (note_id, chunk_index, content)
+			VALUES (?, ?, ?)
+		`, noteID, 0, "chunk")
+		assert.Nil(t, err)
+
+		exists, err := dao.tableExists("note_chunks_vec")
+		assert.Nil(t, err)
+		assert.False(t, exists)
+
+		err = dao.RemoveEmbeddings(noteID)
+		assert.Nil(t, err)
+
+		var count int
+		err = tx.QueryRow(`SELECT COUNT(1) FROM note_chunks WHERE note_id = ?`, noteID).Scan(&count)
+		assert.Nil(t, err)
+		assert.Equal(t, count, 0)
+	})
+}
+
 // Also remove the outbound links, and set the target_id of inbound links to NULL.
 func TestNoteDAORemoveCascadeLinks(t *testing.T) {
 	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {

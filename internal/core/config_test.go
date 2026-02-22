@@ -48,6 +48,20 @@ func TestParseDefaultConfig(t *testing.T) {
 			FzfPreview: opt.NullString,
 			FzfLine:    opt.NullString,
 		},
+		Embedding: EmbeddingConfig{
+			Enabled:          false,
+			Provider:         "",
+			Model:            "",
+			Endpoint:         "",
+			APIKeyEnv:        "",
+			Dimensions:       0,
+			ChunkSize:        800,
+			ChunkOverlap:     200,
+			MaxChunksPerNote: 128,
+			BatchSize:        32,
+			QueryTopK:        40,
+			VectorWeight:     0.7,
+		},
 		LSP: LSPConfig{
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle:       LSPDiagnosticNone,
@@ -247,6 +261,20 @@ func TestParseComplete(t *testing.T) {
 			FzfOptions: opt.NewString("--border --height 40%"),
 			FzfBindNew: opt.NewString("Ctrl-C"),
 		},
+		Embedding: EmbeddingConfig{
+			Enabled:          false,
+			Provider:         "",
+			Model:            "",
+			Endpoint:         "",
+			APIKeyEnv:        "",
+			Dimensions:       0,
+			ChunkSize:        800,
+			ChunkOverlap:     200,
+			MaxChunksPerNote: 128,
+			BatchSize:        32,
+			QueryTopK:        40,
+			VectorWeight:     0.7,
+		},
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
 				Note: LSPCompletionTemplates{
@@ -425,6 +453,20 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				LinkDropExtension: true,
 			},
 		},
+		Embedding: EmbeddingConfig{
+			Enabled:          false,
+			Provider:         "",
+			Model:            "",
+			Endpoint:         "",
+			APIKeyEnv:        "",
+			Dimensions:       0,
+			ChunkSize:        800,
+			ChunkOverlap:     200,
+			MaxChunksPerNote: 128,
+			BatchSize:        32,
+			QueryTopK:        40,
+			VectorWeight:     0.7,
+		},
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
 				Note: LSPCompletionTemplates{
@@ -537,6 +579,39 @@ func TestParseMarkdownLinkEncodePath(t *testing.T) {
 	test("markdown", true)
 	test("wiki", false)
 	test("custom", false)
+}
+
+func TestParseEmbeddingConfig(t *testing.T) {
+	conf, err := ParseConfig([]byte(`
+		[embedding]
+		enabled = true
+		provider = "local"
+		model = "nomic-embed-text"
+		endpoint = "http://127.0.0.1:11434/v1"
+		chunk-size = 600
+		chunk-overlap = 100
+		vector-weight = 0.6
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Embedding.Enabled, true)
+	assert.Equal(t, conf.Embedding.Provider, "local")
+	assert.Equal(t, conf.Embedding.Model, "nomic-embed-text")
+	assert.Equal(t, conf.Embedding.Endpoint, "http://127.0.0.1:11434/v1")
+	assert.Equal(t, conf.Embedding.ChunkSize, 600)
+	assert.Equal(t, conf.Embedding.ChunkOverlap, 100)
+	assert.Equal(t, conf.Embedding.VectorWeight, 0.6)
+}
+
+func TestParseEmbeddingConfigValidation(t *testing.T) {
+	_, err := ParseConfig([]byte(`
+		[embedding]
+		enabled = true
+		provider = "local"
+		model = "nomic-embed-text"
+		chunk-size = 100
+		chunk-overlap = 100
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.Err(t, err, "embedding.chunk-overlap must be >= 0 and < chunk-size")
 }
 
 func TestParseLSPDiagnosticsSeverity(t *testing.T) {

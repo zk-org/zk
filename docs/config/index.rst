@@ -9,6 +9,7 @@ Configuration
    Notebook <config-notebook>
    Notes <config-note>
    Groups <config-group>
+   Embeddings <config-embedding>
    Aliases <config-alias>
    Filters <config-filter>
    LSP <config-lsp>

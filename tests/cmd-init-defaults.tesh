@@ -123,6 +123,44 @@ $ cat .zk/config.toml
 >#fzf-preview = "bat -p --color always {-1}"
 >
 >
+># EMBEDDINGS
+>#
+># Configure semantic search with vector embeddings.
+>[embedding]
+>
+># Enable semantic indexing and natural language search.
+>#enabled = false
+>
+># Embedding provider: openai, googleai, or local.
+>#provider = "openai"
+>
+># Embedding model name.
+>#model = "text-embedding-3-small"
+>
+># Provider endpoint.
+># For provider = "local", set an OpenAI-compatible endpoint (required), e.g.
+>#endpoint = "http://127.0.0.1:11434/v1"
+>
+># Environment variable containing the API key.
+># Defaults:
+># - openai: ZK_EMBEDDING_OPENAI_API_KEY
+># - googleai: ZK_EMBEDDING_GOOGLE_API_KEY
+>#api-key-env = "ZK_EMBEDDING_OPENAI_API_KEY"
+>
+># Optional embedding vector dimensions (0 = auto-detect).
+>#dimensions = 0
+>
+># Chunking options.
+>#chunk-size = 800
+>#chunk-overlap = 200
+>#max-chunks-per-note = 128
+>
+># Embedding and query tuning.
+>#batch-size = 32
+>#query-top-k = 40
+>#vector-weight = 0.7
+>
+>
 ># LSP
 >#
 >#   Configure basic editor integration for LSP-compatible editors.
@@ -212,4 +250,3 @@ $ cat .zk/templates/default.md
 ># \{{title}}
 >
 >\{{content}}
-

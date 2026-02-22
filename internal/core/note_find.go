@@ -174,6 +174,8 @@ const (
 	MatchStrategyExact
 	// Regular expression.
 	MatchStrategyRe
+	// Natural-language semantic search.
+	MatchStrategyNL
 )
 
 // MatchStrategyFromString returns a MatchStrategy from its string representation.
@@ -185,7 +187,9 @@ func MatchStrategyFromString(str string) (MatchStrategy, error) {
 		return MatchStrategyRe, nil
 	case "exact", "e":
 		return MatchStrategyExact, nil
+	case "nl", "n":
+		return MatchStrategyNL, nil
 	default:
-		return 0, fmt.Errorf("%s: unknown match strategy\ntry fts (full-text search), re (regular expression) or exact", str)
+		return 0, fmt.Errorf("%s: unknown match strategy\ntry fts (full-text search), re (regular expression), exact or nl (natural language)", str)
 	}
 }

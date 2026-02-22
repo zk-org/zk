@@ -61,6 +61,7 @@ The search is powered by different strategies to answer various use cases:
   offer near-instant results and advanced search operators.
 - `exact` is useful if you need to find patterns containing special characters.
 - `re` enables regular expression for advanced use cases.
+- `nl` uses vector embeddings for natural-language semantic search.
 
 Change the currently used strategy with `--match-strategy <strategy>` (or `-M`).
 To set the default strategy, you can declare a [custom alias](../config/config-alias.md):
@@ -194,6 +195,36 @@ wildcards.
 $ zk list --match-strategy re --match ".+@.+"
 $ zk list -Mr -m ".+@.+"
 ```
+
+### Natural language (`nl`)
+
+Use semantic search to retrieve notes by meaning instead of exact terms.
+
+```sh
+$ zk list --match-strategy nl --match "notes about thread safety in rust"
+$ zk list -Mn -m "how to avoid deadlocks with mutexes"
+```
+
+This strategy requires enabling embeddings in your notebook config:
+
+```toml
+[embedding]
+enabled = true
+provider = "local" # openai-compatible local endpoint
+endpoint = "http://127.0.0.1:11434/v1"
+model = "nomic-embed-text"
+```
+
+After enabling embeddings, re-index your notebook before running NL queries:
+
+```sh
+$ zk index -f
+$ zk list -Mn -m "notes about thread safety in rust"
+```
+
+If embeddings are configured but not yet indexed, results may be empty or stale.
+For setup details and all embedding options, see
+[the embedding configuration page](../config/config-embedding.md).
 
 ## Filter by tags
 

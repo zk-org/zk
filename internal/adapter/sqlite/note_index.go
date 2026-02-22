@@ -1,10 +1,15 @@
 package sqlite
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/zk-org/zk/internal/adapter/embedding"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/errors"
@@ -19,6 +24,10 @@ type NoteIndex struct {
 	db           *DB
 	dao          *dao
 	logger       util.Logger
+	config       core.Config
+	embedder     embedding.Provider
+	embedderErr  error
+	embedderInit bool
 }
 
 type dao struct {
@@ -28,17 +37,26 @@ type dao struct {
 	metadata    *MetadataDAO
 }
 
-func NewNoteIndex(notebookPath string, db *DB, logger util.Logger) *NoteIndex {
+func NewNoteIndex(notebookPath string, db *DB, logger util.Logger, config core.Config) *NoteIndex {
 	return &NoteIndex{
 		notebookPath: notebookPath,
 		db:           db,
 		logger:       logger,
+		config:       config,
 	}
 }
 
 // Find implements core.NoteIndex.
 func (ni *NoteIndex) Find(opts core.NoteFindOpts) (notes []core.ContextualNote, err error) {
 	err = ni.commit(func(dao *dao) error {
+		if opts.MatchStrategy == core.MatchStrategyNL {
+			embedder, err := ni.getEmbedder()
+			if err != nil {
+				return err
+			}
+			notes, err = dao.notes.FindNaturalLanguage(opts, embedder, ni.config.Embedding)
+			return err
+		}
 		notes, err = dao.notes.Find(opts)
 		return err
 	})
@@ -48,6 +66,14 @@ func (ni *NoteIndex) Find(opts core.NoteFindOpts) (notes []core.ContextualNote, 
 // FindMinimal implements core.NoteIndex.
 func (ni *NoteIndex) FindMinimal(opts core.NoteFindOpts) (notes []core.MinimalNote, err error) {
 	err = ni.commit(func(dao *dao) error {
+		if opts.MatchStrategy == core.MatchStrategyNL {
+			embedder, err := ni.getEmbedder()
+			if err != nil {
+				return err
+			}
+			notes, err = dao.notes.FindMinimalNaturalLanguage(opts, embedder, ni.config.Embedding)
+			return err
+		}
 		notes, err = dao.notes.FindMinimal(opts)
 		return err
 	})
@@ -132,7 +158,12 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 			return err
 		}
 
-		return ni.associateTags(dao.collections, id, note.Tags)
+		err = ni.associateTags(dao.collections, id, note.Tags)
+		if err != nil {
+			return err
+		}
+
+		return ni.indexNoteEmbeddings(dao.notes, id, note)
 	})
 
 	err = errors.Wrapf(err, "%v: failed to index the note", note.Path)
@@ -241,7 +272,12 @@ func (ni *NoteIndex) Update(note core.Note) error {
 		if err != nil {
 			return err
 		}
-		return ni.associateTags(dao.collections, id, note.Tags)
+		err = ni.associateTags(dao.collections, id, note.Tags)
+		if err != nil {
+			return err
+		}
+
+		return ni.indexNoteEmbeddings(dao.notes, id, note)
 	})
 
 	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
@@ -292,6 +328,15 @@ func (ni *NoteIndex) resolveLinkNoteIDs(dao *dao, sourceID core.NoteID, links []
 // Remove implements core.NoteIndex
 func (ni *NoteIndex) Remove(path string) error {
 	err := ni.commit(func(dao *dao) error {
+		id, err := dao.notes.FindIDByPath(path)
+		if err != nil {
+			return err
+		}
+		if id.IsValid() && ni.config.Embedding.Enabled {
+			if err := dao.notes.RemoveEmbeddings(id); err != nil {
+				return err
+			}
+		}
 		return dao.notes.Remove(path)
 	})
 	return errors.Wrapf(err, "%v: failed to remove note from index", path)
@@ -301,9 +346,12 @@ func (ni *NoteIndex) Remove(path string) error {
 func (ni *NoteIndex) Commit(transaction func(idx core.NoteIndex) error) error {
 	return ni.commit(func(dao *dao) error {
 		return transaction(&NoteIndex{
-			db:     ni.db,
-			dao:    dao,
-			logger: ni.logger,
+			notebookPath: ni.notebookPath,
+			db:           ni.db,
+			dao:          dao,
+			logger:       ni.logger,
+			config:       ni.config,
+			embedder:     ni.embedder,
 		})
 	})
 }
@@ -313,7 +361,21 @@ func (ni *NoteIndex) NeedsReindexing() (needsReindexing bool, err error) {
 	err = ni.commit(func(dao *dao) error {
 		res, err := dao.metadata.Get(reindexingRequiredKey)
 		needsReindexing = (res == "true")
-		return err
+		if err != nil {
+			return err
+		}
+
+		if ni.config.Embedding.Enabled {
+			expected := ni.embeddingConfigSignature()
+			actual, err := dao.metadata.Get(embeddingConfigSignatureKey)
+			if err != nil {
+				return err
+			}
+			if actual != expected {
+				needsReindexing = true
+			}
+		}
+		return nil
 	})
 	return
 }
@@ -326,7 +388,14 @@ func (ni *NoteIndex) SetNeedsReindexing(needsReindexing bool) error {
 			value = "true"
 		}
 
-		return dao.metadata.Set(reindexingRequiredKey, value)
+		if err := dao.metadata.Set(reindexingRequiredKey, value); err != nil {
+			return err
+		}
+
+		if !needsReindexing && ni.config.Embedding.Enabled {
+			return dao.metadata.Set(embeddingConfigSignatureKey, ni.embeddingConfigSignature())
+		}
+		return nil
 	})
 }
 
@@ -344,4 +413,55 @@ func (ni *NoteIndex) commit(transaction func(dao *dao) error) error {
 			return transaction(&dao)
 		})
 	}
+}
+
+func (ni *NoteIndex) embeddingConfigSignature() string {
+	raw := fmt.Sprintf(
+		"%t|%s|%s|%s|%d|%d|%d|%d",
+		ni.config.Embedding.Enabled,
+		ni.config.Embedding.Provider,
+		ni.config.Embedding.Model,
+		ni.config.Embedding.Endpoint,
+		ni.config.Embedding.Dimensions,
+		ni.config.Embedding.ChunkSize,
+		ni.config.Embedding.ChunkOverlap,
+		ni.config.Embedding.MaxChunksPerNote,
+	)
+	sum := sha256.Sum256([]byte(raw))
+	return hex.EncodeToString(sum[:])
+}
+
+func (ni *NoteIndex) getEmbedder() (embedding.Provider, error) {
+	if !ni.config.Embedding.Enabled {
+		return nil, fmt.Errorf("embedding search is disabled; set [embedding].enabled = true in config.toml")
+	}
+	if !vecBuildEnabled() {
+		return nil, fmt.Errorf("semantic search requires zk built with -tags vec")
+	}
+	if ni.embedderInit {
+		return ni.embedder, ni.embedderErr
+	}
+
+	ni.embedder, ni.embedderErr = embedding.NewProvider(ni.config.Embedding)
+	ni.embedderInit = true
+	return ni.embedder, ni.embedderErr
+}
+
+func (ni *NoteIndex) indexNoteEmbeddings(notes *NoteDAO, id core.NoteID, note core.Note) error {
+	if !ni.config.Embedding.Enabled {
+		return nil
+	}
+
+	embedder, err := ni.getEmbedder()
+	if err != nil {
+		return err
+	}
+
+	return notes.ReindexEmbeddings(
+		context.Background(),
+		id,
+		note,
+		embedder,
+		ni.config.Embedding,
+	)
 }

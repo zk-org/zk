@@ -84,7 +84,9 @@ func TestMatchStrategyFromString(t *testing.T) {
 
 	test("e", MatchStrategyExact)
 	test("exact", MatchStrategyExact)
+	test("n", MatchStrategyNL)
+	test("nl", MatchStrategyNL)
 
 	_, err := MatchStrategyFromString("foobar")
-	assert.Err(t, err, "foobar: unknown match strategy\ntry fts (full-text search), re (regular expression) or exact")
+	assert.Err(t, err, "foobar: unknown match strategy\ntry fts (full-text search), re (regular expression), exact or nl (natural language)")
 }

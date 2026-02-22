@@ -2,9 +2,17 @@
 build:
 	$(call go,build)
 
+# Build zk with sqlite-vec semantic search support.
+build-vec:
+	$(call go_vec,build)
+
 # Build and install `zk` using go's default bin directory.
 install:
 	$(call go,install)
+
+# Build and install `zk` with sqlite-vec semantic search support.
+install-vec:
+	$(call go_vec,install)
 
 # Run unit tests.
 test:
@@ -62,6 +70,10 @@ endif
 # Wrapper around the go binary, to set all the default parameters.
 define go
 	$(ENV_PREFIX) go $(1) -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=$(VERSION)" $(2)
+endef
+
+define go_vec
+	$(ENV_PREFIX) go $(1) -mod=mod -buildvcs=false -tags "fts5 vec" -ldflags "-X=main.Version=$(VERSION)" $(2)
 endef
 
 # Alpine (musl) requires statically linked libs. This should be compatible for

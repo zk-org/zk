@@ -15,15 +15,16 @@ import (
 
 // Config holds the user configuration.
 type Config struct {
-	Notebook NotebookConfig
-	Note     NoteConfig
-	Groups   map[string]GroupConfig
-	Format   FormatConfig
-	Tool     ToolConfig
-	LSP      LSPConfig
-	Filters  map[string]string
-	Aliases  map[string]string
-	Extra    map[string]string
+	Notebook  NotebookConfig
+	Note      NoteConfig
+	Groups    map[string]GroupConfig
+	Format    FormatConfig
+	Tool      ToolConfig
+	Embedding EmbeddingConfig
+	LSP       LSPConfig
+	Filters   map[string]string
+	Aliases   map[string]string
+	Extra     map[string]string
 }
 
 // NOTE: config generation occurs in internal/core/notebook_store.go. The below function is used
@@ -59,6 +60,20 @@ func NewDefaultConfig() Config {
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
 			},
+		},
+		Embedding: EmbeddingConfig{
+			Enabled:          false,
+			Provider:         "",
+			Model:            "",
+			Endpoint:         "",
+			APIKeyEnv:        "",
+			Dimensions:       0,
+			ChunkSize:        800,
+			ChunkOverlap:     200,
+			MaxChunksPerNote: 128,
+			BatchSize:        32,
+			QueryTopK:        40,
+			VectorWeight:     0.7,
 		},
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
@@ -174,6 +189,22 @@ type ToolConfig struct {
 	FzfLine    opt.String
 	FzfOptions opt.String
 	FzfBindNew opt.String
+}
+
+// EmbeddingConfig holds semantic indexing and search settings.
+type EmbeddingConfig struct {
+	Enabled          bool
+	Provider         string
+	Model            string
+	Endpoint         string
+	APIKeyEnv        string
+	Dimensions       int
+	ChunkSize        int
+	ChunkOverlap     int
+	MaxChunksPerNote int
+	BatchSize        int
+	QueryTopK        int
+	VectorWeight     float64
 }
 
 // LSPConfig holds the Language Server Protocol configuration.
@@ -433,6 +464,45 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Tool.FzfBindNew = opt.NewStringWithPtr(tool.FzfBindNew)
 	}
 
+	// Embedding
+	embedding := tomlConf.Embedding
+	if embedding.Enabled != nil {
+		config.Embedding.Enabled = *embedding.Enabled
+	}
+	if embedding.Provider != nil {
+		config.Embedding.Provider = *embedding.Provider
+	}
+	if embedding.Model != nil {
+		config.Embedding.Model = *embedding.Model
+	}
+	if embedding.Endpoint != nil {
+		config.Embedding.Endpoint = *embedding.Endpoint
+	}
+	if embedding.APIKeyEnv != nil {
+		config.Embedding.APIKeyEnv = *embedding.APIKeyEnv
+	}
+	if embedding.Dimensions != nil {
+		config.Embedding.Dimensions = *embedding.Dimensions
+	}
+	if embedding.ChunkSize != nil {
+		config.Embedding.ChunkSize = *embedding.ChunkSize
+	}
+	if embedding.ChunkOverlap != nil {
+		config.Embedding.ChunkOverlap = *embedding.ChunkOverlap
+	}
+	if embedding.MaxChunksPerNote != nil {
+		config.Embedding.MaxChunksPerNote = *embedding.MaxChunksPerNote
+	}
+	if embedding.BatchSize != nil {
+		config.Embedding.BatchSize = *embedding.BatchSize
+	}
+	if embedding.QueryTopK != nil {
+		config.Embedding.QueryTopK = *embedding.QueryTopK
+	}
+	if embedding.VectorWeight != nil {
+		config.Embedding.VectorWeight = *embedding.VectorWeight
+	}
+
 	// LSP completion
 	lspCompl := tomlConf.LSP.Completion
 	if lspCompl.NoteLabel != nil {
@@ -487,6 +557,10 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		maps.Copy(config.Aliases, tomlConf.Aliases)
 	}
 
+	if err := config.Embedding.validate(); err != nil {
+		return config, wrap(err)
+	}
+
 	return config, nil
 }
 
@@ -537,15 +611,16 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 
 // tomlConfig holds the TOML representation of Config
 type tomlConfig struct {
-	Notebook tomlNotebookConfig
-	Note     tomlNoteConfig
-	Groups   map[string]tomlGroupConfig `toml:"group"`
-	Format   tomlFormatConfig
-	Tool     tomlToolConfig
-	LSP      tomlLSPConfig
-	Extra    map[string]string
-	Filters  map[string]string `toml:"filter"`
-	Aliases  map[string]string `toml:"alias"`
+	Notebook  tomlNotebookConfig
+	Note      tomlNoteConfig
+	Groups    map[string]tomlGroupConfig `toml:"group"`
+	Format    tomlFormatConfig
+	Tool      tomlToolConfig
+	Embedding tomlEmbeddingConfig `toml:"embedding"`
+	LSP       tomlLSPConfig
+	Extra     map[string]string
+	Filters   map[string]string `toml:"filter"`
+	Aliases   map[string]string `toml:"alias"`
 }
 
 type tomlNotebookConfig struct {
@@ -592,6 +667,21 @@ type tomlToolConfig struct {
 	FzfLine    *string `toml:"fzf-line"`
 	FzfOptions *string `toml:"fzf-options"`
 	FzfBindNew *string `toml:"fzf-bind-new"`
+}
+
+type tomlEmbeddingConfig struct {
+	Enabled          *bool    `toml:"enabled"`
+	Provider         *string  `toml:"provider"`
+	Model            *string  `toml:"model"`
+	Endpoint         *string  `toml:"endpoint"`
+	APIKeyEnv        *string  `toml:"api-key-env"`
+	Dimensions       *int     `toml:"dimensions"`
+	ChunkSize        *int     `toml:"chunk-size"`
+	ChunkOverlap     *int     `toml:"chunk-overlap"`
+	MaxChunksPerNote *int     `toml:"max-chunks-per-note"`
+	BatchSize        *int     `toml:"batch-size"`
+	QueryTopK        *int     `toml:"query-top-k"`
+	VectorWeight     *float64 `toml:"vector-weight"`
 }
 
 type tomlLSPConfig struct {
@@ -670,4 +760,51 @@ func lspDiagnosticPositionFromString(s string) (LSPDiagnosticPosition, error) {
 	default:
 		return 0, fmt.Errorf("%s: unknown LSP diagnostic position - may be top, bottom, or last-section", s)
 	}
+}
+
+func (c EmbeddingConfig) validate() error {
+	if c.ChunkSize <= 0 {
+		return fmt.Errorf("embedding.chunk-size must be > 0")
+	}
+	if c.ChunkOverlap < 0 || c.ChunkOverlap >= c.ChunkSize {
+		return fmt.Errorf("embedding.chunk-overlap must be >= 0 and < chunk-size")
+	}
+	if c.MaxChunksPerNote <= 0 {
+		return fmt.Errorf("embedding.max-chunks-per-note must be > 0")
+	}
+	if c.BatchSize <= 0 {
+		return fmt.Errorf("embedding.batch-size must be > 0")
+	}
+	if c.QueryTopK <= 0 {
+		return fmt.Errorf("embedding.query-top-k must be > 0")
+	}
+	if c.VectorWeight < 0 || c.VectorWeight > 1 {
+		return fmt.Errorf("embedding.vector-weight must be between 0 and 1")
+	}
+	if c.Dimensions < 0 {
+		return fmt.Errorf("embedding.dimensions must be >= 0")
+	}
+
+	if !c.Enabled {
+		return nil
+	}
+
+	if c.Provider == "" {
+		return fmt.Errorf("embedding.provider is required when embedding.enabled = true")
+	}
+	if c.Model == "" {
+		return fmt.Errorf("embedding.model is required when embedding.enabled = true")
+	}
+
+	switch c.Provider {
+	case "openai", "googleai", "local":
+	default:
+		return fmt.Errorf("%s: unknown embedding.provider\ntry openai, googleai or local", c.Provider)
+	}
+
+	if c.Provider == "local" && c.Endpoint == "" {
+		return fmt.Errorf("embedding.endpoint is required when embedding.provider = \"local\"")
+	}
+
+	return nil
 }

@@ -1,14 +1,17 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/zk-org/zk/internal/adapter/embedding"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/errors"
@@ -795,6 +798,366 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 	// d.logger.Println(args)
 
 	return d.tx.Query(query.String(), args...)
+}
+
+func (d *NoteDAO) ensureVecTable(dim int) error {
+	if dim <= 0 {
+		return fmt.Errorf("embedding dimensions must be > 0")
+	}
+	_, err := d.tx.Exec(fmt.Sprintf(`
+		CREATE VIRTUAL TABLE IF NOT EXISTS note_chunks_vec USING vec0(
+			embedding float[%d]
+		)
+	`, dim))
+	return err
+}
+
+func (d *NoteDAO) RemoveEmbeddings(noteID core.NoteID) error {
+	if !noteID.IsValid() {
+		return nil
+	}
+
+	rows, err := d.tx.Query(`SELECT id FROM note_chunks WHERE note_id = ?`, noteID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	chunkIDs := make([]int64, 0)
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return err
+		}
+		chunkIDs = append(chunkIDs, id)
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	// If this note has no stored chunks yet, there is nothing to remove.
+	if len(chunkIDs) == 0 {
+		return nil
+	}
+
+	vecTableExists, err := d.tableExists("note_chunks_vec")
+	if err != nil {
+		return err
+	}
+	if vecTableExists {
+		ids := make([]string, 0, len(chunkIDs))
+		for _, id := range chunkIDs {
+			ids = append(ids, fmt.Sprintf("%d", id))
+		}
+		_, err = d.tx.Exec(`
+			DELETE FROM note_chunks_vec
+			 WHERE rowid IN (` + strings.Join(ids, ",") + `)
+		`)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = d.tx.Exec(`DELETE FROM note_chunks WHERE note_id = ?`, noteID)
+	return err
+}
+
+func (d *NoteDAO) tableExists(name string) (bool, error) {
+	row := d.tx.QueryRow(`
+		SELECT COUNT(1)
+		  FROM sqlite_master
+		 WHERE type = 'table' AND name = ?
+	`, name)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (d *NoteDAO) ReindexEmbeddings(ctx context.Context, noteID core.NoteID, note core.Note, provider embedding.Provider, cfg core.EmbeddingConfig) error {
+	if provider == nil || !cfg.Enabled {
+		return nil
+	}
+
+	if err := d.RemoveEmbeddings(noteID); err != nil {
+		return err
+	}
+
+	content := strings.TrimSpace(note.Title + "\n\n" + note.Body)
+	if content == "" {
+		content = strings.TrimSpace(note.RawContent)
+	}
+	chunks := embedding.ChunkText(content, cfg.ChunkSize, cfg.ChunkOverlap, cfg.MaxChunksPerNote)
+	if len(chunks) == 0 {
+		return nil
+	}
+
+	step := cfg.BatchSize
+	if step <= 0 {
+		step = 32
+	}
+
+	embeddings := make([][]float32, 0, len(chunks))
+	for i := 0; i < len(chunks); i += step {
+		j := i + step
+		if j > len(chunks) {
+			j = len(chunks)
+		}
+		vecs, err := provider.EmbedTexts(ctx, chunks[i:j])
+		if err != nil {
+			return err
+		}
+		embeddings = append(embeddings, vecs...)
+	}
+	if len(embeddings) != len(chunks) {
+		return fmt.Errorf("embedding output mismatch: got %d vectors for %d chunks", len(embeddings), len(chunks))
+	}
+
+	dim := len(embeddings[0])
+	if cfg.Dimensions > 0 && dim != cfg.Dimensions {
+		return fmt.Errorf("embedding dimension mismatch: model returned %d, expected %d", dim, cfg.Dimensions)
+	}
+	if err := d.ensureVecTable(dim); err != nil {
+		return errors.Wrap(err, "failed to initialize vector table")
+	}
+
+	for i, chunk := range chunks {
+		res, err := d.tx.Exec(`
+			INSERT INTO note_chunks (note_id, chunk_index, content)
+			VALUES (?, ?, ?)
+		`, noteID, i, chunk)
+		if err != nil {
+			return err
+		}
+		chunkID, err := res.LastInsertId()
+		if err != nil {
+			return err
+		}
+
+		serialized, err := serializeEmbedding(embeddings[i])
+		if err != nil {
+			return err
+		}
+		_, err = d.tx.Exec(`
+			INSERT INTO note_chunks_vec (rowid, embedding)
+			VALUES (?, ?)
+		`, chunkID, serialized)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *NoteDAO) findFTSScores(opts core.NoteFindOpts) (map[core.NoteID]float64, error) {
+	scores := map[core.NoteID]float64{}
+	if len(opts.Match) == 0 {
+		return scores, nil
+	}
+
+	where := make([]string, 0, len(opts.Match))
+	args := make([]any, 0, len(opts.Match)+1)
+	for _, match := range opts.Match {
+		where = append(where, "fts.notes_fts MATCH ?")
+		args = append(args, fts5.ConvertQuery(match))
+	}
+
+	var query strings.Builder
+	query.WriteString(`SELECT fts.rowid, bm25(fts.notes_fts, 1000.0, 500.0, 1.0) AS rank
+FROM notes_fts fts
+WHERE ` + strings.Join(where, " AND "))
+	if opts.Limit > 0 {
+		query.WriteString("\nLIMIT ?")
+		args = append(args, opts.Limit)
+	}
+
+	rows, err := d.tx.Query(query.String(), args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var rank float64
+		if err := rows.Scan(&id, &rank); err != nil {
+			return nil, err
+		}
+		if rank < 0 {
+			rank = 0
+		}
+		scores[core.NoteID(id)] = 1.0 / (1.0 + rank)
+	}
+
+	return scores, rows.Err()
+}
+
+func (d *NoteDAO) vectorCandidates(ctx context.Context, opts core.NoteFindOpts, provider embedding.Provider, cfg core.EmbeddingConfig) (map[core.NoteID]float64, map[core.NoteID]string, error) {
+	if len(opts.Match) == 0 {
+		return nil, nil, fmt.Errorf("--match is required with --match-strategy=nl")
+	}
+	queryText := strings.Join(opts.Match, "\n")
+	queryVec, err := provider.EmbedQuery(ctx, queryText)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	serializedQuery, err := serializeEmbedding(queryVec)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rows, err := d.tx.Query(`
+		SELECT c.note_id, c.content, v.distance
+		  FROM note_chunks_vec v
+		  JOIN note_chunks c ON c.id = v.rowid
+		 WHERE v.embedding MATCH ?
+		   AND k = ?
+		 ORDER BY v.distance ASC
+	`, serializedQuery, cfg.QueryTopK)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	vecScores := map[core.NoteID]float64{}
+	snippets := map[core.NoteID]string{}
+	for rows.Next() {
+		var noteID int64
+		var chunk string
+		var dist float64
+		if err := rows.Scan(&noteID, &chunk, &dist); err != nil {
+			return nil, nil, err
+		}
+		id := core.NoteID(noteID)
+		if _, ok := vecScores[id]; ok {
+			continue
+		}
+		vecScores[id] = 1.0 / (1.0 + dist)
+		snippets[id] = chunk
+	}
+	return vecScores, snippets, rows.Err()
+}
+
+func sortContextualByScore(notes []core.ContextualNote, scoreForID map[core.NoteID]float64) {
+	sort.SliceStable(notes, func(i, j int) bool {
+		leftID := notes[i].ID
+		rightID := notes[j].ID
+		ls := scoreForID[leftID]
+		rs := scoreForID[rightID]
+		if ls == rs {
+			return leftID < rightID
+		}
+		return ls > rs
+	})
+}
+
+func sortMinimalByScore(notes []core.MinimalNote, scoreForID map[core.NoteID]float64) {
+	sort.SliceStable(notes, func(i, j int) bool {
+		leftID := notes[i].ID
+		rightID := notes[j].ID
+		ls := scoreForID[leftID]
+		rs := scoreForID[rightID]
+		if ls == rs {
+			return leftID < rightID
+		}
+		return ls > rs
+	})
+}
+
+func (d *NoteDAO) FindNaturalLanguage(opts core.NoteFindOpts, provider embedding.Provider, cfg core.EmbeddingConfig) ([]core.ContextualNote, error) {
+	notes := make([]core.ContextualNote, 0)
+
+	vecScores, snippets, err := d.vectorCandidates(context.Background(), opts, provider, cfg)
+	if err != nil {
+		return notes, err
+	}
+	if len(vecScores) == 0 {
+		return notes, nil
+	}
+
+	ftsScores, err := d.findFTSScores(opts)
+	if err != nil {
+		return notes, err
+	}
+
+	ids := make([]core.NoteID, 0, len(vecScores))
+	finalScore := map[core.NoteID]float64{}
+	for id, vec := range vecScores {
+		fts := ftsScores[id]
+		finalScore[id] = cfg.VectorWeight*vec + (1-cfg.VectorWeight)*fts
+		ids = append(ids, id)
+	}
+
+	filtered := opts
+	filtered.Match = nil
+	filtered.IncludeIDs = ids
+	filtered.Limit = 0
+	filtered.MatchStrategy = core.MatchStrategyFts
+
+	notes, err = d.Find(filtered)
+	if err != nil {
+		return notes, err
+	}
+
+	for i := range notes {
+		if snippet := snippets[notes[i].ID]; snippet != "" {
+			notes[i].Snippets = []string{snippet}
+		}
+	}
+
+	sortContextualByScore(notes, finalScore)
+	if opts.Limit > 0 && len(notes) > opts.Limit {
+		notes = notes[:opts.Limit]
+	}
+
+	return notes, nil
+}
+
+func (d *NoteDAO) FindMinimalNaturalLanguage(opts core.NoteFindOpts, provider embedding.Provider, cfg core.EmbeddingConfig) ([]core.MinimalNote, error) {
+	notes := make([]core.MinimalNote, 0)
+
+	vecScores, _, err := d.vectorCandidates(context.Background(), opts, provider, cfg)
+	if err != nil {
+		return notes, err
+	}
+	if len(vecScores) == 0 {
+		return notes, nil
+	}
+
+	ftsScores, err := d.findFTSScores(opts)
+	if err != nil {
+		return notes, err
+	}
+
+	ids := make([]core.NoteID, 0, len(vecScores))
+	finalScore := map[core.NoteID]float64{}
+	for id, vec := range vecScores {
+		fts := ftsScores[id]
+		finalScore[id] = cfg.VectorWeight*vec + (1-cfg.VectorWeight)*fts
+		ids = append(ids, id)
+	}
+
+	filtered := opts
+	filtered.Match = nil
+	filtered.IncludeIDs = ids
+	filtered.Limit = 0
+	filtered.MatchStrategy = core.MatchStrategyFts
+
+	notes, err = d.FindMinimal(filtered)
+	if err != nil {
+		return notes, err
+	}
+
+	sortMinimalByScore(notes, finalScore)
+	if opts.Limit > 0 && len(notes) > opts.Limit {
+		notes = notes[:opts.Limit]
+	}
+
+	return notes, nil
 }
 
 func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {

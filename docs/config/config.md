@@ -6,6 +6,7 @@ Each [notebook](../notes/notebook.md) contains a configuration file used to cust
 * `[note]` sets the [note creation rules](config-note.md)
 * `[extra]` contains free [user variables](config-extra.md) which can be expanded in templates
 * `[group]` defines [note groups](config-group.md) with custom rules
+* `[embedding]` configures [semantic indexing and natural-language search](config-embedding.md)
 * `[format]` configures the [note format settings](../notes/note-format.md), such as Markdown options
 * `[tool]` customizes interaction with external programs such as:
     * [your default editor](tool-editor.md)

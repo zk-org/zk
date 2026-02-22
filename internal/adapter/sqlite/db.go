@@ -11,6 +11,8 @@ import (
 )
 
 func init() {
+	registerVecExtension()
+
 	// Register custom SQLite functions.
 	sql.Register("sqlite3_custom", &sqlite.SQLiteDriver{
 		ConnectHook: func(conn *sqlite.SQLiteConn) error {
@@ -222,6 +224,22 @@ func (db *DB) migrate() error {
 				SQL: []string{
 					`ALTER TABLE notes ADD COLUMN filename TEXT DEFAULT('') NOT NULL`,
 					`CREATE INDEX IF NOT EXISTS index_notes_filename ON notes (filename)`,
+				},
+				NeedsReindexing: true,
+			},
+
+			{ // 9
+				SQL: []string{
+					// Note chunks used as embedding units.
+					`CREATE TABLE IF NOT EXISTS note_chunks (
+						id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+						note_id INTEGER NOT NULL REFERENCES notes(id)
+							ON DELETE CASCADE,
+						chunk_index INTEGER NOT NULL,
+						content TEXT NOT NULL,
+						UNIQUE(note_id, chunk_index)
+					)`,
+					`CREATE INDEX IF NOT EXISTS index_note_chunks_note_id ON note_chunks (note_id)`,
 				},
 				NeedsReindexing: true,
 			},

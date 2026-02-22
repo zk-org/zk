@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/alecthomas/kong v0.5.0
+	github.com/asg017/sqlite-vec-go-bindings v0.1.6
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/fatih/color v1.13.0

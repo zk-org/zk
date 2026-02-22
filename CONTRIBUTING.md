@@ -14,6 +14,15 @@ command requires a few parameters.
 make build
 ```
 
+To build with semantic search (`sqlite-vec`) support, use:
+
+```shell
+make build-vec
+```
+
+This target requires SQLite development headers (for example `sqlite-devel` on
+Fedora or `libsqlite3-dev` on Debian/Ubuntu).
+
 This will be expanded to the following command:
 
 ```shell

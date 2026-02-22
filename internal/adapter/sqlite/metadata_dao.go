@@ -8,6 +8,8 @@ import (
 
 // Known metadata keys.
 var reindexingRequiredKey = "zk.reindexing_required"
+var embeddingConfigSignatureKey = "zk.embedding.config_signature"
+var embeddingDimensionsKey = "zk.embedding.dimensions"
 
 // MetadataDAO persists arbitrary key/value pairs in the SQLite database.
 type MetadataDAO struct {
