@@ -19,7 +19,7 @@ jobs:
     needs: [build]
     steps:
       - name: Download artifacts from 'build' workflow
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: ~/downloaded
           merge-multiple: true
