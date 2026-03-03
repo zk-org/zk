@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>zk graph</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1115;
+      --panel: #171b21;
+      --line: #2e3440;
+      --text: #f2f3f7;
+      --muted: #9ea6b5;
+      --accent: #5ec2ff;
+      --node: #9cd3ff;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #1a1f28 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    #meta {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 10;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: color-mix(in oklab, var(--panel) 88%, transparent);
+      backdrop-filter: blur(5px);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    #meta strong {
+      color: var(--text);
+    }
+    #controls {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+    }
+    #controls button {
+      border: 1px solid var(--line);
+      background: color-mix(in oklab, var(--panel) 88%, transparent);
+      color: var(--text);
+      border-radius: 8px;
+      min-width: 34px;
+      height: 34px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background: color-mix(in oklab, var(--panel) 70%, #2c3340);
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .link {
+      stroke: color-mix(in oklab, var(--accent) 48%, #1f2633);
+      stroke-opacity: 0.35;
+      stroke-width: 1.1px;
+    }
+    .node {
+      cursor: grab;
+    }
+    .node circle {
+      fill: var(--node);
+      stroke: white;
+      stroke-width: 1.2px;
+      filter: drop-shadow(0 0 6px rgba(120, 210, 255, 0.32));
+    }
+    .node text {
+      fill: var(--text);
+      font-size: 12px;
+      dominant-baseline: middle;
+      paint-order: stroke;
+      stroke: rgba(15, 17, 21, 0.82);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+<body>
+  <div id="meta"></div>
+  <div id="controls" aria-label="Graph controls">
+    <button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+    <button id="zoom-out" title="Zoom out" aria-label="Zoom out">-</button>
+    <button id="zoom-reset" title="Reset view" aria-label="Reset view">Reset</button>
+  </div>
+  <svg id="scene" aria-label="zk graph view"></svg>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+    const graph = __DATA__;
+    const meta = document.getElementById("meta");
+    meta.innerHTML = "<strong>" + graph.nodes.length + "</strong> notes, <strong>" + graph.links.length + "</strong> links";
+
+    const svg = d3.select("#scene");
+    const viewport = svg.append("g");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const baseRadius = 4.6;
+    const degree = new Map(graph.nodes.map((n) => [n.id, 0]));
+    for (const l of graph.links) {
+      degree.set(l.source, (degree.get(l.source) || 0) + 1);
+      degree.set(l.target, (degree.get(l.target) || 0) + 1);
+    }
+
+    const links = graph.links.map((l) => ({...l}));
+    const nodes = graph.nodes.map((n) => ({
+      ...n,
+      radius: baseRadius + Math.min(9, Math.log2((degree.get(n.id) || 1) + 1) * 2.2),
+      wobble: (Math.random() - 0.5) * 0.5
+    }));
+
+    const link = viewport.append("g")
+      .attr("stroke-linecap", "round")
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("class", "link");
+
+    const node = viewport.append("g")
+      .selectAll("g")
+      .data(nodes)
+      .join("g")
+      .attr("class", "node")
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    node.append("circle")
+      .attr("r", (d) => d.radius);
+
+    node.append("title")
+      .text((d) => d.path);
+
+    node.append("text")
+      .text((d) => d.title)
+      .attr("x", (d) => d.radius + 6);
+
+    const zoom = d3.zoom()
+      .scaleExtent([0.2, 4])
+      .on("zoom", (event) => {
+        viewport.attr("transform", event.transform);
+      });
+
+    svg.call(zoom);
+
+    const zoomStep = 1.25;
+    document.getElementById("zoom-in").addEventListener("click", () => {
+      svg.transition().duration(140).call(zoom.scaleBy, zoomStep);
+    });
+    document.getElementById("zoom-out").addEventListener("click", () => {
+      svg.transition().duration(140).call(zoom.scaleBy, 1 / zoomStep);
+    });
+    document.getElementById("zoom-reset").addEventListener("click", () => {
+      svg.transition().duration(180).call(zoom.transform, d3.zoomIdentity);
+    });
+
+    const simulation = d3.forceSimulation(nodes)
+      .velocityDecay(0.2)
+      .force("link", d3.forceLink(links).id((d) => d.id).distance(85).strength(0.2))
+      .force("charge", d3.forceManyBody().strength(-90))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius((d) => d.radius + 7).strength(0.9))
+      .force("jiggle", () => {
+        for (const n of nodes) {
+          n.vx += Math.sin(performance.now() / 1200 + n.id * 0.73) * 0.015 + n.wobble * 0.02;
+          n.vy += Math.cos(performance.now() / 900 + n.id * 0.51) * 0.015 - n.wobble * 0.02;
+        }
+      });
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y);
+
+      node.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+    });
+
+    function dragstarted(event) {
+      if (!event.active) simulation.alphaTarget(0.2).restart();
+      event.subject.fx = event.subject.x;
+      event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event) {
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+    }
+
+    function dragended(event) {
+      if (!event.active) simulation.alphaTarget(0);
+      event.subject.fx = null;
+      event.subject.fy = null;
+    }
+
+    window.addEventListener("resize", () => {
+      simulation.force("center", d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2));
+      simulation.alpha(0.35).restart();
+    });
+  </script>
+</body>
+</html>

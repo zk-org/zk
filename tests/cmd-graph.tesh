@@ -18,7 +18,7 @@ $ zk graph --help
 >      --no-input             Never prompt or ask for confirmation.
 >
 >Formatting
->  -f, --format=STRING    Format of the graph among: json.
+>  -f, --format=STRING    Format of the graph among: json, web.
 >  -q, --quiet            Do not print the total number of notes found.
 >
 >Filtering
@@ -80,3 +80,5 @@ $ zk graph -qn5 --format json
 >  ]
 >}
 
+# Generate a web graph page.
+$ zk graph -qn5 --format web
