@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/kballard/go-shellquote"
-	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	stringsutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -85,7 +84,7 @@ func New(opts Opts) (*Fzf, error) {
 	// Additional options.
 	additionalArgs, err := shellquote.Split(opts.Options.String())
 	if err != nil {
-		return nil, errs.Wrapf(err, "can't split the fzf-options: %s", opts.Options.String())
+		return nil, fmt.Errorf("can't split the fzf-options: %s: %w", opts.Options.String(), err)
 	}
 	args = append(args, additionalArgs...)
 
@@ -149,7 +148,7 @@ func New(opts Opts) (*Fzf, error) {
 			case ok && exitErr.ExitCode() == exitNoMatch:
 				break
 			default:
-				f.err = errs.Wrap(err, "failed to filter interactively the output with fzf, try again without --interactive or make sure you have a working fzf installation")
+				f.err = fmt.Errorf("failed to filter interactively the output with fzf, try again without --interactive or make sure you have a working fzf installation: %w", err)
 			}
 		} else {
 			f.parseSelection(output)

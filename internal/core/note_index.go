@@ -139,7 +139,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		for _, ignoreGlob := range group.ExcludeGlobs() {
 			matches, err := doublestar.PathMatch(ignoreGlob, path)
 			if err != nil {
-				return true, errors.Wrapf(err, "failed to match exclude glob %s to %s", ignoreGlob, path)
+				return true, fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
 			}
 			if matches {
 				notifyIgnored("matched exclude glob \"" + ignoreGlob + "\"")

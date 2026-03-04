@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	"github.com/zk-org/zk/internal/adapter/markdown/extensions"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -72,7 +72,7 @@ func (s *documentStore) Get(pathOrURI string) (*document, bool) {
 func (s *documentStore) normalizePath(pathOrURI string) (string, error) {
 	path, err := uriToPath(pathOrURI)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to parse URI: %s", pathOrURI)
+		return "", fmt.Errorf("unable to parse URI: %s: %w", pathOrURI, err)
 	}
 	return s.fs.Canonical(path), nil
 }

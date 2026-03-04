@@ -124,7 +124,7 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 		for _, groupPath := range config.Paths {
 			matches, err := doublestar.Match(groupPath, path)
 			if err != nil {
-				return "", errs.Wrapf(err, "failed to match group %s to %s", name, path)
+				return "", fmt.Errorf("failed to match group %s to %s: %w", name, path, err)
 			} else if matches {
 				// Early return if an exact match
 				return name, nil
@@ -306,7 +306,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 
 	content, err := fs.Read(path)
 	if err != nil {
-		return parentConfig, errs.Wrapf(err, "failed to open config file at %s", path)
+		return parentConfig, fmt.Errorf("failed to open config file at %s: %w", path, err)
 	}
 
 	return ParseConfig(content, path, parentConfig, isGlobal)

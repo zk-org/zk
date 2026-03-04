@@ -40,7 +40,7 @@ func (t *Template) Styler() core.Styler {
 func (t *Template) Render(context any) (string, error) {
 	res, err := t.template.Exec(context)
 	if err != nil {
-		return "", errors.Wrap(err, "render template failed")
+		return "", fmt.Errorf("render template failed: %w", err)
 	}
 	return html.UnescapeString(res), nil
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
-	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -82,7 +81,7 @@ func (cmd *List) Run(container *cli.Container) error {
 
 	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
-		return errs.Wrapf(err, "incorrect criteria")
+		return fmt.Errorf("incorrect criteria: %w", err)
 	}
 
 	notes, err := notebook.FindNotes(findOpts)

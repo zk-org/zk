@@ -8,7 +8,6 @@ import (
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -28,7 +27,7 @@ func executeCommandList(logger util.Logger, notebook *core.Notebook, args []any)
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdList, arg)
+			return nil, fmt.Errorf("failed to parse %s args, got: %v: %w", cmdList, arg, err)
 		}
 	}
 

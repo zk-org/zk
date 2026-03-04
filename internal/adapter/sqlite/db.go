@@ -59,7 +59,7 @@ func open(uri string) (*DB, error) {
 
 	err = db.migrate()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to migrate the database")
+		return nil, fmt.Errorf("failed to migrate the database: %w", err)
 	}
 
 	return db, nil

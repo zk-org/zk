@@ -8,7 +8,6 @@ import (
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -32,7 +31,7 @@ func (cmd *Graph) Run(container *cli.Container) error {
 
 	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect criteria")
+		return fmt.Errorf("incorrect criteria: %w", err)
 	}
 
 	notes, err := notebook.FindNotes(findOpts)

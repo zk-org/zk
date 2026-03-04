@@ -555,7 +555,7 @@ func (s *Server) noteForHref(href string, relativeToDir string, notebook *core.N
 	}
 	path, err := filepath.Rel(notebook.Path, path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
+		return nil, fmt.Errorf("failed to resolve href: %s: %w", href, err)
 	}
 	note, err := notebook.FindByHref(path, false)
 	if err != nil {
@@ -824,7 +824,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 
 	item.TextEdit, err = s.newTextEditForLink(notebook, note, doc, pos, linkFormatter)
 	if err != nil {
-		err = errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path)
+		err = fmt.Errorf("failed to build TextEdit for note at %s: %w", note.Path, err)
 		return item, err
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 const cmdTagList = "zk.tag.list"
@@ -23,7 +22,7 @@ func executeCommandTagList(logger util.Logger, notebook *core.Notebook, args []a
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdTagList, arg)
+			return nil, fmt.Errorf("failed to parse %s args, got: %v: %w", cmdTagList, arg, err)
 		}
 	}
 

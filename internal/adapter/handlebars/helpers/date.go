@@ -1,12 +1,12 @@
 package helpers
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
-	"github.com/pkg/errors"
 	"github.com/rvflash/elapsed"
 	"github.com/zk-org/zk/internal/util"
 	dateutil "github.com/zk-org/zk/internal/util/date"
@@ -22,7 +22,7 @@ func RegisterDate(logger util.Logger) {
 		case string:
 			t, err := dateutil.TimeFromNatural(date)
 			if err != nil {
-				logger.Err(errors.Wrap(err, "the {{date}} template helper failed to parse the date"))
+				logger.Err(fmt.Errorf("the {{date}} template helper failed to parse the date: %w", err))
 			}
 			return t
 		case time.Time:

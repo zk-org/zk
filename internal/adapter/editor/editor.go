@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/zk-org/zk/internal/util/errors"
 	executil "github.com/zk-org/zk/internal/util/exec"
 	"github.com/zk-org/zk/internal/util/opt"
 	osutil "github.com/zk-org/zk/internal/util/os"
@@ -47,9 +46,9 @@ func (e *Editor) Open(paths ...string) error {
 	err := cmd.Run()
 	switch err.(type) {
 	case *exec.ExitError:
-		return errors.Wrapf(err, "operation aborted by editor: %s %s", e.editor, strings.Join(paths, " "))
+		return fmt.Errorf("operation aborted by editor: %s %s: %w", e.editor, strings.Join(paths, " "), err)
 	default:
-		return errors.Wrapf(err, "failed to launch editor: %s %s", e.editor, strings.Join(paths, " "))
+		return fmt.Errorf("failed to launch editor: %s %s: %w", e.editor, strings.Join(paths, " "), err)
 
 	}
 }

@@ -242,7 +242,7 @@ func (d *CollectionDAO) RemoveAssociations(noteID core.NoteID) error {
 
 	_, err := d.removeAssociationsStmt.Exec(noteID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove associations of note %d", noteID)
+		return fmt.Errorf("failed to remove associations of note %d: %w", noteID, err)
 	}
 
 	return nil
