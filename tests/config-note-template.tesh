@@ -14,5 +14,5 @@ $ zk new --title "A new note" --dry-run
 # Template not found.
 $ echo -e "[note] template = 'not-found'" > .zk/config.toml
 1$ zk new --dry-run
-2>zk: error: new note: load template file failed: cannot find template at not-found
+2>zk: error: new note: cannot locate template at not-found
 

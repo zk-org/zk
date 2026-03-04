@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 	"github.com/zk-org/zk/internal/adapter/term"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	errs "github.com/zk-org/zk/internal/util/errors"
 	osutil "github.com/zk-org/zk/internal/util/os"
 	"github.com/zk-org/zk/internal/util/pager"
 	"github.com/zk-org/zk/internal/util/paths"
@@ -43,8 +43,6 @@ type Container struct {
 }
 
 func NewContainer(version string) (*Container, error) {
-	wrap := errs.Wrapper("initialization")
-
 	term := term.New()
 	styler := core.NewProxyStyler(term)
 	logger := util.NewProxyLogger(util.NewStdLogger("zk: ", 0))
@@ -66,12 +64,12 @@ func NewContainer(version string) (*Container, error) {
 	// Load global user config
 	configPath, err := locateGlobalConfig()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("locating config failed: %w", err)
 	}
 	if configPath != "" {
 		config, err = core.OpenConfig(configPath, config, fs, true)
 		if err != nil {
-			return nil, wrap(err)
+			return nil, fmt.Errorf("opening config failed: %w", err)
 		}
 	}
 
@@ -80,7 +78,7 @@ func NewContainer(version string) (*Container, error) {
 	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR").IsNull() && !config.Notebook.Dir.IsNull() {
 		notebookDir, err := paths.ExpandPath(config.Notebook.Dir.Unwrap())
 		if err != nil {
-			return nil, wrap(err)
+			return nil, fmt.Errorf("expanding notebook dir failed: %w", err)
 		}
 		os.Setenv("ZK_NOTEBOOK_DIR", notebookDir)
 	}

@@ -77,7 +77,7 @@ func TestLookupPaths(t *testing.T) {
 	test1 := filepath.Join(path1, "test1.tpl")
 
 	tpl1, err := sut.LoadTemplateAt(test1)
-	assert.Err(t, err, "cannot find template at "+test1)
+	assert.Err(t, err, "cannot locate template at "+test1)
 	assert.Nil(t, tpl1)
 
 	paths.WriteString(test1, "Test 1")

@@ -7,7 +7,6 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -94,14 +93,12 @@ type indexTask struct {
 }
 
 func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexingStats, error) {
-	wrap := errors.Wrapper("indexing failed")
-
 	stats := NoteIndexingStats{}
 	startTime := time.Now()
 
 	needsReindexing, err := t.index.NeedsReindexing()
 	if err != nil {
-		return stats, wrap(err)
+		return stats, fmt.Errorf("indexing failed: %w", err)
 	}
 
 	print := func(message string) {
@@ -155,7 +152,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 
 	target, err := t.index.IndexedPaths()
 	if err != nil {
-		return stats, wrap(err)
+		return stats, fmt.Errorf("finding indexed paths failed: %w", err)
 	}
 
 	// FIXME: Use the FS?
@@ -202,5 +199,8 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 
 	print("")
-	return stats, wrap(err)
+	if err != nil {
+		return stats, fmt.Errorf("indexing failed: %w", err)
+	}
+	return stats, nil
 }

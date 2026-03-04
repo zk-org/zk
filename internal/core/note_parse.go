@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/relvacode/iso8601"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 	"gopkg.in/djherbis/times.v1"
@@ -42,28 +41,24 @@ type NoteContent struct {
 
 // ParseNoteAt implements NoteParser.
 func (n *Notebook) ParseNoteAt(absPath string) (*Note, error) {
-	wrap := errors.Wrapper(absPath)
-
 	content, err := n.fs.Read(absPath)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("parsing %s: %w", absPath, err)
 	}
 
 	return n.ParseNoteWithContent(absPath, content)
 }
 
 func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, error) {
-	wrap := errors.Wrapper(absPath)
-
 	relPath, err := n.RelPath(absPath)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("error calculating relative path %s: %w", absPath, err)
 	}
 
 	contentStr := string(content)
 	contentParts, err := n.Parser.ParseNoteContent(contentStr)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("error parsing note content %s: %w", absPath, err)
 	}
 
 	note := Note{

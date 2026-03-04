@@ -7,7 +7,6 @@ import (
 
 	sqlite "github.com/mattn/go-sqlite3"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 func init() {
@@ -41,18 +40,16 @@ func OpenInMemory() (*DB, error) {
 }
 
 func open(uri string) (*DB, error) {
-	wrap := errors.Wrapper("failed to open the database")
-
 	nativeDB, err := sql.Open("sqlite3_custom", uri)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to open the database: %w", err)
 	}
 
 	// Make sure that CASCADE statements are properly applied by enabling
 	// foreign keys.
 	_, err = nativeDB.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	db := &DB{nativeDB}

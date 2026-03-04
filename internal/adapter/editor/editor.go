@@ -44,11 +44,13 @@ func (e *Editor) Open(paths ...string) error {
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
+	if err == nil {
+		return nil
+	}
 	switch err.(type) {
 	case *exec.ExitError:
 		return fmt.Errorf("operation aborted by editor: %s %s: %w", e.editor, strings.Join(paths, " "), err)
 	default:
 		return fmt.Errorf("failed to launch editor: %s %s: %w", e.editor, strings.Join(paths, " "), err)
-
 	}
 }

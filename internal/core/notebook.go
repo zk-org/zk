@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
 )
@@ -123,16 +122,14 @@ func (e ErrNoteExists) Error() string {
 //
 // Returns ErrNoteExists if no free filename can be generated for this note.
 func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
-	wrap := errors.Wrapper("new note")
-
 	dir, err := n.RequireDirAt(opts.Directory.OrString(n.Path).Unwrap())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	config, err := n.Config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	extra := config.Extra
@@ -140,7 +137,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 
 	templates, err := n.templateLoaderFactory(config.Note.Lang)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	var idGenerator IDGenerator
@@ -168,18 +165,18 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 	}
 	path, content, err := task.execute()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	note, err := n.ParseNoteWithContent(path, []byte(content))
 	if note == nil || err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	if !opts.DryRun {
 		id, err := n.index.Add(*note)
 		if err != nil {
-			return nil, wrap(err)
+			return nil, fmt.Errorf("new note: %w", err)
 		}
 		note.ID = id
 	}
@@ -248,16 +245,14 @@ func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSort
 
 // RelPath returns the path relative to the notebook root to the given path.
 func (n *Notebook) RelPath(originalPath string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)
-
 	path, err := n.fs.Abs(originalPath)
 	if err != nil {
-		return path, wrap(err)
+		return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
 	}
 
 	path, err = filepath.Rel(n.Path, path)
 	if err != nil {
-		return path, wrap(err)
+		return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
 	}
 	if strings.HasPrefix(path, "..") {
 		return path, fmt.Errorf("%s: path is outside the notebook at %s", originalPath, n.Path)

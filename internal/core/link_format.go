@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/paths"
 )
 
@@ -86,10 +85,9 @@ func NewWikiLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
 }
 
 func NewCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader) (LinkFormatter, error) {
-	wrap := errors.Wrapperf("failed to render custom link with format: %s", config.LinkFormat)
 	template, err := templateLoader.LoadTemplate(config.LinkFormat)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to render custom link with format: %s: %w", config.LinkFormat, err)
 	}
 
 	return func(context LinkFormatterContext) (string, error) {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // CollectionDAO persists collections (e.g. tags) in the SQLite database.
@@ -139,11 +138,9 @@ func collectionOrderTerm(sorter core.CollectionSorter) string {
 }
 
 func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (core.CollectionID, error) {
-	wrap := errors.Wrapperf("failed to get %s named %s", kind, name)
-
 	row, err := d.findCollectionStmt.QueryRow(kind, name)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to get %s named %s: %w", kind, name, err)
 	}
 
 	var id sql.NullInt64
@@ -153,23 +150,21 @@ func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (c
 	case err == sql.ErrNoRows:
 		return 0, nil
 	case err != nil:
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to get %s named %s: %w", kind, name, err)
 	default:
 		return core.CollectionID(id.Int64), nil
 	}
 }
 
 func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.CollectionID, error) {
-	wrap := errors.Wrapperf("failed to create new %s named %s", kind, name)
-
 	res, err := d.createCollectionStmt.Exec(kind, name)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to create new %s named %s: %w", kind, name, err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to create new %s named %s: %w", kind, name, err)
 	}
 
 	return core.CollectionID(id), nil
@@ -178,18 +173,19 @@ func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.Coll
 // Associate creates a new association between a note and a collection, if it
 // does not already exist.
 func (d *CollectionDAO) Associate(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
-	wrap := errors.Wrapperf("failed to associate note %d to collection %d", noteID, collectionID)
-
 	id, err := d.findAssociation(noteID, collectionID)
 
 	switch {
 	case err != nil:
-		return id, wrap(err)
+		return id, fmt.Errorf("finding association for note %d to collection %d failed: %w", noteID, collectionID, err)
 	case id.IsValid():
 		return id, nil
 	default:
 		id, err = d.createAssociation(noteID, collectionID)
-		return id, wrap(err)
+		if err != nil {
+			return id, fmt.Errorf("failed to associate note %d to collection %d: %w", noteID, collectionID, err)
+		}
+		return id, nil
 	}
 }
 

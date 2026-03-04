@@ -8,7 +8,6 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -53,20 +52,18 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 
 	for _, path := range f.Path {
 		if filter, ok := filters[path]; ok && !strings.Contains(expandedFilters, path) {
-			wrap := errors.Wrapperf("failed to expand named filter `%v`", path)
-
 			var parsedFilter Filtering
 			parser, err := kong.New(&parsedFilter)
 			if err != nil {
-				return f, wrap(err)
+				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
 			}
 			args, err := shellquote.Split(filter)
 			if err != nil {
-				return f, wrap(err)
+				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
 			}
 			_, err = parser.Parse(args)
 			if err != nil {
-				return f, wrap(err)
+				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
 			}
 
 			// Expand recursively, but prevent infinite loops by registering
