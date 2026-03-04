@@ -1,13 +1,12 @@
 package paths
 
 import (
+	"errors"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // Metadata holds information about a file path.

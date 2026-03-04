@@ -1,13 +1,14 @@
 package lsp
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 )
 
 const cmdLink = "zk.link"
@@ -28,7 +29,7 @@ func executeCommandLink(notebook *core.Notebook, documents *documentStore, conte
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdLink, arg)
+			return nil, errs.Wrapf(err, "failed to parse %s args, got: %v", cmdLink, arg)
 		}
 	}
 

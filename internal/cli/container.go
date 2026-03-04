@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 	"github.com/zk-org/zk/internal/adapter/term"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 	osutil "github.com/zk-org/zk/internal/util/os"
 	"github.com/zk-org/zk/internal/util/pager"
 	"github.com/zk-org/zk/internal/util/paths"
@@ -42,7 +43,7 @@ type Container struct {
 }
 
 func NewContainer(version string) (*Container, error) {
-	wrap := errors.Wrapper("initialization")
+	wrap := errs.Wrapper("initialization")
 
 	term := term.New()
 	styler := core.NewProxyStyler(term)

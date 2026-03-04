@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"path/filepath"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	toml "github.com/pelletier/go-toml"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
 )
@@ -123,7 +124,7 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 		for _, groupPath := range config.Paths {
 			matches, err := doublestar.Match(groupPath, path)
 			if err != nil {
-				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
+				return "", errs.Wrapf(err, "failed to match group %s to %s", name, path)
 			} else if matches {
 				// Early return if an exact match
 				return name, nil
@@ -305,7 +306,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 
 	content, err := fs.Read(path)
 	if err != nil {
-		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)
+		return parentConfig, errs.Wrapf(err, "failed to open config file at %s", path)
 	}
 
 	return ParseConfig(content, path, parentConfig, isGlobal)
@@ -317,7 +318,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 //
 // The parentConfig will be used to inherit default config settings.
 func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool) (Config, error) {
-	wrap := errors.Wrapperf("failed to read config")
+	wrap := errs.Wrapperf("failed to read config")
 
 	config := parentConfig
 

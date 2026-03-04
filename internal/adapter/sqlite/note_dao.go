@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/fts5"
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
@@ -192,7 +193,7 @@ func (d *NoteDAO) metadataToJSON(note core.Note) string {
 	if err != nil {
 		// Failure to serialize the metadata to JSON should not prevent the
 		// note from being saved.
-		d.logger.Err(errors.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path))
+		d.logger.Err(errs.Wrapf(err, "cannot serialize note metadata to JSON: %s", note.Path))
 		return "{}"
 	}
 	return string(json)
@@ -812,7 +813,7 @@ func (d *NoteDAO) scanMinimalNote(row RowScanner) (*core.MinimalNote, error) {
 	default:
 		metadata, err := unmarshalMetadata(metadataJSON)
 		if err != nil {
-			d.logger.Err(errors.Wrap(err, path))
+			d.logger.Err(errs.Wrap(err, path))
 		}
 
 		return &core.MinimalNote{
@@ -845,7 +846,7 @@ func (d *NoteDAO) scanNote(row RowScanner) (*core.ContextualNote, error) {
 	default:
 		metadata, err := unmarshalMetadata(metadataJSON)
 		if err != nil {
-			d.logger.Err(errors.Wrap(err, path))
+			d.logger.Err(errs.Wrap(err, path))
 		}
 
 		return &core.ContextualNote{

@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 

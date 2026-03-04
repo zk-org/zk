@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -81,7 +82,7 @@ func (cmd *List) Run(container *cli.Container) error {
 
 	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect criteria")
+		return errs.Wrapf(err, "incorrect criteria")
 	}
 
 	notes, err := notebook.FindNotes(findOpts)

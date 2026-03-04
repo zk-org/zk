@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -8,7 +9,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/errors"
+	errs "github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 )
 
@@ -37,13 +38,13 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdNew, arg)
+			return nil, errs.Wrapf(err, "failed to parse %s args, got: %v", cmdNew, arg)
 		}
 	}
 
 	date, err := dateutil.TimeFromNatural(opts.Date)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
+		return nil, errs.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
 	}
 
 	note, err := notebook.NewNote(core.NewNoteOpts{
