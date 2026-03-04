@@ -5,9 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"fmt"
+
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -109,7 +110,9 @@ func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) 
 		metadata, err = dao.notes.Indexed()
 		return err
 	})
-	err = errors.Wrap(err, "failed to get indexed notes")
+	if err != nil {
+		err = fmt.Errorf("failed to get indexed notes: %w", err)
+	}
 	return
 }
 
@@ -135,7 +138,9 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 		return ni.associateTags(dao.collections, id, note.Tags)
 	})
 
-	err = errors.Wrapf(err, "%v: failed to index the note", note.Path)
+	if err != nil {
+		err = fmt.Errorf("%v: failed to index the note: %w", note.Path, err)
+	}
 	return
 }
 
@@ -214,8 +219,10 @@ func (ni *NoteIndex) relNotebookPath(baseDir string, href string) (string, error
 	path := filepath.Clean(filepath.Join(baseDir, href))
 	path, err := filepath.Rel(ni.notebookPath, path)
 
-	return path,
-		errors.Wrapf(err, "failed to make href relative to the notebook: %s", href)
+	if err != nil {
+		return "", fmt.Errorf("failed to make href relative to the notebook: %s: %w", href, err)
+	}
+	return path, nil
 }
 
 // Update implements core.NoteIndex.
@@ -244,7 +251,10 @@ func (ni *NoteIndex) Update(note core.Note) error {
 		return ni.associateTags(dao.collections, id, note.Tags)
 	})
 
-	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
+	if err != nil {
+		return fmt.Errorf("%v: failed to update note index: %w", note.Path, err)
+	}
+	return nil
 }
 
 func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteID core.NoteID, tags []string) error {
@@ -294,7 +304,10 @@ func (ni *NoteIndex) Remove(path string) error {
 	err := ni.commit(func(dao *dao) error {
 		return dao.notes.Remove(path)
 	})
-	return errors.Wrapf(err, "%v: failed to remove note from index", path)
+	if err != nil {
+		return fmt.Errorf("%v: failed to remove note from index: %w", path, err)
+	}
+	return nil
 }
 
 // Commit implements core.NoteIndex.

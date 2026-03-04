@@ -80,7 +80,9 @@ func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change pa
 		return err
 	})
 
-	err = errors.Wrap(err, "indexing")
+	if err != nil {
+		err = fmt.Errorf("indexing: %w", err)
+	}
 	return
 }
 

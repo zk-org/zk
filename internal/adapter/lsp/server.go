@@ -16,7 +16,6 @@ import (
 	_ "github.com/tliron/kutil/logging/simple"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -515,7 +514,10 @@ func NewServer(opts ServerOpts) *Server {
 
 // Run starts the Language Server in stdio mode.
 func (s *Server) Run() error {
-	return errors.Wrap(s.server.RunStdio(), "lsp")
+	if err := s.server.RunStdio(); err != nil {
+		return fmt.Errorf("lsp: %w", err)
+	}
+	return nil
 }
 
 func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {

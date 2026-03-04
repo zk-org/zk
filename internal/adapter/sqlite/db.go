@@ -67,8 +67,10 @@ func open(uri string) (*DB, error) {
 
 // Close terminates the connections to the SQLite database.
 func (db *DB) Close() error {
-	err := db.db.Close()
-	return errors.Wrap(err, "failed to close the database")
+	if err := db.db.Close(); err != nil {
+		return fmt.Errorf("failed to close the database: %w", err)
+	}
+	return nil
 }
 
 // migrate upgrades the SQL schema of the database.
@@ -255,5 +257,8 @@ func (db *DB) migrate() error {
 		return nil
 	})
 
-	return errors.Wrap(err, "database migration failed")
+	if err != nil {
+		return fmt.Errorf("database migration failed: %w", err)
+	}
+	return nil
 }

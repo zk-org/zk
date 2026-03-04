@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 type RowScanner interface {
@@ -56,6 +57,8 @@ func joinNoteIDs(ids []core.NoteID, delimiter string) string {
 
 func unmarshalMetadata(metadataJSON string) (metadata map[string]any, err error) {
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
-	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
+	if err != nil {
+		err = fmt.Errorf("cannot parse note metadata from JSON: %s: %w", metadataJSON, err)
+	}
 	return
 }

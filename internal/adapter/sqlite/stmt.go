@@ -2,9 +2,8 @@ package sqlite
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
-
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // LazyStmt is a wrapper around a sql.Stmt which will be evaluated on first use.
@@ -58,5 +57,8 @@ func (s *LazyStmt) QueryRow(args ...any) (*sql.Row, error) {
 }
 
 func (s *LazyStmt) wrapErr(err error) error {
-	return errors.Wrapf(err, "database query: %s", s.query)
+	if err != nil {
+		return fmt.Errorf("database query: %s: %w", s.query, err)
+	}
+	return nil
 }

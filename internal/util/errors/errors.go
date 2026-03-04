@@ -10,17 +10,9 @@ func Wrapperf(format string, args ...any) func(error) error {
 
 func Wrapper(msg string) func(error) error {
 	return func(err error) error {
-		return Wrap(err, msg)
+		if err == nil {
+			return nil
+		}
+		return fmt.Errorf("%s: %w", msg, err)
 	}
-}
-
-func Wrapf(err error, format string, args ...any) error {
-	return Wrap(err, fmt.Sprintf(format, args...))
-}
-
-func Wrap(err error, msg string) error {
-	if err == nil {
-		return nil
-	}
-	return fmt.Errorf("%s: %w", msg, err)
 }
