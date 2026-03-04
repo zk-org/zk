@@ -38,7 +38,7 @@ func (cmd *TagList) Run(container *cli.Container) error {
 			return errors.New("--delimiter and --delimiter0 can't be used together")
 		}
 		if cmd.Header != "" {
-			return errors.New("--footer and --delimiter0 can't be used together")
+			return errors.New("--header and --delimiter0 can't be used together")
 		}
 		if cmd.Footer != "\n" {
 			return errors.New("--footer and --delimiter0 can't be used together")

@@ -28,7 +28,7 @@ $ zk list -n4 -qfpath -d,
 
 # Can't mix --delimiter0 and --header
 1$ zk list --delimiter0 --header "-"
-2>zk: error: --footer and --delimiter0 can't be used together
+2>zk: error: --header and --delimiter0 can't be used together
 
 # Can't mix --delimiter0 and --footer
 1$ zk list --delimiter0 --footer "-"
