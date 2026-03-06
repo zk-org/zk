@@ -318,7 +318,13 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 	lines := strutil.CopyList(d.GetLines())
 	lineIdx := int(position.Line)
 	charIdx := int(position.Character)
+	if len(lines) <= lineIdx {
+		return false
+	}
 	line := lines[lineIdx]
+	if len(line) <= charIdx {
+		return false
+	}
 	// https://github.com/zk-org/zk/issues/144#issuecomment-1006108485
 	line = line[:charIdx] + "ZK_PLACEHOLDER" + line[charIdx:]
 	lines[lineIdx] = line

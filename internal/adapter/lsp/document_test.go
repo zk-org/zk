@@ -403,6 +403,24 @@ func TestDocument_IsTagPosition(t *testing.T) {
 			},
 			expected: true,
 		},
+		{
+			name:    "out of bound line",
+			content: "line1\n#tag line2",
+			pos: protocol.Position{
+				Line:      10,
+				Character: 2,
+			},
+			expected: false,
+		},
+		{
+			name:    "out of bound character",
+			content: "line1\n#tag line2",
+			pos: protocol.Position{
+				Line:      1,
+				Character: 100,
+			},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
