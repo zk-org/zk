@@ -1,9 +1,11 @@
 package lsp
 
 import (
+	"regexp"
 	"testing"
 
 	protocol "github.com/tliron/glsp/protocol_3_16"
+	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -311,6 +313,105 @@ func TestDocument_LookBehind(t *testing.T) {
 				Path:    "/test/note.md",
 			}
 			actual := doc.LookBehind(tt.pos, tt.length)
+			assert.Equal(t, actual, tt.expected)
+		})
+	}
+}
+
+type mockNoteContentParser struct{}
+
+func (m *mockNoteContentParser) ParseNoteContent(content string) (*core.NoteContent, error) {
+	tags := []string{}
+	// This mock parser only finds hashtags.
+	// It's important to match the behavior where ZK_PLACEHOLDER is part of the tag.
+	re := regexp.MustCompile(`#[^ \t\n\f\r,;\[\]\"\']+`)
+	matches := re.FindAllString(content, -1)
+	for _, match := range matches {
+		tags = append(tags, match[1:]) // strip #
+	}
+	return &core.NoteContent{Tags: tags}, nil
+}
+
+func TestDocument_IsTagPosition(t *testing.T) {
+	parser := &mockNoteContentParser{}
+	tests := []struct {
+		name     string
+		content  string
+		pos      protocol.Position
+		expected bool
+	}{
+		{
+			name:    "at the start of a hashtag (#)",
+			content: "hello #tag world",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 6, // at #
+			},
+			expected: false, // ZK_PLACEHOLDER is inserted BEFORE #, so it's "ZK_PLACEHOLDER#tag" which is not a tag
+		},
+		{
+			name:    "just after #",
+			content: "hello #tag world",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 7, // after #
+			},
+			expected: true,
+		},
+		{
+			name:    "inside a hashtag",
+			content: "hello #tag world",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 8, // at a
+			},
+			expected: true,
+		},
+		{
+			name:    "at the end of a hashtag",
+			content: "hello #tag world",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 10, // after g
+			},
+			expected: true,
+		},
+		{
+			name:    "not in a tag (at 'h')",
+			content: "hello #tag world",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 0, // at h
+			},
+			expected: false,
+		},
+		{
+			name:    "between two tags (at space)",
+			content: "#tag1 #tag2",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 5, // space between
+			},
+			expected: true, // WordAt returns "#tag1" at index 5
+		},
+		{
+			name:    "in multiple lines",
+			content: "line1\n#tag line2",
+			pos: protocol.Position{
+				Line:      1,
+				Character: 2, // at 't' in #tag
+			},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			actual := doc.IsTagPosition(tt.pos, parser)
 			assert.Equal(t, actual, tt.expected)
 		})
 	}
