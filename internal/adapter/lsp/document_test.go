@@ -3,6 +3,7 @@ package lsp
 import (
 	"testing"
 
+	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -244,6 +245,73 @@ func TestDocumentLinks_ComplexContent(t *testing.T) {
 			}
 			hrefs := extractHrefs(doc)
 			assert.Equal(t, hrefs, tt.expectedHrefs)
+		})
+	}
+}
+
+func TestDocument_LookBehind(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		pos      protocol.Position
+		length   int
+		expected string
+	}{
+		{
+			name:    "empty",
+			content: "",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 0,
+			},
+			length:   0,
+			expected: "",
+		},
+		{
+			name:     "normal case",
+			content:  "hello world",
+			pos:      protocol.Position{Line: 0, Character: 5},
+			length:   2,
+			expected: "lo",
+		},
+		{
+			name:     "normal case",
+			content:  "hello world",
+			pos:      protocol.Position{Line: 0, Character: 5},
+			length:   2,
+			expected: "lo",
+		},
+		{
+			name:     "out of bound line index",
+			content:  "lorem\nipsum\ndor\nsit\n",
+			pos:      protocol.Position{Line: 6, Character: 0},
+			length:   0,
+			expected: "",
+		},
+		{
+			name:     "out of bound length",
+			content:  "hello world",
+			pos:      protocol.Position{Line: 0, Character: 5},
+			length:   10,
+			expected: "hello",
+		},
+		{
+			name:     "out of bound character",
+			content:  "#abc #z",
+			pos:      protocol.Position{Line: 0, Character: 8},
+			length:   8,
+			expected: "#abc #z",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			actual := doc.LookBehind(tt.pos, tt.length)
+			assert.Equal(t, actual, tt.expected)
 		})
 	}
 }
