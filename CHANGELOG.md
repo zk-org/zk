@@ -16,7 +16,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 - Links in markdown footnotes now included in :ZkLinks (by @WhyNotHugo, 639)
 - Indexing notebook now 35% and 74% faster for full and incremental indexing
   respectively (by @WhyNotHugo, 642)
-- Stop crashing lsp server when server received `textDocument/completion` request with out of range parameters. (by @virusbb001, XXX)
+- Stop crashing lsp server when server received `textDocument/completion` request with out of range parameters. (by @virusbb001, 667)
 
 ## 0.15.2
 
