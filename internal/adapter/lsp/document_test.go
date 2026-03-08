@@ -421,6 +421,15 @@ func TestDocument_IsTagPosition(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name:    "at end of line (true for completion)",
+			content: "#zk",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 3,
+			},
+			expected: true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -322,7 +322,7 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 		return false
 	}
 	line := lines[lineIdx]
-	if len(line) <= charIdx {
+	if len(line) < charIdx {
 		return false
 	}
 	// https://github.com/zk-org/zk/issues/144#issuecomment-1006108485
