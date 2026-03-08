@@ -79,6 +79,17 @@ func TestIsURL(t *testing.T) {
 	test("https://example.com/dir", true)
 	test("http://example.com/dir", true)
 	test("ftp://example.com/", true)
+
+	// zk:// URIs carry everything in their query, with no authority.
+	test("zk://?v=/notebook&f=note.md", true)
+	test("zk:?v=/notebook&f=note.md", true)
+	test("zk://?v=/notebook&f=a note.md", true)
+	test("zk://notebook/note", true)
+
+	// Other schemes still need a host, so that a Windows path isn't mistaken
+	// for a URL.
+	test(`C:\notes\note.md`, false)
+	test("mailto:someone@example.com", false)
 }
 
 func TestRemoveDuplicates(t *testing.T) {

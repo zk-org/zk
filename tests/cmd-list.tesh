@@ -20,6 +20,8 @@ $ zk list --help
 >Formatting
 >  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
 >                           of the predefined formats.
+>      --link               Print the zk:// URI of each note (shorthand for
+>                           --format uri).
 >      --header=STRING      Arbitrary text printed at the start of the list.
 >      --footer="\n"        Arbitrary text printed at the end of the list.
 >  -d, --delimiter="\n"     Print items delimited by the given separator.

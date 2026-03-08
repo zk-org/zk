@@ -1,0 +1,97 @@
+$ cd edit
+
+# Open the note referenced by a zk:// URI.
+#
+# The editor is faked with a script, because the position of the cursor is
+# passed to it on the command line and the syntax differs per editor. tesh puts
+# the current directory first in PATH, hence the `./` prefixes below.
+
+$ zk uri blue.md -l 12 -c 4
+>zk://?v={{working-dir}}&f=blue.md&l=12&c=4
+
+# An editor with no known position syntax is given the plain path.
+
+$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=blue.md"
+>{{working-dir}}/blue.md
+
+$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=blue.md&l=12&c=4"
+>{{working-dir}}/blue.md
+
+# Vim and friends take the line as a `+N` argument.
+
+$ printf '#!/bin/sh\necho "$@"\n' > nvim
+
+$ chmod +x nvim
+
+$ ZK_EDITOR=./nvim zk open "zk://?v=$PWD&f=blue.md&l=12&c=4"
+>+12 {{working-dir}}/blue.md
+
+# Visual Studio Code wants --goto and a suffixed location.
+
+$ cp nvim code
+
+$ ZK_EDITOR=./code zk open "zk://?v=$PWD&f=blue.md&l=12&c=4"
+>--goto {{working-dir}}/blue.md:12:4
+
+# Helix suffixes the path directly.
+
+$ cp nvim hx
+
+$ ZK_EDITOR=./hx zk open "zk://?v=$PWD&f=blue.md&l=12"
+>{{working-dir}}/blue.md:12:1
+
+# Without a position, the file is opened as-is.
+
+$ ZK_EDITOR=./nvim zk open "zk://?v=$PWD&f=blue.md"
+>{{working-dir}}/blue.md
+
+# Notes in subdirectories are resolved against the notebook root.
+
+$ mkdir ref
+
+$ touch ref/note.md
+
+$ ZK_EDITOR=./nvim zk open "zk://?v=$PWD&f=ref/note.md&l=3"
+>+3 {{working-dir}}/ref/note.md
+
+# Percent-encoded paths are decoded.
+
+$ touch "a note.md"
+
+$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=a%20note.md"
+>{{working-dir}}/a note.md
+
+# A URI is only opened if it points inside a real notebook, at a file which
+# exists. These come from outside systems, so none of it is taken on trust.
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=nowhere.md"
+2>zk: error: nowhere.md: file not found in notebook {{working-dir}}
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=../blue.md"
+2>zk: error: ../blue.md: the 'f' parameter must be a relative path inside the notebook
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=/etc/passwd"
+2>zk: error: /etc/passwd: the 'f' parameter must be a relative path inside the notebook
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD/ref&f=note.md"
+2>zk: error: {{working-dir}}/ref: not a notebook, no .zk directory found
+
+1$ ZK_EDITOR=echo zk open "zk://?v=relative&f=blue.md"
+2>zk: error: relative: the 'v' parameter must be an absolute notebook path
+
+1$ ZK_EDITOR=echo zk open "zk://?f=blue.md"
+2>zk: error: zk://?f=blue.md: zk:// URI is missing the 'v' (notebook path) parameter
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD"
+2>zk: error: zk://?v={{working-dir}}: zk:// URI is missing the 'f' (file path) parameter
+
+1$ ZK_EDITOR=echo zk open "zk://?v=$PWD&f=blue.md&l=0"
+2>zk: error: 0: the 'l' parameter must be a positive line number
+
+# The shape zk used to emit is not supported any more.
+
+1$ ZK_EDITOR=echo zk open "zk://edit/blue"
+2>zk: error: zk://edit/blue: unsupported zk:// URI, expected the form zk://?v=<notebook>&f=<path>
+
+1$ ZK_EDITOR=echo zk open "https://example.com"
+2>zk: error: https://example.com: not a zk:// URI

@@ -11,12 +11,23 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 - Disable full notebook scans when running regular commands
   `notebook.scan = false` (by @paoValle, #788)
+- New `zk://` URI scheme to link to a precise location in a notebook from
+  outside systems. `zk uri <path> --line --column` prints a link,
+  `zk list --link` (or `--format uri` / `{{uri}}`) prints them in bulk, the
+  `zk.uri` LSP command returns one for the cursor position, and
+  `zk open <uri>` opens the referenced file in your editor at the right line
+  and column (by @sudores, #801)
 
 ### Fixed
 
 - `lsp.completion.use-additional-text-edits` set in the global config is no
   longer ignored when the notebook config doesn't set it (by @marktsuchida,
   #789)
+- The `zk.link` LSP command is now advertised in the server capabilities, so
+  that strict clients will call it (by @sudores, #801)
+- The editor's standard input is no longer redirected to `/dev/tty` when there
+  is no terminal attached, which prevented the editor from starting when `zk`
+  was launched from a desktop handler (by @sudores, #801)
 
 ## 0.15.7
 

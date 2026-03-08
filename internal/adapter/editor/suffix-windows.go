@@ -2,4 +2,6 @@
 
 package editor
 
-const CMD_SUFFIX = ""
+func cmdSuffix() string {
+	return ""
+}

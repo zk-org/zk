@@ -66,6 +66,15 @@ func JoinInt64(ints []int64, delimiter string) string {
 	return strings.Join(strs, delimiter)
 }
 
+// hostlessURLSchemes are the URL schemes which are meaningful without an
+// authority component, e.g. zk://?v=/notebook&f=note.md
+//
+// Requiring a host is otherwise what keeps a Windows path such as C:\notes
+// from being mistaken for a URL.
+var hostlessURLSchemes = map[string]bool{
+	"zk": true,
+}
+
 // IsURL returns whether the given string is a valid URL.
 func IsURL(s string) bool {
 	_, err := url.ParseRequestURI(s)
@@ -74,11 +83,11 @@ func IsURL(s string) bool {
 	}
 
 	u, err := url.Parse(s)
-	if err != nil || u.Scheme == "" || u.Host == "" {
+	if err != nil || u.Scheme == "" {
 		return false
 	}
 
-	return true
+	return u.Host != "" || hostlessURLSchemes[u.Scheme]
 }
 
 // RemoveDuplicates keeps only unique strings in the source.

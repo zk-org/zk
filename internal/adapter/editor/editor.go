@@ -38,6 +38,19 @@ func NewEditor(editor *string, shell string) (*Editor, error) {
 
 // Open launches the editor with the notes at given paths.
 func (e *Editor) Open(paths ...string) error {
+	return e.run(shellquote.Join(paths...), paths)
+}
+
+// OpenAt launches the editor with the note at the given path, moving the cursor
+// to the given position when the editor is known to support it.
+func (e *Editor) OpenAt(path string, pos Position) error {
+	args := openArgs(editorBinary(e.editor), path, pos)
+	return e.run(shellquote.Join(args...), []string{path})
+}
+
+// run launches the editor with the given pre-quoted arguments. paths is only
+// used to report errors.
+func (e *Editor) run(args string, paths []string) error {
 	// If stdin is a pipe, pipe it to the editor, so it can consume the output from
 	// that pipe. Allows providing input to commands like `zk new` when using Vim.
 	//
@@ -45,11 +58,11 @@ func (e *Editor) Open(paths ...string) error {
 	//
 	// See: https://github.com/zk-org/zk/issues/4
 	// See: https://github.com/zk-org/zk/pull/693
-	suffix := CMD_SUFFIX
+	suffix := cmdSuffix()
 	if isatty.IsTerminal(os.Stdin.Fd()) {
 		suffix = ""
 	}
-	cmd := executil.CommandFromString(e.shell, e.editor+" "+shellquote.Join(paths...)+suffix)
+	cmd := executil.CommandFromString(e.shell, e.editor+" "+args+suffix)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

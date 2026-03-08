@@ -21,6 +21,8 @@ features are:
 - Navigate in your notes by following internal links.
 - Create a new note using the current selection as title.
 - Diagnostics for dead links, wiki-links titles, and missing backlinks.
+- Get the [`zk://` URI](../notes/note-uri.md) of the cursor position with the
+  `zk.uri` command, to link to it from outside your notebook.
 - [And more to come...](https://github.com/zk-org/zk/issues/22)
 
 You can configure some of these features in your notebook's

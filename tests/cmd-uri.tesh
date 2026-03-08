@@ -1,0 +1,57 @@
+$ cd edit
+
+# Print the zk:// URI of a note, to link to it from an outside system.
+
+$ zk uri blue.md
+>zk://?v={{working-dir}}&f=blue.md
+
+# A line and a column can be pointed at.
+
+$ zk uri blue.md --line 12
+>zk://?v={{working-dir}}&f=blue.md&l=12
+
+$ zk uri blue.md -l 12 -c 4
+>zk://?v={{working-dir}}&f=blue.md&l=12&c=4
+
+# A column makes no sense on its own.
+
+1$ zk uri blue.md -c 4
+2>zk: error: --column requires --line
+
+1$ zk uri blue.md --line=-3
+2>zk: error: --line and --column must be positive
+
+# Notes in subdirectories keep their path.
+
+$ mkdir ref
+
+$ touch ref/note.md
+
+$ zk uri ref/note.md
+>zk://?v={{working-dir}}&f=ref/note.md
+
+# The path can also be given relative to the working directory.
+
+$ zk -W ref uri note.md
+>zk://?v={{working-dir}}&f=ref/note.md
+
+# Spaces are percent-encoded, so that the URI survives being pasted around.
+
+$ touch "a note.md"
+
+$ zk uri "a note.md"
+>zk://?v={{working-dir}}&f=a%20note.md
+
+# An argument which isn't a path is looked up as an href, like in the other
+# commands taking a note.
+
+$ zk uri blue
+>zk://?v={{working-dir}}&f=blue.md
+
+1$ zk uri nowhere
+2>zk: error: nowhere: note not found
+
+# A path outside of the notebook has no URI.
+
+1$ zk uri /etc/passwd
+2>zk: error: /etc/passwd: path is outside the notebook at {{working-dir}}

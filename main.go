@@ -30,6 +30,8 @@ var root struct {
 	List  cmd.List  `cmd group:"notes" help:"List notes matching the given criteria."`
 	Graph cmd.Graph `cmd group:"notes" help:"Produce a graph of the notes matching the given criteria."`
 	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
+	Open  cmd.Open  `cmd group:"notes" help:"Open the file referenced by a zk:// URI in your editor."`
+	URI   cmd.URI   `cmd name:"uri" group:"notes" help:"Print the zk:// URI of a note."`
 	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
 
 	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
@@ -103,7 +105,7 @@ func main() {
 
 		// Index the current notebook except if the user is running the `index`
 		// command, otherwise it would hide the stats.
-		if ctx.Command() != "index" {
+		if !skipsAutoIndex(ctx.Command()) {
 			if notebook, err := container.CurrentNotebook(); err == nil {
 				index := cmd.Index{Quiet: true, Automatic: true}
 				err = index.RunWithNotebook(container, notebook)
@@ -113,6 +115,26 @@ func main() {
 
 		err = ctx.Run(container)
 		ctx.FatalIfErrorf(err)
+	}
+}
+
+// skipsAutoIndex returns whether the given Kong command doesn't need an
+// up-to-date notebook index.
+//
+// Kong renders a command taking positional arguments as e.g. "open <uri>", so
+// only the first word is significant.
+func skipsAutoIndex(command string) bool {
+	name, _, _ := strings.Cut(command, " ")
+	switch name {
+	// Indexing would hide the stats `index` itself prints.
+	case "index":
+		return true
+	// `open` resolves its notebook from the URI, so indexing whichever
+	// notebook we were started in would be beside the point.
+	case "open":
+		return true
+	default:
+		return false
 	}
 }
 
