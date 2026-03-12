@@ -430,6 +430,24 @@ func TestDocument_IsTagPosition(t *testing.T) {
 			},
 			expected: true,
 		},
+		{
+			name:    "utf-16 test",
+			content: "#雨果",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 2,
+			},
+			expected: true,
+		},
+		{
+			name:    "utf-16 test out of bounds",
+			content: "#雨果",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 4,
+			},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
