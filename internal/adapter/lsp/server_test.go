@@ -1,9 +1,13 @@
 package lsp
 
 import (
+	"net/url"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	protocol "github.com/tliron/glsp/protocol_3_16"
+	"github.com/zk-org/zk/internal/adapter/fs"
 	"github.com/zk-org/zk/internal/adapter/markdown"
 	"github.com/zk-org/zk/internal/adapter/sqlite"
 	"github.com/zk-org/zk/internal/core"
@@ -19,7 +23,60 @@ func (m *mockFileStorage) Canonical(path string) string {
 	return path
 }
 
+// Get project root directory.
+// It returns absolute path.
+func getProjectRoot() string {
+	_, file, _, _ := runtime.Caller(0)
+	return filepath.Join(filepath.Dir(file), "../../..")
+}
+
+func getNotebookFixture(name string) notebookFixture {
+	p := filepath.Join(getProjectRoot(), "tests", "fixtures", name)
+	return newNotebookFixture(p)
+}
+
+type notebookFixture struct {
+	Path string
+	FS   *fs.FileStorage
+}
+
+func newNotebookFixture(path string) notebookFixture {
+	return notebookFixture{
+		Path: path,
+	}
+}
+
+// Read content and create parameter for DidOpen
+func (notebook *notebookFixture) MakeDidOpenParam(noteName string) (protocol.DidOpenTextDocumentParams, error) {
+	path := filepath.Join(notebook.Path, noteName)
+	u := url.URL{
+		Scheme: "file",
+		Path:   filepath.ToSlash(path),
+	}
+	content, err := notebook.FS.Read(path)
+	if err != nil {
+		return protocol.DidOpenTextDocumentParams{}, err
+	}
+
+	return protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI:        u.String(),
+			LanguageID: "markdown",
+			Version:    1,
+			Text:       string(content),
+		},
+	}, nil
+}
+
 func TestServer_buildInvokedCompletionList(t *testing.T) {
+	fixture := getNotebookFixture("issue-XXX-not-complete-with-multibyte")
+
+	fs, err := fs.NewFileStorage(fixture.Path, &util.NullLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture.FS = fs
+
 	// Setup DB
 	db, err := sqlite.OpenInMemory()
 	if err != nil {
@@ -27,7 +84,7 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 	}
 	defer db.Close()
 
-	index := sqlite.NewNoteIndex("/tmp/notebook", db, &util.NullLogger)
+	index := sqlite.NewNoteIndex(fixture.Path, db, &util.NullLogger)
 	config := core.NewDefaultConfig()
 
 	// Initialize markdown parser directly
@@ -35,9 +92,7 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		HashtagEnabled: true,
 	}, &util.NullLogger)
 
-	fs := &mockFileStorage{}
-
-	notebook := core.NewNotebook("/tmp/notebook", config, core.NotebookPorts{
+	notebook := core.NewNotebook(fixture.Path, config, core.NotebookPorts{
 		NoteIndex:         index,
 		NoteContentParser: parser,
 		FS:                fs,
@@ -46,21 +101,21 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		},
 		Logger: &util.NullLogger,
 	})
+	notebook.Index(core.NoteIndexOpts{
+		Force:   true,
+		Verbose: false,
+	})
 
 	docStore := newDocumentStore(fs, &util.NullLogger)
 	server := &Server{
 		documents: docStore,
 	}
 
-	uri := "file:///tmp/notebook/note.md"
-	doc, err := docStore.DidOpen(protocol.DidOpenTextDocumentParams{
-		TextDocument: protocol.TextDocumentItem{
-			URI:        uri,
-			LanguageID: "markdown",
-			Version:    1,
-			Text:       "Hello #world\n[[",
-		},
-	}, nil)
+	didOpenParam, err := fixture.MakeDidOpenParam("Item1.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc, err := docStore.DidOpen(didOpenParam, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,10 +146,13 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	t.Run("Link completion trigger", func(t *testing.T) {
+	t.Run("Return all link completion", func(t *testing.T) {
 		// Position after [[ (line 1, char 2)
-		pos := protocol.Position{Line: 1, Character: 2}
-		_, err := server.buildInvokedCompletionList(notebook, doc, pos)
+		pos := protocol.Position{Line: 3, Character: 2}
+		item, err := server.buildInvokedCompletionList(notebook, doc, pos)
 		assert.Nil(t, err)
+		if len(item) < 1 {
+			t.Error("Number of completion items should be greater than 0")
+		}
 	})
 }
