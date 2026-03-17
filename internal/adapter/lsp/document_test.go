@@ -495,6 +495,12 @@ func TestDocument_WordAt(t *testing.T) {
 			pos:      protocol.Position{Line: 0, Character: 8},
 			expected: "ジン",
 		},
+		{
+			name:     "when Character is out-of-bound, it treats as end of line",
+			content:  "ビール 焼酎 ジン ワイン ウィスキー",
+			pos:      protocol.Position{Line: 0, Character: 100},
+			expected: "ウィスキー",
+		},
 	}
 
 	for _, tt := range tests {
