@@ -109,7 +109,8 @@ func (d *document) WordAt(pos protocol.Position) string {
 		return ""
 	}
 	utf16Bytes := utf16.Encode([]rune(line))
-	strChar := len(string(utf16.Decode(utf16Bytes[0:pos.Character])))
+	charIdx := min(int(pos.Character), len(utf16Bytes))
+	strChar := len(string(utf16.Decode(utf16Bytes[0:charIdx])))
 
 	return strutil.WordAt(line, strChar)
 }
