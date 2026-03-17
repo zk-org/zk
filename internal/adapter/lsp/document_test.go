@@ -466,3 +466,45 @@ func TestDocument_IsTagPosition(t *testing.T) {
 		})
 	}
 }
+
+func TestDocument_WordAt(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		pos      protocol.Position
+		expected string
+	}{
+		{
+			name:    "empty",
+			content: "",
+			pos: protocol.Position{
+				Line:      0,
+				Character: 0,
+			},
+			expected: "",
+		},
+		{
+			name:     "normal case",
+			content:  "Hello World",
+			pos:      protocol.Position{Line: 0, Character: 8},
+			expected: "World",
+		},
+		{
+			name:     "should handle utf-16 correctly",
+			content:  "ビール 焼酎 ジン ワイン ウィスキー",
+			pos:      protocol.Position{Line: 0, Character: 8},
+			expected: "ジン",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			actual := doc.WordAt(tt.pos)
+			assert.Equal(t, actual, tt.expected)
+		})
+	}
+}
