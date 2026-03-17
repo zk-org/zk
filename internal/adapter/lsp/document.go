@@ -108,7 +108,10 @@ func (d *document) WordAt(pos protocol.Position) string {
 	if !ok {
 		return ""
 	}
-	return strutil.WordAt(line, int(pos.Character))
+	utf16Bytes := utf16.Encode([]rune(line))
+	strChar := len(string(utf16.Decode(utf16Bytes[0:pos.Character])))
+
+	return strutil.WordAt(line, strChar)
 }
 
 // ContentAtRange returns the document text at given range.
