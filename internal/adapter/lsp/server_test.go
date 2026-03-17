@@ -3,7 +3,6 @@ package lsp
 import (
 	"net/url"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	protocol "github.com/tliron/glsp/protocol_3_16"
@@ -12,6 +11,7 @@ import (
 	"github.com/zk-org/zk/internal/adapter/sqlite"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/fixtures"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -23,15 +23,8 @@ func (m *mockFileStorage) Canonical(path string) string {
 	return path
 }
 
-// Get project root directory.
-// It returns absolute path.
-func getProjectRoot() string {
-	_, file, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(file), "../../..")
-}
-
 func getNotebookFixture(name string) notebookFixture {
-	p := filepath.Join(getProjectRoot(), "tests", "fixtures", name)
+	p := fixtures.Path(name)
 	return newNotebookFixture(p)
 }
 
