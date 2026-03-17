@@ -120,49 +120,52 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Run("Panic protection (out of bounds)", func(t *testing.T) {
-		// Use a defer to catch panics
-		defer func() {
-			if r := recover(); r != nil {
-				t.Errorf("Function panicked: %v", r)
+	tests := []struct {
+		name string
+		doc  *document
+		pos  protocol.Position
+		// check that returns completions.
+		checkItem bool
+	}{{
+		name:      "Panic protection line (out of bounds)",
+		doc:       doc,
+		pos:       protocol.Position{Line: 100, Character: 100},
+		checkItem: false,
+	}, {
+		name:      "Panic protection character (out of bounds)",
+		doc:       doc,
+		pos:       protocol.Position{Line: 0, Character: 100},
+		checkItem: false,
+	}, {
+		name:      "Tag completion trigger",
+		doc:       doc,
+		pos:       protocol.Position{Line: 0, Character: 7},
+		checkItem: false,
+	}, {
+		name:      "Return all link completion",
+		doc:       doc,
+		pos:       protocol.Position{Line: 3, Character: 2},
+		checkItem: true,
+	}, {
+		name:      "Return all link completion even line starts with non-ascii characters",
+		doc:       docItem2,
+		pos:       protocol.Position{Line: 3, Character: 6},
+		checkItem: true,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Use a defer to catch panics
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("Function panicked: %v", r)
+				}
+			}()
+			item, err1 := server.buildInvokedCompletionList(notebook, tt.doc, tt.pos)
+			assert.Nil(t, err1)
+			if tt.checkItem && len(item) < 1 {
+				t.Error("Number of completion items should be greater than 0")
 			}
-		}()
-
-		// Test with line out of bounds
-		posLineOutOfBounds := protocol.Position{Line: 100, Character: 100}
-		_, err1 := server.buildInvokedCompletionList(notebook, doc, posLineOutOfBounds)
-		assert.Nil(t, err1)
-
-		// Test with character out of bounds on a valid line
-		posCharOutOfBounds := protocol.Position{Line: 0, Character: 100}
-		_, err2 := server.buildInvokedCompletionList(notebook, doc, posCharOutOfBounds)
-		assert.Nil(t, err2)
-	})
-
-	t.Run("Tag completion trigger", func(t *testing.T) {
-		// Position at #world (line 0, char 7 is just after #)
-		pos := protocol.Position{Line: 0, Character: 7}
-		_, err := server.buildInvokedCompletionList(notebook, doc, pos)
-		assert.Nil(t, err)
-	})
-
-	t.Run("Return all link completion", func(t *testing.T) {
-		// Position after [[
-		pos := protocol.Position{Line: 3, Character: 2}
-		item, err := server.buildInvokedCompletionList(notebook, doc, pos)
-		assert.Nil(t, err)
-		if len(item) < 1 {
-			t.Error("Number of completion items should be greater than 0")
-		}
-	})
-
-	t.Run("Return all link completion even line starts with non-ascii characters", func(t *testing.T) {
-		// Position after [[
-		pos := protocol.Position{Line: 3, Character: 6}
-		item, err := server.buildInvokedCompletionList(notebook, docItem2, pos)
-		assert.Nil(t, err)
-		if len(item) < 1 {
-			t.Error("Number of completion items should be greater than 0")
-		}
-	})
+		})
+	}
 }
