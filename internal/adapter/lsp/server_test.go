@@ -115,7 +115,18 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	doc, err := docStore.DidOpen(didOpenParam, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	didOpenParam, err = fixture.MakeDidOpenParam("Item2.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	docItem2, err := docStore.DidOpen(didOpenParam, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,9 +158,19 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 	})
 
 	t.Run("Return all link completion", func(t *testing.T) {
-		// Position after [[ (line 1, char 2)
+		// Position after [[
 		pos := protocol.Position{Line: 3, Character: 2}
 		item, err := server.buildInvokedCompletionList(notebook, doc, pos)
+		assert.Nil(t, err)
+		if len(item) < 1 {
+			t.Error("Number of completion items should be greater than 0")
+		}
+	})
+
+	t.Run("Return all link completion even line starts with non-ascii characters", func(t *testing.T) {
+		// Position after [[
+		pos := protocol.Position{Line: 3, Character: 6}
+		item, err := server.buildInvokedCompletionList(notebook, docItem2, pos)
 		assert.Nil(t, err)
 		if len(item) < 1 {
 			t.Error("Number of completion items should be greater than 0")
