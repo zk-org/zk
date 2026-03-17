@@ -69,7 +69,7 @@ func (notebook *notebookFixture) MakeDidOpenParam(noteName string) (protocol.Did
 }
 
 func TestServer_buildInvokedCompletionList(t *testing.T) {
-	fixture := getNotebookFixture("issue-XXX-not-complete-with-multibyte")
+	fixture := getNotebookFixture("completion")
 
 	fs, err := fs.NewFileStorage(fixture.Path, &util.NullLogger)
 	if err != nil {
