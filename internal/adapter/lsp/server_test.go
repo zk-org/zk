@@ -1,7 +1,6 @@
 package lsp
 
 import (
-	"net/url"
 	"path/filepath"
 	"testing"
 
@@ -42,10 +41,7 @@ func newNotebookFixture(path string) notebookFixture {
 // Read content and create parameter for DidOpen
 func (notebook *notebookFixture) MakeDidOpenParam(noteName string) (protocol.DidOpenTextDocumentParams, error) {
 	path := filepath.Join(notebook.Path, noteName)
-	u := url.URL{
-		Scheme: "file",
-		Path:   filepath.ToSlash(path),
-	}
+	u := pathToURI(path)
 	content, err := notebook.FS.Read(path)
 	if err != nil {
 		return protocol.DidOpenTextDocumentParams{}, err
@@ -53,7 +49,7 @@ func (notebook *notebookFixture) MakeDidOpenParam(noteName string) (protocol.Did
 
 	return protocol.DidOpenTextDocumentParams{
 		TextDocument: protocol.TextDocumentItem{
-			URI:        u.String(),
+			URI:        u,
 			LanguageID: "markdown",
 			Version:    1,
 			Text:       string(content),
