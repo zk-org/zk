@@ -17,7 +17,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 - Indexing notebook now 35% and 74% faster for full and incremental indexing
   respectively (by @WhyNotHugo, 642)
 - Stop crashing lsp server when server received `textDocument/completion` request with out of range parameters. (by @virusbb001, 667)
-- lsp: Provide completion after [[ on lines with multi-byte characters (by @virusbb001, XXX)
+- lsp: Provide completion after [[ on lines with multi-byte characters (by @virusbb001, 671)
 
 ## 0.15.2
 
