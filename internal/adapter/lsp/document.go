@@ -164,7 +164,7 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 	}
 
 	lineLength := len(utf16Bytes)
-	charIdx := int(pos.Character)
+	charIdx := min(int(pos.Character), len(utf16Bytes))
 	if lineLength <= charIdx+length {
 		return string(utf16.Decode(utf16Bytes[charIdx:]))
 	}
