@@ -18,7 +18,7 @@ Format: `<description> (by <contributor>, <pr number>)`
   respectively (by @WhyNotHugo, 642)
 - Stop crashing lsp server when server received `textDocument/completion` request with out of range parameters. (by @virusbb001, 667)
 - lsp: Provide completion after [[ on lines with multi-byte characters (by @virusbb001, 671)
-- Prevent crush in LookForward when the parameters is out of characters number. (by @virusbb001, 673)
+- Prevent crash in LookForward when the parameters is out of characters number. (by @virusbb001, 673)
 
 ## 0.15.2
 
