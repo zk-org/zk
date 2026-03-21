@@ -14,14 +14,14 @@ import (
 
 // AliasList lists all the aliases.
 type Config struct {
-	List       string `short:l placeholder:OBJECT 				   help:"List configuration objects. Listable ojects are: aliases, filters and extras."`
-	Format     string `group:format short:f placeholder:TEMPLATE   help:"Pretty print the list using a custom template or one of the predefined formats: short, full, json."`
-	Header     string `group:format                                help:"Arbitrary text printed at the start of the list."`
-	Footer     string `group:format default:\n                     help:"Arbitrary text printed at the end of the list."`
-	Delimiter  string "group:format short:d default:\n             help:\"Print tags delimited by the given separator.\""
-	Delimiter0 bool   "group:format short:0 name:delimiter0        help:\"Print tags delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
-	NoPager    bool   `group:format short:P help:"Do not pipe output into a pager."`
-	Quiet      bool   `group:format short:q help:"Do not print the total number of tags found."`
+	List       string `short:"l" placeholder:"OBJECT" help:"List configuration objects. Listable objects are: aliases, filters and extras."`
+	Format     string `group:"format" short:"f" placeholder:"TEMPLATE" help:"Pretty print the list using a custom template or predefined formats: short, full, json."`
+	Header     string `group:"format" help:"Arbitrary text printed at the start of the list."`
+	Footer     string `group:"format" default:"\n" help:"Arbitrary text printed at the end of the list."`
+	Delimiter  string `group:"format" short:"d" default:"\n" help:"Print tags delimited by the given separator."`
+	Delimiter0 bool   `group:"format" short:"0" name:"delimiter0" help:"Print tags delimited by ASCII NUL characters. Useful with xargs -0."`
+	NoPager    bool   `group:"format" short:"P" help:"Do not pipe output into a pager."`
+	Quiet      bool   `group:"format" short:"q" help:"Do not print the total number of tags found."`
 }
 
 func (cmd *Config) Run(container *cli.Container) error {
@@ -30,14 +30,14 @@ func (cmd *Config) Run(container *cli.Container) error {
 	cmd.Delimiter = strings.ExpandWhitespaceLiterals(cmd.Delimiter)
 
 	if cmd.Delimiter0 {
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter and --delimiter0 can't be used together")
-		}
 		if cmd.Header != "" {
-			return errors.New("--footer and --delimiter0 can't be used together")
+			return errors.New("--header and --delimiter0 can't be used together")
 		}
 		if cmd.Footer != "\n" {
 			return errors.New("--footer and --delimiter0 can't be used together")
+		}
+		if cmd.Delimiter != "\n" {
+			return errors.New("--delimiter and --delimiter0 can't be used together")
 		}
 
 		cmd.Delimiter = "\x00"
