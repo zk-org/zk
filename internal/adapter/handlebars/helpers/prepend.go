@@ -19,7 +19,7 @@ import (
 // > A quote on
 // > several lines
 func RegisterPrepend(logger util.Logger) {
-	raymond.RegisterHelper("prepend", func(prefix string, opt interface{}) string {
+	raymond.RegisterHelper("prepend", func(prefix string, opt any) string {
 		switch arg := opt.(type) {
 		case *raymond.Options:
 			return strings.Prepend(arg.Fn(), prefix)

@@ -6,17 +6,18 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 type RowScanner interface {
-	Scan(dest ...interface{}) error
+	Scan(dest ...any) error
 }
 
 type RowQuerier interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 }
 
 // escapeLikeTerm returns the given term after escaping any LIKE-significant
@@ -54,8 +55,10 @@ func joinNoteIDs(ids []core.NoteID, delimiter string) string {
 	return strings.Join(strs, delimiter)
 }
 
-func unmarshalMetadata(metadataJSON string) (metadata map[string]interface{}, err error) {
+func unmarshalMetadata(metadataJSON string) (metadata map[string]any, err error) {
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
-	err = errors.Wrapf(err, "cannot parse note metadata from JSON: %s", metadataJSON)
+	if err != nil {
+		err = fmt.Errorf("cannot parse note metadata from JSON: %s: %w", metadataJSON, err)
+	}
 	return
 }

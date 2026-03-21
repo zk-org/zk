@@ -71,7 +71,7 @@ func (c *newNoteTask) generatePath(context newNoteTemplateContext, filenameTempl
 	var filename string
 	var path string
 
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		context.ID = c.genID()
 
 		filename, err = filenameTemplate.Render(context)

@@ -2,12 +2,12 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
 	toml "github.com/pelletier/go-toml"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
 )
@@ -122,7 +122,7 @@ func (c Config) GroupNameForPath(path string) (string, error) {
 		for _, groupPath := range config.Paths {
 			matches, err := doublestar.Match(groupPath, path)
 			if err != nil {
-				return "", errors.Wrapf(err, "failed to match group %s to %s", name, path)
+				return "", fmt.Errorf("failed to match group %s to %s: %w", name, path, err)
 			} else if matches {
 				// Early return if an exact match
 				return name, nil
@@ -187,7 +187,7 @@ type LSPCompletionConfig struct {
 	UseAdditionalTextEdits opt.Bool
 }
 
-// LSPCompletionConfig holds the LSP completion templates for a particular
+// LSPCompletionTemplates holds the LSP completion templates for a particular
 // completion item type (e.g. note or tag).
 type LSPCompletionTemplates struct {
 	Label      opt.String
@@ -289,9 +289,7 @@ func (c GroupConfig) Clone() GroupConfig {
 	copy(clone.Paths, c.Paths)
 
 	clone.Extra = make(map[string]string)
-	for k, v := range c.Extra {
-		clone.Extra[k] = v
-	}
+	maps.Copy(clone.Extra, c.Extra)
 	return clone
 }
 
@@ -306,7 +304,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 
 	content, err := fs.Read(path)
 	if err != nil {
-		return parentConfig, errors.Wrapf(err, "failed to open config file at %s", path)
+		return parentConfig, fmt.Errorf("failed to open config file at %s: %w", path, err)
 	}
 
 	return ParseConfig(content, path, parentConfig, isGlobal)
@@ -318,14 +316,12 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 //
 // The parentConfig will be used to inherit default config settings.
 func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool) (Config, error) {
-	wrap := errors.Wrapperf("failed to read config")
-
 	config := parentConfig
 
 	var tomlConf tomlConfig
 	err := toml.Unmarshal(content, &tomlConf)
 	if err != nil {
-		return config, wrap(err)
+		return config, fmt.Errorf("failed to read config: %w", err)
 	}
 
 	// Notebook
@@ -334,7 +330,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		if isGlobal {
 			config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
 		} else {
-			return config, wrap(errors.New("notebook.dir should not be set on local configuration"))
+			return config, fmt.Errorf("notebook.dir should not be set on local configuration")
 		}
 	}
 
@@ -349,7 +345,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if note.Template != "" {
 		expanded, err := paths.ExpandPath(note.Template)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to expand template path from config: %w", err)
 		}
 		config.Note.BodyTemplatePath = opt.NewNotEmptyString(expanded)
 	}
@@ -368,16 +364,10 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if note.DefaultTitle != "" {
 		config.Note.DefaultTitle = note.DefaultTitle
 	}
-	for _, v := range note.Exclude {
-		config.Note.Exclude = append(config.Note.Exclude, v)
-	}
-	for _, v := range note.Ignore {
-		config.Note.Exclude = append(config.Note.Exclude, v)
-	}
+	config.Note.Exclude = append(config.Note.Exclude, note.Exclude...)
+	config.Note.Exclude = append(config.Note.Exclude, note.Ignore...)
 	if tomlConf.Extra != nil {
-		for k, v := range tomlConf.Extra {
-			config.Extra[k] = v
-		}
+		maps.Copy(config.Extra, tomlConf.Extra)
 	}
 
 	// Groups
@@ -458,44 +448,40 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if lspDiags.WikiTitle != nil {
 		config.LSP.Diagnostics.WikiTitle, err = lspDiagnosticSeverityFromString(*lspDiags.WikiTitle)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to parse wikititle level: %w", err)
 		}
 	}
 	if lspDiags.DeadLink != nil {
 		config.LSP.Diagnostics.DeadLink, err = lspDiagnosticSeverityFromString(*lspDiags.DeadLink)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to parse deadlink level: %w", err)
 		}
 	}
 	if lspDiags.SelfLink != nil {
 		config.LSP.Diagnostics.SelfLink, err = lspDiagnosticSeverityFromString(*lspDiags.SelfLink)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to parse deadlink level: %w", err)
 		}
 	}
 	if lspDiags.MissingBacklink != nil {
 		config.LSP.Diagnostics.MissingBacklink.Level, err = lspDiagnosticSeverityFromString(lspDiags.MissingBacklink.Level)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to parse missing backlink level: %w", err)
 		}
 		config.LSP.Diagnostics.MissingBacklink.Position, err = lspDiagnosticPositionFromString(lspDiags.MissingBacklink.Position)
 		if err != nil {
-			return config, wrap(err)
+			return config, fmt.Errorf("failed to parse missing backlink position: %w", err)
 		}
 	}
 
 	// Filters
 	if tomlConf.Filters != nil {
-		for k, v := range tomlConf.Filters {
-			config.Filters[k] = v
-		}
+		maps.Copy(config.Filters, tomlConf.Filters)
 	}
 
 	// Aliases
 	if tomlConf.Aliases != nil {
-		for k, v := range tomlConf.Aliases {
-			config.Aliases[k] = v
-		}
+		maps.Copy(config.Aliases, tomlConf.Aliases)
 	}
 
 	return config, nil
@@ -505,9 +491,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	res := c.Clone()
 
 	if tomlConf.Paths != nil {
-		for _, p := range tomlConf.Paths {
-			res.Paths = append(res.Paths, p)
-		}
+		res.Paths = append(res.Paths, tomlConf.Paths...)
 	} else {
 		// If no `paths` config property was given for this group, we assume
 		// that its name will be used as the path.
@@ -539,16 +523,10 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 	if note.DefaultTitle != "" {
 		res.Note.DefaultTitle = note.DefaultTitle
 	}
-	for _, v := range note.Exclude {
-		res.Note.Exclude = append(res.Note.Exclude, v)
-	}
-	for _, v := range note.Ignore {
-		res.Note.Exclude = append(res.Note.Exclude, v)
-	}
+	res.Note.Exclude = append(res.Note.Exclude, note.Exclude...)
+	res.Note.Exclude = append(res.Note.Exclude, note.Ignore...)
 	if tomlConf.Extra != nil {
-		for k, v := range tomlConf.Extra {
-			res.Extra[k] = v
-		}
+		maps.Copy(res.Extra, tomlConf.Extra)
 	}
 
 	return res

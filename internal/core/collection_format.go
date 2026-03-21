@@ -9,12 +9,7 @@ type CollectionFormatter func(collection Collection) (string, error)
 
 func newCollectionFormatter(template Template) (CollectionFormatter, error) {
 	return func(collection Collection) (string, error) {
-		return template.Render(collectionFormatRenderContext{
-			ID:        collection.ID,
-			Kind:      collection.Kind,
-			Name:      collection.Name,
-			NoteCount: collection.NoteCount,
-		})
+		return template.Render(collectionFormatRenderContext(collection))
 	}, nil
 }
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // CollectionDAO persists collections (e.g. tags) in the SQLite database.
@@ -87,11 +86,10 @@ func (d *CollectionDAO) FindAll(kind core.CollectionKind, sorters []core.Collect
 	`
 
 	orderTerms := []string{}
-	if sorters != nil {
-		for _, sorter := range sorters {
-			orderTerms = append(orderTerms, collectionOrderTerm(sorter))
-		}
+	for _, sorter := range sorters {
+		orderTerms = append(orderTerms, collectionOrderTerm(sorter))
 	}
+
 	orderTerms = append(orderTerms, `c.name ASC`)
 	query += "ORDER BY " + strings.Join(orderTerms, ", ") + "\n"
 
@@ -140,11 +138,9 @@ func collectionOrderTerm(sorter core.CollectionSorter) string {
 }
 
 func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (core.CollectionID, error) {
-	wrap := errors.Wrapperf("failed to get %s named %s", kind, name)
-
 	row, err := d.findCollectionStmt.QueryRow(kind, name)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to get %s named %s: %w", kind, name, err)
 	}
 
 	var id sql.NullInt64
@@ -154,23 +150,21 @@ func (d *CollectionDAO) findCollection(kind core.CollectionKind, name string) (c
 	case err == sql.ErrNoRows:
 		return 0, nil
 	case err != nil:
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to get %s named %s: %w", kind, name, err)
 	default:
 		return core.CollectionID(id.Int64), nil
 	}
 }
 
 func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.CollectionID, error) {
-	wrap := errors.Wrapperf("failed to create new %s named %s", kind, name)
-
 	res, err := d.createCollectionStmt.Exec(kind, name)
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to create new %s named %s: %w", kind, name, err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, wrap(err)
+		return 0, fmt.Errorf("failed to create new %s named %s: %w", kind, name, err)
 	}
 
 	return core.CollectionID(id), nil
@@ -178,28 +172,29 @@ func (d *CollectionDAO) create(kind core.CollectionKind, name string) (core.Coll
 
 // Associate creates a new association between a note and a collection, if it
 // does not already exist.
-func (d *CollectionDAO) Associate(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	wrap := errors.Wrapperf("failed to associate note %d to collection %d", noteId, collectionId)
-
-	id, err := d.findAssociation(noteId, collectionId)
+func (d *CollectionDAO) Associate(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	id, err := d.findAssociation(noteID, collectionID)
 
 	switch {
 	case err != nil:
-		return id, wrap(err)
+		return id, fmt.Errorf("finding association for note %d to collection %d failed: %w", noteID, collectionID, err)
 	case id.IsValid():
 		return id, nil
 	default:
-		id, err = d.createAssociation(noteId, collectionId)
-		return id, wrap(err)
+		id, err = d.createAssociation(noteID, collectionID)
+		if err != nil {
+			return id, fmt.Errorf("failed to associate note %d to collection %d: %w", noteID, collectionID, err)
+		}
+		return id, nil
 	}
 }
 
-func (d *CollectionDAO) findAssociation(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	if !noteId.IsValid() || !collectionId.IsValid() {
-		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteId, collectionId)
+func (d *CollectionDAO) findAssociation(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	if !noteID.IsValid() || !collectionID.IsValid() {
+		return 0, fmt.Errorf("note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
 	}
 
-	row, err := d.findAssociationStmt.QueryRow(noteId, collectionId)
+	row, err := d.findAssociationStmt.QueryRow(noteID, collectionID)
 	if err != nil {
 		return 0, err
 	}
@@ -217,12 +212,12 @@ func (d *CollectionDAO) findAssociation(noteId core.NoteID, collectionId core.Co
 	}
 }
 
-func (d *CollectionDAO) createAssociation(noteId core.NoteID, collectionId core.CollectionID) (core.NoteCollectionID, error) {
-	if !noteId.IsValid() || !collectionId.IsValid() {
-		return 0, fmt.Errorf("Note ID (%d) or collection ID (%d) not valid", noteId, collectionId)
+func (d *CollectionDAO) createAssociation(noteID core.NoteID, collectionID core.CollectionID) (core.NoteCollectionID, error) {
+	if !noteID.IsValid() || !collectionID.IsValid() {
+		return 0, fmt.Errorf("note ID (%d) or collection ID (%d) not valid", noteID, collectionID)
 	}
 
-	res, err := d.createAssociationStmt.Exec(noteId, collectionId)
+	res, err := d.createAssociationStmt.Exec(noteID, collectionID)
 	if err != nil {
 		return 0, err
 	}
@@ -236,14 +231,14 @@ func (d *CollectionDAO) createAssociation(noteId core.NoteID, collectionId core.
 }
 
 // RemoveAssociations deletes all associations with the given note.
-func (d *CollectionDAO) RemoveAssociations(noteId core.NoteID) error {
-	if !noteId.IsValid() {
-		return fmt.Errorf("Note ID (%d) not valid", noteId)
+func (d *CollectionDAO) RemoveAssociations(noteID core.NoteID) error {
+	if !noteID.IsValid() {
+		return fmt.Errorf("note ID (%d) not valid", noteID)
 	}
 
-	_, err := d.removeAssociationsStmt.Exec(noteId)
+	_, err := d.removeAssociationsStmt.Exec(noteID)
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove associations of note %d", noteId)
+		return fmt.Errorf("failed to remove associations of note %d: %w", noteID, err)
 	}
 
 	return nil

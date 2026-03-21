@@ -10,8 +10,8 @@ import (
 //
 // {{slug "This will be slugified!"}} -> this-will-be-slugified
 // {{#slug}}This will be slugified!{{/slug}} -> this-will-be-slugified
-func NewSlugHelper(lang string, logger util.Logger) interface{} {
-	return func(opt interface{}) string {
+func NewSlugHelper(lang string, logger util.Logger) any {
+	return func(opt any) string {
 		switch arg := opt.(type) {
 		case *raymond.Options:
 			return slug.MakeLang(arg.Fn(), lang)

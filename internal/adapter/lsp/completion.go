@@ -38,7 +38,7 @@ type completionItemRenderContext struct {
 	RelPath      string `handlebars:"rel-path"`
 	Title        string
 	TitleOrPath  string `handlebars:"title-or-path"`
-	Metadata     map[string]interface{}
+	Metadata     map[string]any
 }
 
 func newCompletionItemRenderContext(note core.MinimalNote, notebookDir string, currentDir string) (completionItemRenderContext, error) {

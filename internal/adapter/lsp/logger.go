@@ -2,6 +2,7 @@ package lsp
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tliron/kutil/logging"
 )
@@ -16,19 +17,20 @@ func newGlspLogger(log logging.Logger) *glspLogger {
 	return &glspLogger{log}
 }
 
-func (l *glspLogger) Printf(format string, v ...interface{}) {
+func (l *glspLogger) Printf(format string, v ...any) {
 	l.log.Debugf("zk: "+format, v...)
 }
 
-func (l *glspLogger) Println(vs ...interface{}) {
-	message := "zk: "
+func (l *glspLogger) Println(vs ...any) {
+	var message strings.Builder
+	message.WriteString("zk: ")
 	for i, v := range vs {
 		if i > 0 {
-			message += ", "
+			message.WriteString(", ")
 		}
-		message += fmt.Sprint(v)
+		fmt.Fprint(&message, v)
 	}
-	l.log.Debug(message)
+	l.log.Debug(message.String())
 }
 
 func (l *glspLogger) Err(err error) {

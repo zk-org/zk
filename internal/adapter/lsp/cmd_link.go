@@ -1,13 +1,13 @@
 package lsp
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 const cmdLink = "zk.link"
@@ -18,17 +18,17 @@ type cmdLinkOpts struct {
 	Title    *string            `json:"title"`
 }
 
-func executeCommandLink(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
+func executeCommandLink(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []any) (any, error) {
 	var opts cmdLinkOpts
 
 	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
+		arg, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdLink, args[1])
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdLink, arg)
+			return nil, fmt.Errorf("failed to parse %s args, got: %v: %w", cmdLink, arg, err)
 		}
 	}
 
@@ -58,7 +58,7 @@ func executeCommandLink(notebook *core.Notebook, documents *documentStore, conte
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"path": filepath.Join(notebook.Path, note.Path),
 	}, nil
 }

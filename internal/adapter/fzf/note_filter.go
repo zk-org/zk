@@ -191,7 +191,7 @@ type lineRenderContext struct {
 	RawContent   string `handlebars:"raw-content"`
 	WordCount    int    `handlebars:"word-count"`
 	Tags         []string
-	Metadata     map[string]interface{}
+	Metadata     map[string]any
 	Created      time.Time
 	Modified     time.Time
 	Checksum     string

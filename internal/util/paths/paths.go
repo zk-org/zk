@@ -1,13 +1,12 @@
 package paths
 
 import (
+	"errors"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // Metadata holds information about a file path.
@@ -80,7 +79,7 @@ func WriteString(path string, content string) error {
 	return err
 }
 
-// Expands environment variables and `~`, returning an absolute path.
+// ExpandPath environment variables and `~`, returning an absolute path.
 func ExpandPath(path string) (string, error) {
 
 	if strings.HasPrefix(path, "~") {

@@ -23,6 +23,7 @@
 # Zk specific
 notebook.db
 zk
+testdata/
 
 # Sphinx Docs / Python #
 # created by `make zkdocs` for building documentation locally

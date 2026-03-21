@@ -2,8 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
-
-	"github.com/zk-org/zk/internal/util/errors"
+	"fmt"
 )
 
 // Known metadata keys.
@@ -35,11 +34,9 @@ func NewMetadataDAO(tx Transaction) *MetadataDAO {
 
 // Get returns the value for the given key.
 func (d *MetadataDAO) Get(key string) (string, error) {
-	wrap := errors.Wrapperf("failed to get metadata with key %s", key)
-
 	row, err := d.getStmt.QueryRow(key)
 	if err != nil {
-		return "", wrap(err)
+		return "", fmt.Errorf("failed to query metadata with key %s: %w", key, err)
 	}
 
 	var value string
@@ -49,7 +46,7 @@ func (d *MetadataDAO) Get(key string) (string, error) {
 	case err == sql.ErrNoRows:
 		return "", nil
 	case err != nil:
-		return "", wrap(err)
+		return "", fmt.Errorf("failed to read metadata with key %s: %w", key, err)
 	default:
 		return value, nil
 	}

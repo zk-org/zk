@@ -13,10 +13,10 @@ import (
 //
 // {{style "date" created}}
 // {{#style "red"}}Hello, world{{/style}}
-func NewStyleHelper(styler core.Styler, logger util.Logger) interface{} {
+func NewStyleHelper(styler core.Styler, logger util.Logger) any {
 	style := func(keys string, text string) string {
 		rules := make([]core.Style, 0)
-		for _, key := range strings.Fields(keys) {
+		for key := range strings.FieldsSeq(keys) {
 			rules = append(rules, core.Style(key))
 		}
 		res, err := styler.Style(text, rules...)
@@ -28,7 +28,7 @@ func NewStyleHelper(styler core.Styler, logger util.Logger) interface{} {
 		}
 	}
 
-	return func(rules string, opt interface{}) string {
+	return func(rules string, opt any) string {
 		switch arg := opt.(type) {
 		case *raymond.Options:
 			return style(rules, arg.Fn())

@@ -8,7 +8,6 @@ import (
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 // Edit opens notes matching a set of criteria with the user editor.
@@ -23,9 +22,9 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		return err
 	}
 
-	findOpts, err := cmd.Filtering.NewNoteFindOpts(notebook)
+	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect criteria")
+		return fmt.Errorf("incorrect criteria: %w", err)
 	}
 
 	notes, err := notebook.FindNotes(findOpts)

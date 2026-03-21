@@ -7,9 +7,15 @@
 For an Emanote-specific zk configuration, see
 [https://emanote.srid.ca/start/resources/zk](https://emanote.srid.ca/start/resources/zk).
 
-## Golumn
+## Weave
 
-[Golumn](https://github.com/gollum/gollum) is _"a simple, Git-powered wiki with
+[Weave](https://github.com/matze/weave) is a self-hosted zk-based viewer and
+editor for the web. For an example see the [demo
+page](https://weave.bloerg.net).
+
+## Gollum
+
+[Gollum](https://github.com/gollum/gollum) is _"a simple, Git-powered wiki with
 a local frontend and support for many kinds of markup and content."_
 
 ## Other Lists / Directories of Links

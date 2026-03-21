@@ -24,7 +24,7 @@ type MinimalNote struct {
 	// Title of the note.
 	Title string
 	// JSON dictionary of raw metadata extracted from the frontmatter.
-	Metadata map[string]interface{}
+	Metadata map[string]any
 }
 
 // Note holds the metadata and content of a single note.
@@ -48,7 +48,7 @@ type Note struct {
 	// List of tags found in the content.
 	Tags []string
 	// JSON dictionary of raw metadata extracted from the frontmatter.
-	Metadata map[string]interface{}
+	Metadata map[string]any
 	// Date of creation.
 	Created time.Time
 	// Date of last modification.

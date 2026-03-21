@@ -10,12 +10,12 @@ import "database/sql"
 // To ensure TxFn funcs cannot commit or rollback a transaction (which is
 // handled by `WithTransaction`), those methods are not included here.
 type Transaction interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	Exec(query string, args ...any) (sql.Result, error)
 	ExecStmts(stmts []string) error
 	Prepare(query string) (*sql.Stmt, error)
 	PrepareLazy(query string) *LazyStmt
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
 }
 
 // txWrapper wraps a native sql.Tx to fully implement the Transaction interface.
@@ -38,7 +38,7 @@ func (tx *txWrapper) ExecStmts(stmts []string) error {
 	return err
 }
 
-// A Txfn is a function that will be called with an initialized Transaction
+// TxFn is a function that will be called with an initialized Transaction
 // object that can be used for executing statements and queries against a
 // database.
 type TxFn func(tx Transaction) error

@@ -21,6 +21,10 @@ type wikiLink struct{}
 // WikiLink represents a wiki link found in a Markdown document.
 type WikiLink struct {
 	ast.Link
+	// StartOffset is the byte offset of the start of the link.
+	StartOffset int
+	// EndOffset is the byte offset of the end of the link.
+	EndOffset int
 }
 
 func (w *wikiLink) Extend(m goldmark.Markdown) {
@@ -38,7 +42,8 @@ func (p *wlParser) Trigger() []byte {
 }
 
 func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
-	line, _ := block.PeekLine()
+	line, segment := block.PeekLine()
+	startOffset := segment.Start
 
 	var (
 		href  string
@@ -145,6 +150,8 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 	// Title will be parsed as the link's rel by the Markdown parser.
 	link.Title = []byte(rel)
 	link.AppendChild(link, ast.NewString([]byte(label)))
+	link.StartOffset = startOffset
+	link.EndOffset = startOffset + endPos
 
 	return link
 }

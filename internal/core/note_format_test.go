@@ -36,7 +36,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			RawContent: "Content 1",
 			WordCount:  1,
 			Tags:       []string{"tag1", "tag2"},
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"metadata1": "val1",
 				"metadata2": "val2",
 			},
@@ -59,7 +59,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			RawContent: "Content 2",
 			WordCount:  2,
 			Tags:       []string{},
-			Metadata:   map[string]interface{}{},
+			Metadata:   map[string]any{},
 			Created:    date3,
 			Modified:   date4,
 			Checksum:   "checksum2",
@@ -70,7 +70,7 @@ func TestNewNoteFormatter(t *testing.T) {
 	assert.Equal(t, res, "format")
 
 	// Check that the template received the proper contexts
-	assert.Equal(t, test.template.Contexts, []interface{}{
+	assert.Equal(t, test.template.Contexts, []any{
 		noteFormatRenderContext{
 			Filename:     "note1.md",
 			FilenameStem: "note1",
@@ -84,7 +84,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			RawContent:   "Content 1",
 			WordCount:    1,
 			Tags:         []string{"tag1", "tag2"},
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"metadata1": "val1",
 				"metadata2": "val2",
 			},
@@ -105,7 +105,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			RawContent:   "Content 2",
 			WordCount:    2,
 			Tags:         []string{},
-			Metadata:     map[string]interface{}{},
+			Metadata:     map[string]any{},
 			Created:      date3,
 			Modified:     date4,
 			Checksum:     "checksum2",
@@ -126,7 +126,7 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 			Note: Note{Path: path},
 		})
 		assert.Nil(t, err)
-		assert.Equal(t, test.template.Contexts, []interface{}{
+		assert.Equal(t, test.template.Contexts, []any{
 			noteFormatRenderContext{
 				Filename:     filepath.Base(expected),
 				FilenameStem: paths.FilenameStem(expected),
@@ -159,7 +159,7 @@ func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
 			Snippets: []string{snippet},
 		})
 		assert.Nil(t, err)
-		assert.Equal(t, test.template.Contexts, []interface{}{
+		assert.Equal(t, test.template.Contexts, []any{
 			noteFormatRenderContext{
 				Filename:     ".",
 				FilenameStem: ".",

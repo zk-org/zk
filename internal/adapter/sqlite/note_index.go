@@ -5,9 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"fmt"
+
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -19,6 +20,7 @@ type NoteIndex struct {
 	db           *DB
 	dao          *dao
 	logger       util.Logger
+	extension    string
 }
 
 type dao struct {
@@ -28,11 +30,12 @@ type dao struct {
 	metadata    *MetadataDAO
 }
 
-func NewNoteIndex(notebookPath string, db *DB, logger util.Logger) *NoteIndex {
+func NewNoteIndex(notebookPath string, db *DB, logger util.Logger, extension string) *NoteIndex {
 	return &NoteIndex{
 		notebookPath: notebookPath,
 		db:           db,
 		logger:       logger,
+		extension:    extension,
 	}
 }
 
@@ -74,7 +77,7 @@ func (ni *NoteIndex) findLinkMatch(dao *dao, baseDir string, href string, linkTy
 	}
 
 	allowPartialMatch := (linkType == core.LinkTypeWikiLink)
-	return dao.notes.FindIdByHref(href, allowPartialMatch)
+	return dao.notes.FindIDByHref(href, allowPartialMatch)
 }
 
 func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.NoteID, error) {
@@ -82,7 +85,7 @@ func (ni *NoteIndex) findPathMatch(dao *dao, baseDir string, href string) (core.
 	if err != nil {
 		return 0, err
 	}
-	return dao.notes.FindIdByHref(href, false)
+	return dao.notes.FindIDByHref(href, false)
 }
 
 // FindLinksBetweenNotes implements core.NoteIndex.
@@ -109,7 +112,9 @@ func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) 
 		metadata, err = dao.notes.Indexed()
 		return err
 	})
-	err = errors.Wrap(err, "failed to get indexed notes")
+	if err != nil {
+		err = fmt.Errorf("failed to get indexed notes: %w", err)
+	}
 	return
 }
 
@@ -135,7 +140,9 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 		return ni.associateTags(dao.collections, id, note.Tags)
 	})
 
-	err = errors.Wrapf(err, "%v: failed to index the note", note.Path)
+	if err != nil {
+		err = fmt.Errorf("%v: failed to index the note: %w", note.Path, err)
+	}
 	return
 }
 
@@ -155,7 +162,8 @@ func (ni *NoteIndex) fixExistingLinks(dao *dao, id core.NoteID, path string) err
 			continue
 		}
 
-		if matches, err := ni.linkMatchesPath(link, path); matches && err == nil {
+		matches, err := ni.linkMatchesPath(link, path)
+		if matches && err == nil {
 			err = dao.links.SetTargetID(link.ID, id)
 		}
 		if err != nil {
@@ -213,8 +221,10 @@ func (ni *NoteIndex) relNotebookPath(baseDir string, href string) (string, error
 	path := filepath.Clean(filepath.Join(baseDir, href))
 	path, err := filepath.Rel(ni.notebookPath, path)
 
-	return path,
-		errors.Wrapf(err, "failed to make href relative to the notebook: %s", href)
+	if err != nil {
+		return "", fmt.Errorf("failed to make href relative to the notebook: %s: %w", href, err)
+	}
+	return path, nil
 }
 
 // Update implements core.NoteIndex.
@@ -243,16 +253,19 @@ func (ni *NoteIndex) Update(note core.Note) error {
 		return ni.associateTags(dao.collections, id, note.Tags)
 	})
 
-	return errors.Wrapf(err, "%v: failed to update note index", note.Path)
+	if err != nil {
+		return fmt.Errorf("%v: failed to update note index: %w", note.Path, err)
+	}
+	return nil
 }
 
-func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteId core.NoteID, tags []string) error {
+func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteID core.NoteID, tags []string) error {
 	for _, tag := range tags {
-		tagId, err := collections.FindOrCreate(core.CollectionKindTag, tag)
+		tagID, err := collections.FindOrCreate(core.CollectionKindTag, tag)
 		if err != nil {
 			return err
 		}
-		_, err = collections.Associate(noteId, tagId)
+		_, err = collections.Associate(noteID, tagID)
 		if err != nil {
 			return err
 		}
@@ -293,7 +306,10 @@ func (ni *NoteIndex) Remove(path string) error {
 	err := ni.commit(func(dao *dao) error {
 		return dao.notes.Remove(path)
 	})
-	return errors.Wrapf(err, "%v: failed to remove note from index", path)
+	if err != nil {
+		return fmt.Errorf("%v: failed to remove note from index: %w", path, err)
+	}
+	return nil
 }
 
 // Commit implements core.NoteIndex.
@@ -335,7 +351,7 @@ func (ni *NoteIndex) commit(transaction func(dao *dao) error) error {
 	} else {
 		return ni.db.WithTransaction(func(tx Transaction) error {
 			dao := dao{
-				notes:       NewNoteDAO(tx, ni.logger),
+				notes:       NewNoteDAO(tx, ni.logger, ni.extension),
 				links:       NewLinkDAO(tx, ni.logger),
 				collections: NewCollectionDAO(tx, ni.logger),
 				metadata:    NewMetadataDAO(tx),

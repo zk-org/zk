@@ -2,12 +2,12 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
 )
@@ -63,7 +63,7 @@ func (n *Notebook) Index(opts NoteIndexOpts) (stats NoteIndexingStats, err error
 	return n.IndexWithCallback(opts, func(change paths.DiffChange) {})
 }
 
-// Index indexes the content of the notebook to be searchable.
+// IndexWithCallback indexes the content of the notebook to be searchable.
 func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change paths.DiffChange)) (stats NoteIndexingStats, err error) {
 	err = n.index.Commit(func(index NoteIndex) error {
 		task := indexTask{
@@ -79,7 +79,9 @@ func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change pa
 		return err
 	})
 
-	err = errors.Wrap(err, "indexing")
+	if err != nil {
+		err = fmt.Errorf("indexing: %w", err)
+	}
 	return
 }
 
@@ -120,26 +122,22 @@ func (e ErrNoteExists) Error() string {
 //
 // Returns ErrNoteExists if no free filename can be generated for this note.
 func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
-	wrap := errors.Wrapper("new note")
-
 	dir, err := n.RequireDirAt(opts.Directory.OrString(n.Path).Unwrap())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	config, err := n.Config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	extra := config.Extra
-	for k, v := range opts.Extra {
-		extra[k] = v
-	}
+	maps.Copy(extra, opts.Extra)
 
 	templates, err := n.templateLoaderFactory(config.Note.Lang)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	var idGenerator IDGenerator
@@ -167,18 +165,18 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 	}
 	path, content, err := task.execute()
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	note, err := n.ParseNoteWithContent(path, []byte(content))
 	if note == nil || err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("new note: %w", err)
 	}
 
 	if !opts.DryRun {
 		id, err := n.index.Add(*note)
 		if err != nil {
-			return nil, wrap(err)
+			return nil, fmt.Errorf("new note: %w", err)
 		}
 		note.ID = id
 	}
@@ -211,7 +209,7 @@ func (n *Notebook) FindMinimalNotes(opts NoteFindOpts) ([]MinimalNote, error) {
 	return n.index.FindMinimal(opts)
 }
 
-// FindMinimalNotes retrieves lightweight metadata for the first note matching
+// FindMinimalNote retrieves lightweight metadata for the first note matching
 // the given filtering options.
 func (n *Notebook) FindMinimalNote(opts NoteFindOpts) (*MinimalNote, error) {
 	opts.Limit = 1
@@ -247,16 +245,14 @@ func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSort
 
 // RelPath returns the path relative to the notebook root to the given path.
 func (n *Notebook) RelPath(originalPath string) (string, error) {
-	wrap := errors.Wrapperf("%v: not a valid notebook path", originalPath)
-
 	path, err := n.fs.Abs(originalPath)
 	if err != nil {
-		return path, wrap(err)
+		return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
 	}
 
 	path, err = filepath.Rel(n.Path, path)
 	if err != nil {
-		return path, wrap(err)
+		return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
 	}
 	if strings.HasPrefix(path, "..") {
 		return path, fmt.Errorf("%s: path is outside the notebook at %s", originalPath, n.Path)

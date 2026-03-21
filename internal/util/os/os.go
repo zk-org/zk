@@ -7,7 +7,7 @@ import (
 	"github.com/zk-org/zk/internal/util/opt"
 )
 
-// Getenv returns an optional String for the environment variable with given
+// GetOptEnv returns an optional String for the environment variable with given
 // key.
 func GetOptEnv(key string) opt.String {
 	if value, ok := os.LookupEnv(key); ok {

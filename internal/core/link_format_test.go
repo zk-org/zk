@@ -138,7 +138,7 @@ func TestCustomLinkFormatter(t *testing.T) {
 			})
 			assert.Nil(t, err)
 			assert.Equal(t, actual, "custom")
-			assert.Equal(t, template.Contexts, []interface{}{expected})
+			assert.Equal(t, template.Contexts, []any{expected})
 		}
 	}
 

@@ -149,10 +149,10 @@ func fatalIfError(err error) {
 }
 
 func setupDebugMode() {
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	go func() {
 		stacktrace := make([]byte, 8192)
-		for _ = range c {
+		for range c {
 			length := runtime.Stack(stacktrace, true)
 			fmt.Fprintf(os.Stderr, "%s\n", string(stacktrace[:length]))
 			os.Exit(1)

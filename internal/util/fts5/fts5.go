@@ -4,7 +4,7 @@ import "strings"
 
 // ConvertQuery transforms a Google-like query into a SQLite FTS5 one.
 func ConvertQuery(query string) string {
-	out := ""
+	var out strings.Builder
 
 	// List of tokens which won't be automatically quoted in the output query.
 	passthroughTokens := map[string]bool{
@@ -34,7 +34,7 @@ func ConvertQuery(query string) string {
 		}
 
 		if !inQuote && passthroughTokens[term] {
-			out += term
+			out.WriteString(term)
 		} else {
 			// If the term has a wildcard suffix, it is a prefix token. We make
 			// sure that the * is not quoted or it will be ignored by the FTS5
@@ -43,9 +43,9 @@ func ConvertQuery(query string) string {
 			if isPrefixToken {
 				term = strings.TrimSuffix(term, "*")
 			}
-			out += `"` + term + `"`
+			out.WriteString(`"` + term + `"`)
 			if isPrefixToken {
-				out += "*"
+				out.WriteString("*")
 			}
 		}
 
@@ -65,33 +65,34 @@ func ConvertQuery(query string) string {
 		//   ^foo -> ^"foo"
 		//   "foo"* -> "foo"*
 		case term == "" && (c == '^' || c == '*'):
-			out += string(c)
+			out.WriteString(string(c))
 
 		// Passthrough for FTS5's column filters, e.g.
 		//   col:foo -> col:"foo"
 		case !inQuote && c == ':':
-			out += term + string(c)
+			out.WriteString(term + string(c))
 			term = ""
 
 		// - is an alias to NOT, but only at the start of a term, to allow
 		// compound words such as "well-known"
 		case c == '-' && term == "":
-			out += " NOT "
+			out.WriteString(" NOT ")
 
 		// | is an alias to OR.
 		case !inQuote && c == '|':
 			closeTerm()
-			out += " OR "
+			out.WriteString(" OR ")
 
 		// FTS5's + is ignored because it doesn't bring much to the syntax,
 		// compared to explicit quotes.
 		case !inQuote && c == '+' && term == "":
+			// FIXME: ineffective break?
 			break
 
 		// Term separators outside explicit quotes terminates the current term.
 		case !inQuote && termSeparators[c]:
 			closeTerm()
-			out += string(c)
+			out.WriteString(string(c))
 
 		default:
 			term += string(c)
@@ -99,5 +100,5 @@ func ConvertQuery(query string) string {
 	}
 
 	closeTerm()
-	return out
+	return out.String()
 }

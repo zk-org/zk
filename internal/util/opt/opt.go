@@ -15,7 +15,7 @@ func NewString(value string) String {
 	return String{&value}
 }
 
-// NewString creates a new optional String with the given pointer.
+// NewStringWithPtr creates a new optional String with the given pointer.
 // When nil, the String is considered null, but an empty String is valid.
 func NewStringWithPtr(value *string) String {
 	return String{value}
@@ -89,7 +89,7 @@ func (s String) String() string {
 }
 
 func (s String) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%v"`, s)), nil
+	return fmt.Appendf(nil, `"%v"`, s), nil
 }
 
 // Bool holds an optional boolean value.
@@ -111,7 +111,7 @@ func NewBool(value bool) Bool {
 	return Bool{&value}
 }
 
-// NewBool creates a new optional Bool with the given pointer.
+// NewBoolWithPtr creates a new optional Bool with the given pointer.
 // When nil, the Bool is considered null.
 func NewBoolWithPtr(value *bool) Bool {
 	return Bool{value}

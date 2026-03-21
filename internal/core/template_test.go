@@ -15,7 +15,7 @@ func newTemplateLoaderMock() *templateLoaderMock {
 	}
 }
 
-func (m *templateLoaderMock) Spy(template string, result func(context interface{}) string) *templateSpy {
+func (m *templateLoaderMock) Spy(template string, result func(context any) string) *templateSpy {
 	spy := newTemplateSpy(result)
 	spy.styler = m.styler
 	m.templates[template] = spy
@@ -54,22 +54,22 @@ func (l *templateLoaderMock) LoadTemplateAt(path string) (Template, error) {
 
 // templateSpy implements Template and saves the provided render contexts.
 type templateSpy struct {
-	Result   func(interface{}) string
-	Contexts []interface{}
+	Result   func(any) string
+	Contexts []any
 	styler   Styler
 }
 
-func newTemplateSpy(result func(interface{}) string) *templateSpy {
+func newTemplateSpy(result func(any) string) *templateSpy {
 	return &templateSpy{
-		Contexts: make([]interface{}, 0),
+		Contexts: make([]any, 0),
 		Result:   result,
 	}
 }
 
 func newTemplateSpyString(result string) *templateSpy {
 	return &templateSpy{
-		Contexts: make([]interface{}, 0),
-		Result:   func(_ interface{}) string { return result },
+		Contexts: make([]any, 0),
+		Result:   func(_ any) string { return result },
 	}
 }
 
@@ -77,7 +77,7 @@ func (m *templateSpy) Styler() Styler {
 	return m.styler
 }
 
-func (m *templateSpy) Render(context interface{}) (string, error) {
+func (m *templateSpy) Render(context any) (string, error) {
 	m.Contexts = append(m.Contexts, context)
 	return m.Result(context), nil
 }

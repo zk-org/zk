@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -8,7 +9,6 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 )
 
@@ -28,22 +28,22 @@ type cmdNewOpts struct {
 	InsertContentAtLocation *protocol.Location `json:"insertContentAtLocation"`
 }
 
-func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []interface{}) (interface{}, error) {
+func executeCommandNew(notebook *core.Notebook, documents *documentStore, context *glsp.Context, args []any) (any, error) {
 	var opts cmdNewOpts
 	if len(args) > 1 {
-		arg, ok := args[1].(map[string]interface{})
+		arg, ok := args[1].(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("%s expects a dictionary of options as second argument, got: %v", cmdNew, args[1])
 		}
 		err := unmarshalJSON(arg, &opts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse %s args, got: %v", cmdNew, arg)
+			return nil, fmt.Errorf("failed to parse %s args, got: %v: %w", cmdNew, arg, err)
 		}
 	}
 
 	date, err := dateutil.TimeFromNatural(opts.Date)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s, failed to parse the `date` option", opts.Date)
+		return nil, fmt.Errorf("%s, failed to parse the `date` option: %w", opts.Date, err)
 	}
 
 	note, err := notebook.NewNote(core.NewNoteOpts{
@@ -105,7 +105,7 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		}, nil)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"path":    absPath,
 		"content": note.RawContent,
 	}, nil

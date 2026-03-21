@@ -50,7 +50,7 @@ func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func
 	assert.Nil(t, err)
 }
 
-func assertExistOrNot(t *testing.T, db *DB, shouldExist bool, sql string, args ...interface{}) {
+func assertExistOrNot(t *testing.T, db *DB, shouldExist bool, sql string, args ...any) {
 	if shouldExist {
 		assertExist(t, db, sql, args...)
 	} else {
@@ -58,47 +58,38 @@ func assertExistOrNot(t *testing.T, db *DB, shouldExist bool, sql string, args .
 	}
 }
 
-func assertExist(t *testing.T, db *DB, sql string, args ...interface{}) {
+func assertExist(t *testing.T, db *DB, sql string, args ...any) {
 	if !exists(t, db, sql, args...) {
 		t.Errorf("SQL query did not return any result: %s, with arguments %v", sql, args)
 	}
 }
 
-func assertNotExist(t *testing.T, db *DB, sql string, args ...interface{}) {
+func assertNotExist(t *testing.T, db *DB, sql string, args ...any) {
 	if exists(t, db, sql, args...) {
 		t.Errorf("SQL query returned a result: %s, with arguments %v", sql, args)
 	}
 }
 
-func exists(t *testing.T, db *DB, sql string, args ...interface{}) bool {
+func exists(t *testing.T, db *DB, sql string, args ...any) bool {
 	var exists int
 	err := db.db.QueryRow("SELECT EXISTS ("+sql+")", args...).Scan(&exists)
 	assert.Nil(t, err)
 	return exists == 1
 }
 
-// FIXME: Migrate to DB-based versions?
-func assertExistOrNotTx(t *testing.T, tx Transaction, shouldExist bool, sql string, args ...interface{}) {
-	if shouldExist {
-		assertExistTx(t, tx, sql, args...)
-	} else {
-		assertNotExistTx(t, tx, sql, args...)
-	}
-}
-
-func assertExistTx(t *testing.T, tx Transaction, sql string, args ...interface{}) {
+func assertExistTx(t *testing.T, tx Transaction, sql string, args ...any) {
 	if !existsTx(t, tx, sql, args...) {
 		t.Errorf("SQL query did not return any result: %s, with arguments %v", sql, args)
 	}
 }
 
-func assertNotExistTx(t *testing.T, tx Transaction, sql string, args ...interface{}) {
+func assertNotExistTx(t *testing.T, tx Transaction, sql string, args ...any) {
 	if existsTx(t, tx, sql, args...) {
 		t.Errorf("SQL query returned a result: %s, with arguments %v", sql, args)
 	}
 }
 
-func existsTx(t *testing.T, tx Transaction, sql string, args ...interface{}) bool {
+func existsTx(t *testing.T, tx Transaction, sql string, args ...any) bool {
 	var exists int
 	err := tx.QueryRow("SELECT EXISTS ("+sql+")", args...).Scan(&exists)
 	assert.Nil(t, err)

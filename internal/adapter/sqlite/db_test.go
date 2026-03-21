@@ -27,11 +27,11 @@ func TestMigrateFrom0(t *testing.T) {
 		var version int
 		err := tx.QueryRow("PRAGMA user_version").Scan(&version)
 		assert.Nil(t, err)
-		assert.Equal(t, version, 7)
+		assert.Equal(t, version, 8)
 
 		_, err = tx.Exec(`
-			INSERT INTO notes (path, sortable_path, title, body, word_count, checksum)
-			VALUES ("ref/tx1.md", "reftx1.md", "A reference", "Content", 1, "qwfpg")
+			INSERT INTO notes (path, sortable_path, filename, title, body, word_count, checksum)
+			VALUES ("ref/tx1.md", "reftx1.md", "tx1.md", "A reference", "Content", 1, "qwfpg")
 		`)
 		assert.Nil(t, err)
 

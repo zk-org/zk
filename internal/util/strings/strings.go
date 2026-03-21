@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -116,8 +117,8 @@ func RemoveBlank(strs []string) []string {
 	return res
 }
 
-// Expand literal escaped whitespace characters in the given string to their
-// actual character.
+// ExpandWhitespaceLiterals expands literal escaped whitespace characters in
+// the given string to their actual character.
 func ExpandWhitespaceLiterals(s string) string {
 	s = strings.ReplaceAll(s, `\n`, "\n")
 	s = strings.ReplaceAll(s, `\t`, "\t")
@@ -127,12 +128,7 @@ func ExpandWhitespaceLiterals(s string) string {
 // Contains returns whether the given slice of strings contains the given
 // string.
 func Contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }
 
 // WordAt returns the word found at the given character position.
@@ -158,7 +154,7 @@ func CopyList(list []string) []string {
 
 func ByteIndexToRuneIndex(s string, i int) int {
 	res := 0
-	for j, _ := range s {
+	for j := range s {
 		if j >= i {
 			break
 		}

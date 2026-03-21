@@ -1,6 +1,6 @@
 # No notebook found in the current directory.
 1$ zk index -q
-2>zk: error: failed to open notebook: no notebook found in {{working-dir}} or a parent directory
+2>zk: error: failed to locate notebook: no notebook found in {{working-dir}} or a parent directory
 
 # Provide the notebook directory with `--notebook-dir`.
 # --notebook-dir is custom parsed, check that it handles both one and two arg forms

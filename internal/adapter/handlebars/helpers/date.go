@@ -1,12 +1,12 @@
 package helpers
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/aymerick/raymond"
 	"github.com/lestrrat-go/strftime"
-	"github.com/pkg/errors"
 	"github.com/rvflash/elapsed"
 	"github.com/zk-org/zk/internal/util"
 	dateutil "github.com/zk-org/zk/internal/util/date"
@@ -16,13 +16,13 @@ import (
 // This can be used in combination with the `format-date` helper to generate dates in the user's language.
 // {{format-date (date "last week") "timestamp"}}
 func RegisterDate(logger util.Logger) {
-	raymond.RegisterHelper("date", func(arg1 interface{}, arg2 interface{}) time.Time {
+	raymond.RegisterHelper("date", func(arg1 any, arg2 any) time.Time {
 		var t time.Time
 		switch date := arg1.(type) {
 		case string:
 			t, err := dateutil.TimeFromNatural(date)
 			if err != nil {
-				logger.Err(errors.Wrap(err, "the {{date}} template helper failed to parse the date"))
+				logger.Err(fmt.Errorf("the {{date}} template helper failed to parse the date: %w", err))
 			}
 			return t
 		case time.Time:
@@ -45,7 +45,7 @@ func RegisterDate(logger util.Logger) {
 // {{format-date now "medium"}} -> Nov 17, 2009
 // {{format-date now "%Y-%m"}} -> 2009-11
 func RegisterFormatDate(logger util.Logger) {
-	raymond.RegisterHelper("format-date", func(date time.Time, arg interface{}) string {
+	raymond.RegisterHelper("format-date", func(date time.Time, arg any) string {
 		format := "%Y-%m-%d"
 
 		if arg, ok := arg.(string); ok {

@@ -29,12 +29,12 @@ func TestNoteIndexFindByHrefPrefixBug(t *testing.T) {
 	}
 
 	// Add notes to the index
-	shorterId, err := index.Add(shorterNote)
+	shorterID, err := index.Add(shorterNote)
 	assert.Nil(t, err)
-	longerId, err := index.Add(longerNote)
+	longerID, err := index.Add(longerNote)
 	assert.Nil(t, err)
 
-	t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterId, longerId)
+	t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterID, longerID)
 
 	// Test the ACTUAL scenario: markdown link without extension
 	// Link: [text](journal/2024-08-27) should find journal/2024-08-27.md

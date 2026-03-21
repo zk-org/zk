@@ -5,19 +5,12 @@ import (
 	"testing"
 
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
-func testLinkDAO(t *testing.T, callback func(tx Transaction, dao *LinkDAO)) {
-	testTransaction(t, func(tx Transaction) {
-		callback(tx, NewLinkDAO(tx, &util.NullLogger))
-	})
-}
-
 type linkRow struct {
-	SourceId                         core.NoteID
-	TargetId                         *core.NoteID
+	SourceID                         core.NoteID
+	TargetID                         *core.NoteID
 	Href, Type, Title, Rels, Snippet string
 	SnippetStart, SnippetEnd         int
 	IsExternal                       bool
@@ -36,13 +29,13 @@ func queryLinkRows(t *testing.T, q RowQuerier, where string) []linkRow {
 
 	for rows.Next() {
 		var row linkRow
-		var sourceId int64
-		var targetId *int64
-		err = rows.Scan(&sourceId, &targetId, &row.Title, &row.Href, &row.Type, &row.IsExternal, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
+		var sourceID int64
+		var targetID *int64
+		err = rows.Scan(&sourceID, &targetID, &row.Title, &row.Href, &row.Type, &row.IsExternal, &row.Rels, &row.Snippet, &row.SnippetStart, &row.SnippetEnd)
 		assert.Nil(t, err)
-		row.SourceId = core.NoteID(sourceId)
-		if targetId != nil {
-			row.TargetId = idPointer(*targetId)
+		row.SourceID = core.NoteID(sourceID)
+		if targetID != nil {
+			row.TargetID = idPointer(*targetID)
 		}
 		links = append(links, row)
 	}

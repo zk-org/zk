@@ -1,0 +1,7 @@
+$ cd link-in-footnote
+
+# ZkLinks must detect links in footnotes.
+#
+# Find notes linked by note2.md (which has a footnote linking to note1)
+$ zk list -qf\{{title}} --linked-by note2.md
+>Title note 1

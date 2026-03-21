@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -33,7 +33,7 @@ func (cmd *List) Run(container *cli.Container) error {
 			return errors.New("--delimiter and --delimiter0 can't be used together")
 		}
 		if cmd.Header != "" {
-			return errors.New("--footer and --delimiter0 can't be used together")
+			return errors.New("--header and --delimiter0 can't be used together")
 		}
 		if cmd.Footer != "\n" {
 			return errors.New("--footer and --delimiter0 can't be used together")
@@ -79,9 +79,9 @@ func (cmd *List) Run(container *cli.Container) error {
 		return err
 	}
 
-	findOpts, err := cmd.Filtering.NewNoteFindOpts(notebook)
+	findOpts, err := cmd.NewNoteFindOpts(notebook)
 	if err != nil {
-		return errors.Wrapf(err, "incorrect criteria")
+		return fmt.Errorf("incorrect criteria: %w", err)
 	}
 
 	notes, err := notebook.FindNotes(findOpts)

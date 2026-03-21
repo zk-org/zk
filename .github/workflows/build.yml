@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -48,7 +48,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
@@ -61,7 +61,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -83,7 +83,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-linux-arm64.tar.gz
@@ -99,7 +99,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -121,7 +121,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-${{ matrix.tag }}.tar.gz
@@ -134,7 +134,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -156,7 +156,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvz zk > zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-alpine-arm64.tar.gz
@@ -181,7 +181,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz zk
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-macos-x86_64.tar.gz
@@ -210,7 +210,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz zk
       - name: upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-macos-arm64.tar.gz
@@ -236,7 +236,7 @@ jobs:
         if: startsWith(steps.vars.outputs.version, 'v')
         run: tar -cvzf zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz zk.exe
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz
           path: zk-${{ steps.vars.outputs.version }}-windows-x86_64.tar.gz

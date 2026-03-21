@@ -65,7 +65,7 @@ func (k DiffKind) Symbol() string {
 func Diff(source, target <-chan Metadata, forceModified bool, callback func(DiffChange) error) (int, error) {
 	var err error
 	var sourceFile, targetFile Metadata
-	var sourceOpened, targetOpened bool = true, true
+	var sourceOpened, targetOpened = true, true
 	sourceCount := 0
 	pair := diffPair{}
 

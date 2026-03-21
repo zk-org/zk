@@ -1,17 +1,23 @@
 package lsp
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"unicode/utf16"
 
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	gmext "github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
+	"github.com/zk-org/zk/internal/adapter/markdown"
+	"github.com/zk-org/zk/internal/adapter/markdown/extensions"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -64,10 +70,10 @@ func (s *documentStore) Get(pathOrURI string) (*document, bool) {
 	return d, ok
 }
 
-func (s *documentStore) normalizePath(pathOrUri string) (string, error) {
-	path, err := uriToPath(pathOrUri)
+func (s *documentStore) normalizePath(pathOrURI string) (string, error) {
+	path, err := uriToPath(pathOrURI)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to parse URI: %s", pathOrUri)
+		return "", fmt.Errorf("unable to parse URI: %s: %w", pathOrURI, err)
 	}
 	return s.fs.Canonical(path), nil
 }
@@ -82,7 +88,7 @@ type document struct {
 }
 
 // ApplyChanges updates the content of the document from LSP textDocument/didChange events.
-func (d *document) ApplyChanges(changes []interface{}) {
+func (d *document) ApplyChanges(changes []any) {
 	for _, change := range changes {
 		switch c := change.(type) {
 		case protocol.TextDocumentContentChangeEvent:
@@ -102,7 +108,11 @@ func (d *document) WordAt(pos protocol.Position) string {
 	if !ok {
 		return ""
 	}
-	return strutil.WordAt(line, int(pos.Character))
+	utf16Bytes := utf16.Encode([]rune(line))
+	charIdx := min(int(pos.Character), len(utf16Bytes))
+	strChar := len(string(utf16.Decode(utf16Bytes[0:charIdx])))
+
+	return strutil.WordAt(line, strChar)
 }
 
 // ContentAtRange returns the document text at given range.
@@ -132,12 +142,13 @@ func (d *document) GetLines() []string {
 // LookBehind returns the n characters before the given position, on the same line.
 func (d *document) LookBehind(pos protocol.Position, length int) string {
 	line, ok := d.GetLine(int(pos.Line))
-	utf16Bytes := utf16.Encode([]rune(line))
 	if !ok {
 		return ""
 	}
+	utf16Bytes := utf16.Encode([]rune(line))
 
-	charIdx := int(pos.Character)
+	charIdx := min(int(pos.Character), len(utf16Bytes))
+
 	if length > charIdx {
 		return string(utf16.Decode(utf16Bytes[0:charIdx]))
 	}
@@ -153,7 +164,7 @@ func (d *document) LookForward(pos protocol.Position, length int) string {
 	}
 
 	lineLength := len(utf16Bytes)
-	charIdx := int(pos.Character)
+	charIdx := min(int(pos.Character), len(utf16Bytes))
 	if lineLength <= charIdx+length {
 		return string(utf16.Decode(utf16Bytes[charIdx:]))
 	}
@@ -190,171 +201,120 @@ func (d *document) DocumentLinkAt(pos protocol.Position) (*documentLink, error) 
 	return nil, nil
 }
 
-// countUnescapedBackticks counts backticks that are not preceded by a backslash.
-func countUnescapedBackticks(s string) int {
-	count := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '`' && (i == 0 || s[i-1] != '\\') {
-			count++
+// documentParser is a goldmark parser configured for extracting links.
+var documentParser = goldmark.New(
+	goldmark.WithExtensions(
+		gmext.Footnote,
+		extensions.WikiLinkExt,
+	),
+)
+
+// byteOffsetToPosition converts a byte offset in source to a protocol.Position (line, character).
+// lineOffsets must contain the byte offset of the start of each line.
+func byteOffsetToPosition(offset int, source []byte, lineOffsets []int) protocol.Position {
+	line := 0
+	for i := 1; i < len(lineOffsets); i++ {
+		if lineOffsets[i] > offset {
+			break
 		}
+		line = i
 	}
-	return count
-}
+	lineStart := lineOffsets[line]
 
-// linkWithinInlineCode checks whether a link is within inline code.
-func linkWithinInlineCode(strBuffer string, linkStart, linkEnd int, insideInline bool) bool {
-	for i := 0; i < len(strBuffer) && i < linkEnd; i++ {
-		if strBuffer[i] == '`' && (i == 0 || strBuffer[i-1] != '\\') {
-			insideInline = !insideInline
-		}
-	}
-	return insideInline
-}
-
-var wikiLinkRegex = regexp.MustCompile(`\[?\[\[(.+?)(?: *\| *(.+?))?\]\]`)
-var markdownLinkRegex = regexp.MustCompile(`\[([^\]]+?[^\\])\]\((.+?[^\\])\)`)
-var fileURIregex = regexp.MustCompile(`file:///`)
-var fencedStartRegex = regexp.MustCompile(`^(` + "```" + `|~~~).*`)
-var fencedEndRegex = regexp.MustCompile(`^(` + "```" + `|~~~)\s*`)
-var indentedRegex = regexp.MustCompile(`^(\s{4}|\t).+`)
-var magnetRegex = regexp.MustCompile(`magnet:\?`)
-
-var insideInline = false
-var insideFenced = false
-var insideIndented = false
-var currentCodeBlockStart = -1
-
-// check whether the current line in document is within a fenced or indented
-// code block
-func isLineWithinCodeBlock(lines []string, lineIndex int, line string) bool {
-	// Reset global state from previous runs
-	if lineIndex == 0 {
-		insideInline = false
-		insideFenced = false
-		insideIndented = false
-		currentCodeBlockStart = -1
-	}
-
-	// if line is already within code fences or indented code block
-	if insideFenced {
-		if fencedEndRegex.FindStringIndex(line) != nil &&
-			lines[currentCodeBlockStart][:3] == line[:3] {
-			// Fenced code block ends with this line
-			insideFenced = false
-			currentCodeBlockStart = -1
-		}
-		return true
-	} else if insideIndented {
-		if indentedRegex.FindStringIndex(line) == nil && len(line) > 0 {
-			// Indeted code block ends with this line
-			insideIndented = false
-			currentCodeBlockStart = -1
-		} else {
-			return true
-		}
+	// Convert byte offset within line to rune index.
+	var lineContent string
+	if line+1 < len(lineOffsets) {
+		lineContent = string(source[lineStart : lineOffsets[line+1]-1]) // -1 to exclude newline.
 	} else {
-		// Check whether the current line is the start of a code fence or
-		// indented code block
-		if fencedStartRegex.FindStringIndex(line) != nil {
-			insideFenced = true
-			currentCodeBlockStart = lineIndex
-			return true
-		} else if indentedRegex.FindStringIndex(line) != nil &&
-			(lineIndex > 0 && len(lines[lineIndex-1]) == 0 || lineIndex == 0) {
-			insideIndented = true
-			currentCodeBlockStart = lineIndex
-			return true
+		lineContent = string(source[lineStart:]) // Last line.
+	}
+	byteOffsetInLine := offset - lineStart
+	charPos := strutil.ByteIndexToRuneIndex(lineContent, byteOffsetInLine)
+
+	return protocol.Position{
+		Line:      protocol.UInteger(line),
+		Character: protocol.UInteger(charPos),
+	}
+}
+
+// buildLineOffsets returns a slice where lineOffsets[i] is the byte offset of line i.
+func buildLineOffsets(source []byte) []int {
+	offsets := []int{0}
+	for i, b := range source {
+		if b == '\n' {
+			offsets = append(offsets, i+1)
 		}
 	}
-	return false
-
+	return offsets
 }
 
 // DocumentLinks returns all the internal and external links found in the
 // document.
 func (d *document) DocumentLinks() ([]documentLink, error) {
 	links := []documentLink{}
+	source := []byte(d.Content)
+	lineOffsets := buildLineOffsets(source)
 
-	lines := d.GetLines()
-	for lineIndex, line := range lines {
+	reader := text.NewReader(source)
+	context := parser.NewContext()
+	root := documentParser.Parser().Parse(reader, parser.WithContext(context))
 
-		if isLineWithinCodeBlock(lines, lineIndex, line) {
-			continue
+	ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
 		}
 
-		appendLink := func(href string, start, end int, hasTitle bool, isWikiLink bool) {
+		switch link := n.(type) {
+		case *ast.Link:
+			href := string(link.Destination)
 			if href == "" {
-				return
+				return ast.WalkContinue, nil
 			}
 
-			// Go regexes work with bytes, but the LSP client expects character indexes.
-			start = strutil.ByteIndexToRuneIndex(line, start)
-			end = strutil.ByteIndexToRuneIndex(line, end)
-
-			links = append(links, documentLink{
-				Href:          href,
-				RelativeToDir: filepath.Dir(d.Path),
-				Range: protocol.Range{
-					Start: protocol.Position{
-						Line:      protocol.UInteger(lineIndex),
-						Character: protocol.UInteger(start),
-					},
-					End: protocol.Position{
-						Line:      protocol.UInteger(lineIndex),
-						Character: protocol.UInteger(end),
-					},
-				},
-				HasTitle:   hasTitle,
-				IsWikiLink: isWikiLink,
-			})
-		}
-
-		// extract link paths from [title](path) patterns
-		// note: match[0:1] is the entire match, match[2:3] is the contents of
-		// brackets, match[4:5] is contents of parentheses
-		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-			// Ignore when inside backticks: `[title](file)`
-			if linkWithinInlineCode(line, match[0], match[1], insideInline) {
-				continue
+			if strings.HasPrefix(href, "file:///") || strings.HasPrefix(href, "magnet:?") {
+				return ast.WalkContinue, nil
 			}
-
-			// Ignore embedded images ![title](file.png)
-			if match[0] > 0 && line[match[0]-1] == '!' {
-				continue
-			}
-
-			// ignore tripple dash file URIs [title](file:///foo.go) and magnet links
-			if match[5]-match[4] >= 8 {
-				linkURL := line[match[4]:match[5]]
-				fileURIresult := linkURL[:8]
-				if fileURIregex.MatchString(fileURIresult) || magnetRegex.MatchString(fileURIresult) {
-					continue
-				}
-			}
-
-			href := line[match[4]:match[5]]
 
 			// Decode the href if it's percent-encoded
 			if decodedHref, err := url.PathUnescape(href); err == nil {
 				href = decodedHref
 			}
 
-			appendLink(href, match[0], match[1], false, false)
+			pos := markdown.GetLinkPosition(link, source)
+			if pos == nil {
+				return ast.WalkContinue, nil
+			}
+
+			links = append(links, documentLink{
+				Href:          href,
+				RelativeToDir: filepath.Dir(d.Path),
+				Range: protocol.Range{
+					Start: byteOffsetToPosition(pos.Start, source, lineOffsets),
+					End:   byteOffsetToPosition(pos.End, source, lineOffsets),
+				},
+				IsWikiLink: false,
+			})
+
+		case *extensions.WikiLink:
+			href := string(link.Destination)
+			if href == "" {
+				return ast.WalkContinue, nil
+			}
+
+			links = append(links, documentLink{
+				Href:          href,
+				RelativeToDir: filepath.Dir(d.Path),
+				Range: protocol.Range{
+					Start: byteOffsetToPosition(link.StartOffset, source, lineOffsets),
+					End:   byteOffsetToPosition(link.EndOffset, source, lineOffsets),
+				},
+				HasTitle:   len(link.Title) > 0,
+				IsWikiLink: true,
+			})
 		}
 
-		for _, match := range wikiLinkRegex.FindAllStringSubmatchIndex(line, -1) {
-			// Ignore when inside backticks: `[[filename]]`
-			if linkWithinInlineCode(line, match[0], match[1], insideInline) {
-				continue
-			}
-			href := line[match[2]:match[3]]
-			hasTitle := match[4] != -1
-			appendLink(href, match[0], match[1], hasTitle, true)
-		}
-		if countUnescapedBackticks(line)%2 == 1 {
-			insideInline = !insideInline
-		}
-	}
+		return ast.WalkContinue, nil
+	})
 
 	return links, nil
 }
@@ -364,7 +324,14 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 	lines := strutil.CopyList(d.GetLines())
 	lineIdx := int(position.Line)
 	charIdx := int(position.Character)
+	if len(lines) <= lineIdx {
+		return false
+	}
 	line := lines[lineIdx]
+	utf16Len := len(utf16.Encode([]rune(line)))
+	if utf16Len < charIdx {
+		return false
+	}
 	// https://github.com/zk-org/zk/issues/144#issuecomment-1006108485
 	line = line[:charIdx] + "ZK_PLACEHOLDER" + line[charIdx:]
 	lines[lineIdx] = line

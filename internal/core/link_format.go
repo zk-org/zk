@@ -5,11 +5,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/paths"
 )
 
-// Metadata used to generate a link.
+// LinkFormatterContext contains metadata used to generate a link.
 type LinkFormatterContext struct {
 	// Filename of the note
 	Filename string `json:"filename"`
@@ -22,10 +21,10 @@ type LinkFormatterContext struct {
 	// Title of the note.
 	Title string `json:"title"`
 	// Metadata extracted from the YAML frontmatter.
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]any `json:"metadata"`
 }
 
-func NewLinkFormatterContext(path NotebookPath, title string, metadata map[string]interface{}) (LinkFormatterContext, error) {
+func NewLinkFormatterContext(path NotebookPath, title string, metadata map[string]any) (LinkFormatterContext, error) {
 	relPath, err := path.PathRelToWorkingDir()
 	if err != nil {
 		return LinkFormatterContext{}, err
@@ -86,10 +85,9 @@ func NewWikiLinkFormatter(config MarkdownConfig) (LinkFormatter, error) {
 }
 
 func NewCustomLinkFormatter(config MarkdownConfig, templateLoader TemplateLoader) (LinkFormatter, error) {
-	wrap := errors.Wrapperf("failed to render custom link with format: %s", config.LinkFormat)
 	template, err := templateLoader.LoadTemplate(config.LinkFormat)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to render custom link with format: %s: %w", config.LinkFormat, err)
 	}
 
 	return func(context LinkFormatterContext) (string, error) {

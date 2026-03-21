@@ -16,7 +16,6 @@ import (
 	_ "github.com/tliron/kutil/logging/simple"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/errors"
 	"github.com/zk-org/zk/internal/util/opt"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
@@ -73,7 +72,7 @@ func NewServer(opts ServerOpts) *Server {
 
 	var clientCapabilities protocol.ClientCapabilities
 
-	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (interface{}, error) {
+	handler.Initialize = func(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
 		clientCapabilities = params.Capabilities
 
 		// To see the logs with coc.nvim, run :CocCommand workspace.showOutput
@@ -190,7 +189,7 @@ func NewServer(opts ServerOpts) *Server {
 		return nil
 	}
 
-	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (interface{}, error) {
+	handler.TextDocumentCompletion = func(context *glsp.Context, params *protocol.CompletionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -305,7 +304,7 @@ func NewServer(opts ServerOpts) *Server {
 		return documentLinks, err
 	}
 
-	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (interface{}, error) {
+	handler.TextDocumentDefinition = func(context *glsp.Context, params *protocol.DefinitionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -322,13 +321,11 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		target, err := server.noteForLink(*link, notebook)
-		if link == nil || target == nil || err != nil {
+		if target == nil || err != nil {
 			return nil, err
 		}
 
-		// FIXME: Waiting for https://github.com/tliron/glsp/pull/3 to be
-		// merged before using LocationLink.
-		if false && isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
@@ -340,8 +337,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 	}
 
-	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
-
+	handler.WorkspaceExecuteCommand = func(context *glsp.Context, params *protocol.ExecuteCommandParams) (any, error) {
 		openNotebook := func() (*core.Notebook, error) {
 			args := params.Arguments
 			if len(args) == 0 {
@@ -396,7 +392,7 @@ func NewServer(opts ServerOpts) *Server {
 		}
 	}
 
-	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (interface{}, error) {
+	handler.TextDocumentCodeAction = func(context *glsp.Context, params *protocol.CodeActionParams) (any, error) {
 		doc, ok := server.documents.Get(params.TextDocument.URI)
 		if !ok {
 			return nil, nil
@@ -420,7 +416,7 @@ func NewServer(opts ServerOpts) *Server {
 					},
 				}
 
-				var jsonOpts map[string]interface{}
+				var jsonOpts map[string]any
 				err := unmarshalJSON(opts, &jsonOpts)
 				if err != nil {
 					return err
@@ -432,7 +428,7 @@ func NewServer(opts ServerOpts) *Server {
 					Command: &protocol.Command{
 						Title:     actionTitle,
 						Command:   cmdNew,
-						Arguments: []interface{}{wd, jsonOpts},
+						Arguments: []any{wd, jsonOpts},
 					},
 				})
 
@@ -468,6 +464,7 @@ func NewServer(opts ServerOpts) *Server {
 			}
 		}
 
+		// TODO: possible nil
 		target, err := server.noteForLink(*link, notebook)
 		if link == nil || target == nil || err != nil {
 			return nil, err
@@ -517,7 +514,10 @@ func NewServer(opts ServerOpts) *Server {
 
 // Run starts the Language Server in stdio mode.
 func (s *Server) Run() error {
-	return errors.Wrap(s.server.RunStdio(), "lsp")
+	if err := s.server.RunStdio(); err != nil {
+		return fmt.Errorf("lsp: %w", err)
+	}
+	return nil
 }
 
 func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
@@ -540,8 +540,8 @@ func (s *Server) noteForLink(link documentLink, notebook *core.Notebook) (*Note,
 		return nil, err
 	}
 
-	joined_path := filepath.Join(notebook.Path, note.Path)
-	return &Note{*note, pathToURI(joined_path)}, nil
+	joinedPath := filepath.Join(notebook.Path, note.Path)
+	return &Note{*note, pathToURI(joinedPath)}, nil
 }
 
 // noteForHref returns the Note object for the note targeted by the given HREF
@@ -557,7 +557,7 @@ func (s *Server) noteForHref(href string, relativeToDir string, notebook *core.N
 	}
 	path, err := filepath.Rel(notebook.Path, path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to resolve href: %s", href)
+		return nil, fmt.Errorf("failed to resolve href: %s: %w", href, err)
 	}
 	note, err := notebook.FindByHref(path, false)
 	if err != nil {
@@ -826,7 +826,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 
 	item.TextEdit, err = s.newTextEditForLink(notebook, note, doc, pos, linkFormatter)
 	if err != nil {
-		err = errors.Wrapf(err, "failed to build TextEdit for note at %s", note.Path)
+		err = fmt.Errorf("failed to build TextEdit for note at %s: %w", note.Path, err)
 		return item, err
 	}
 
@@ -853,7 +853,7 @@ func (s *Server) newCompletionItem(notebook *core.Notebook, note core.MinimalNot
 	return item, nil
 }
 
-func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (interface{}, error) {
+func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNote, doc *document, pos protocol.Position, linkFormatter core.LinkFormatter) (any, error) {
 	path := core.NotebookPath{
 		Path:       note.Path,
 		BasePath:   notebook.Path,
@@ -933,11 +933,7 @@ func boolPtr(v bool) *bool {
 }
 
 func isTrue(v *bool) bool {
-	return v != nil && *v == true
-}
-
-func isFalse(v *bool) bool {
-	return v == nil || *v == false
+	return v != nil && *v
 }
 
 func stringPtr(v string) *string {
@@ -945,7 +941,7 @@ func stringPtr(v string) *string {
 	return &s
 }
 
-func unmarshalJSON(obj interface{}, v interface{}) error {
+func unmarshalJSON(obj any, v any) error {
 	js, err := json.Marshal(obj)
 	if err != nil {
 		return err
@@ -953,7 +949,7 @@ func unmarshalJSON(obj interface{}, v interface{}) error {
 	return json.Unmarshal(js, v)
 }
 
-func toBool(obj interface{}) bool {
+func toBool(obj any) bool {
 	s := strings.ToLower(fmt.Sprint(obj))
 	return s == "true" || s == "1"
 }

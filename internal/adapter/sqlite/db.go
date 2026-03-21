@@ -7,7 +7,6 @@ import (
 
 	sqlite "github.com/mattn/go-sqlite3"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/errors"
 )
 
 func init() {
@@ -41,25 +40,23 @@ func OpenInMemory() (*DB, error) {
 }
 
 func open(uri string) (*DB, error) {
-	wrap := errors.Wrapper("failed to open the database")
-
 	nativeDB, err := sql.Open("sqlite3_custom", uri)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to open the database: %w", err)
 	}
 
 	// Make sure that CASCADE statements are properly applied by enabling
 	// foreign keys.
 	_, err = nativeDB.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
-		return nil, wrap(err)
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	db := &DB{nativeDB}
 
 	err = db.migrate()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to migrate the database")
+		return nil, fmt.Errorf("failed to migrate the database: %w", err)
 	}
 
 	return db, nil
@@ -67,8 +64,10 @@ func open(uri string) (*DB, error) {
 
 // Close terminates the connections to the SQLite database.
 func (db *DB) Close() error {
-	err := db.db.Close()
-	return errors.Wrap(err, "failed to close the database")
+	if err := db.db.Close(); err != nil {
+		return fmt.Errorf("failed to close the database: %w", err)
+	}
+	return nil
 }
 
 // migrate upgrades the SQL schema of the database.
@@ -217,6 +216,14 @@ func (db *DB) migrate() error {
 				// https://github.com/zk-org/zk/issues/170#issuecomment-1107848441
 				NeedsReindexing: true,
 			},
+
+			{ // 8
+				SQL: []string{
+					`ALTER TABLE notes ADD COLUMN filename TEXT DEFAULT('') NOT NULL`,
+					`CREATE INDEX IF NOT EXISTS index_notes_filename ON notes (filename)`,
+				},
+				NeedsReindexing: true,
+			},
 		}
 
 		needsReindexing := false
@@ -247,5 +254,8 @@ func (db *DB) migrate() error {
 		return nil
 	})
 
-	return errors.Wrap(err, "database migration failed")
+	if err != nil {
+		return fmt.Errorf("database migration failed: %w", err)
+	}
+	return nil
 }
