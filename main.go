@@ -21,8 +21,8 @@ import (
 var Version = "dev"
 
 var root struct {
-	Init  cmd.Init  `cmd group:"zk" help:"Create a new notebook in the given directory."`
-	Index cmd.Index `cmd group:"zk" help:"Index the notes to be searchable."`
+	Init   cmd.Init   `cmd group:"zk" help:"Create a new notebook in the given directory."`
+	Index  cmd.Index  `cmd group:"zk" help:"Index the notes to be searchable."`
 	Config cmd.Config `cmd group:"zk" help:"List configuration parameters."`
 
 	New   cmd.New   `cmd group:"notes" help:"Create a new note in the given notebook directory."`
