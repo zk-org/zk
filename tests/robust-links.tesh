@@ -1,0 +1,42 @@
+$ cd robust-links
+
+# Check if all notes are indexed
+$ zk list -qf'{{path}}'
+>root-note.md
+>sub/another-note.md
+>sub/priority-test.md
+>sub/sub-note.md
+>sub/target.md
+>target.md
+
+# Test links in sub/sub-note.md
+# [[root-note]]
+$ zk list -qf'{{path}}' --link-to root-note.md
+>sub/sub-note.md
+
+# [markdown root](../root-note.md)
+$ zk list -qf'{{path}}' --link-to root-note.md
+>sub/sub-note.md
+
+# [[another-note]]
+$ zk list -qf'{{path}}' --link-to sub/another-note.md
+>sub/sub-note.md
+
+# [markdown same dir](another-note.md)
+$ zk list -qf'{{path}}' --link-to sub/another-note.md
+>sub/sub-note.md
+
+# Priority Test
+# sub/priority-test.md links to [target](target.md) and [[target]]
+# They should both point to sub/target.md, NOT target.md (root)
+$ zk list -qf'{{path}}' --linked-by sub/priority-test.md
+>sub/target.md
+
+# Verify that root target.md is NOT linked by priority-test.md
+$ zk list -qf'{{path}}' --link-to target.md
+>
+
+# Root absolute links
+# [markdown root absolute](/root-note.md)
+$ zk list -qf'{{path}}' --link-to root-note.md
+>sub/sub-note.md
