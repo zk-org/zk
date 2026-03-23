@@ -55,6 +55,14 @@ func joinNoteIDs(ids []core.NoteID, delimiter string) string {
 	return strings.Join(strs, delimiter)
 }
 
+func joinStrings(strs []string, sep string, quote string) string {
+	res := make([]string, len(strs))
+	for i, s := range strs {
+		res[i] = quote + s + quote
+	}
+	return strings.Join(res, sep)
+}
+
 func unmarshalMetadata(metadataJSON string) (metadata map[string]any, err error) {
 	err = json.Unmarshal([]byte(metadataJSON), &metadata)
 	if err != nil {

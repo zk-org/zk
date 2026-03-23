@@ -3,13 +3,11 @@ package core
 import (
 	"crypto/sha256"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/relvacode/iso8601"
 	"github.com/zk-org/zk/internal/util/opt"
-	strutil "github.com/zk-org/zk/internal/util/strings"
 	"gopkg.in/djherbis/times.v1"
 )
 
@@ -75,15 +73,6 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	}
 
 	for _, link := range contentParts.Links {
-		if !strutil.IsURL(link.Href) && link.Type == LinkTypeMarkdown {
-			// Make the href relative to the notebook root.
-			href := filepath.Join(filepath.Dir(absPath), link.Href)
-			link.Href, err = n.RelPath(href)
-			if err != nil {
-				n.logger.Err(err)
-				continue
-			}
-		}
 		note.Links = append(note.Links, link)
 	}
 

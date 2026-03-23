@@ -325,7 +325,12 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		linkSupport := false
+		if clientCapabilities.TextDocument != nil && clientCapabilities.TextDocument.Definition != nil {
+			linkSupport = isTrue(clientCapabilities.TextDocument.Definition.LinkSupport)
+		}
+
+		if linkSupport {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
@@ -531,13 +536,25 @@ func (s *Server) notebookOf(doc *document) (*core.Notebook, error) {
 //  2. Find any occurrence of the href in a note path (substring)
 //  3. Match the href as a term in the note titles
 func (s *Server) noteForLink(link documentLink, notebook *core.Notebook) (*Note, error) {
-	note, err := s.noteForHref(link.Href, link.RelativeToDir, notebook)
-	if note == nil && err == nil && link.IsWikiLink {
-		// Try to find a partial href match.
-		note, err = notebook.FindByHref(link.Href, true)
+	if strutil.IsURL(link.Href) {
+		return nil, nil
 	}
-	if note == nil || err != nil {
-		return nil, err
+
+	// 1. Try relative to the current file (relativeToDir)
+	note, _ := s.noteForHref(link.Href, link.RelativeToDir, notebook)
+
+	// 2. Try relative to vault root
+	if note == nil {
+		note, _ = notebook.FindByHref(link.Href, false)
+	}
+
+	// 3. Fallback to partial matching for both link types
+	if note == nil {
+		note, _ = notebook.FindByHref(link.Href, true)
+	}
+
+	if note == nil {
+		return nil, fmt.Errorf("failed to resolve href: %s", link.Href)
 	}
 
 	joinedPath := filepath.Join(notebook.Path, note.Path)
