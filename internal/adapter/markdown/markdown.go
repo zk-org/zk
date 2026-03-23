@@ -54,6 +54,7 @@ func NewParser(options ParserOpts, logger util.Logger) *Parser {
 					),
 				),
 				extensions.WikiLinkExt,
+				extensions.MarkdownLinkWithSpacesExt,
 				&extensions.TagExt{
 					HashtagEnabled:      options.HashtagEnabled,
 					MultiWordTagEnabled: options.MultiWordTagEnabled,

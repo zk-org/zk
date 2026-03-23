@@ -206,6 +206,7 @@ var documentParser = goldmark.New(
 	goldmark.WithExtensions(
 		gmext.Footnote,
 		extensions.WikiLinkExt,
+		extensions.MarkdownLinkWithSpacesExt,
 	),
 )
 
