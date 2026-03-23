@@ -2,9 +2,12 @@ $ cd robust-links
 
 # Check if all notes are indexed
 $ zk list -s path -qf'\{{path}}'
+>note with space at root.md
 >root-note.md
 >sub/another-note.md
+>sub/note with space in sub.md
 >sub/priority-test.md
+>sub/space-test.md
 >sub/sub-note.md
 >sub/target.md
 >target.md
@@ -39,4 +42,15 @@ $ zk list -s path -qf'\{{path}}' --link-to target.md
 # Root absolute links
 # [markdown root absolute](/root-note.md)
 $ zk list -s path -qf'\{{path}}' --link-to root-note.md
+>sub/sub-note.md
+
+# Space Test
+# sub/space-test.md links to "sub/note with space in sub.md"
+$ zk list -s path -qf'\{{path}}' --link-to "sub/note with space in sub.md"
+>sub/space-test.md
+
+# Root absolute links with spaces
+# [markdown root space literal](/note with space at root.md)
+$ zk list -s path -qf'\{{path}}' --link-to "note with space at root.md"
+>sub/space-test.md
 >sub/sub-note.md
