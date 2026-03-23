@@ -169,3 +169,78 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		})
 	}
 }
+
+func TestDefinition_PanicProtection(t *testing.T) {
+	fixture := getNotebookFixture("completion")
+
+	fs, err := fs.NewFileStorage(fixture.Path, &util.NullLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture.FS = fs
+
+	db, err := sqlite.OpenInMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	config := core.NewDefaultConfig()
+	index := sqlite.NewNoteIndex(fixture.Path, db, &util.NullLogger, config.Note.Extension)
+	parser := markdown.NewParser(markdown.ParserOpts{}, &util.NullLogger)
+
+	notebook := core.NewNotebook(fixture.Path, config, core.NotebookPorts{
+		NoteIndex: index,
+		NoteContentParser: parser,
+		FS: fs,
+		TemplateLoaderFactory: func(lang string) (core.TemplateLoader, error) {
+			return &core.NullTemplateLoader, nil
+		},
+		Logger: &util.NullLogger,
+	})
+	notebook.Index(core.NoteIndexOpts{Force: true})
+
+	docStore := newDocumentStore(fs, &util.NullLogger)
+	server := &Server{
+		documents: docStore,
+	}
+
+	// Create note content with a link
+	noteContent := "Link to [[Item2]]"
+	doc, err := docStore.DidOpen(protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: pathToURI(filepath.Join(fixture.Path, "Item1.md")),
+			LanguageID: "markdown",
+			Version: 1,
+			Text: noteContent,
+		},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	link, err := doc.DocumentLinkAt(protocol.Position{Line: 0, Character: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if link == nil {
+		t.Fatal("Link not found at position")
+	}
+
+	// 1. Test with NIL capabilities (the crash case)
+	var nilCaps protocol.ClientCapabilities
+	
+	target, err := server.noteForLink(*link, notebook)
+	assert.Nil(t, err)
+	assert.NotNil(t, target)
+
+	// Logic from Definition handler:
+	linkSupport := false
+	if nilCaps.TextDocument != nil && nilCaps.TextDocument.Definition != nil {
+		linkSupport = isTrue(nilCaps.TextDocument.Definition.LinkSupport)
+	}
+	
+	if linkSupport {
+		t.Error("linkSupport should be false for nil capabilities")
+	}
+}

@@ -10,6 +10,10 @@ $ zk list --debug-style -q --link-to 4oma.md
 >
 >  - [Channel](fwsj) for a safe [<term>message passing</term>](4oma) approach.
 >
+><title>Do not communicate by sharing memory; instead, share memory by communicating</title> <path>ref/7fto.md</path> (just now)
+>
+>  - Advocates for the use of [<term>message passing</term>](4oma) instead of shared state.
+>
 
 # Follow backlinks of "Message passing" recursively.
 # FIXME: The snippets don't seem right.
@@ -17,6 +21,10 @@ $ zk list --debug-style -q --link-to 4oma.md --recursive
 ><title>Channel</title> <path>fwsj.md</path> (just now)
 >
 >  - It's an implementation of the [<term>message passing</term>](4oma) pattern.
+>
+><title>Do not communicate by sharing memory; instead, share memory by communicating</title> <path>ref/7fto.md</path> (just now)
+>
+>  - Advocates for the use of [<term>message passing</term>](4oma) instead of shared state.
 >
 ><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
 >
@@ -37,6 +45,10 @@ $ zk list --debug-style -q --link-to 4oma.md --recursive --max-distance 1
 ><title>Concurrency in Rust</title> <path>g7qa.md</path> (just now)
 >
 >  - [Channel](fwsj) for a safe [<term>message passing</term>](4oma) approach.
+>
+><title>Do not communicate by sharing memory; instead, share memory by communicating</title> <path>ref/7fto.md</path> (just now)
+>
+>  - Advocates for the use of [<term>message passing</term>](4oma) instead of shared state.
 >
 
 # Find notes linked by "Mutex".

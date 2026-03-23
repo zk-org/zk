@@ -296,31 +296,48 @@ func (d *NoteDAO) findIDsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core
 // FindIdsByHref finds note IDs which match the given href string.
 // This implements logic similar to NoteIndex.linkMatchesPath.
 func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.NoteID, error) {
+	var err error
 	// Remove any anchor at the end of the HREF, since it's most likely
 	// matching a sub-section in the note.
 	href = strings.SplitN(href, "#", 2)[0]
 
 	href = strings.NewReplacer("%", "\\%", "_", "\\_").Replace(href)
+	
+	// Treat leading slash as relative to the notebook root.
+	rootHref := strings.TrimPrefix(href, "/")
 
-	// Prioritise exact match with extension.
-	id, err := d.FindIDByPath(href + "." + d.extension)
-	if err != nil {
-		return nil, err
-	}
-	if id.IsValid() {
-		return []core.NoteID{id}, nil
+	// 1. Prioritize exact match (either literal href or root-relative).
+	for _, h := range []string{href, rootHref} {
+		id, err := d.FindIDByPath(h)
+		if err != nil {
+			return nil, err
+		}
+		if id.IsValid() {
+			return []core.NoteID{id}, nil
+		}
+
+		// Try with extension.
+		if !strings.HasSuffix(h, "."+d.extension) {
+			id, err = d.FindIDByPath(h + "." + d.extension)
+			if err != nil {
+				return nil, err
+			}
+			if id.IsValid() {
+				return []core.NoteID{id}, nil
+			}
+		}
 	}
 
 	var ids []core.NoteID
 	if allowPartialHref {
 		// Filename (not path) contains 'href' anywhere.
-		ids, err = d.findIDsByFilenameLike("%" + href + "%")
+		ids, err = d.findIDsByFilenameLike("%" + rootHref + "%")
 		if len(ids) > 0 || err != nil {
 			return ids, err
 		}
 
 		// Path contains 'href' anywhere.
-		ids, err = d.findIDsByPathLike("%" + href + "%")
+		ids, err = d.findIDsByPathLike("%" + rootHref + "%")
 		if len(ids) > 0 || err != nil {
 			return ids, err
 		}
@@ -329,7 +346,7 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 	// Path either:
 	// 1. starts with 'href' and has no slash after href.
 	// 2. starts with 'href/', followed by more content.
-	ids, err = d.findIDsByPathPrefix(href)
+	ids, err = d.findIDsByPathPrefix(rootHref)
 	if len(ids) > 0 || err != nil {
 		return ids, err
 	}
@@ -528,6 +545,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 		}
 
 		idSelects := make([]string, 0)
+		hrefList := "(" + joinStrings(hrefs, ",", "'") + ")"
 		if direction <= 0 {
 			idSelects = append(idSelects, fmt.Sprintf(
 				"    SELECT target_id FROM %s WHERE target_id IS NOT NULL AND source_id IN %s",
@@ -535,10 +553,17 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 			))
 		}
 		if direction >= 0 {
-			idSelects = append(idSelects, fmt.Sprintf(
-				"    SELECT source_id FROM %s WHERE target_id IS NOT NULL AND target_id IN %s",
-				linksSrc, idsList,
-			))
+			if linksSrc == "links" {
+				idSelects = append(idSelects, fmt.Sprintf(
+					"    SELECT source_id FROM %s WHERE (target_id IN %s OR (target_id IS NULL AND href IN %s))",
+					linksSrc, idsList, hrefList,
+				))
+			} else {
+				idSelects = append(idSelects, fmt.Sprintf(
+					"    SELECT source_id FROM %s WHERE target_id IS NOT NULL AND target_id IN %s",
+					linksSrc, idsList,
+				))
+			}
 		}
 
 		idExpr += " IN (\n" + strings.Join(idSelects, "\n    UNION\n") + "\n)"
