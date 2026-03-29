@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/zk-org/zk/internal/util"
@@ -9,8 +10,8 @@ import (
 )
 
 type noteIndexMock struct {
-	notes             map[string]*ContextualNote
-	findMinimalResult []MinimalNote
+	notes           map[string]*ContextualNote
+	findMinimalFunc func(opts NoteFindOpts) ([]MinimalNote, error)
 }
 
 func (m *noteIndexMock) Find(opts NoteFindOpts) ([]ContextualNote, error) {
@@ -18,7 +19,10 @@ func (m *noteIndexMock) Find(opts NoteFindOpts) ([]ContextualNote, error) {
 }
 
 func (m *noteIndexMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) {
-	return m.findMinimalResult, nil
+	if m.findMinimalFunc != nil {
+		return m.findMinimalFunc(opts)
+	}
+	return []MinimalNote{}, nil
 }
 
 func (m *noteIndexMock) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error) {
@@ -121,8 +125,9 @@ func TestNotebookFindMinimalNotes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			index := &noteIndexMock{
-				findMinimalResult: tt.notes,
+			index := &noteIndexMock{}
+			index.findMinimalFunc = func(opts NoteFindOpts) ([]MinimalNote, error) {
+				return tt.notes, nil
 			}
 			test := notebookTest{
 				rootDir: "/notebook",
@@ -132,6 +137,54 @@ func TestNotebookFindMinimalNotes(t *testing.T) {
 			notes, err := test.notebook.FindMinimalNotes(NoteFindOpts{})
 			assert.Nil(t, err)
 			assert.Equal(t, len(notes), len(tt.notes))
+		})
+	}
+}
+
+func TestNotebookFindMinimalNote(t *testing.T) {
+	var tests = []struct {
+		name   string
+		notes  []MinimalNote
+		err    error
+		assert func(t *testing.T, note *MinimalNote, err error)
+	}{{
+		name:  "empty",
+		notes: []MinimalNote{},
+		assert: func(t *testing.T, note *MinimalNote, err error) {
+			assert.Nil(t, err)
+			assert.Nil(t, note)
+		},
+	}, {
+		name: "some",
+		notes: []MinimalNote{
+			{ID: 1},
+		},
+		assert: func(t *testing.T, note *MinimalNote, err error) {
+			assert.Nil(t, err)
+			assert.Equal(t, note.ID, NoteID(1))
+		},
+	}, {
+		name: "error",
+		err:  errors.New("Something went wrong"),
+		assert: func(t *testing.T, note *MinimalNote, err error) {
+			assert.Nil(t, note)
+			assert.Nil(t, err)
+		},
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			index := &noteIndexMock{}
+			index.findMinimalFunc = func(opts NoteFindOpts) ([]MinimalNote, error) {
+				return tt.notes, nil
+			}
+			test := notebookTest{
+				rootDir: "/notebook",
+				index:   index,
+			}
+			test.setup()
+			note, err := test.notebook.FindMinimalNote(NoteFindOpts{})
+			tt.assert(t, note, err)
 		})
 	}
 }
