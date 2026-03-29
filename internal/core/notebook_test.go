@@ -9,7 +9,8 @@ import (
 )
 
 type noteIndexMock struct {
-	notes map[string]*ContextualNote
+	notes             map[string]*ContextualNote
+	findMinimalResult []MinimalNote
 }
 
 func (m *noteIndexMock) Find(opts NoteFindOpts) ([]ContextualNote, error) {
@@ -17,7 +18,7 @@ func (m *noteIndexMock) Find(opts NoteFindOpts) ([]ContextualNote, error) {
 }
 
 func (m *noteIndexMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) {
-	return []MinimalNote{}, nil
+	return m.findMinimalResult, nil
 }
 
 func (m *noteIndexMock) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error) {
@@ -76,7 +77,9 @@ func (t *notebookTest) setup() {
 	t.dirs = append(t.dirs, t.rootDir)
 
 	t.fs = newFileStorageMock(t.rootDir, t.dirs)
-	t.index = &noteIndexMock{}
+	if t.index == nil {
+		t.index = &noteIndexMock{}
+	}
 	t.parser = newNoteContentParserMock(map[string]*NoteContent{})
 
 	if t.config.Note.Lang == "" {
@@ -101,12 +104,34 @@ func (t *notebookTest) setup() {
 }
 
 func TestNotebookFindMinimalNotes(t *testing.T) {
-	test := notebookTest{
-		rootDir: "/notebook",
-	}
-	test.setup()
+	var tests = []struct {
+		name  string
+		notes []MinimalNote
+	}{{
+		name:  "empty",
+		notes: []MinimalNote{},
+	}, {
+		name: "some",
+		notes: []MinimalNote{
+			{ID: 1},
+			{ID: 2},
+			{ID: 3},
+		},
+	}}
 
-	notes, err := test.notebook.FindMinimalNotes(NoteFindOpts{})
-	assert.Nil(t, err)
-	assert.Equal(t, len(notes), 0)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			index := &noteIndexMock{
+				findMinimalResult: tt.notes,
+			}
+			test := notebookTest{
+				rootDir: "/notebook",
+				index:   index,
+			}
+			test.setup()
+			notes, err := test.notebook.FindMinimalNotes(NoteFindOpts{})
+			assert.Nil(t, err)
+			assert.Equal(t, len(notes), len(tt.notes))
+		})
+	}
 }
