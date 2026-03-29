@@ -279,6 +279,17 @@ func (d *NoteDAO) findIDsByHrefs(hrefs []string, allowPartialHrefs bool) ([]core
 	return ids, nil
 }
 
+func (d *NoteDAO) FindExact(href string) (core.NoteID, error) {
+	id, err := d.FindIDByPath(href + "." + d.extension)
+	if err != nil {
+		return core.NoteID(0), err
+	}
+	if id.IsValid() {
+		return id, nil
+	}
+	return core.NoteID(0), nil
+}
+
 // FindIdsByHref finds note IDs which match the given href string.
 // This implements logic similar to NoteIndex.linkMatchesPath.
 func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.NoteID, error) {
@@ -288,19 +299,9 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 
 	href = strings.NewReplacer("%", "\\%", "_", "\\_").Replace(href)
 
-	// Prioritise exact match with extension.
-	id, err := d.FindIDByPath(href + "." + d.extension)
-	if err != nil {
-		return nil, err
-	}
-	if id.IsValid() {
-		return []core.NoteID{id}, nil
-	}
-
-	var ids []core.NoteID
 	if allowPartialHref {
 		// Filename (not path) contains 'href' anywhere.
-		ids, err = d.findIDsWithStmt(d.findIDsByFilenameLikeStmt, "%"+href+"%")
+		ids, err := d.findIDsWithStmt(d.findIDsByFilenameLikeStmt, "%"+href+"%")
 		if len(ids) > 0 || err != nil {
 			return ids, err
 		}
@@ -319,7 +320,7 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 	// 1. href% for prefix,
 	// 2. href%/% to exclude slashes after href,
 	// 3. href/% for directory
-	ids, err = d.findIDsWithStmt(d.findIDsByPathPrefixStmt, href+"%", href+"%/%", href+"/%")
+	ids, err := d.findIDsWithStmt(d.findIDsByPathPrefixStmt, href+"%", href+"%/%", href+"/%")
 	if len(ids) > 0 || err != nil {
 		return ids, err
 	}
@@ -333,6 +334,19 @@ func (d *NoteDAO) FindMinimal(opts core.NoteFindOpts) ([]core.MinimalNote, error
 	opts, err := d.expandMentionsIntoMatch(opts)
 	if err != nil {
 		return notes, err
+	}
+	// If IncludeHrefs is only one element and limit is 1,
+	// it may wants exact match
+	if len(opts.IncludeHrefs) == 1 && opts.Limit == 1 {
+		exactNoteId, err := d.FindExact(opts.IncludeHrefs[0])
+		if err != nil {
+			return notes, err
+		}
+
+		if exactNoteId.IsValid() {
+			opts.IncludeHrefs = nil
+			opts = opts.IncludingIDs([]core.NoteID{exactNoteId})
+		}
 	}
 
 	rows, err := d.findRows(opts, noteSelectionMinimal)
