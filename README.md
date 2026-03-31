@@ -165,3 +165,5 @@ Here you can read
   a similar purpose
 - [zk-spaced](https://github.com/matze/zk-spaced) – spaced repetition plugin for
   zk
+- [zk-graph-view](https://github.com/cyberSapoPerro/zk-graph-view) -
+interactive graph visualization plugin for zk
