@@ -85,6 +85,12 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 		return nil, err
 	}
 
+	fmLinks, err := p.parseFrontmatterLinks(frontmatter)
+	if err != nil {
+		return nil, err
+	}
+	links = append(links, fmLinks...)
+
 	title, bodyStart, err := parseTitle(frontmatter, root, bytes)
 	if err != nil {
 		return nil, err
@@ -269,6 +275,22 @@ func (p *Parser) parseLinks(root ast.Node, source []byte) ([]core.Link, error) {
 		return ast.WalkContinue, nil
 	})
 	return links, err
+}
+
+func (p *Parser) parseFrontmatterLinks(frontmatter frontmatter) ([]core.Link, error) {
+	links := []core.Link{}
+	for _, val := range frontmatter.values {
+		valStr := fmt.Sprint(val)
+		fmRoot := p.md.Parser().Parse(
+			text.NewReader([]byte(valStr)),
+		)
+		fmLinks, err := p.parseLinks(fmRoot, []byte(valStr))
+		if err != nil {
+			return nil, err
+		}
+		links = append(links, fmLinks...)
+	}
+	return links, nil
 }
 
 func extractLines(n ast.Node, source []byte) (content string, start, end int) {
