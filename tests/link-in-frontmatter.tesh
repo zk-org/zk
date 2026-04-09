@@ -1,0 +1,7 @@
+$ cd link-in-frontmatter
+
+$ zk list -qf\{{title}} --link-to 2bbc.md
+>Note has link in array
+>Note has link in string
+>Note has plain outbound link
+
