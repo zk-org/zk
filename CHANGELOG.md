@@ -9,6 +9,8 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ### Added
 
+- Parse links to notes in frontmatter (by @tjex, 710)
+
 ### Fixed
 
 - Indexing made significantly more performant (by @Keluaa, 735)
