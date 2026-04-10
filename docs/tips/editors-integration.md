@@ -51,9 +51,9 @@ add the following in the settings file:
       "command": "zk",
       "args": ["lsp"],
       "trace.server": "messages",
-      "filetypes": ["markdown"],
-    },
-  },
+      "filetypes": ["markdown"]
+    }
+  }
 }
 ```
 
@@ -131,11 +131,10 @@ language-servers = ["zk"]
 ```
 
 <!-- prettier-ignore -->
-:::{note}
-This configuration disables Helix's
+
+:::{note} This configuration disables Helix's
 [default language servers](https://docs.helix-editor.com/lang-support.html) for
-Markdown.
-:::
+Markdown. :::
 
 </details>
 
@@ -155,9 +154,9 @@ file:
       "command": ["zk", "lsp"],
       "languageId": "markdown",
       "scopes": ["source.markdown"],
-      "syntaxes": ["Packages/MarkdownEditing/Markdown.sublime-syntax"],
-    },
-  },
+      "syntaxes": ["Packages/MarkdownEditing/Markdown.sublime-syntax"]
+    }
+  }
 }
 ```
 
@@ -211,6 +210,7 @@ quickly create a new note with a key binding. `zk.new` takes two arguments:
    | `date`                    | string               | A date of creation for the note in natural language, e.g. "tomorrow"                                                 |
    | `edit`                    | boolean              | When true, the editor will open the newly created note (**not supported by all editors**)                            |
    | `dryRun`                  | boolean              | When true, `zk` will not actually create the note on the file system, but will return its generated content and path |
+   | `append`                  | boolean              | Append the link to selection instead of replacing it.                                                  |
    | `insertLinkAtLocation`    | location<sup>1</sup> | A location in another note where a link to the new note will be inserted                                             |
    | `insertContentAtLocation` | location<sup>1</sup> | A location in another note where the content of the new note will be inserted                                        |
 
@@ -258,41 +258,41 @@ This LSP command calls `zk list` to search a notebook. It takes two arguments:
 1. A path to any file or directory in the notebook, to locate it.
 2. <details><summary>A dictionary of additional options (click to expand)</summary>
 
-    | Key              | Type         | Required? | Description                                                                                               |
-    | ---------------- | ------------ | --------- | --------------------------------------------------------------------------------------------------------- |
-    | `select`         | string array | Yes       | List of note fields to return<sup>1</sup>                                                                 |
-    | `hrefs`          | string array | No        | Find notes matching the given path, including its descendants                                             |
-    | `limit`          | integer      | No        | Limit the number of notes found                                                                           |
-    | `match`          | string array | No        | Terms to search for in the notes                                                                          |
-    | `exactMatch`     | boolean      | No        | (deprecated: use `matchStrategy`) Search for exact occurrences of the `match` argument (case insensitive) |
-    | `matchStrategy`  | string       | No        | Specify match strategy, which may be "fts" (default), "exact" or "re"                                     |
-    | `excludeHrefs`   | string array | No        | Ignore notes matching the given path, including its descendants                                           |
-    | `tags`           | string array | No        | Find notes tagged with the given tags                                                                     |
-    | `mention`        | string array | No        | Find notes mentioning the title of the given ones                                                         |
-    | `mentionedBy`    | string array | No        | Find notes whose title is mentioned in the given ones                                                     |
-    | `linkTo`         | string array | No        | Find notes which are linking to the given ones                                                            |
-    | `linkedBy`       | string array | No        | Find notes which are linked by the given ones                                                             |
-    | `orphan`         | boolean      | No        | Find notes which are not linked by any other note                                                         |
-    | `tagless`        | boolean      | No        | Find notes which have no tags                                                                             |
-    | `related`        | string array | No        | Find notes which might be related to the given ones                                                       |
-    | `maxDistance`    | integer      | No        | Maximum distance between two linked notes                                                                 |
-    | `recursive`      | boolean      | No        | Follow links recursively                                                                                  |
-    | `created`        | string       | No        | Find notes created on the given date                                                                      |
-    | `createdBefore`  | string       | No        | Find notes created before the given date                                                                  |
-    | `createdAfter`   | string       | No        | Find notes created after the given date                                                                   |
-    | `modified`       | string       | No        | Find notes modified on the given date                                                                     |
-    | `modifiedBefore` | string       | No        | Find notes modified before the given date                                                                 |
-    | `modifiedAfter`  | string       | No        | Find notes modified after the given date                                                                  |
-    | `sort`           | string array | No        | Order the notes by the given criterion                                                                    |
+   | Key              | Type         | Required? | Description                                                                                               |
+   | ---------------- | ------------ | --------- | --------------------------------------------------------------------------------------------------------- |
+   | `select`         | string array | Yes       | List of note fields to return<sup>1</sup>                                                                 |
+   | `hrefs`          | string array | No        | Find notes matching the given path, including its descendants                                             |
+   | `limit`          | integer      | No        | Limit the number of notes found                                                                           |
+   | `match`          | string array | No        | Terms to search for in the notes                                                                          |
+   | `exactMatch`     | boolean      | No        | (deprecated: use `matchStrategy`) Search for exact occurrences of the `match` argument (case insensitive) |
+   | `matchStrategy`  | string       | No        | Specify match strategy, which may be "fts" (default), "exact" or "re"                                     |
+   | `excludeHrefs`   | string array | No        | Ignore notes matching the given path, including its descendants                                           |
+   | `tags`           | string array | No        | Find notes tagged with the given tags                                                                     |
+   | `mention`        | string array | No        | Find notes mentioning the title of the given ones                                                         |
+   | `mentionedBy`    | string array | No        | Find notes whose title is mentioned in the given ones                                                     |
+   | `linkTo`         | string array | No        | Find notes which are linking to the given ones                                                            |
+   | `linkedBy`       | string array | No        | Find notes which are linked by the given ones                                                             |
+   | `orphan`         | boolean      | No        | Find notes which are not linked by any other note                                                         |
+   | `tagless`        | boolean      | No        | Find notes which have no tags                                                                             |
+   | `related`        | string array | No        | Find notes which might be related to the given ones                                                       |
+   | `maxDistance`    | integer      | No        | Maximum distance between two linked notes                                                                 |
+   | `recursive`      | boolean      | No        | Follow links recursively                                                                                  |
+   | `created`        | string       | No        | Find notes created on the given date                                                                      |
+   | `createdBefore`  | string       | No        | Find notes created before the given date                                                                  |
+   | `createdAfter`   | string       | No        | Find notes created after the given date                                                                   |
+   | `modified`       | string       | No        | Find notes modified on the given date                                                                     |
+   | `modifiedBefore` | string       | No        | Find notes modified before the given date                                                                 |
+   | `modifiedAfter`  | string       | No        | Find notes modified after the given date                                                                  |
+   | `sort`           | string array | No        | Order the notes by the given criterion                                                                    |
 
-    1. As the output of this command might be very verbose and put a heavy load on
-       the LSP client, you need to explicitly set which note fields you want to
-       receive with the `select` option. The following fields are available:
-       `filename`, `filenameStem`, `path`, `absPath`, `title`, `lead`, `body`,
-       `snippets`, `rawContent`, `wordCount`, `tags`, `metadata`, `created`,
-       `modified` and `checksum`.
+   1. As the output of this command might be very verbose and put a heavy load
+      on the LSP client, you need to explicitly set which note fields you want
+      to receive with the `select` option. The following fields are available:
+      `filename`, `filenameStem`, `path`, `absPath`, `title`, `lead`, `body`,
+      `snippets`, `rawContent`, `wordCount`, `tags`, `metadata`, `created`,
+      `modified` and `checksum`.
 
-    </details>
+   </details>
 
 `zk.list` returns the found notes as a JSON array.
 

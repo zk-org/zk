@@ -67,6 +67,7 @@ type linkInfo struct {
 	note     *core.MinimalNote
 	location *protocol.Location
 	title    *string
+	prefix   string
 }
 
 func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.Context, info *linkInfo) error {
@@ -107,6 +108,8 @@ func linkNote(notebook *core.Notebook, documents *documentStore, context *glsp.C
 	if err != nil {
 		return err
 	}
+
+	link = info.prefix + link
 
 	go context.Call(protocol.ServerWorkspaceApplyEdit, protocol.ApplyWorkspaceEditParams{
 		Edit: protocol.WorkspaceEdit{
