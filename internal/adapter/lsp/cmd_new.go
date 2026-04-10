@@ -24,6 +24,7 @@ type cmdNewOpts struct {
 	Date                    string             `json:"date"`
 	Edit                    jsonBoolean        `json:"edit"`
 	DryRun                  jsonBoolean        `json:"dryRun"`
+	Append                  bool               `json:"append"`
 	InsertLinkAtLocation    *protocol.Location `json:"insertLinkAtLocation"`
 	InsertContentAtLocation *protocol.Location `json:"insertContentAtLocation"`
 }
@@ -85,10 +86,22 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 	if !opts.DryRun && opts.InsertLinkAtLocation != nil {
 		minNote := note.AsMinimalNote()
 
+		var prefix string
+		if opts.Append {
+			r := opts.InsertLinkAtLocation.Range
+			opts.InsertLinkAtLocation.Range = protocol.Range{
+				Start: r.End,
+				End:   r.End,
+			}
+			// Links should be appended after a space
+			prefix = " "
+		}
+
 		info := &linkInfo{
 			note:     &minNote,
 			location: opts.InsertLinkAtLocation,
 			title:    &opts.Title,
+			prefix:   prefix,
 		}
 		err := linkNote(notebook, documents, context, info)
 
