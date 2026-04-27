@@ -687,6 +687,146 @@ Paragraph
 	})
 }
 
+func TestParseLinksInFrontmatter(t *testing.T) {
+	test := func(source string, links []core.Link) {
+		content := parse(t, source)
+		assert.Equal(t, content.Links, links)
+	}
+
+	test(`---
+key: "[[wikilink]]"
+---
+`, []core.Link{
+		{
+			Title:        "wikilink",
+			Href:         "wikilink",
+			Type:         core.LinkTypeWikiLink,
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[[wikilink]]",
+			SnippetStart: 0,
+			SnippetEnd:   12,
+		},
+	})
+
+	// FIX: Links in arrays get a test Rels: value of {"down"}...?
+	// Links do work in arrays, but not sure what to make of this in terms of
+	// testability.
+
+	// 	test(`---
+	// key:
+	// 	- [[wikilink]]
+	// ---
+	// `, []core.Link{
+	// 		{
+	// 			Title:        "wikilink",
+	// 			Href:         "wikilink",
+	// 			Type:         core.LinkTypeWikiLink,
+	// 			IsExternal:   false,
+	// 			Rels:         []core.LinkRelation{},
+	// 			Snippet:      "[[[wikilink]]]",
+	// 			SnippetStart: 0,
+	// 			SnippetEnd:   14,
+	// 		},
+	// 	})
+
+	// 	test(`---
+	// key: [ [[wiki link in a list]] ]
+	// ---`, []core.Link{
+	// 		{
+	// 			Title:        "wiki link in a list",
+	// 			Href:         "wiki link in a list",
+	// 			Type:         core.LinkTypeWikiLink,
+	// 			IsExternal:   false,
+	// 			Rels:         []core.LinkRelation{},
+	// 			Snippet:      "[[[wiki link in a list]]]",
+	// 			SnippetStart: 0,
+	// 			SnippetEnd:   25,
+	// 		},
+	// 	},
+	// 	)
+
+	test(`---
+key: "[markdown title](path.md)"
+---
+`, []core.Link{
+		{
+			Title:        "markdown title",
+			Href:         "path.md",
+			Type:         core.LinkTypeMarkdown,
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[markdown title](path.md)",
+			SnippetStart: 0,
+			SnippetEnd:   25,
+		},
+	})
+
+	test(`---
+key: "https://www.foo.com"
+---
+`, []core.Link{
+		{
+			Title:        "https://www.foo.com",
+			Href:         "https://www.foo.com",
+			Type:         core.LinkTypeImplicit,
+			IsExternal:   true,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "https://www.foo.com",
+			SnippetStart: 0,
+			SnippetEnd:   19,
+		},
+	})
+
+	test(`---
+key: "[[link with | title]]"
+---
+`, []core.Link{
+		{
+			Title:        "title",
+			Href:         "link with",
+			Type:         core.LinkTypeWikiLink,
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[[link with | title]]",
+			SnippetStart: 0,
+			SnippetEnd:   21,
+		},
+	})
+
+	test(`---
+key: [[link without quotes]]
+---
+`, []core.Link{
+		{
+			Title:        "link without quotes",
+			Href:         "link without quotes",
+			Type:         core.LinkTypeWikiLink,
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "[[link without quotes]]",
+			SnippetStart: 0,
+			SnippetEnd:   23,
+		},
+	})
+
+	test(`---
+key: "A [[link inside]] a string"
+---
+`, []core.Link{
+		{
+			Title:        "link inside",
+			Href:         "link inside",
+			Type:         core.LinkTypeWikiLink,
+			IsExternal:   false,
+			Rels:         []core.LinkRelation{},
+			Snippet:      "A [[link inside]] a string",
+			SnippetStart: 0,
+			SnippetEnd:   26,
+		},
+	})
+}
+
 func parse(t *testing.T, source string) core.NoteContent {
 	return parseWithOptions(t, source, ParserOpts{
 		HashtagEnabled:      true,
