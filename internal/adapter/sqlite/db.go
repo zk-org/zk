@@ -224,6 +224,19 @@ func (db *DB) migrate() error {
 				},
 				NeedsReindexing: true,
 			},
+			{ // 9
+				SQL: []string{
+					`CREATE TABLE IF NOT EXISTS tags (
+						tag_id INTEGER NOT NULL REFERENCES collections(id)
+							ON DELETE CASCADE,
+						note_id INTEGER NOT NULL REFERENCES notes(id)
+							ON DELETE CASCADE,
+						pos INTEGER NOT NULL,
+						PRIMARY KEY(tag_id, note_id, pos)
+					);`,
+				},
+				NeedsReindexing: true,
+			},
 		}
 
 		needsReindexing := false

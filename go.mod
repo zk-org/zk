@@ -27,6 +27,7 @@ require (
 	github.com/yuin/goldmark-meta v1.1.0
 	github.com/zk-org/pretty v0.2.4
 	gopkg.in/djherbis/times.v1 v1.3.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/zk-org/zk/internal/core"
@@ -685,6 +686,97 @@ Paragraph
 			"key": "value",
 		},
 	})
+}
+
+func tagIndexes(t *testing.T, source string, tag string) []int {
+	var indexes []int
+	offset := 0
+	for {
+		i := strings.Index(source[offset:], tag)
+		if i == -1 {
+			break
+		}
+		indexes = append(indexes, offset+i)
+		offset += i + len(tag)
+	}
+	if !(len(indexes) > 0) {
+		t.Errorf("Test tag %q not found in the source.", tag)
+	}
+	return indexes
+}
+
+func verifyParsedTagPositions(t *testing.T, source string, tags []string, parsedTags []core.Tag, frontmatter bool) {
+	adjustment := 0
+	// in the body of the document, the character that introduces a tag
+	// is its start position, so we move one character forward.
+	if frontmatter == false {
+		adjustment = 1
+	}
+	for _, tag := range tags {
+		tagIndexes := tagIndexes(t, source, tag)
+		currentIndex := 0
+		for _, parsedTag := range parsedTags {
+			if tag == parsedTag.Name {
+				wantPosition := tagIndexes[currentIndex]
+				parsedPosition := parsedTag.Pos + adjustment
+				if wantPosition != parsedPosition {
+					t.Errorf("tag %q: Pos=%d, want %d", tag, parsedPosition, wantPosition)
+				}
+				currentIndex += 1
+			}
+		}
+		if currentIndex < len(tagIndexes) {
+			t.Errorf("Not every instance of tag %q found.", tag)
+		}
+	}
+}
+
+func TestParseTagsPositions(t *testing.T) {
+	test := func(source string, tagsFrontMatter []string, tagsBody []string) {
+		content := parse(t, source)
+		extendedTags := content.ExtendedTags
+		verifyParsedTagPositions(t, source, tagsFrontMatter, extendedTags, true)
+		verifyParsedTagPositions(t, source, tagsBody, extendedTags, false)
+	}
+
+	test(`---
+Title: A title
+Tags:
+    - tag1
+    - tag2
+---       
+
+# Body
+
+- Take note of something here. #important 
+- Another note here. #important #revisit
+
+`, []string{"tag1", "tag2"}, []string{"important", "revisit"})
+
+	test(`---
+Title: A title
+Tags: [tag1, tag2]
+---     
+
+# Body
+
+- A note of something here.
+- Stopping here until later. #continue
+
+:revisit:ongoing:continue:
+
+`, []string{"tag1", "tag2"}, []string{"continue", "revisit", "ongoing"})
+
+	test(`---
+Title: A title
+Tags: tag1 tag2
+---     
+
+# Body
+
+- Something that needs more attention. #needs review#
+
+`, []string{"tag1", "tag2"}, []string{"needs review"})
 }
 
 func parse(t *testing.T, source string) core.NoteContent {

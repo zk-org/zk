@@ -27,6 +27,11 @@ type MinimalNote struct {
 	Metadata map[string]any
 }
 
+type Tag struct {
+	Name string
+	Pos  int
+}
+
 // Note holds the metadata and content of a single note.
 type Note struct {
 	// Unique ID of this note in a NoteRepository.
@@ -47,6 +52,8 @@ type Note struct {
 	Links []Link
 	// List of tags found in the content.
 	Tags []string
+	// List of pairs (tag, start position).
+	ExtendedTags []Tag
 	// JSON dictionary of raw metadata extracted from the frontmatter.
 	Metadata map[string]any
 	// Date of creation.

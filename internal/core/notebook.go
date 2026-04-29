@@ -243,6 +243,14 @@ func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSort
 	return n.index.FindCollections(kind, sorters)
 }
 
+func (n *Notebook) FindTaggedNotes(tagName string, sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error) {
+	return n.index.FindTaggedNotes(tagName, sorters)
+}
+
+func (n *Notebook) FindTaggedNotesAll(sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error) {
+	return n.index.FindTaggedNotesAll(sorters)
+}
+
 // RelPath returns the path relative to the notebook root to the given path.
 func (n *Notebook) RelPath(originalPath string) (string, error) {
 	path, err := n.fs.Abs(originalPath)

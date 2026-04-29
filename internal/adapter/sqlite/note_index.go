@@ -27,6 +27,7 @@ type dao struct {
 	notes       *NoteDAO
 	links       *LinkDAO
 	collections *CollectionDAO
+	tags        *TaggedNoteDAO
 	metadata    *MetadataDAO
 }
 
@@ -85,6 +86,22 @@ func (ni *NoteIndex) FindLinksBetweenNotes(ids []core.NoteID) (links []core.Reso
 	return
 }
 
+func (ni *NoteIndex) FindTaggedNotes(tagName string, sorters []core.TaggedNoteSorter) (tag []core.TaggedNoteDetail, err error) {
+	err = ni.commit(func(dao *dao) error {
+		tag, err = dao.tags.FindTaggedNotes(tagName, sorters)
+		return err
+	})
+	return
+}
+
+func (ni *NoteIndex) FindTaggedNotesAll(sorters []core.TaggedNoteSorter) (tags []core.TaggedNoteDetail, err error) {
+	err = ni.commit(func(dao *dao) error {
+		tags, err = dao.tags.FindTaggedNotesAll(sorters)
+		return err
+	})
+	return
+}
+
 // FindCollections implements core.NoteIndex.
 func (ni *NoteIndex) FindCollections(kind core.CollectionKind, sorters []core.CollectionSorter) (collections []core.Collection, err error) {
 	err = ni.commit(func(dao *dao) error {
@@ -125,7 +142,7 @@ func (ni *NoteIndex) Add(note core.Note) (id core.NoteID, err error) {
 			return err
 		}
 
-		return ni.associateTags(dao.collections, id, note.Tags)
+		return ni.associateTags(dao, &note, id)
 	})
 
 	if err != nil {
@@ -234,11 +251,11 @@ func (ni *NoteIndex) Update(note core.Note) error {
 		}
 
 		// Reset tags
-		err = dao.collections.RemoveAssociations(id)
+		err = ni.removeAssociations(dao, id)
 		if err != nil {
 			return err
 		}
-		return ni.associateTags(dao.collections, id, note.Tags)
+		return ni.associateTags(dao, &note, id)
 	})
 
 	if err != nil {
@@ -247,18 +264,50 @@ func (ni *NoteIndex) Update(note core.Note) error {
 	return nil
 }
 
-func (ni *NoteIndex) associateTags(collections *CollectionDAO, noteID core.NoteID, tags []string) error {
+func (ni *NoteIndex) removeAssociations(dao *dao, noteID core.NoteID) error {
+	err := dao.tags.RemoveAssociations(noteID)
+	if err != nil {
+		return err
+	}
+	err = dao.collections.RemoveAssociations(noteID)
+	return err
+}
+
+func (ni *NoteIndex) associateTags(dao *dao, note *core.Note, noteID core.NoteID) error {
+	tagIDs, err := ni.associateTagCollections(dao, note, noteID)
+	if err != nil {
+		return err
+	}
+	return ni.associateTagOccurrences(dao, note, noteID, tagIDs)
+}
+
+func (ni *NoteIndex) associateTagCollections(dao *dao, note *core.Note, noteID core.NoteID) (map[string]core.CollectionID, error) {
+	tags := note.Tags
+	collections := dao.collections
+	tagIDs := map[string]core.CollectionID{}
 	for _, tag := range tags {
 		tagID, err := collections.FindOrCreate(core.CollectionKindTag, tag)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		tagIDs[tag] = tagID
 		_, err = collections.Associate(noteID, tagID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return tagIDs, nil
+}
+
+func (ni *NoteIndex) associateTagOccurrences(dao *dao, note *core.Note, noteID core.NoteID, tagIDs map[string]core.CollectionID) error {
+	extendedTags := note.ExtendedTags
+	tagsDAO := dao.tags
+	for _, tag := range extendedTags {
+		err := tagsDAO.CreateAssociation(noteID, tagIDs[tag.Name], tag.Pos)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -342,6 +391,7 @@ func (ni *NoteIndex) commit(transaction func(dao *dao) error) error {
 				notes:       NewNoteDAO(tx, ni.logger, ni.extension),
 				links:       NewLinkDAO(tx, ni.logger),
 				collections: NewCollectionDAO(tx, ni.logger),
+				tags:        NewTaggedNoteDAO(tx, ni.logger),
 				metadata:    NewMetadataDAO(tx),
 			}
 			return transaction(&dao)

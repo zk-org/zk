@@ -33,6 +33,8 @@ type NoteContent struct {
 	Body opt.String
 	// Tags is the list of tags found in the note content.
 	Tags []string
+	// ExtendedTags is a list of pairs (tag, position)
+	ExtendedTags []Tag
 	// Links is the list of outbound links found in the note.
 	Links []Link
 	// Additional metadata. For example, extracted from a YAML frontmatter.
@@ -62,16 +64,17 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	}
 
 	note := Note{
-		Path:       relPath,
-		Title:      contentParts.Title.String(),
-		Lead:       contentParts.Lead.String(),
-		Body:       contentParts.Body.String(),
-		RawContent: contentStr,
-		WordCount:  len(strings.Fields(contentStr)),
-		Links:      make([]Link, 0),
-		Tags:       contentParts.Tags,
-		Metadata:   contentParts.Metadata,
-		Checksum:   fmt.Sprintf("%x", sha256.Sum256(content)),
+		Path:         relPath,
+		Title:        contentParts.Title.String(),
+		Lead:         contentParts.Lead.String(),
+		Body:         contentParts.Body.String(),
+		RawContent:   contentStr,
+		WordCount:    len(strings.Fields(contentStr)),
+		Links:        make([]Link, 0),
+		Tags:         contentParts.Tags,
+		Metadata:     contentParts.Metadata,
+		Checksum:     fmt.Sprintf("%x", sha256.Sum256(content)),
+		ExtendedTags: contentParts.ExtendedTags,
 	}
 
 	for _, link := range contentParts.Links {

@@ -13,7 +13,8 @@ import (
 
 // Tag manages the note tags in the notebook.
 type Tag struct {
-	List TagList `cmd group:"cmd" default:"withargs" help:"List all the note tags."`
+	List      TagList      `cmd group:"cmd" default:"withargs" help:"List all the note tags."`
+	Positions TagPositions `cmd group:"cmd" help:"List the positions of tags in the notes."`
 }
 
 // TagList lists all the note tags.

@@ -25,6 +25,12 @@ type NoteIndex interface {
 	// FindCollections retrieves all the collections of the given kind.
 	FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error)
 
+	// FindTaggedNotes retrieves for a given tag its associated notes.
+	FindTaggedNotes(tagName string, sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error)
+
+	// FindTaggedNotesAll retrieves all tag-note associations.
+	FindTaggedNotesAll(sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error)
+
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)
 	// Add indexes a new note.

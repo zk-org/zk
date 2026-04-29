@@ -500,6 +500,12 @@ type noteIndexAddMock struct {
 
 func (m *noteIndexAddMock) Find(opts NoteFindOpts) ([]ContextualNote, error)     { return nil, nil }
 func (m *noteIndexAddMock) FindMinimal(opts NoteFindOpts) ([]MinimalNote, error) { return nil, nil }
+func (m *noteIndexAddMock) FindTaggedNotes(tagName string, sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error) {
+	return nil, nil
+}
+func (m *noteIndexAddMock) FindTaggedNotesAll(sorters []TaggedNoteSorter) ([]TaggedNoteDetail, error) {
+	return nil, nil
+}
 func (m *noteIndexAddMock) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, error) {
 	return nil, nil
 }

@@ -2,9 +2,8 @@ package markdown
 
 import (
 	"bufio"
-	"fmt"
+
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/mvdan/xurls"
@@ -19,7 +18,7 @@ import (
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/opt"
 	strutil "github.com/zk-org/zk/internal/util/strings"
-	"github.com/zk-org/zk/internal/util/yaml"
+	yaml "github.com/zk-org/zk/internal/util/yaml"
 )
 
 // Parser parses the content of Markdown notes.
@@ -36,6 +35,8 @@ type ParserOpts struct {
 	// Indicates whether :colon:tags: are parsed.
 	ColontagEnabled bool
 }
+
+type FrontMatterExtended = yaml.FrontmatterExtended
 
 // NewParser creates a new Markdown Parser.
 func NewParser(options ParserOpts, logger util.Logger) *Parser {
@@ -65,6 +66,24 @@ func NewParser(options ParserOpts, logger util.Logger) *Parser {
 	}
 }
 
+func tagNames(parsedTags []core.Tag) []string {
+	if parsedTags == nil {
+		return []string{}
+	}
+	check := make(map[string]struct{})
+	res := make([]string, 0)
+
+	for _, tag := range parsedTags {
+		tagName := tag.Name
+		if _, ok := check[tagName]; ok {
+			continue
+		}
+		check[tagName] = struct{}{}
+		res = append(res, tagName)
+	}
+	return res
+}
+
 // ParseNoteContent implements core.NoteContentParser.
 func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	bytes := []byte(content)
@@ -79,8 +98,7 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	frontmatter, err := parseFrontmatter(context, bytes)
+	frontmatter, err := yaml.ParseFrontmatter(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -89,27 +107,33 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	body := parseBody(bodyStart, bytes)
 
-	tags, err := parseTags(frontmatter, root)
+	tags, err := parseTags(root)
 	if err != nil {
 		return nil, err
 	}
 
+	combinedTags := append(frontmatter.Tags, tags...)
+
 	return &core.NoteContent{
-		Title:    title,
-		Body:     body,
-		Lead:     parseLead(body),
-		Links:    links,
-		Tags:     tags,
-		Metadata: frontmatter.values,
+		Title:        title,
+		Body:         body,
+		Lead:         parseLead(body),
+		Links:        links,
+		Tags:         tagNames(combinedTags),
+		Metadata:     frontmatter.Values,
+		ExtendedTags: combinedTags,
 	}, nil
 }
 
 // parseTitle extracts the note title with its node.
-func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title opt.String, bodyStart int, err error) {
-	if title = frontmatter.getString("title", "Title"); !title.IsNull() {
-		bodyStart = frontmatter.end
+func parseTitle(frontmatter *FrontMatterExtended, root ast.Node, source []byte) (title opt.String, bodyStart int, err error) {
+	titleString := frontmatter.GetTitleString()
+	if !titleString.IsNull() {
+		title = titleString
+		bodyStart = frontmatter.End
 		return
 	}
 
@@ -163,51 +187,30 @@ func parseLead(body opt.String) opt.String {
 	return opt.NewNotEmptyString(strings.TrimSpace(lead.String()))
 }
 
-// parseTags extracts tags as #hashtags, :colon:tags: or from the YAML frontmatter.
-func parseTags(frontmatter frontmatter, root ast.Node) ([]string, error) {
-	tags := make([]string, 0)
-
-	// Parse from YAML frontmatter, either:
-	// * a list of strings
-	// * a single space-separated string
-	findFMTags := func(key string) []string {
-		if tags, ok := frontmatter.getStrings(key); ok {
-			return tags
-
-		} else if tags := frontmatter.getString(key); !tags.IsNull() {
-			// Parse a space-separated string list
-			res := []string{}
-			for s := range strings.FieldsSeq(tags.Unwrap()) {
-				s = strings.TrimSpace(s)
-				if len(s) > 0 {
-					res = append(res, s)
-				}
-			}
-			return res
-
-		} else {
-			return []string{}
-		}
+func resolveTags(tags []string, pos int) []core.Tag {
+	// if the tags slice has length larger than one, we assume these are colon separated tags,
+	// that the parser has returned only the start position of the first of them, and we make position adjustments.
+	result := make([]core.Tag, 0)
+	currentPosition := 0
+	for _, t := range tags {
+		result = append(result, core.Tag{Name: t, Pos: pos + currentPosition})
+		currentPosition += len(t) + 1
 	}
+	return result
+}
 
-	for _, key := range []string{"tag", "tags", "keyword", "keywords"} {
-		for _, t := range findFMTags(key) {
-			// Trims any # prefix to support hashtags embedded in YAML
-			// frontmatter, as in Simple Markdown Zettelkasten:
-			// http://evantravers.com/articles/2020/11/23/zettelkasten-updates/
-			tags = append(tags, strings.TrimPrefix(t, "#"))
-		}
-	}
-
+func parseTags(root ast.Node) ([]core.Tag, error) {
 	// Parse #hashtags and :colon:tags:
+	tags := []core.Tag{}
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if tagsNode, ok := n.(*extensions.Tags); ok && entering {
-			tags = append(tags, tagsNode.Tags...)
+			tagNodePosition := tagsNode.Pos()
+			tagNodeContent := tagsNode.Tags
+			tags = append(tags, resolveTags(tagNodeContent, tagNodePosition)...)
 		}
 		return ast.WalkContinue, nil
 	})
-
-	return strutil.RemoveDuplicates(tags), err
+	return tags, err
 }
 
 // parseLinks extracts outbound links from the note.
@@ -290,84 +293,4 @@ func extractLines(n ast.Node, source []byte) (content string, start, end int) {
 	}
 
 	return
-}
-
-// frontmatter contains metadata parsed from a YAML frontmatter.
-type frontmatter struct {
-	values map[string]any
-	start  int
-	end    int
-}
-
-var frontmatterRegex = regexp.MustCompile(`(?ms)^\s*-+\s*$.*?^\s*-+\s*$`)
-
-func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error) {
-	var front frontmatter
-	front.values = map[string]any{}
-
-	index := frontmatterRegex.FindIndex(source)
-	if index == nil {
-		return front, nil
-	}
-
-	front.start = index[0]
-	front.end = index[1]
-
-	values, err := meta.TryGet(context)
-	if err != nil {
-		return front, err
-	}
-
-	// The YAML parser parses nested maps as map[any]any
-	// instead of map[string]any, which doesn't work with the JSON
-	// marshaller.
-	values = yaml.ConvertMapToJSONCompatible(values)
-
-	// Convert keys to lowercase, because we don't want to be case sensitive.
-	for k, v := range values {
-		front.values[strings.ToLower(k)] = v
-	}
-
-	return front, nil
-}
-
-// getString returns the first string value found for any of the given keys.
-func (m frontmatter) getString(keys ...string) opt.String {
-	if m.values == nil {
-		return opt.NullString
-	}
-
-	for _, key := range keys {
-		key = strings.ToLower(key)
-		if val, ok := m.values[key]; ok {
-			if val, ok := val.(string); ok {
-				return opt.NewNotEmptyString(val)
-			}
-		}
-	}
-	return opt.NullString
-}
-
-// getStrings returns the first string list found for any of the given keys.
-func (m frontmatter) getStrings(keys ...string) ([]string, bool) {
-	if m.values == nil {
-		return nil, false
-	}
-
-	for _, key := range keys {
-		key = strings.ToLower(key)
-		if val, ok := m.values[key]; ok {
-			if val, ok := val.([]any); ok {
-				strs := []string{}
-				for _, v := range val {
-					s := strings.TrimSpace(fmt.Sprint(v))
-					if len(s) > 0 {
-						strs = append(strs, s)
-					}
-				}
-				return strs, true
-			}
-		}
-	}
-	return nil, false
 }

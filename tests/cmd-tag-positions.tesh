@@ -1,0 +1,776 @@
+$ cd tags
+
+# Print help for `zk tag list`
+$ zk tag positions --help
+>Usage: zk tag positions
+>
+>List the positions of tags in the notes.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+>
+>Sorting
+>  -s, --sort=name,...    Sort the output.
+>
+>Formatting
+>  -P, --no-pager    Do not pipe output into a pager.
+
+# List all tags.
+$ zk tag positions -P
+>[
+>  {
+>    "tag": "biography",
+>    "notes": [
+>      {
+>        "title": "The Diary of a Young Girl",
+>        "path": "the-diary-of-a-young-girl.md",
+>        "position": [
+>          57
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "biology",
+>    "notes": [
+>      {
+>        "title": "The Origin of Species",
+>        "path": "the-origin-of-species.md",
+>        "position": [
+>          53
+>        ]
+>      },
+>      {
+>        "title": "The Selfish Gene",
+>        "path": "the-selfish-gene.md",
+>        "position": [
+>          48
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "book",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          8
+>        ]
+>      },
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          27
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          17
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          19
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "The Art of War",
+>        "path": "the-art-of-war.md",
+>        "position": [
+>          18
+>        ]
+>      },
+>      {
+>        "title": "The Diary of a Young Girl",
+>        "path": "the-diary-of-a-young-girl.md",
+>        "position": [
+>          29
+>        ]
+>      },
+>      {
+>        "title": "The Great Gatsby",
+>        "path": "the-great-gatsby.md",
+>        "position": [
+>          20
+>        ]
+>      },
+>      {
+>        "title": "The Origin of Species",
+>        "path": "the-origin-of-species.md",
+>        "position": [
+>          25
+>        ]
+>      },
+>      {
+>        "title": "The Second Sex",
+>        "path": "the-second-sex.md",
+>        "position": [
+>          18
+>        ]
+>      },
+>      {
+>        "title": "The Selfish Gene",
+>        "path": "the-selfish-gene.md",
+>        "position": [
+>          20
+>        ]
+>      },
+>      {
+>        "title": "Ulysses",
+>        "path": "ulysses.md",
+>        "position": [
+>          11
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "dystopia",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          51
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "feminism",
+>    "notes": [
+>      {
+>        "title": "The Second Sex",
+>        "path": "the-second-sex.md",
+>        "position": [
+>          37
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "fiction",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          14
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          25
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          29
+>        ]
+>      },
+>      {
+>        "title": "The Great Gatsby",
+>        "path": "the-great-gatsby.md",
+>        "position": [
+>          26
+>        ]
+>      },
+>      {
+>        "title": "Ulysses",
+>        "path": "ulysses.md",
+>        "position": [
+>          17
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "history",
+>    "notes": [
+>      {
+>        "title": "The Art of War",
+>        "path": "the-art-of-war.md",
+>        "position": [
+>          49
+>        ]
+>      },
+>      {
+>        "title": "The Diary of a Young Girl",
+>        "path": "the-diary-of-a-young-girl.md",
+>        "position": [
+>          48
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "non-fiction",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          42
+>        ]
+>      },
+>      {
+>        "title": "The Art of War",
+>        "path": "the-art-of-war.md",
+>        "position": [
+>          24
+>        ]
+>      },
+>      {
+>        "title": "The Diary of a Young Girl",
+>        "path": "the-diary-of-a-young-girl.md",
+>        "position": [
+>          35
+>        ]
+>      },
+>      {
+>        "title": "The Origin of Species",
+>        "path": "the-origin-of-species.md",
+>        "position": [
+>          40
+>        ]
+>      },
+>      {
+>        "title": "The Second Sex",
+>        "path": "the-second-sex.md",
+>        "position": [
+>          24
+>        ]
+>      },
+>      {
+>        "title": "The Selfish Gene",
+>        "path": "the-selfish-gene.md",
+>        "position": [
+>          35
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "philosophy",
+>    "notes": [
+>      {
+>        "title": "The Art of War",
+>        "path": "the-art-of-war.md",
+>        "position": [
+>          37
+>        ]
+>      },
+>      {
+>        "title": "The Origin of Species",
+>        "path": "the-origin-of-species.md",
+>        "position": [
+>          62
+>        ]
+>      },
+>      {
+>        "title": "The Second Sex",
+>        "path": "the-second-sex.md",
+>        "position": [
+>          47
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "physics",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          55
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "romance",
+>    "notes": [
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          32
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          38
+>        ]
+>      },
+>      {
+>        "title": "The Great Gatsby",
+>        "path": "the-great-gatsby.md",
+>        "position": [
+>          35
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          33
+>        ]
+>      },
+>      {
+>        "title": "The Origin of Species",
+>        "path": "the-origin-of-species.md",
+>        "position": [
+>          31
+>        ]
+>      },
+>      {
+>        "title": "The Selfish Gene",
+>        "path": "the-selfish-gene.md",
+>        "position": [
+>          26
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science-fiction",
+>    "notes": [
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          34
+>        ]
+>      }
+>    ]
+>  }
+>]
+
+# Remove some tags.
+$ rm the*
+
+$ zk tag positions -P
+>[
+>  {
+>    "tag": "book",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          8
+>        ]
+>      },
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          27
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          17
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          19
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Ulysses",
+>        "path": "ulysses.md",
+>        "position": [
+>          11
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "dystopia",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          51
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "fiction",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          14
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          25
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          29
+>        ]
+>      },
+>      {
+>        "title": "Ulysses",
+>        "path": "ulysses.md",
+>        "position": [
+>          17
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "non-fiction",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          42
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "physics",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          55
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "romance",
+>    "notes": [
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          32
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          38
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          33
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science-fiction",
+>    "notes": [
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          34
+>        ]
+>      }
+>    ]
+>  }
+>]
+
+# Add new tags.
+$ echo "#tag1 #tag2 #science" > ulysses.md
+
+$ zk tag positions -P
+>[
+>  {
+>    "tag": "book",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          8
+>        ]
+>      },
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          27
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          17
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          19
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          23
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "dystopia",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          51
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "fiction",
+>    "notes": [
+>      {
+>        "title": "1984",
+>        "path": "1984.md",
+>        "position": [
+>          14
+>        ]
+>      },
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          23
+>        ]
+>      },
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          25
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          29
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "non-fiction",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          42
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "physics",
+>    "notes": [
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          55
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "romance",
+>    "notes": [
+>      {
+>        "title": "Anna Karenina",
+>        "path": "anna-karenina.md",
+>        "position": [
+>          32
+>        ]
+>      },
+>      {
+>        "title": "Pride and Prejudice",
+>        "path": "pride-and-prejudice.md",
+>        "position": [
+>          38
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science",
+>    "notes": [
+>      {
+>        "title": "",
+>        "path": "ulysses.md",
+>        "position": [
+>          12
+>        ]
+>      },
+>      {
+>        "title": "A Brief History of Time",
+>        "path": "a-brief-history-of-time.md",
+>        "position": [
+>          33
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "science-fiction",
+>    "notes": [
+>      {
+>        "title": "Brave New World",
+>        "path": "brave-new-world.md",
+>        "position": [
+>          34
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "tag1",
+>    "notes": [
+>      {
+>        "title": "",
+>        "path": "ulysses.md",
+>        "position": [
+>          0
+>        ]
+>      }
+>    ]
+>  },
+>  {
+>    "tag": "tag2",
+>    "notes": [
+>      {
+>        "title": "",
+>        "path": "ulysses.md",
+>        "position": [
+>          6
+>        ]
+>      }
+>    ]
+>  }
+>]
+
+# Remove all tags.
+$ rm *
+
+$ zk tag positions -P
+>[]
+
