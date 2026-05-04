@@ -164,7 +164,7 @@ Here you can read
 
 - [Neuron](https://github.com/srid/neuron) – a great tool to publish a
   Zettelkasten on the web
-- [Emanote](https://emanote.srid.ca/) – an improved successor to Neuron
+- [Emanote](https://emanote.srid.ca/) – an improved successor to Neuron (see [Emanote configuration for zk](https://emanote.srid.ca/zk))
 - [Weave](https://github.com/matze/weave) – another tool to publish Zettelkasten
   on the web
 - [sirupsen's zk](https://github.com/sirupsen/zk) – a collection of scripts with
