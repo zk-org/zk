@@ -30,6 +30,7 @@ type Filtering struct {
 	Orphan          bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
 	Tagless         bool     `kong:"group='filter',help='Find notes which have no tags.'" json:"tagless"`
 	MissingBacklink bool     `kong:"group='filter',help='Find notes with at least one missing backlink.'" json:"missingBacklink"`
+	BrokenLinks     bool     `kong:"group='filter',help='Find notes with at least one broken internal link.'" json:"brokenLinks"`
 	Related         []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
 	MaxDistance     int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
 	Recursive       bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
@@ -90,6 +91,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 			f.Orphan = f.Orphan || parsedFilter.Orphan
 			f.Tagless = f.Tagless || parsedFilter.Tagless
 			f.MissingBacklink = f.MissingBacklink || parsedFilter.MissingBacklink
+			f.BrokenLinks = f.BrokenLinks || parsedFilter.BrokenLinks
 			f.Recursive = f.Recursive || parsedFilter.Recursive
 
 			if f.Limit == 0 {
@@ -206,6 +208,7 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 	opts.Orphan = f.Orphan
 	opts.Tagless = f.Tagless
 	opts.MissingBacklink = f.MissingBacklink
+	opts.BrokenLinks = f.BrokenLinks
 
 	if f.Created != "" {
 		start, end, err := parseDayRange(f.Created)

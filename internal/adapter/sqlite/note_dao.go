@@ -691,6 +691,14 @@ WHERE collection_id IN (SELECT id FROM collections t WHERE kind = '%s' AND (%s))
 		)`)
 	}
 
+	if opts.BrokenLinks {
+		whereExprs = append(whereExprs, `n.id IN (
+			SELECT DISTINCT source_id
+			FROM links
+			WHERE external = 0 AND target_id IS NULL
+		)`)
+	}
+
 	if opts.CreatedStart != nil {
 		whereExprs = append(whereExprs, "created >= ?")
 		args = append(args, opts.CreatedStart)

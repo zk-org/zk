@@ -1023,6 +1023,13 @@ func TestNoteDAOFindMissingBacklink(t *testing.T) {
 	)
 }
 
+func TestNoteDAOFindBrokenLinks(t *testing.T) {
+	testNoteDAOFindPaths(t,
+		core.NoteFindOpts{BrokenLinks: true},
+		[]string{"index.md"},
+	)
+}
+
 func TestNoteDAOFindCreatedOn(t *testing.T) {
 	start := time.Date(2020, 11, 22, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2020, 11, 23, 0, 0, 0, 0, time.UTC)
