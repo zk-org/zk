@@ -54,6 +54,8 @@ $ zk list --help
 >      --tagless                    Find notes which have no tags.
 >      --missing-backlink           Find notes with at least one missing
 >                                   backlink.
+>      --broken-links               Find notes with at least one broken internal
+>                                   link.
 >      --related=PATH,...           Find notes which might be related to the
 >                                   given ones.
 >      --max-distance=COUNT         Maximum distance between two linked notes.
