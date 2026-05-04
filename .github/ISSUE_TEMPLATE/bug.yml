@@ -1,6 +1,6 @@
-name: Bug report
+name: Bug Report
 description: File a bug report to help improve zk.
-title: "<do not include bug: feat: etc>"
+title: "Don't start with 'bug:'"
 labels:
   - bug
 body:

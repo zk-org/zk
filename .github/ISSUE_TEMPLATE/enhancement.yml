@@ -1,0 +1,20 @@
+name: Enhancement
+description: Something that exists, but can be improved.
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description:
+        Describe the enhancement. What is currently not working so well? And how
+        can it be improved?
+  - type: checkboxes
+    id: ownership
+    attributes:
+      label: Ownership
+      description: "Do I plan to submit a PR for this feature?"
+      options:
+        - label: "No"
+        - label: "Yes"

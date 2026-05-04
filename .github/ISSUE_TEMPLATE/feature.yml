@@ -1,8 +1,8 @@
-name: Feature Request
-description: Suggest a new feature or enhancement for this project.
-title: "<do not include bug:, feat:, etc>"
+name: Feature
+description: Suggest a new feature for this project.
+title: "Don't start with 'feat:'"
 labels:
-  - feature request
+  - feature
 body:
   - type: textarea
     id: description
@@ -10,7 +10,7 @@ body:
       label: Description
       description:
         Describe the feature. Why should it be implemented? What problem does it
-        solve? What value does it bring? How would it help users?
+        solve? What value does it bring? How could it be implemented?
   - type: checkboxes
     id: ownership
     attributes:
