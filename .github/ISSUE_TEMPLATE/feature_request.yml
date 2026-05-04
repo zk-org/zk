@@ -17,5 +17,5 @@ body:
       label: Ownership
       description: "Do I plan to submit a PR for this feature?"
       options:
-        - label: No
-        - label: Yes
+        - label: "No"
+        - label: "Yes"
