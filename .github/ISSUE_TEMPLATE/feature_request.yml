@@ -11,11 +11,22 @@ body:
       description:
         Describe the feature. Why should it be implemented? What problem does
         it solve? What value does it bring? How would it help users?
+  # - type: checkboxes
+  #   id: ownership
+  #   attributes:
+  #     label: Ownership
+  #     description: Do I plan to submit a PR for this feature?
+  #     options:
+  #       - label: No
+  #       - label: Yes
   - type: checkboxes
-    id: ownership
+    id: checks
     attributes:
-      label: Ownership
-      description: Do I plan to submit a PR for this feature?
+      label: Check if applicable
+      description: |
+        :warning: Our time is limited and if we don't plan on fixing the reported bug myself, we might close this issue. No hard feelings.
+        :heart: But if you would like to contribute a fix yourself, **we'll be happy to guide you through the codebase and review a pull request**.
       options:
-        - label: No
-        - label: Yes
+        - label: I have searched the existing issues (**required**)
+          required: true
+        - label: I'm willing to help fix the problem and contribute a pull request
