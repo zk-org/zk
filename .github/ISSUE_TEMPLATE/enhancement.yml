@@ -13,8 +13,7 @@ body:
   - type: checkboxes
     id: ownership
     attributes:
-      label: Ownership
-      description: "Do I plan to submit a PR for this feature?"
+      label: "Do I plan to submit a PR for this?"
       options:
         - label: "No"
         - label: "Yes"
