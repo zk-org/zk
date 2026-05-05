@@ -1,0 +1,20 @@
+name: Feature
+description: Suggest a new feature for this project.
+title: "Don't start with 'feat:'"
+labels:
+  - feature
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description:
+        Describe the feature. Why should it be implemented? What problem does it
+        solve? What value does it bring? How could it be implemented?
+  - type: checkboxes
+    id: ownership
+    attributes:
+      label: "Do I plan to submit a PR for this?"      
+      options:
+        - label: "No"
+        - label: "Yes"
