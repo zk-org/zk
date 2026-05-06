@@ -1,8 +1,8 @@
-name: Deploy documentation site
+name: Deploy Docs
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
     paths: [docs/**]
 
 concurrency:

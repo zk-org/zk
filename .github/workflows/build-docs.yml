@@ -1,11 +1,18 @@
-# Build the Sphinx docs on PR to catch any issues before merging.
-# Deployment happens on push/merge to main with gh-pages.yml
+# Deployment occurs on push/merge to main with gh-pages.yml
 name: Build Docs
 
 on:
+  push:
+    branches: [dev, main]
+    paths: [docs/**]
   pull_request:
     branches: [dev, main]
     paths: [docs/**]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   pages:
@@ -15,7 +22,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Install requirements
-        run: pip install -r docs/requirements.txt
-      - name: Build docs
-        run: make zkdocs
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+      - run: pip install zensical
+      - run: zensical build --clean --strict
