@@ -1,13 +1,19 @@
-name: Documentation
+name: Deploy documentation site
+
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [main]
+    paths: [docs/**]
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 jobs:
   deploy:
     environment:
