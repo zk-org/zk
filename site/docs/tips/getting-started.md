@@ -4,8 +4,8 @@ A short introduction showing how to use `zk`.
 
 ## Create a new notebook
 
-Create a [notebook](../notes/notebook.md) to host your notes. You are free to organize
-your notebook as you want, adding subdirectories if needed.
+Create a [notebook](../notes/notebook.md) to host your notes. You are free to
+organize your notebook as you want, adding subdirectories if needed.
 
 ```sh
 $ zk init my-notes
@@ -23,8 +23,8 @@ Now you are ready to write your very first note. Pick a subject,
 $ zk new --title "An interesting concept"
 ```
 
-You can customize your experience using [custom templates](../notes/template.md) to
-generate many kind of notes.
+You can customize your experience using [custom templates](../notes/template.md)
+to generate many kind of notes.
 
 ![Create a note](../assets/media/new1.svg)
 
@@ -42,8 +42,9 @@ the current search query as title.
 
 After some time, hopefully you will have enough notes to be lost in it.
 
-To help structure your notebook, you can add [metadata](../notes/note-frontmatter.md)
-(e.g. keywords/tags) to your notes. You can then use `zk`'s powerful
+To help structure your notebook, you can add
+[metadata](../notes/note-frontmatter.md) (e.g. keywords/tags) to your notes. You
+can then use `zk`'s powerful
 [filtering capabilities](../notes/note-filtering.md) to find the notes you need.
 
 ```sh
@@ -95,7 +96,7 @@ To customize your experience with `zk`, you may want to edit the
 $ vim .zk/config.toml
 ```
 
-Declaring your own [aliases](../config/config-alias.md) is a great way to make your
-experience with `zk` easier and more familiar.
+Declaring your own [aliases](../config/config-alias.md) is a great way to make
+your experience with `zk` easier and more familiar.
 
 ![Note alias](../assets/media/alias.svg)

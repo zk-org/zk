@@ -11,7 +11,7 @@ You can list notes which could be good candidates for a new link with the
 `--related` [filtering option](../notes/note-filtering.md).
 
 ```sh
-$ zk list --related note.md
+zk list --related note.md
 ```
 
 This returns notes which are not connected to the given note, but with at least
@@ -23,7 +23,10 @@ To find flimsy notes needing to be fleshed out, you can list the first few notes
 with the smallest word count from your notebook with the following command:
 
 ```sh
-$ zk list --format '{{word-count}}\t{{title}}' --sort word-count --limit 20
+zk list --format '{{word-count}}\t{{title}}' --sort word-count --limit 20
+```
+
+```
 4       Integration with fzf
 5       Searching and filtering notes
 63      Setting your default editor
@@ -34,5 +37,11 @@ $ zk list --format '{{word-count}}\t{{title}}' --sort word-count --limit 20
 ## Find notes without tags
 
 ```sh
-$ zk list --tagless
+zk list --tagless
+```
+
+## Find notes with broken links
+
+```sh
+zk list --broken-links
 ```

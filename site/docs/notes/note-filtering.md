@@ -63,7 +63,8 @@ The search is powered by different strategies to answer various use cases:
 - `re` enables regular expression for advanced use cases.
 
 Change the currently used strategy with `--match-strategy <strategy>` (or `-M`).
-To set the default strategy, you can declare a [custom alias](../config/config-alias.md):
+To set the default strategy, you can declare a
+[custom alias](../config/config-alias.md):
 
 ```toml
 [alias]
@@ -228,8 +229,8 @@ you use a separator (e.g. `/`) to group multiple tags under a parent tag.
 $ zk list --tag "year/201*"
 ```
 
-A useful [notebook housekeeping](../tips/notebook-housekeeping.md) feature is to find
-tags which _do not_ have tags.
+A useful [notebook housekeeping](../tips/notebook-housekeeping.md) feature is to
+find tags which _do not_ have tags.
 
 ```sh
 $ zk list --tagless
@@ -361,8 +362,8 @@ especially useful with `zk edit` to avoid opening many unwanted notes with your
 editor.
 
 Use `--interactive` (or `-i`) to select filtered notes manually. The interactive
-selection is handled by [`fzf`](../config/tool-fzf.md) which brings a powerful fuzzy
-matching search into the mix.
+selection is handled by [`fzf`](../config/tool-fzf.md) which brings a powerful
+fuzzy matching search into the mix.
 
 ## Sort the results
 

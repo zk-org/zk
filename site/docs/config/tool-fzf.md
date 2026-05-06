@@ -35,9 +35,9 @@ fzf-preview = "zk list --quiet --format full --limit 1 {-1}"
 ## Line format
 
 With the `fzf-line` setting property, you can provide your own
-[template](../notes/template.md) to customize the format of each `fzf` line. The lines
-are used by `fzf` for the fuzzy matching, so if you want to search in the full
-note content, do not forget to add `{{body}}` in your custom template.
+[template](../notes/template.md) to customize the format of each `fzf` line. The
+lines are used by `fzf` for the fuzzy matching, so if you want to search in the
+full note content, do not forget to add `{{body}}` in your custom template.
 
 The default line template is
 `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`.

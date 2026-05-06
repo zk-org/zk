@@ -1,13 +1,14 @@
 # Note formats
 
-To keep your notebooks [future-proof](../tips/future-proof.md), `zk` uses a simple plain
-text format for your notes. Only Markdown is supported at the moment, but more
-formats may be added in the future.
+To keep your notebooks [future-proof](../tips/future-proof.md), `zk` uses a
+simple plain text format for your notes. Only Markdown is supported at the
+moment, but more formats may be added in the future.
 
 ## Markdown
 
 You can set up some features of `zk`'s Markdown parser from your
-[configuration file](../config/config.md), under the `[format.markdown]` section.
+[configuration file](../config/config.md), under the `[format.markdown]`
+section.
 
 | Setting               | Default         | Description                                                                    |
 | --------------------- | --------------- | ------------------------------------------------------------------------------ |

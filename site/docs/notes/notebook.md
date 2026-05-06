@@ -13,8 +13,8 @@ environment variable. Setting `ZK_NOTEBOOK_DIR` in your shell configuration
 (e.g. `~/.profile`) can be used to define a default notebook which `zk` commands
 will use when the working directory is not in another notebook.
 
-If the [default notebook](../config/config-notebook.md) is set it will be used as
-`ZK_NOTEBOOK_DIR`, unless this environment variable is not already set.
+If the [default notebook](../config/config-notebook.md) is set it will be used
+as `ZK_NOTEBOOK_DIR`, unless this environment variable is not already set.
 
 ## Anatomy of a notebook
 

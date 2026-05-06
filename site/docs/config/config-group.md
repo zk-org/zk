@@ -2,8 +2,8 @@
 
 A _group_ is a named [configuration section](config.md) used to override
 [note creation rules](config-note.md) for specific directories. This allows you
-to use your [notebook](../notes/notebook.md) very differently depending on the type of
-note created. For a practical example, take a look at
+to use your [notebook](../notes/notebook.md) very differently depending on the
+type of note created. For a practical example, take a look at
 [maintaining a daily journal](../tips/daily-journal.md).
 
 ## Declaring a new group
@@ -21,7 +21,7 @@ paths = [
 ```
 
 You can also use
-[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) in `paths`:
+[glob patterns](<https://en.wikipedia.org/wiki/Glob_(programming)>) in `paths`:
 
 ```toml
 [group.journal]

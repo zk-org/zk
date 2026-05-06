@@ -91,8 +91,9 @@ The `{{slug}}` helper generates a URL friendly version of a text. For example,
 `{{slug "This will be slugified!"}}` becomes `this-will-be-slugified`.
 
 This is mostly useful to generate a safe filename containing the title passed to
-`zk new --title "An interesting note"`. With the [`filename`](../config/config-note.md)
-template `{{slug title}}`, it becomes `an-interesting-note.md`.
+`zk new --title "An interesting note"`. With the
+[`filename`](../config/config-note.md) template `{{slug title}}`, it becomes
+`an-interesting-note.md`.
 
 ### Prepend helper
 

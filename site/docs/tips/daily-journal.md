@@ -5,8 +5,8 @@ Let's assume you want to write daily notes named like `2021-02-16.md` in a
 [note group](../config/config-group.md) overriding the default
 [note creation](../notes/note-creation.md) settings.
 
-First, create a `group` entry in the [configuration file](../config/config.md) to set the
-note settings for this directory. Refer to the
+First, create a `group` entry in the [configuration file](../config/config.md)
+to set the note settings for this directory. Refer to the
 [template syntax reference](../notes/template.md) to understand how to use the
 `{{format-date}}` helper.
 
@@ -41,7 +41,8 @@ $ zk new journal/daily
 
 That is a bit of a mouthful for a command called every day. Would it not be
 better to just write `zk daily`? We can, by defining a
-[command alias](../config/config-alias.md) in the [configuration file](../config/config.md).
+[command alias](../config/config-alias.md) in the
+[configuration file](../config/config.md).
 
 ```toml
 [alias]
@@ -54,8 +55,8 @@ Let's unpack this alias:
   it will instead ask you if you wish to edit it. Using `--no-input` skips the
   prompt and edit the existing note right away.
 - `$ZK_NOTEBOOK_DIR` is set to the absolute path of the current
-  [notebook](../notes/notebook.md) when running an alias. Using it allows you to run
-  `zk daily` no matter where you are in the notebook folder hierarchy.
+  [notebook](../notes/notebook.md) when running an alias. Using it allows you to
+  run `zk daily` no matter where you are in the notebook folder hierarchy.
 - We need to use double quotes around `$ZK_NOTEBOOK_DIR`, otherwise it will not
   be expanded.
 

@@ -2,8 +2,8 @@
 
 A great way to expand `zk` feature set is to explore a wealth of command-line
 tools available. You can use `zk`'s powerful
-[searching and filtering](../notes/note-filtering.md) capabilities to select notes before
-delegating further processing to other programs.
+[searching and filtering](../notes/note-filtering.md) capabilities to select
+notes before delegating further processing to other programs.
 
 ## Process file paths
 
@@ -21,7 +21,8 @@ using the `{{path}}` [template variable](../notes/template-format.md) instead:
 $ zk list --format "'{{path}}'" --delimiter " "
 ```
 
-As always, this is such a useful [command alias](../config/config-alias.md) to have:
+As always, this is such a useful [command alias](../config/config-alias.md) to
+have:
 
 ```toml
 paths = "zk list --format \"'{{path}}'\" --quiet --delimiter ' ' $@"

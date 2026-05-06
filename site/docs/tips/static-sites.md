@@ -1,4 +1,4 @@
-# Static Site Solutions
+# Static site solutions
 
 ## Emanote
 
@@ -10,8 +10,8 @@ For an Emanote-specific zk configuration, see
 ## Weave
 
 [Weave](https://github.com/matze/weave) is a self-hosted zk-based viewer and
-editor for the web. For an example see the [demo
-page](https://weave.bloerg.net).
+editor for the web. For an example see the
+[demo page](https://weave.bloerg.net).
 
 ## Gollum
 

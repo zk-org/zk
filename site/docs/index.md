@@ -14,8 +14,7 @@ title: Getting Started
 [Zettelkasten](https://zettelkasten.de/introduction/) or
 [personal wiki](https://en.wikipedia.org/wiki/Personal_wiki).
 
-Looking for a
-[quick usage example?](tips/getting-started)
+Looking for a [quick usage example?](tips/getting-started)
 
 Or want to see it in action? Checkout [Shivan's](https://github.com/shivan-s)
 video,
@@ -26,18 +25,16 @@ video,
 > Note: Links in the below list are outbound ↗
 
 - [Creating notes from templates](notes/note-creation)
-- [Advanced search and filtering capabilities](notes/note-filtering)
-  including [tags](notes/tags), links and
-  mentions
+- [Advanced search and filtering capabilities](notes/note-filtering) including
+  [tags](notes/tags), links and mentions
 - [Integration with your favorite editors](tips/editors-integration):
   - [Any LSP-compatible editor](tips/editors-integration)
   - [`zk-emacs`](https://codeberg.org/mcookly/zk-emacs) for Emacs
   - [`zk-nvim`](https://github.com/zk-org/zk-nvim) for Neovim 0.8+
   - [`zk-vscode`](https://github.com/zk-org/zk-vscode) for Visual Studio Code
-- [Interactive browser](config/tool-fzf),
-  powered by `fzf`
-- [Git-style command aliases](config/config-alias)
-  and [named filters](config/config-filter)
+- [Interactive browser](config/tool-fzf), powered by `fzf`
+- [Git-style command aliases](config/config-alias) and
+  [named filters](config/config-filter)
 - [Made with automation in mind](tips/automation)
 - [Notebook housekeeping](tips/notebook-housekeeping)
 - [Future-proof, thanks to Markdown](tips/future-proof)
