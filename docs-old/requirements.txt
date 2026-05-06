@@ -1,3 +1,0 @@
-Sphinx
-furo
-myst-parser
