@@ -41,8 +41,8 @@ video,
   - Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
   - [YAML frontmatter](notes/note-frontmatter)
 
-See the changelog in our source code repository for the list of upcoming features
-waiting to be released.
+See the changelog in our source code repository for the list of upcoming
+features waiting to be released.
 
 ### What `zk` is not
 
@@ -135,8 +135,8 @@ sudo port install zk
 
 ### Build from scratch
 
-Make sure you have a working [Go 1.21+ installation](https://golang.org/), then
-clone the repository:
+Make sure you have a working [Go installation](https://golang.org/) (v1.21+),
+then:
 
 ```sh
 git clone https://github.com/zk-org/zk.git
@@ -161,13 +161,8 @@ $ ./zk -h
 
 ## Contributing
 
-We warmly welcome issues, PRs and
-[discussions](https://github.com/zk-org/zk/discussions).
-
-_Be sure when contributing to branch from dev, not main._
-
-Here you can read
-[some useful info for contributing to `zk`](./CONTRIBUTING.md).
+We warmly welcome issues, PRs and discussions. Check the `CONTRIBUTING.md` in
+our GitHub repository for further information.
 
 ## Related projects
 
