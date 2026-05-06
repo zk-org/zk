@@ -1,5 +1,5 @@
 def main():
-    print("Hello from site!")
+    print("Hello from migrate-to-zensical!")
 
 
 if __name__ == "__main__":

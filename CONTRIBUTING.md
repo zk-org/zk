@@ -76,49 +76,18 @@ releases are created.
 
 ## Documentation
 
-We're using [Sphinx](https://www.sphinx-doc.org/en/master/) as our documentation
-framework, and the [furo](https://pradyunsg.me/furo/quickstart/) theme.
+Our documentation is generated with [`zensical`](https://zensical.org).
 
-To install, from the repository root run:
+Follow their instructions to install.
 
-```sh
-pip install -r docs/requirements.txt
-```
+To format, navigate to the repository root and run `npx prettier ./docs --write`.
+There is a `.prettierrc` in the root of this repository.
 
-`docs/` is the root level of the documentation site.
-[index.rst](./docs/index.rst) is the landing page.
+The docs themselves are a `zk` notebook. The root of the notebook is `./docs`.
+The notebook.db is not version controlled, so feel free to reindex etc as you
+need.
 
-Documentation is written in markdown, with the exception of pages which render
-TOCs. These pages are written in
-[reStructuredText (rst)](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html),
-as Myst (which does the parsing from Markdown to rst within Sphinx's back end),
-does not handle TOCs yet (as far as I'm (@tjex) aware).
-
-### Formatting
-
-There is a `.prettierrc` at the root of the git repo. If you are using a
-different formatter, feel free to add its config file to this repo with the same
-settings.
-
-### Local Preview
-
-Sphinx generates static html. So previewing locally is easy. Simply build the
-site with `make`:
-
-```sh
-make zkdocs
-```
-
-This will create a folder `[docs-build/]` containing the static site (and is of
-course ignored by git, so you can do whatever you like in that folder).
-
-Open `docs-build/index.html` in your browser and you're good to go.
-
-You can install and use
-[sphinx-autobuild](https://pypi.org/project/sphinx-autobuild/) to emulate hot
-reloading / live server style development.\
-Otherwise you can just manually rebuild with `make zkdocs` each time you want to
-preview your changes.
+The configuration of the site itself is done in `./zensical.toml`.
 
 ### Deploying
 
@@ -141,10 +110,10 @@ When `zk` is ready to be released, follow these steps in order:
    example: `v0.13.0`). Make sure you follow the
    [Semantic Versioning](https://semver.org) scheme.
 
-If you create the git tag via the command line, and push it (`git push --tags`), then the
-[release action](.github/workflows/release.yml) will be triggered. This in turn
-calls the [build-binaries action](.github/workflows/build-binaries.yml), creates
-a _draft_ release on GitHub and attaches the built binaries.
+If you create the git tag via the command line, and push it (`git push --tags`),
+then the [release action](.github/workflows/release.yml) will be triggered. This
+in turn calls the [build-binaries action](.github/workflows/build-binaries.yml),
+creates a _draft_ release on GitHub and attaches the built binaries.
 
 Alternatively, you can manually create a release via the GitHub interface, also
 creating a release tag. Then you would run the
@@ -156,8 +125,8 @@ created (i.e, adding or editing the changelog).
 
 ## Benchmarks
 
-Use `make testdata` to generate test notes in `testdata`, usable for
-reproducing test benchmarks on a notebook with 3k notes and ~15k links.
+Use `make testdata` to generate test notes in `testdata`, usable for reproducing
+test benchmarks on a notebook with 3k notes and ~15k links.
 
 When testing indexing or similar processes, be sure to test two approaches:
 

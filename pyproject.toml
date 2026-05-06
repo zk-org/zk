@@ -1,7 +1,7 @@
 [project]
-name = "zk"
+name = "zk-docs"
 version = "0.1.0"
-description = "A plain text note-taking assistant"
+description = "Documentation for zk"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
