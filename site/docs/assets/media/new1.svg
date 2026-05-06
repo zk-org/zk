@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="terminal" baseProfile="full" viewBox="-70 -25 827 558" width="827" height="558" version="1.1">
+    <defs>
+        <termtosvg:template_settings xmlns:termtosvg="https://github.com/nbedos/termtosvg">
+            <termtosvg:screen_geometry columns="80" rows="25"/>
+            <termtosvg:animation type="css"/>
+        </termtosvg:template_settings>
+        <style type="text/css" id="generated-style"><![CDATA[#screen {
+                font-family: 'DejaVu Sans Mono', monospace;
+                font-style: normal;
+                font-size: 14px;
+            }
+
+        text {
+            dominant-baseline: text-before-edge;
+            white-space: pre;
+        }
+    
+            :root {
+                --animation-duration: 25278ms;
+            }
+
+            @keyframes roll {
+                0.000%{transform:translateY(0px)}
+0.851%{transform:translateY(-442px)}
+13.189%{transform:translateY(-884px)}
+23.293%{transform:translateY(-1326px)}
+33.674%{transform:translateY(-1768px)}
+34.754%{transform:translateY(-2210px)}
+51.563%{transform:translateY(-2652px)}
+51.990%{transform:translateY(-3094px)}
+58.786%{transform:translateY(-3536px)}
+69.768%{transform:translateY(-3978px)}
+70.876%{transform:translateY(-4420px)}
+90.933%{transform:translateY(-4862px)}
+91.558%{transform:translateY(-5304px)}
+96.044%{transform:translateY(-5746px)}
+100.000%{transform:translateY(-5746px)}
+            }
+
+            #screen_view {
+                animation-duration: 25278ms;
+                animation-iteration-count:infinite;
+                animation-name:roll;
+                animation-timing-function: steps(1,end);
+                animation-fill-mode: forwards;
+            }
+        ]]></style>
+        <style type="text/css" id="user-style">
+            
+            /* The colors defined below are the default 16 colors used for rendering text of the terminal. Adjust
+               them as needed.
+               gjm8 color theme (source: https://terminal.sexy/) */
+            .foreground {fill: #ECEFF4} /* nord6 */
+            .background {fill: #2E3440} /* nord0 */
+            .color0 {fill: #3B4252} /* nord1 */
+            .color1 {fill: #BF616A} /* nord11 */
+            .color2 {fill: #A3BE8C} /* nord14 */
+            .color3 {fill: #EBCB8B} /* nord13 */
+            .color4 {fill: #81A1C1} /* nord9 */
+            .color5 {fill: #B48EAD} /* nord15 */
+            .color6 {fill: #88C0D0} /* nord8 */
+            .color7 {fill: #ECEFF4} /* nord5 */
+
+            .color8 {fill: #434C5E} /* nord3 */
+            .color9 {fill: #BF616A} /* nord11 */
+            .color10 {fill: #A3BE8C} /* nord14 */
+            .color11 {fill: #EBCB8B} /* nord13 */
+            .color12 {fill: #81A1C1} /* nord9 */
+            .color13 {fill: #B48EAD} /* nord15 */
+            .color14 {fill: #8FBCBB} /* nord7 */
+            .color15 {fill: #ECEFF4} /* nord6 */
+
+            #screen {
+                font-family: Monaco, Consolas, Menlo, 'Bitstream Vera Sans Mono', 'Powerline Symbols', monospace;
+                font-size: 13px;
+            }
+            
+        </style>
+        <filter id="dropshadow" height="130%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="16"/> 
+            <feOffset dx="2" dy="14" result="offsetblur"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.9"/>
+            </feComponentTransfer>
+            <feMerge> 
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/> 
+            </feMerge>
+        </filter>
+    </defs>
+    <rect id="terminalui" class="background" width="680" height="485" ry="4.5826941" filter="url(#dropshadow)"/>
+    <circle cx="24" cy="23" r="7" class="color1"/>
+    <circle cx="44" cy="23" r="7" class="color3"/>
+    <circle cx="64" cy="23" r="7" class="color2"/>
+    <svg id="screen" width="640" height="425" x="20" y="40" viewBox="0 0 640 425" preserveAspectRatio="xMidYMin slice"><rect class="background" height="100%" width="100%" x="0" y="0"/><defs><g id="g1"><text x="0" textLength="640" class="foreground">                                                                                </text></g><g id="g2"><text x="0" textLength="16" class="foreground">$ </text><text x="16" textLength="8" class="background"> </text><text x="24" textLength="616" class="foreground">                                                                             </text></g><g id="g3"><text x="0" textLength="232" class="foreground">$ echo "I'm writing about it"</text><text x="232" textLength="8" class="background"> </text><text x="240" textLength="400" class="foreground">                                                  </text></g><g id="g4"><text x="0" textLength="304" class="foreground">$ echo "I'm writing about it" | zk new --interactive</text><text x="304" textLength="8" class="background"> </text><text x="312" textLength="328" class="foreground">                                         </text></g><g id="g5"><text x="0" textLength="544" class="foreground">$ echo "I'm writing about it" | zk new --interactive --title "Interesting subject"</text><text x="544" textLength="8" class="background"> </text><text x="552" textLength="88" class="foreground">           </text></g><g id="g6"><text x="0" textLength="8" class="background"> </text><text x="8" textLength="632" class="foreground">                                                                               </text></g><g id="g7"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" class="foreground">1   </text><text x="48" textLength="8" class="color0">#</text><text x="56" textLength="160" font-weight="bold" class="color14"> Interesting subject</text><text x="216" textLength="424" class="foreground">                                                     </text></g><g id="g8"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" font-weight="bold" class="color8">  1 </text><text x="48" textLength="592" class="foreground">                                                                          </text></g><g id="g9"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" font-weight="bold" class="color8">  2 </text><text x="48" textLength="592" class="foreground">I'm writing about it                                                      </text></g><g id="g10"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" font-weight="bold" class="color8">  3 </text><text x="48" textLength="592" class="foreground">                                                                          </text></g><g id="g11"><text x="0" textLength="640" class="color0">~                                                                               </text></g><g id="g12"><text x="0" textLength="640" font-weight="bold" class="foreground"> docs/interesting-subject.md                                                    </text></g><g id="g13"><text x="0" textLength="640" class="foreground">cwd: /Users/mickael/dvpts/mickael/zk-test                                       </text></g><g id="g14"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" class="foreground">1   </text><text x="48" textLength="8" class="background">#</text><text x="56" textLength="160" font-weight="bold" class="color14"> Interesting subject</text><text x="216" textLength="424" class="foreground">                                                     </text></g><g id="g15"><text x="0" textLength="640" class="foreground">cwd: /Users/mickael/dvpts/mickael/zk-test                            Z          </text></g><g id="g16"><text x="0" textLength="136" class="foreground">$ zk new journal/</text><text x="136" textLength="8" class="background"> </text><text x="144" textLength="496" class="foreground">                                                              </text></g><g id="g17"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" class="foreground">1   </text><text x="48" textLength="8" class="background">#</text><text x="56" textLength="120" font-weight="bold" class="color14"> March 05, 2021</text><text x="176" textLength="464" class="foreground">                                                          </text></g><g id="g18"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" font-weight="bold" class="color8">  2 </text><text x="48" textLength="592" class="foreground">What did I do today?                                                      </text></g><g id="g19"><text x="0" textLength="16" class="color0">  </text><text x="16" textLength="32" font-weight="bold" class="color8">  3 </text><text x="48" textLength="16" class="color4">* </text><text x="64" textLength="576" class="foreground">                                                                        </text></g><g id="g20"><text x="0" textLength="640" font-weight="bold" class="foreground"> docs/journal/2021-03-05.md                                                     </text></g><g id="g21"><text x="0" textLength="640" class="foreground">                                                                     Z          </text></g><g id="g22"><text x="0" textLength="640" class="foreground">$                                                                               </text></g><g id="g23"><text x="0" textLength="8" class="background"> </text></g></defs><g id="screen_view"><g><use xlink:href="#g1" y="0"/><rect x="16" y="17" width="8" height="17" class="foreground"/><use xlink:href="#g2" y="17"/></g><g><use xlink:href="#g1" y="442"/><rect x="232" y="459" width="8" height="17" class="foreground"/><use xlink:href="#g3" y="459"/></g><g><use xlink:href="#g1" y="884"/><rect x="304" y="901" width="8" height="17" class="foreground"/><use xlink:href="#g4" y="901"/></g><g><use xlink:href="#g1" y="1326"/><rect x="544" y="1343" width="8" height="17" class="foreground"/><use xlink:href="#g5" y="1343"/></g><g><rect x="0" y="1768" width="8" height="17" class="foreground"/><use xlink:href="#g6" y="1768"/><use xlink:href="#g1" y="1785"/></g><g><rect x="48" y="2210" width="8" height="17" class="foreground"/><use xlink:href="#g7" y="2210"/><use xlink:href="#g8" y="2227"/><use xlink:href="#g9" y="2244"/><use xlink:href="#g10" y="2261"/><use xlink:href="#g11" y="2278"/><use xlink:href="#g11" y="2295"/><use xlink:href="#g11" y="2312"/><use xlink:href="#g11" y="2329"/><use xlink:href="#g11" y="2346"/><use xlink:href="#g11" y="2363"/><use xlink:href="#g11" y="2380"/><use xlink:href="#g11" y="2397"/><use xlink:href="#g11" y="2414"/><use xlink:href="#g11" y="2431"/><use xlink:href="#g11" y="2448"/><use xlink:href="#g11" y="2465"/><use xlink:href="#g11" y="2482"/><use xlink:href="#g11" y="2499"/><use xlink:href="#g11" y="2516"/><use xlink:href="#g11" y="2533"/><use xlink:href="#g11" y="2550"/><use xlink:href="#g11" y="2567"/><use xlink:href="#g11" y="2584"/><rect x="0" y="2601" width="640" height="17" class="color0"/><use xlink:href="#g12" y="2601"/><use xlink:href="#g13" y="2618"/></g><g><rect x="48" y="2652" width="8" height="17" class="foreground"/><use xlink:href="#g14" y="2652"/><use xlink:href="#g8" y="2669"/><use xlink:href="#g9" y="2686"/><use xlink:href="#g10" y="2703"/><use xlink:href="#g11" y="2720"/><use xlink:href="#g11" y="2737"/><use xlink:href="#g11" y="2754"/><use xlink:href="#g11" y="2771"/><use xlink:href="#g11" y="2788"/><use xlink:href="#g11" y="2805"/><use xlink:href="#g11" y="2822"/><use xlink:href="#g11" y="2839"/><use xlink:href="#g11" y="2856"/><use xlink:href="#g11" y="2873"/><use xlink:href="#g11" y="2890"/><use xlink:href="#g11" y="2907"/><use xlink:href="#g11" y="2924"/><use xlink:href="#g11" y="2941"/><use xlink:href="#g11" y="2958"/><use xlink:href="#g11" y="2975"/><use xlink:href="#g11" y="2992"/><use xlink:href="#g11" y="3009"/><use xlink:href="#g11" y="3026"/><rect x="0" y="3043" width="640" height="17" class="color0"/><use xlink:href="#g12" y="3043"/><use xlink:href="#g15" y="3060"/></g><g><use xlink:href="#g9" y="3094"/><use xlink:href="#g10" y="3111"/><use xlink:href="#g11" y="3128"/><use xlink:href="#g11" y="3145"/><use xlink:href="#g11" y="3162"/><use xlink:href="#g11" y="3179"/><use xlink:href="#g11" y="3196"/><use xlink:href="#g11" y="3213"/><use xlink:href="#g11" y="3230"/><use xlink:href="#g11" y="3247"/><use xlink:href="#g11" y="3264"/><use xlink:href="#g11" y="3281"/><use xlink:href="#g11" y="3298"/><use xlink:href="#g11" y="3315"/><use xlink:href="#g11" y="3332"/><use xlink:href="#g11" y="3349"/><use xlink:href="#g11" y="3366"/><use xlink:href="#g11" y="3383"/><use xlink:href="#g11" y="3400"/><use xlink:href="#g11" y="3417"/><use xlink:href="#g11" y="3434"/><rect x="0" y="3451" width="640" height="17" class="color0"/><use xlink:href="#g12" y="3451"/><use xlink:href="#g1" y="3468"/><use xlink:href="#g1" y="3485"/><rect x="16" y="3502" width="8" height="17" class="foreground"/><use xlink:href="#g2" y="3502"/></g><g><use xlink:href="#g9" y="3536"/><use xlink:href="#g10" y="3553"/><use xlink:href="#g11" y="3570"/><use xlink:href="#g11" y="3587"/><use xlink:href="#g11" y="3604"/><use xlink:href="#g11" y="3621"/><use xlink:href="#g11" y="3638"/><use xlink:href="#g11" y="3655"/><use xlink:href="#g11" y="3672"/><use xlink:href="#g11" y="3689"/><use xlink:href="#g11" y="3706"/><use xlink:href="#g11" y="3723"/><use xlink:href="#g11" y="3740"/><use xlink:href="#g11" y="3757"/><use xlink:href="#g11" y="3774"/><use xlink:href="#g11" y="3791"/><use xlink:href="#g11" y="3808"/><use xlink:href="#g11" y="3825"/><use xlink:href="#g11" y="3842"/><use xlink:href="#g11" y="3859"/><use xlink:href="#g11" y="3876"/><rect x="0" y="3893" width="640" height="17" class="color0"/><use xlink:href="#g12" y="3893"/><use xlink:href="#g1" y="3910"/><use xlink:href="#g1" y="3927"/><rect x="136" y="3944" width="8" height="17" class="foreground"/><use xlink:href="#g16" y="3944"/></g><g><rect x="0" y="3978" width="8" height="17" class="foreground"/><use xlink:href="#g6" y="3978"/><use xlink:href="#g1" y="3995"/><use xlink:href="#g1" y="4012"/><use xlink:href="#g1" y="4029"/><use xlink:href="#g1" y="4046"/><use xlink:href="#g1" y="4063"/><use xlink:href="#g1" y="4080"/><use xlink:href="#g1" y="4097"/><use xlink:href="#g1" y="4114"/><use xlink:href="#g1" y="4131"/><use xlink:href="#g1" y="4148"/><use xlink:href="#g1" y="4165"/><use xlink:href="#g1" y="4182"/><use xlink:href="#g1" y="4199"/><use xlink:href="#g1" y="4216"/><use xlink:href="#g1" y="4233"/><use xlink:href="#g1" y="4250"/><use xlink:href="#g1" y="4267"/><use xlink:href="#g1" y="4284"/><use xlink:href="#g1" y="4301"/><use xlink:href="#g1" y="4318"/><use xlink:href="#g1" y="4335"/><use xlink:href="#g1" y="4352"/><use xlink:href="#g1" y="4369"/></g><g><rect x="48" y="4420" width="8" height="17" class="foreground"/><use xlink:href="#g17" y="4420"/><use xlink:href="#g8" y="4437"/><use xlink:href="#g18" y="4454"/><use xlink:href="#g19" y="4471"/><use xlink:href="#g11" y="4488"/><use xlink:href="#g11" y="4505"/><use xlink:href="#g11" y="4522"/><use xlink:href="#g11" y="4539"/><use xlink:href="#g11" y="4556"/><use xlink:href="#g11" y="4573"/><use xlink:href="#g11" y="4590"/><use xlink:href="#g11" y="4607"/><use xlink:href="#g11" y="4624"/><use xlink:href="#g11" y="4641"/><use xlink:href="#g11" y="4658"/><use xlink:href="#g11" y="4675"/><use xlink:href="#g11" y="4692"/><use xlink:href="#g11" y="4709"/><use xlink:href="#g11" y="4726"/><use xlink:href="#g11" y="4743"/><use xlink:href="#g11" y="4760"/><use xlink:href="#g11" y="4777"/><use xlink:href="#g11" y="4794"/><rect x="0" y="4811" width="640" height="17" class="color0"/><use xlink:href="#g20" y="4811"/><use xlink:href="#g1" y="4828"/></g><g><rect x="48" y="4862" width="8" height="17" class="foreground"/><use xlink:href="#g17" y="4862"/><use xlink:href="#g8" y="4879"/><use xlink:href="#g18" y="4896"/><use xlink:href="#g19" y="4913"/><use xlink:href="#g11" y="4930"/><use xlink:href="#g11" y="4947"/><use xlink:href="#g11" y="4964"/><use xlink:href="#g11" y="4981"/><use xlink:href="#g11" y="4998"/><use xlink:href="#g11" y="5015"/><use xlink:href="#g11" y="5032"/><use xlink:href="#g11" y="5049"/><use xlink:href="#g11" y="5066"/><use xlink:href="#g11" y="5083"/><use xlink:href="#g11" y="5100"/><use xlink:href="#g11" y="5117"/><use xlink:href="#g11" y="5134"/><use xlink:href="#g11" y="5151"/><use xlink:href="#g11" y="5168"/><use xlink:href="#g11" y="5185"/><use xlink:href="#g11" y="5202"/><use xlink:href="#g11" y="5219"/><use xlink:href="#g11" y="5236"/><rect x="0" y="5253" width="640" height="17" class="color0"/><use xlink:href="#g20" y="5253"/><use xlink:href="#g21" y="5270"/></g><g><use xlink:href="#g18" y="5304"/><use xlink:href="#g19" y="5321"/><use xlink:href="#g11" y="5338"/><use xlink:href="#g11" y="5355"/><use xlink:href="#g11" y="5372"/><use xlink:href="#g11" y="5389"/><use xlink:href="#g11" y="5406"/><use xlink:href="#g11" y="5423"/><use xlink:href="#g11" y="5440"/><use xlink:href="#g11" y="5457"/><use xlink:href="#g11" y="5474"/><use xlink:href="#g11" y="5491"/><use xlink:href="#g11" y="5508"/><use xlink:href="#g11" y="5525"/><use xlink:href="#g11" y="5542"/><use xlink:href="#g11" y="5559"/><use xlink:href="#g11" y="5576"/><use xlink:href="#g11" y="5593"/><use xlink:href="#g11" y="5610"/><use xlink:href="#g11" y="5627"/><use xlink:href="#g11" y="5644"/><rect x="0" y="5661" width="640" height="17" class="color0"/><use xlink:href="#g20" y="5661"/><use xlink:href="#g1" y="5678"/><use xlink:href="#g1" y="5695"/><rect x="16" y="5712" width="8" height="17" class="foreground"/><use xlink:href="#g2" y="5712"/></g><g><use xlink:href="#g19" y="5746"/><use xlink:href="#g11" y="5763"/><use xlink:href="#g11" y="5780"/><use xlink:href="#g11" y="5797"/><use xlink:href="#g11" y="5814"/><use xlink:href="#g11" y="5831"/><use xlink:href="#g11" y="5848"/><use xlink:href="#g11" y="5865"/><use xlink:href="#g11" y="5882"/><use xlink:href="#g11" y="5899"/><use xlink:href="#g11" y="5916"/><use xlink:href="#g11" y="5933"/><use xlink:href="#g11" y="5950"/><use xlink:href="#g11" y="5967"/><use xlink:href="#g11" y="5984"/><use xlink:href="#g11" y="6001"/><use xlink:href="#g11" y="6018"/><use xlink:href="#g11" y="6035"/><use xlink:href="#g11" y="6052"/><use xlink:href="#g11" y="6069"/><rect x="0" y="6086" width="640" height="17" class="color0"/><use xlink:href="#g20" y="6086"/><use xlink:href="#g1" y="6103"/><use xlink:href="#g1" y="6120"/><use xlink:href="#g22" y="6137"/><rect x="0" y="6154" width="8" height="17" class="foreground"/><use xlink:href="#g23" y="6154"/></g></g></svg>
+</svg>

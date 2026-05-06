@@ -1,0 +1,12 @@
+[project]
+name = "zk"
+version = "0.1.0"
+description = "A plain text note-taking assistant"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "zensical>=0.0.40",
+]
