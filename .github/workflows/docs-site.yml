@@ -2,7 +2,7 @@ name: Deploy documentation site
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
     paths: [docs/**]
 
 concurrency:
