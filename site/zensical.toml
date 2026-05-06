@@ -40,6 +40,7 @@ Copyright &copy; 2026 The authors
 """
 
 nav = [
+	{"Home" = "index.md"},
 	{ "Configuration" = [
 		"config/config.md",
 		"config/config-notebook.md",
@@ -75,16 +76,15 @@ nav = [
 	] },
 
 	{ "Tips" = [
-		"tips/automation.md",
-		"tips/daily-journal.md",
-		"tips/editors-integration.md",
-		"tips/external-call.md",
-		"tips/external-processing.md",
-		"tips/future-proof.md",
 		"tips/getting-started.md",
-		"tips/graph-visualization.md",
-		"tips/index.rst",
+		"tips/daily-journal.md",
+		"tips/automation.md",
+		"tips/future-proof.md",
 		"tips/notebook-housekeeping.md",
+		"tips/editors-integration.md",
+		"tips/external-processing.md",
+		"tips/external-call.md",
+		"tips/graph-visualization.md",
 		"tips/static-sites.md",
 		"tips/style.md",
 	] },

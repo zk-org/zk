@@ -1,5 +1,5 @@
 ---
-title: Getting Started
+title: "Home"
 ---
 
 <div align="center">
@@ -22,8 +22,6 @@ video,
 
 ### Highlights
 
-> Note: Links in the below list are outbound ↗
-
 - [Creating notes from templates](notes/note-creation)
 - [Advanced search and filtering capabilities](notes/note-filtering) including
   [tags](notes/tags), links and mentions
@@ -43,14 +41,14 @@ video,
   - Tags: `#hashtags`, `:colon:separated:tags:`, Bear's `#multi-word tags#`.
   - [YAML frontmatter](notes/note-frontmatter)
 
-[See the changelog](CHANGELOG.md) for the list of upcoming features waiting to
-be released.
+See the changelog in our source code repository for the list of upcoming features
+waiting to be released.
 
 ### What `zk` is not
 
 - A note editor.
 - A tool to serve your notes on the web – for this, there are some
-  [static site solutions](docs/tips/static-sites.md).
+  [static site solutions](tips/static-sites.md).
 
 ## Install
 
