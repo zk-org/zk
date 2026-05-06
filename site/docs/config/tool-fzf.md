@@ -54,23 +54,23 @@ fzf-line = "{{style 'blue' rel-path}}{{#each tags}} #{{this}}{{/each}} {{style '
 
 The following variables are available in the line template.
 
-| Variable        | Type     | Description                                                        |
-| --------------- | -------- | ------------------------------------------------------------------ |
-| `filename`      | string   | Filename of the note, including its extension                      |
-| `filename-stem` | string   | Filename of the note without the file extension                    |
-| `path`          | string   | File path to the note, relative to the notebook root               |
-| `abs-path`      | string   | Absolute file path to the note                                     |
-| `rel-path`      | string   | File path to the note, relative to the current directory           |
-| `title`         | string   | Note title                                                         |
-| `title-or-path` | string   | Note title or path if empty                                        |
-| `body`          | string   | All of the note content, minus the heading                         |
-| `raw-content`   | string   | The full raw content of the note file                              |
-| `word-count`    | int      | Number of words in the note                                        |
-| `tags`          | [string] | List of tags found in the note                                     |
-| `metadata`      | map      | YAML frontmatter metadata, e.g. `metadata.description`<sup>1</sup> |
-| `created`       | date     | Date of creation of the note                                       |
-| `modified`      | date     | Last date of modification of the note                              |
-| `checksum`      | string   | SHA-256 checksum of the note file                                  |
+| Variable        | Type   | Description                                                        |
+| --------------- | ------ | ------------------------------------------------------------------ |
+| `filename`      | string | Filename of the note, including its extension                      |
+| `filename-stem` | string | Filename of the note without the file extension                    |
+| `path`          | string | File path to the note, relative to the notebook root               |
+| `abs-path`      | string | Absolute file path to the note                                     |
+| `rel-path`      | string | File path to the note, relative to the current directory           |
+| `title`         | string | Note title                                                         |
+| `title-or-path` | string | Note title or path if empty                                        |
+| `body`          | string | All of the note content, minus the heading                         |
+| `raw-content`   | string | The full raw content of the note file                              |
+| `word-count`    | int    | Number of words in the note                                        |
+| `tags`          | string | List of tags found in the note                                     |
+| `metadata`      | map    | YAML frontmatter metadata, e.g. `metadata.description`<sup>1</sup> |
+| `created`       | date   | Date of creation of the note                                       |
+| `modified`      | date   | Last date of modification of the note                              |
+| `checksum`      | string | SHA-256 checksum of the note file                                  |
 
 1. YAML keys are normalized to lower case.
 
