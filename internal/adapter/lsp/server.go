@@ -936,16 +936,9 @@ func isTrue(v *bool) bool {
 	return v != nil && *v
 }
 
-// definitionLinkSupport reports whether the client advertised
-// textDocument.definition.linkSupport=true. The intermediate capability
-// objects are pointers and may be nil for clients (e.g. helix) that do
-// not advertise every sub-capability; dereferencing them blindly used
-// to crash the LSP server on textDocument/definition (#716).
+// definitionLinkSupport reports whether the client advertised textDocument.definition.linkSupport=true.
 func definitionLinkSupport(caps protocol.ClientCapabilities) bool {
-	if caps.TextDocument == nil || caps.TextDocument.Definition == nil {
-		return false
-	}
-	return isTrue(caps.TextDocument.Definition.LinkSupport)
+	return caps.TextDocument != nil && caps.TextDocument.Definition != nil && isTrue(caps.TextDocument.Definition.LinkSupport)
 }
 
 func stringPtr(v string) *string {
