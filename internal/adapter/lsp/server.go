@@ -325,7 +325,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		if definitionLinkSupport(clientCapabilities) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
@@ -934,6 +934,18 @@ func boolPtr(v bool) *bool {
 
 func isTrue(v *bool) bool {
 	return v != nil && *v
+}
+
+// definitionLinkSupport reports whether the client advertised
+// textDocument.definition.linkSupport=true. The intermediate capability
+// objects are pointers and may be nil for clients (e.g. helix) that do
+// not advertise every sub-capability; dereferencing them blindly used
+// to crash the LSP server on textDocument/definition (#716).
+func definitionLinkSupport(caps protocol.ClientCapabilities) bool {
+	if caps.TextDocument == nil || caps.TextDocument.Definition == nil {
+		return false
+	}
+	return isTrue(caps.TextDocument.Definition.LinkSupport)
 }
 
 func stringPtr(v string) *string {

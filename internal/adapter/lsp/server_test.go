@@ -169,3 +169,50 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		})
 	}
 }
+
+// TestDefinitionLinkSupport_NilCapabilities is a regression test for #716:
+// clients (e.g. helix) that omit `textDocument` or `textDocument.definition`
+// from their initialize-capabilities used to nil-deref the LSP server when
+// handling textDocument/definition. definitionLinkSupport must treat a
+// missing intermediate object as "false" (no LinkSupport) rather than panic.
+func TestDefinitionLinkSupport_NilCapabilities(t *testing.T) {
+	// Whole TextDocument missing.
+	caps := protocol.ClientCapabilities{}
+	assert.Equal(t, definitionLinkSupport(caps), false)
+
+	// TextDocument present but Definition missing (helix's shape).
+	caps = protocol.ClientCapabilities{
+		TextDocument: &protocol.TextDocumentClientCapabilities{},
+	}
+	assert.Equal(t, definitionLinkSupport(caps), false)
+
+	// Definition present but LinkSupport pointer nil.
+	caps = protocol.ClientCapabilities{
+		TextDocument: &protocol.TextDocumentClientCapabilities{
+			Definition: &protocol.DefinitionClientCapabilities{},
+		},
+	}
+	assert.Equal(t, definitionLinkSupport(caps), false)
+
+	// Definition.LinkSupport explicitly false.
+	flag := false
+	caps = protocol.ClientCapabilities{
+		TextDocument: &protocol.TextDocumentClientCapabilities{
+			Definition: &protocol.DefinitionClientCapabilities{
+				LinkSupport: &flag,
+			},
+		},
+	}
+	assert.Equal(t, definitionLinkSupport(caps), false)
+
+	// Definition.LinkSupport explicitly true (the only true path).
+	flag = true
+	caps = protocol.ClientCapabilities{
+		TextDocument: &protocol.TextDocumentClientCapabilities{
+			Definition: &protocol.DefinitionClientCapabilities{
+				LinkSupport: &flag,
+			},
+		},
+	}
+	assert.Equal(t, definitionLinkSupport(caps), true)
+}
