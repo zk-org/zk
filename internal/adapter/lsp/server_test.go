@@ -169,3 +169,75 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		})
 	}
 }
+
+// Regression test for #716: clients such as Helix advertise capabilities
+// without TextDocument or TextDocument.Definition set, so probing
+// clientCapabilities.TextDocument.Definition.LinkSupport must not panic.
+func TestHasDefinitionLinkSupport_NilSafe(t *testing.T) {
+	yes := true
+	no := false
+
+	tests := []struct {
+		name string
+		caps protocol.ClientCapabilities
+		want bool
+	}{
+		{
+			name: "no TextDocument capabilities (e.g. Helix)",
+			caps: protocol.ClientCapabilities{},
+			want: false,
+		},
+		{
+			name: "TextDocument set but no Definition block",
+			caps: protocol.ClientCapabilities{
+				TextDocument: &protocol.TextDocumentClientCapabilities{},
+			},
+			want: false,
+		},
+		{
+			name: "Definition block set but linkSupport unset",
+			caps: protocol.ClientCapabilities{
+				TextDocument: &protocol.TextDocumentClientCapabilities{
+					Definition: &protocol.DefinitionClientCapabilities{},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "linkSupport false",
+			caps: protocol.ClientCapabilities{
+				TextDocument: &protocol.TextDocumentClientCapabilities{
+					Definition: &protocol.DefinitionClientCapabilities{
+						LinkSupport: &no,
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "linkSupport true",
+			caps: protocol.ClientCapabilities{
+				TextDocument: &protocol.TextDocumentClientCapabilities{
+					Definition: &protocol.DefinitionClientCapabilities{
+						LinkSupport: &yes,
+					},
+				},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("hasDefinitionLinkSupport panicked: %v", r)
+				}
+			}()
+			got := hasDefinitionLinkSupport(tt.caps)
+			if got != tt.want {
+				t.Errorf("hasDefinitionLinkSupport = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

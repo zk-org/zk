@@ -325,7 +325,7 @@ func NewServer(opts ServerOpts) *Server {
 			return nil, err
 		}
 
-		if isTrue(clientCapabilities.TextDocument.Definition.LinkSupport) {
+		if hasDefinitionLinkSupport(clientCapabilities) {
 			return protocol.LocationLink{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
@@ -934,6 +934,17 @@ func boolPtr(v bool) *bool {
 
 func isTrue(v *bool) bool {
 	return v != nil && *v
+}
+
+// hasDefinitionLinkSupport reports whether the LSP client advertised the
+// textDocument.definition.linkSupport capability. It safely walks the optional
+// (pointer) fields so that clients that omit some capability blocks (e.g.
+// Helix) do not crash the handler with a nil pointer dereference.
+func hasDefinitionLinkSupport(c protocol.ClientCapabilities) bool {
+	if c.TextDocument == nil || c.TextDocument.Definition == nil {
+		return false
+	}
+	return isTrue(c.TextDocument.Definition.LinkSupport)
 }
 
 func stringPtr(v string) *string {
