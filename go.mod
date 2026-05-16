@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/gosimple/slug v1.12.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/lestrrat-go/strftime v1.0.6
+	github.com/lestrrat-go/strftime v1.1.1
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mvdan/xurls v1.1.0

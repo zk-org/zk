@@ -238,6 +238,8 @@ func TestFormatDateHelper(t *testing.T) {
 	testString(t, "{{format-date now 'timestamp'}}", context, "200911172034")
 	testString(t, "{{format-date now 'timestamp-unix'}}", context, "1258490098")
 	testString(t, "{{format-date now 'cust: %Y-%m'}}", context, "cust: 2009-11")
+	testString(t, "{{format-date now 'cust: %G-%m'}}", context, "cust: 2009-11")
+	testString(t, "{{format-date now 'cust: %g-%m'}}", context, "cust: 09-11")
 }
 
 func TestFormatDateHelperElapsedYear(t *testing.T) {
