@@ -11,6 +11,8 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 - List, edit and filter for broken links with `--broken-links` (by
   @WhyNotHugo, 708)
+- Update strftime package, supporting `%g` and `%G` formats in the
+  `{{format-date}}` helper (by @tjex, 723)
 
 ### Fixed
 
