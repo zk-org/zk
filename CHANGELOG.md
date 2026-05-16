@@ -13,6 +13,7 @@ Format: `<description> (by <contributor>, <pr number>)`
   @WhyNotHugo, 708)
 - Update strftime package, supporting `%g` and `%G` formats in the
   `{{format-date}}` helper (by @tjex, 723)
+- Option to append links to selected text, instead of replacing (by @tjex, 724)
 
 ### Fixed
 
