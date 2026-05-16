@@ -132,9 +132,11 @@ language-servers = ["zk"]
 
 <!-- prettier-ignore -->
 
-:::{note} This configuration disables Helix's
+:::{note}\
+This configuration disables Helix's
 [default language servers](https://docs.helix-editor.com/lang-support.html) for
-Markdown. :::
+Markdown.\
+:::
 
 </details>
 
@@ -210,7 +212,7 @@ quickly create a new note with a key binding. `zk.new` takes two arguments:
    | `date`                    | string               | A date of creation for the note in natural language, e.g. "tomorrow"                                                 |
    | `edit`                    | boolean              | When true, the editor will open the newly created note (**not supported by all editors**)                            |
    | `dryRun`                  | boolean              | When true, `zk` will not actually create the note on the file system, but will return its generated content and path |
-   | `append`                  | boolean              | Append the link to selection instead of replacing it.                                                  |
+   | `append`                  | boolean              | Append the link to selection instead of replacing it.                                                                |
    | `insertLinkAtLocation`    | location<sup>1</sup> | A location in another note where a link to the new note will be inserted                                             |
    | `insertContentAtLocation` | location<sup>1</sup> | A location in another note where the content of the new note will be inserted                                        |
 
