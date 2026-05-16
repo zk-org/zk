@@ -87,13 +87,14 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 		minNote := note.AsMinimalNote()
 
 		var prefix string
+		// Inserts link inline after selected text.
 		if opts.Append {
 			r := opts.InsertLinkAtLocation.Range
 			opts.InsertLinkAtLocation.Range = protocol.Range{
 				Start: r.End,
 				End:   r.End,
 			}
-			// Links should be appended after a space
+			// Seperate last selected character and link with a space.
 			prefix = " "
 		}
 
