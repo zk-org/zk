@@ -506,10 +506,11 @@ func (m *noteIndexAddMock) FindLinksBetweenNotes(ids []NoteID) ([]ResolvedLink, 
 func (m *noteIndexAddMock) FindCollections(kind CollectionKind, sorters []CollectionSorter) ([]Collection, error) {
 	return nil, nil
 }
-func (m *noteIndexAddMock) IndexedPaths() (<-chan paths.Metadata, error)       { return nil, nil }
-func (m *noteIndexAddMock) Add(note Note) (NoteID, error)                      { return m.ReturnedID, nil }
-func (m *noteIndexAddMock) Update(note Note) error                             { return nil }
-func (m *noteIndexAddMock) Remove(path string) error                           { return nil }
-func (m *noteIndexAddMock) Commit(transaction func(idx NoteIndex) error) error { return nil }
-func (m *noteIndexAddMock) NeedsReindexing() (bool, error)                     { return false, nil }
-func (m *noteIndexAddMock) SetNeedsReindexing(needsReindexing bool) error      { return nil }
+func (m *noteIndexAddMock) IndexedPaths() (<-chan paths.Metadata, error)        { return nil, nil }
+func (m *noteIndexAddMock) Add(note Note, fixLinks bool) (NoteID, error)        { return m.ReturnedID, nil }
+func (m *noteIndexAddMock) Update(note Note) error                              { return nil }
+func (m *noteIndexAddMock) Remove(path string) error                            { return nil }
+func (m *noteIndexAddMock) BatchUpdateLinks(ids []NoteID, paths []string) error { return nil }
+func (m *noteIndexAddMock) Commit(transaction func(idx NoteIndex) error) error  { return nil }
+func (m *noteIndexAddMock) NeedsReindexing() (bool, error)                      { return false, nil }
+func (m *noteIndexAddMock) SetNeedsReindexing(needsReindexing bool) error       { return nil }

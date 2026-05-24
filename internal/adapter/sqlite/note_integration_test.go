@@ -29,9 +29,9 @@ func TestNoteIndexFindByHrefPrefixBug(t *testing.T) {
 	}
 
 	// Add notes to the index
-	shorterID, err := index.Add(shorterNote)
+	shorterID, err := index.Add(shorterNote, true)
 	assert.Nil(t, err)
-	longerID, err := index.Add(longerNote)
+	longerID, err := index.Add(longerNote, true)
 	assert.Nil(t, err)
 
 	t.Logf("Shorter note ID: %d, Longer note ID: %d", shorterID, longerID)

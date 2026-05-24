@@ -174,7 +174,7 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 	}
 
 	if !opts.DryRun {
-		id, err := n.index.Add(*note)
+		id, err := n.index.Add(*note, true)
 		if err != nil {
 			return nil, fmt.Errorf("new note: %w", err)
 		}

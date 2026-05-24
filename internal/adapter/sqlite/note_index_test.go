@@ -45,7 +45,7 @@ func TestNoteIndexAddWithLinks(t *testing.T) {
 				Snippet:    "External [URL](http://example.com)",
 			},
 		},
-	})
+	}, true)
 	assert.Nil(t, err)
 
 	rows := queryLinkRows(t, db.db, fmt.Sprintf("source_id = %d", id))
@@ -98,7 +98,7 @@ func TestNoteIndexAddFillsLinksMissingTargetId(t *testing.T) {
 
 	id, err := index.Add(core.Note{
 		Path: "missing_target.md",
-	})
+	}, true)
 	assert.Nil(t, err)
 
 	rows := queryLinkRows(t, db.db, fmt.Sprintf("target_id = %d", id))
@@ -192,7 +192,7 @@ func TestNoteIndexAddWithTags(t *testing.T) {
 	id, err := index.Add(core.Note{
 		Path: "log/added.md",
 		Tags: []string{"new-tag", "fiction"},
-	})
+	}, true)
 	assert.Nil(t, err)
 	assertSQL(true)
 	assertTaggedOrNot(t, db, true, id, "new-tag")
