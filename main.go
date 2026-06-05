@@ -16,6 +16,7 @@ import (
 	"github.com/zk-org/zk/internal/cli/cmd"
 	"github.com/zk-org/zk/internal/core"
 	executil "github.com/zk-org/zk/internal/util/exec"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 var Version = "dev"
@@ -307,7 +308,11 @@ func parseDirs(args []string) (cli.Dirs, []string, error) {
 			}
 
 			if option != "" && value != "" {
-				path, err := filepath.Abs(value)
+				valueAbs, err := paths.ExpandPath(value)
+				if err != nil {
+					return "", newArgs, err
+				}
+				path, err := filepath.Abs(valueAbs)
 				return path, newArgs, err
 			} else if option != "" && value == "" {
 				return "", newArgs, errors.New(option + " requires a path argument")
