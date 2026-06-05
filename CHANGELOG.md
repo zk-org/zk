@@ -17,6 +17,9 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ### Fixed
 
+- Paths with `~` and env variables no longer error when passed to
+  `--notebook-dir` and `--working-dir` (by @tjex, 732)
+
 ## 0.15.4
 
 ### Fixed
