@@ -228,7 +228,7 @@ func (ni *NoteIndex) linkMatchesPath(link core.ResolvedLink, path string) (bool,
 	// Remove any anchor at the end of the HREF, since it's most likely
 	// matching a sub-section in the note.
 	href := link.Href
-	if hashPos := strings.LastIndexByte(link.Href, '#'); hashPos != -1 {
+	if hashPos := strings.IndexByte(link.Href, '#'); hashPos != -1 {
 		href = link.Href[:hashPos]
 	}
 
@@ -240,10 +240,19 @@ func (ni *NoteIndex) linkMatchesPath(link core.ResolvedLink, path string) (bool,
 		if allowPartialHref && pos != -1 {
 			// Match if 'href' is anywhere in 'path'
 			return true
+		} else if pos != 0 {
+			// Otherwise 'path' must start with 'href'
+			return false
 		}
-		// Match only if 'href' prefixes 'path', and 'path' isn't a directory named "href/"
-		// e.g. with 'href="dir"', match "dir/file", "dir", or "dir2", but not "dir/"
-		return pos == 0 && !(len(path) == len(href)+1 && path[len(path)-1] == '/')
+
+		slashPos := strings.IndexByte(path[len(href):], '/')
+		if slashPos != -1 {
+			// 'href/abc', 'href/a/b/c', or 'href/' but not 'hrefAnd/something/after'
+			return slashPos == 0
+		}
+
+		// 'href' or 'hrefSomeSuffix'
+		return true
 	}
 
 	allowPartialMatch := link.Type == core.LinkTypeWikiLink
