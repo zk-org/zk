@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
+	"golang.org/x/sync/errgroup"
 )
 
 // NoteIndex persists note indexing results in the SQLite database.
@@ -188,8 +188,7 @@ func (ni *NoteIndex) batchFixExistingLinks(dao *dao, ids []core.NoteID, paths []
 	// which is a considerable amount of work. We do so without using all CPU cores at once.
 	maxWorkers := min(max(runtime.GOMAXPROCS(0)-2, 1), len(links))
 	linksPerWorker := len(links) / maxWorkers
-	firstError := make(chan error, 1)
-	var wg sync.WaitGroup
+	group := new(errgroup.Group)
 	for wid := range maxWorkers {
 		start := linksPerWorker * wid
 		end := linksPerWorker * (wid + 1)
@@ -197,29 +196,17 @@ func (ni *NoteIndex) batchFixExistingLinks(dao *dao, ids []core.NoteID, paths []
 			// The last worker does a bit more work
 			end += len(links) % maxWorkers
 		}
-		wg.Add(1)
-		go func(start, end int) {
+		group.Go(func() error {
 			for _, link := range links[start:end] {
 				err := fixLink(link)
 				if err != nil {
-					select {
-					case firstError <- err:
-					default:
-					}
+					return err
 				}
 			}
-			wg.Done()
-		}(start, end)
+			return nil
+		})
 	}
-
-	wg.Wait()
-	close(firstError)
-	select {
-	case err := <-firstError:
-		return err
-	default:
-		return nil
-	}
+	return group.Wait()
 }
 
 // linkMatchesPath returns whether the given link can be used to reach the
