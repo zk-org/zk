@@ -184,6 +184,7 @@ type LSPConfig struct {
 // LSPCompletionConfig holds the LSP auto-completion configuration.
 type LSPCompletionConfig struct {
 	Note                   LSPCompletionTemplates
+	NoteFilter             opt.String
 	UseAdditionalTextEdits opt.Bool
 }
 
@@ -441,6 +442,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if lspCompl.NoteDetail != nil {
 		config.LSP.Completion.Note.Detail = opt.NewNotEmptyString(*lspCompl.NoteDetail)
 	}
+	if lspCompl.NoteFilter != nil {
+		config.LSP.Completion.NoteFilter = opt.NewNotEmptyString(*lspCompl.NoteFilter)
+	}
 	config.LSP.Completion.UseAdditionalTextEdits = opt.NewBoolWithPtr(lspCompl.UseAdditionalTextEdits)
 
 	// LSP diagnostics
@@ -595,6 +599,7 @@ type tomlLSPConfig struct {
 	Completion struct {
 		NoteLabel              *string `toml:"note-label"`
 		NoteFilterText         *string `toml:"note-filter-text"`
+		NoteFilter             *string `toml:"note-filter"`
 		NoteDetail             *string `toml:"note-detail"`
 		UseAdditionalTextEdits *bool   `toml:"use-additional-text-edits"`
 	}

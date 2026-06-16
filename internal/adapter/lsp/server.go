@@ -14,6 +14,7 @@ import (
 	glspserv "github.com/tliron/glsp/server"
 	"github.com/tliron/kutil/logging"
 	_ "github.com/tliron/kutil/logging/simple"
+	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/opt"
@@ -746,7 +747,12 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 		return nil, err
 	}
 
-	notes, err := notebook.FindMinimalNotes(core.NoteFindOpts{})
+	findOpts, err := noteCompletionFindOpts(notebook)
+	if err != nil {
+		return nil, err
+	}
+
+	notes, err := notebook.FindMinimalNotes(findOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -769,6 +775,25 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 	}
 
 	return items, nil
+}
+
+func noteCompletionFindOpts(notebook *core.Notebook) (core.NoteFindOpts, error) {
+	filter := notebook.Config.LSP.Completion.NoteFilter
+	if filter.IsNull() {
+		return core.NoteFindOpts{}, nil
+	}
+
+	filtering, err := cli.ParseFilter(*filter.Value)
+	if err != nil {
+		return core.NoteFindOpts{}, fmt.Errorf("failed to parse lsp.completion.note-filter: %w", err)
+	}
+
+	opts, err := filtering.NewNoteFindOpts(notebook)
+	if err != nil {
+		return core.NoteFindOpts{}, fmt.Errorf("failed to apply lsp.completion.note-filter: %w", err)
+	}
+
+	return opts, nil
 }
 
 func newLinkFormatter(notebook *core.Notebook, doc *document, position protocol.Position) (core.LinkFormatter, error) {

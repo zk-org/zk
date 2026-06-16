@@ -47,22 +47,31 @@ type Filtering struct {
 	ExactMatch bool `kong:"hidden,short='e'" json:"exactMatch"`
 }
 
+// ParseFilter parses a shell-like filtering string into Filtering.
+func ParseFilter(filter string) (Filtering, error) {
+	var parsedFilter Filtering
+	parser, err := kong.New(&parsedFilter)
+	if err != nil {
+		return parsedFilter, err
+	}
+	args, err := shellquote.Split(filter)
+	if err != nil {
+		return parsedFilter, err
+	}
+	_, err = parser.Parse(args)
+	if err != nil {
+		return parsedFilter, err
+	}
+	return parsedFilter, nil
+}
+
 // ExpandNamedFilters expands recursively any named filter found in the Path field.
 func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters []string) (Filtering, error) {
 	actualPaths := []string{}
 
 	for _, path := range f.Path {
 		if filter, ok := filters[path]; ok && !strings.Contains(expandedFilters, path) {
-			var parsedFilter Filtering
-			parser, err := kong.New(&parsedFilter)
-			if err != nil {
-				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
-			}
-			args, err := shellquote.Split(filter)
-			if err != nil {
-				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
-			}
-			_, err = parser.Parse(args)
+			parsedFilter, err := ParseFilter(filter)
 			if err != nil {
 				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
 			}

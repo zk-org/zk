@@ -11,6 +11,7 @@ import (
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/fixtures"
+	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -121,9 +122,11 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		doc  *document
-		pos  protocol.Position
+		name           string
+		doc            *document
+		pos            protocol.Position
+		noteFilter     opt.String
+		expectedLabels []string
 		// check that returns completions.
 		checkItem bool
 	}{{
@@ -151,10 +154,18 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		doc:       docItem2,
 		pos:       protocol.Position{Line: 3, Character: 6},
 		checkItem: true,
+	}, {
+		name:           "Filter link completion notes from config",
+		doc:            doc,
+		pos:            protocol.Position{Line: 3, Character: 2},
+		noteFilter:     opt.NewString("--tag project"),
+		expectedLabels: []string{"Item 3 that contains spaces"},
 	}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			notebook.Config.LSP.Completion.NoteFilter = tt.noteFilter
+
 			// Use a defer to catch panics
 			defer func() {
 				if r := recover(); r != nil {
@@ -165,6 +176,13 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 			assert.Nil(t, err1)
 			if tt.checkItem && len(item) < 1 {
 				t.Error("Number of completion items should be greater than 0")
+			}
+			if tt.expectedLabels != nil {
+				labels := make([]string, len(item))
+				for i, completionItem := range item {
+					labels[i] = completionItem.Label
+				}
+				assert.Equal(t, labels, tt.expectedLabels)
 			}
 		})
 	}

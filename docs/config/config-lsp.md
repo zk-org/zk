@@ -11,11 +11,17 @@ with the `[lsp.completion]` sub-section.
 | Setting                     | Type       | Description                                                                           |
 | --------------------------- | ---------- | ------------------------------------------------------------------------------------- |
 | `note-label`                | `template` | Label displayed in the completion pop-up for each note                                |
+| `note-filter`               | `string`   | CLI filtering options used to select which notes are offered for link completion      |
 | `note-filter-text`          | `template` | Text used as a source when filtering the completion pop-up with keystrokes            |
 | `note-detail`               | `template` | Additional information about a completion item                                        |
 | `use-additional-text-edits` | `boolean`  | Indicates whether `additionalTextEdits` will be used to remove the trigger characters |
 
-Each key accepts a [template](../notes/template.md) with the following context:
+`note-filter` accepts the same filtering options as `zk list`, for example
+`"--tag project --sort modified-"`. Named filters declared in `[filter]` can
+also be used.
+
+Each template key accepts a [template](../notes/template.md) with the following
+context:
 
 | Variable        | Type   | Description                                                        |
 | --------------- | ------ | ------------------------------------------------------------------ |
@@ -87,6 +93,8 @@ missing-backlink = { level = "hint", position = "bottom" }
 [lsp.completion]
 # Show the note title in the completion pop-up, or fallback on its path if empty.
 note-label = "{{title-or-path}}"
+# Only suggest notes matching the given filtering options.
+note-filter = "--tag project --sort modified-"
 # Filter out the completion pop-up using the note title or its path.
 note-filter-text = "{{title}} {{path}}"
 # Show the note filename without extension as detail.

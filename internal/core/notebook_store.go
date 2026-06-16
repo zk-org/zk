@@ -332,6 +332,8 @@ dead-link = "error"
 
 # Show the note title in the completion pop-up, or fallback on its path if empty.
 #note-label = "\{{title-or-path}}"
+# Filter the notes offered as completion items using CLI filtering options.
+#note-filter = "--tag project"
 # Filter out the completion pop-up using the note title or its path.
 #note-filter-text = "\{{title}} \{{path}}"
 # Show the note filename without extension as detail.
