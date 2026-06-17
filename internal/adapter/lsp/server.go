@@ -326,10 +326,10 @@ func NewServer(opts ServerOpts) *Server {
 		}
 
 		if definitionLinkSupport(clientCapabilities) {
-			return protocol.LocationLink{
+			return []protocol.LocationLink{{
 				OriginSelectionRange: &link.Range,
 				TargetURI:            target.URI,
-			}, nil
+			}}, nil
 		} else {
 			return protocol.Location{
 				URI: target.URI,
