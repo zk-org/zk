@@ -22,7 +22,7 @@ jobs:
         tag: [linux-amd64, linux-i386]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -95,7 +95,7 @@ jobs:
         tag: [alpine-amd64, alpine-i386]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Login to GitHub Container Registry
@@ -165,7 +165,7 @@ jobs:
     runs-on: macos-15-intel # NOTE: This is the last planned mac intel runner to be supported. See https://github.com/actions/runner-images/issues/13046
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set vars
@@ -192,7 +192,7 @@ jobs:
       GOARCH: arm64
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set vars
@@ -219,7 +219,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set vars
