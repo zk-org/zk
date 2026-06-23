@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -113,7 +114,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 	ignoredFiles := []IgnoredFile{}
 
-	shouldIgnorePath := func(path string) (bool, error) {
+	shouldIgnorePath := func(path string, isDir bool) (bool, error) {
 		notifyIgnored := func(reason string) {
 			ignoredFiles = append(ignoredFiles, IgnoredFile{
 				Path:   path,
@@ -126,13 +127,22 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			return true, err
 		}
 
-		if filepath.Ext(path) != "."+group.Note.Extension {
+		// The note extension only applies to files. A directory is matched
+		// against the exclude globs alone, so that an excluded directory can be
+		// pruned from the walk instead of being traversed file by file.
+		if !isDir && filepath.Ext(path) != "."+group.Note.Extension {
 			notifyIgnored("expected extension \"" + group.Note.Extension + "\"")
 			return true, nil
 		}
 
 		for _, ignoreGlob := range group.ExcludeGlobs() {
-			matches, err := doublestar.PathMatch(ignoreGlob, path)
+			glob := ignoreGlob
+			if isDir {
+				// A directory is excluded when a glob targets the directory
+				// itself ("foo") or its whole subtree ("foo/**").
+				glob = strings.TrimSuffix(glob, "/**")
+			}
+			matches, err := doublestar.PathMatch(glob, path)
 			if err != nil {
 				return true, fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
 			}

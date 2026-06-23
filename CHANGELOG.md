@@ -18,6 +18,9 @@ Format: `<description> (by <contributor>, <pr number>)`
 - Indexing made significantly more performant (by @Keluaa, 735)
 - Support filtering by date and time with `"<date> <time>"` instead of
   `<date>T<time>` only (by @tjex, 743)
+- Exclude globs now also prune matching directories from the index walk instead
+  of descending into them, so large excluded trees (e.g. asset or vendored
+  directories) no longer slow down indexing (by @ehsash, 728)
 
 ## 0.15.5
 
