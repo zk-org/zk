@@ -36,8 +36,7 @@ func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnore
 				if isHidden && !isNotebookRoot {
 					return filepath.SkipDir
 				}
-				// Prune excluded directories so the walk never descends into
-				// large ignored trees (e.g. asset or vendored directories).
+				// Prune excluded directories.
 				if !isNotebookRoot {
 					shouldIgnore, err := shouldIgnorePath(path, true)
 					if err != nil {

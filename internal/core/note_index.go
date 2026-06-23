@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -136,13 +135,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		}
 
 		for _, ignoreGlob := range group.ExcludeGlobs() {
-			glob := ignoreGlob
-			if isDir {
-				// A directory is excluded when a glob targets the directory
-				// itself ("foo") or its whole subtree ("foo/**").
-				glob = strings.TrimSuffix(glob, "/**")
-			}
-			matches, err := doublestar.PathMatch(glob, path)
+			matches, err := doublestar.PathMatch(ignoreGlob, path)
 			if err != nil {
 				return true, fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
 			}
