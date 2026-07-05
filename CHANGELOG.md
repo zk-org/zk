@@ -11,7 +11,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 - Parse links to notes in frontmatter (by @tjex, 710)
 - Set a note's modification time in frontmatter and allow for custom key naming
-  for both creation and modification keys (by @BennoLossin, 531)
+  for both creation and modification keys (by @BennoLossin and @tjex, 531)
 
 ### Fixed
 
