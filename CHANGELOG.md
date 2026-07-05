@@ -16,6 +16,8 @@ Format: `<description> (by <contributor>, <pr number>)`
 ### Fixed
 
 - Indexing made significantly more performant (by @Keluaa, 735)
+- Support filtering by date and time with `"<date> <time>"` instead of
+  `<date>T<time>` only (by @tjex, 743)
 
 ## 0.15.5
 
