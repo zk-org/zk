@@ -41,7 +41,7 @@ func TestParseDefaultConfig(t *testing.T) {
 				LinkDropExtension: true,
 				Frontmatter: YamlFrontmatterConfig{
 					CreationDate:     "date",
-					ModificationDate: opt.NewString("modified"),
+					ModificationDate: "modified",
 				},
 			},
 		},
@@ -246,7 +246,7 @@ func TestParseComplete(t *testing.T) {
 				LinkDropExtension: false,
 				Frontmatter: YamlFrontmatterConfig{
 					CreationDate:     "created",
-					ModificationDate: opt.NewString("changed"),
+					ModificationDate: "changed",
 				},
 			},
 		},
@@ -437,7 +437,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				LinkDropExtension: true,
 				Frontmatter: YamlFrontmatterConfig{
 					CreationDate:     "date",
-					ModificationDate: opt.NewString("modified"),
+					ModificationDate: "modified",
 				},
 			},
 		},

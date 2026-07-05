@@ -59,7 +59,7 @@ func NewDefaultConfig() Config {
 				LinkDropExtension: true,
 				Frontmatter: YamlFrontmatterConfig{
 					CreationDate:     "date",
-					ModificationDate: opt.NewString("modified"),
+					ModificationDate: "modified",
 				},
 			},
 		},
@@ -177,7 +177,7 @@ type YamlFrontmatterConfig struct {
 	CreationDate string
 	// ModificationDate is the key for the modification date has. Default is
 	// "modified".
-	ModificationDate opt.String
+	ModificationDate string
 }
 
 // ToolConfig holds the external tooling configuration.
@@ -434,7 +434,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		frontmatter.ModificationDate = nil
 	}
 	if frontmatter.ModificationDate != nil {
-		config.Format.Markdown.Frontmatter.ModificationDate = opt.NewString(*frontmatter.ModificationDate)
+		config.Format.Markdown.Frontmatter.ModificationDate = *frontmatter.ModificationDate
 	}
 
 	// Tool
