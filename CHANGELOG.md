@@ -10,11 +10,12 @@ Format: `<description> (by <contributor>, <pr number>)`
 ### Added
 
 - Parse links to notes in frontmatter (by @tjex, 710)
+- Set a note's modification time in frontmatter and allow for custom key naming
+  for both creation and modification keys (by @BennoLossin, 531)
 
 ### Fixed
 
 - Indexing made significantly more performant (by @Keluaa, 735)
-
 
 ## 0.15.5
 
