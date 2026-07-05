@@ -19,6 +19,7 @@ keywords: [writing, essay, practice]
 | ---------- | ----------------------------------------------------------- |
 | `title`    | Title of the note – takes precedence over the first heading |
 | `date`     | Creation date – takes precedence over the file date         |
+| `modified` | Modification date – takes precedence over the file date     |
 | `tags`     | List of tags attached to this note                          |
 | `keywords` | Alias for `tags`                                            |
 | `aliases`  | Alternative titles for this note, used by `--mention`       |
@@ -29,31 +30,22 @@ keys are normalized to lower case.
 
 ## Date Keys
 
-By default, `zk` tracks the creation date of notes via the `date` key (or the
-file creation date if it is missing). It is possible to use a different key
-name by specifying the following in the configuration:
+By default, `zk` tracks the creation date of notes via the `date` key. Likewise,
+the modification date can be set and tracked. If the `date` or `modified` keys
+have no value set, the file system creation and modification values are used.
+
+The keys names themselves can be customised.
 
 ```toml
 [format.markdown.frontmatter]
-creation-date-key = "created"
+creation-date-key = "created" # default is "date"
+modification-date-key = "changed" # default is "modified"
 ```
 
-In addition to the creation date, `zk` can track the modification date of the
-notes via a key in the frontmatter. To do this, add the following to your
-configuration:
-
-```toml
-[format.markdown.frontmatter]
-modification-date-key = "changed"
-```
-
-When a value for this key is present in the frontmatter, it is parsed as a date
-and takes precedence over the file's modification date (for example when
-running a command like `zk list --sort modified`). This is useful when the
-modification date cannot be used, since it is modified by external programs.
-For example when the notebook is stored in a git repository and the
-modification date is not tracked by git. Or when the synchronization mechanism
-does not update file attributes.
+Tracking the creation and modification dates is useful as the file's own dates
+are not always the dates that you actually created or last edited the file. This
+can happen if you use git to clone your notebook from an online repository for
+example.
 
 Your notes then can use these custom keys:
 
@@ -68,5 +60,16 @@ aliases:
 ---
 ```
 
-This feature is best combined with external tools changing the frontmatter on
-modification, see [Modification Dates](../tips/modification-date.md).
+This feature is best combined with external tools to update the modified dates
+programmatically, see [Modification Dates](../tips/modification-date.md).
+
+To automate the creation date simply include in your template:
+
+```
+---
+date: {{format-date now}} {{format-date now "time"}}
+---
+```
+
+For further information on creating notes with templates, see
+[here](template-creation.md).

@@ -57,10 +57,10 @@ func NewDefaultConfig() Config {
 				LinkFormat:        "markdown",
 				LinkEncodePath:    true,
 				LinkDropExtension: true,
-                Frontmatter:       YamlFrontmatterConfig{
-                    CreationDate:     "date",
-                    ModificationDate: opt.NullString,
-                },
+				Frontmatter: YamlFrontmatterConfig{
+					CreationDate:     "date",
+					ModificationDate: opt.NewString("modified"),
+				},
 			},
 		},
 		LSP: LSPConfig{
@@ -174,7 +174,7 @@ type MarkdownConfig struct {
 // YamlFrontmatterConfig holds the configuration for Yaml frontmatter.
 type YamlFrontmatterConfig struct {
 	// CreationDate is the key for the creation date has. Default is "date"
-	CreationDate     string
+	CreationDate string
 	// ModificationDate is the key for the modification date has. If not present,
 	// the filesystems modification time is used.
 	ModificationDate opt.String
@@ -422,20 +422,20 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.Format.Markdown.LinkDropExtension = *markdown.LinkDropExtension
 	}
 
-    // Frontmatter
-    frontmatter := markdown.Frontmatter
-    if frontmatter.CreationDate != nil && *frontmatter.CreationDate == "" {
-        *frontmatter.CreationDate = "date"
-    }
-    if frontmatter.CreationDate != nil {
-        config.Format.Markdown.Frontmatter.CreationDate = *frontmatter.CreationDate
-    }
-    if frontmatter.ModificationDate != nil && *frontmatter.ModificationDate == "" {
-        frontmatter.ModificationDate = nil
-    }
-    if frontmatter.ModificationDate != nil {
-        config.Format.Markdown.Frontmatter.ModificationDate = opt.NewString(*frontmatter.ModificationDate)
-    }
+	// Frontmatter
+	frontmatter := markdown.Frontmatter
+	if frontmatter.CreationDate != nil && *frontmatter.CreationDate == "" {
+		*frontmatter.CreationDate = "date"
+	}
+	if frontmatter.CreationDate != nil {
+		config.Format.Markdown.Frontmatter.CreationDate = *frontmatter.CreationDate
+	}
+	if frontmatter.ModificationDate != nil && *frontmatter.ModificationDate == "" {
+		frontmatter.ModificationDate = nil
+	}
+	if frontmatter.ModificationDate != nil {
+		config.Format.Markdown.Frontmatter.ModificationDate = opt.NewString(*frontmatter.ModificationDate)
+	}
 
 	// Tool
 	tool := tomlConf.Tool
