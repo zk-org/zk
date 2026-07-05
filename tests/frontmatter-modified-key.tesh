@@ -1,4 +1,4 @@
-$ cd frontmatter/modified-date-key
+$ cd frontmatter/modified-key
 
 # Creating a new note on test runs ensures that we test the modification key feature
 # against notes that have a valid modification date at the filesystem layer. The
@@ -9,19 +9,22 @@ $ zk list -qf\{{title}}
 >Modified 2026-01-01 19:00
 >Uses file system modification date
 
-$ zk list -qf\{{title}} --modified-before=2026-02-01
+$ zk list -qf\{{title}} --modified today
+>Uses file system modification date
+
+$ zk list -qf\{{title}} --modified-before 2026-02-01
 >Modified 2026-01-01 19:00
 
-$ zk list -qf\{{title}} --modified-before=2026-02-01T20:00
+$ zk list -qf\{{title}} --modified-before 2026-02-01T20:00
 >Modified 2026-01-01 19:00
 
-$ zk list -qf\{{title}} --modified-after=2025-12-01
+$ zk list -qf\{{title}} --modified-after 2025-12-01
 >Modified 2026-01-01 19:00
 >Uses file system modification date
 
-$ zk list -qf\{{title}} --modified-after=2025-12-01T20:00
+$ zk list -qf\{{title}} --modified-after 2025-12-01T20:00
 >Modified 2026-01-01 19:00
 >Uses file system modification date
 
-$ zk list -qf\{{title}} --modified-after=2026-02-01T20:00
+$ zk list -qf\{{title}} --modified-after 2026-02-01T20:00
 >Uses file system modification date

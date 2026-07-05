@@ -96,7 +96,7 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 	return &note, nil
 }
 
-func (n *Notebook) creationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+func (n *Notebook) creationDateFrom(metadata map[string]any, times times.Timespec) time.Time {
 	// Read the creation date from the YAML frontmatter `date` key.
 	if dateVal, ok := metadata[n.Config.Format.Markdown.Frontmatter.CreationDate]; ok {
 		if dateStr, ok := dateVal.(string); ok {
@@ -120,7 +120,7 @@ func (n *Notebook) creationDateFrom(metadata map[string]interface{}, times times
 	return time.Now().UTC()
 }
 
-func (n *Notebook) modificationDateFrom(metadata map[string]interface{}, times times.Timespec) time.Time {
+func (n *Notebook) modificationDateFrom(metadata map[string]any, times times.Timespec) time.Time {
 	configKey := n.Config.Format.Markdown.Frontmatter.ModificationDate
 	if !configKey.IsNull() {
 		if dateVal, ok := metadata[configKey.Unwrap()]; ok {
