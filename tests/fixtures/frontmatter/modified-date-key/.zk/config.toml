@@ -4,4 +4,4 @@ filename = "{{slug title}}"
 template = "default.md"
 
 [format.markdown.frontmatter]
-modification-date-key = "changed"
+modification-date-key = "modified"
