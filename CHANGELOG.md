@@ -7,6 +7,11 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ## Unreleased
 
+### Fixed
+
+- Resolve links with a leading slash against the notebook root, falling back to
+  the filesystem for absolute paths (by @zmre, 745)
+
 ## 0.15.6
 
 ### Added

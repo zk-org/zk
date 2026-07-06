@@ -224,3 +224,115 @@ func TestDefinitionLinkSupport_NilCapabilities(t *testing.T) {
 	}
 	assert.Equal(t, definitionLinkSupport(caps), true)
 }
+
+func TestServer_noteForHref(t *testing.T) {
+	fixture := getNotebookFixture("links")
+
+	fs, err := fs.NewFileStorage(fixture.Path, &util.NullLogger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture.FS = fs
+
+	// Setup DB
+	db, err := sqlite.OpenInMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	config := core.NewDefaultConfig()
+	index := sqlite.NewNoteIndex(fixture.Path, db, &util.NullLogger, config.Note.Extension)
+
+	// Initialize markdown parser directly
+	parser := markdown.NewParser(markdown.ParserOpts{
+		HashtagEnabled: true,
+	}, &util.NullLogger)
+
+	notebook := core.NewNotebook(fixture.Path, config, core.NotebookPorts{
+		NoteIndex:         index,
+		NoteContentParser: parser,
+		FS:                fs,
+		TemplateLoaderFactory: func(lang string) (core.TemplateLoader, error) {
+			return &core.NullTemplateLoader, nil
+		},
+		Logger: &util.NullLogger,
+	})
+	if _, err := notebook.Index(core.NoteIndexOpts{
+		Force:   true,
+		Verbose: false,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	server := &Server{
+		documents: newDocumentStore(fs, &util.NullLogger),
+		logger:    &util.NullLogger,
+	}
+
+	tests := []struct {
+		name          string
+		href          string
+		relativeToDir string
+		// Expected note path relative to the notebook root, or "" when no
+		// note should be found.
+		wantPath string
+	}{{
+		name:          "relative to the note's directory",
+		href:          "note-a",
+		relativeToDir: filepath.Join(fixture.Path, "sub"),
+		wantPath:      "sub/note-a.md",
+	}, {
+		name:          "relative with parent traversal",
+		href:          "../top",
+		relativeToDir: filepath.Join(fixture.Path, "sub"),
+		wantPath:      "top.md",
+	}, {
+		name:          "notebook-root path from a nested directory",
+		href:          "/sub/note-a",
+		relativeToDir: filepath.Join(fixture.Path, "sub", "nested"),
+		wantPath:      "sub/note-a.md",
+	}, {
+		name:          "notebook-root path with extension",
+		href:          "/sub/nested/note-b.md",
+		relativeToDir: fixture.Path,
+		wantPath:      "sub/nested/note-b.md",
+	}, {
+		name:          "notebook-root path to a top-level note",
+		href:          "/top",
+		relativeToDir: filepath.Join(fixture.Path, "sub", "nested"),
+		wantPath:      "top.md",
+	}, {
+		name:          "filesystem absolute path fallback",
+		href:          filepath.Join(fixture.Path, "sub", "note-a.md"),
+		relativeToDir: filepath.Join(fixture.Path, "sub"),
+		wantPath:      "sub/note-a.md",
+	}, {
+		name:          "dead notebook-root link",
+		href:          "/does-not-exist",
+		relativeToDir: filepath.Join(fixture.Path, "sub"),
+		wantPath:      "",
+	}, {
+		name:          "URL is ignored",
+		href:          "https://example.com/foo",
+		relativeToDir: filepath.Join(fixture.Path, "sub"),
+		wantPath:      "",
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			note, err := server.noteForHref(tt.href, tt.relativeToDir, notebook)
+			assert.Nil(t, err)
+			if tt.wantPath == "" {
+				if note != nil {
+					t.Errorf("expected no note for %s, got %s", tt.href, note.Path)
+				}
+			} else {
+				if note == nil {
+					t.Fatalf("expected note %s for %s, got nil", tt.wantPath, tt.href)
+				}
+				assert.Equal(t, note.Path, tt.wantPath)
+			}
+		})
+	}
+}
