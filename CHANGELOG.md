@@ -18,6 +18,8 @@ Format: `<description> (by <contributor>, <pr number>)`
 - Indexing made significantly more performant (by @Keluaa, 735)
 - Support filtering by date and time with `"<date> <time>"` instead of
   `<date>T<time>` only (by @tjex, 743)
+- `NoteIndex.Commit` now passes a complete `NoteIndex` to its transaction
+  instead of one missing the notebook path and note extension (by @ehsash)
 
 ## 0.15.5
 
