@@ -174,7 +174,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v7
         with:
-          go-version: 1.26
+          go-version-file: 'go.mod'
       - name: Build
         run: /bin/bash -c 'go build -buildvcs=false -tags "fts5" -ldflags "-X=main.Version=${{ steps.vars.outputs.version }} -X=main.Build=${{ steps.vars.outputs.version }}"'
       - name: Compress for upload.
