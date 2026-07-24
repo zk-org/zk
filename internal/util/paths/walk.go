@@ -9,8 +9,10 @@ import (
 )
 
 // Walk emits the metadata of each file stored in the directory if they pass
-// the given shouldIgnorePath closure. Hidden files and directories are ignored.
-func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnorePath func(string) (bool, error)) <-chan Metadata {
+// the given shouldIgnorePath closure. Hidden files and directories are ignored,
+// as are directories rejected by shouldIgnorePath, which are pruned from the
+// walk instead of being traversed file by file.
+func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnorePath func(string, bool) (bool, error)) <-chan Metadata {
 	c := make(chan Metadata, 50)
 	go func() {
 		defer close(c)
@@ -24,18 +26,30 @@ func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnore
 			isHidden := strings.HasPrefix(filename, ".")
 			isNotebookRoot := filename == notebookRoot
 
+			path, err := filepath.Rel(basePath, abs)
+			if err != nil {
+				logger.Println(err)
+				return nil
+			}
+
 			if info.IsDir() {
 				if isHidden && !isNotebookRoot {
 					return filepath.SkipDir
 				}
+				// Prune excluded directories.
+				if !isNotebookRoot {
+					shouldIgnore, err := shouldIgnorePath(path, true)
+					if err != nil {
+						logger.Println(err)
+						return nil
+					}
+					if shouldIgnore {
+						return filepath.SkipDir
+					}
+				}
 
 			} else {
-				path, err := filepath.Rel(basePath, abs)
-				if err != nil {
-					logger.Println(err)
-					return nil
-				}
-				shouldIgnore, err := shouldIgnorePath(path)
+				shouldIgnore, err := shouldIgnorePath(path, false)
 				if err != nil {
 					logger.Println(err)
 					return nil
