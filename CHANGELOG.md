@@ -10,11 +10,11 @@ Format: `<description> (by <contributor>, <pr number>)`
 ### Added
 
 - Parse links to notes in frontmatter (by @tjex, 710)
+- Set filters for lsp completion items from the config (by @wrvsrx, 736)
 
 ### Fixed
 
 - Indexing made significantly more performant (by @Keluaa, 735)
-
 
 ## 0.15.5
 
