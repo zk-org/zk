@@ -12,7 +12,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 - Parse links to notes in frontmatter (by @tjex, 710)
 - Set filters for lsp completion items from the config (by @wrvsrx, 736)
 - Set a note's modification time in frontmatter and allow for custom key naming
-  for both creation and modification keys (by @BennoLossin and @tjex, 531)
+  for both creation and modification keys (by @BennoLossin, 531)
 
 ### Fixed
 
