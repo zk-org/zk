@@ -113,7 +113,7 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 	ignoredFiles := []IgnoredFile{}
 
-	shouldIgnorePath := func(path string) (bool, error) {
+	shouldIgnorePath := func(path string, isDir bool) (bool, error) {
 		notifyIgnored := func(reason string) {
 			ignoredFiles = append(ignoredFiles, IgnoredFile{
 				Path:   path,
@@ -126,13 +126,22 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 			return true, err
 		}
 
-		if filepath.Ext(path) != "."+group.Note.Extension {
+		// The note extension only applies to files. A directory is matched
+		// against the exclude globs alone, so that an excluded directory can be
+		// pruned from the walk instead of being traversed file by file.
+		if !isDir && filepath.Ext(path) != "."+group.Note.Extension {
 			notifyIgnored("expected extension \"" + group.Note.Extension + "\"")
 			return true, nil
 		}
 
 		for _, ignoreGlob := range group.ExcludeGlobs() {
-			matches, err := doublestar.PathMatch(ignoreGlob, path)
+			var matches bool
+			var err error
+			if isDir {
+				matches, err = globPrunesDir(ignoreGlob, path)
+			} else {
+				matches, err = doublestar.PathMatch(ignoreGlob, path)
+			}
 			if err != nil {
 				return true, fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
 			}
@@ -216,4 +225,27 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 		return stats, fmt.Errorf("indexing failed: %w", err)
 	}
 	return stats, nil
+}
+
+// globPrunesDir reports whether the exclude glob lets the whole directory be
+// pruned from the index walk, as opposed to only matching some of its entries.
+//
+// A directory is pruned only when the glob excludes its entire subtree: either
+// by naming the directory itself (e.g. "dir") or by covering its descendants
+// (e.g. "dir/**"). A glob that only matches the directory's immediate children
+// (e.g. "dir/*") must not prune it, or notes nested deeper — which the glob
+// never matches — would be dropped along with it.
+func globPrunesDir(glob, dir string) (bool, error) {
+	matches, err := doublestar.PathMatch(glob, dir)
+	if err != nil || !matches {
+		return false, err
+	}
+	// The glob names the directory exactly.
+	if glob == dir {
+		return true, nil
+	}
+	// The glob also matches a path below the directory, so it covers the whole
+	// subtree (as "dir/**" does) rather than only the immediate children (as
+	// "dir/*" does, which never matches a grandchild).
+	return doublestar.PathMatch(glob, dir+"/x/y")
 }

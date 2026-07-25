@@ -1,0 +1,36 @@
+# An exclude glob matching a directory prunes the whole directory from
+# indexing, instead of walking it and filtering each file individually.
+# https://github.com/zk-org/zk/issues/728
+
+$ cd blank
+
+$ mkdir dir
+$ mkdir dir/subdir
+$ touch banana.md
+$ touch orange.md
+$ touch dir/orange.md
+$ touch dir/subdir/apple.md
+
+# A bare directory name excludes the directory and its whole subtree.
+$ echo -e "[note]\n exclude = ['dir']" > .zk/config.toml
+$ zk index -v
+>- added banana.md
+>- added orange.md
+>- ignored dir: matched exclude glob "dir"
+>
+>Indexed 2 notes in 0s
+>  + 2 added
+>  ~ 0 modified
+>  - 0 removed
+
+# The "dir/**" subtree form prunes the directory as well.
+$ echo -e "[note]\n exclude = ['dir/**']" > .zk/config.toml
+$ zk index -vf
+>- modified banana.md
+>- modified orange.md
+>- ignored dir: matched exclude glob "dir/**"
+>
+>Indexed 2 notes in 0s
+>  + 0 added
+>  ~ 2 modified
+>  - 0 removed

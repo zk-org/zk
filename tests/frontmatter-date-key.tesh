@@ -1,0 +1,30 @@
+$ cd frontmatter/created-key
+
+# Creating a new note on test runs ensures that we test the creation key feature
+# against notes that have a valid creation date at the filesystem layer. The
+# creation date will be the date and time of when it was created.
+$ zk new --title "Uses file system creation date" --print-path > /dev/null
+
+$ zk list -qf\{{title}}
+>Created 2026-01-01 19:00
+>Uses file system creation date
+
+$ zk list -qf\{{title}} --created today
+>Uses file system creation date
+
+$ zk list -qf\{{title}} --created-before 2026-02-01
+>Created 2026-01-01 19:00
+
+$ zk list -qf\{{title}} --created-before 2026-02-01T20:00
+>Created 2026-01-01 19:00
+
+$ zk list -qf\{{title}} --created-after 2025-12-01
+>Created 2026-01-01 19:00
+>Uses file system creation date
+
+$ zk list -qf\{{title}} --created-after 2025-12-01T20:00
+>Created 2026-01-01 19:00
+>Uses file system creation date
+
+$ zk list -qf\{{title}} --created-after 2026-02-01T20:00
+>Uses file system creation date

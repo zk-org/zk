@@ -256,6 +256,15 @@ You can filter by range instead, using `--created-before`, `--created-after`,
 --created-after "last monday" --created-before yesterday
 ```
 
+Specifying a date and time can be in two formats:
+
+```
+--created-after 2026-06-01T15:00 --created-before 2026-06-01T18:00
+
+# Must be wrapped in quotes when ommitting 'T'
+--created-after "2026-06-01 15:00" --created-before "2026-06-01 18:00"
+```
+
 ## Explore links
 
 You can use the following options to explore the web of links spanning your

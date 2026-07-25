@@ -83,6 +83,10 @@ hashtags = true
 # Enable support for :colon:separated:tags:
 colon-tags = true
 
+#[format.markdown.frontmatter]
+# Define custom keys and properties of the frontmatter block
+#creation-date-key = "created" # default is "date"
+#modification-date-key = "changed" # default is "modified"
 
 # EXTERNAL TOOLS
 [tool]

@@ -3,7 +3,6 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
@@ -19,16 +18,7 @@ func testDBWithFixtures(t *testing.T, fixturesDir opt.String) *DB {
 	assert.Nil(t, err)
 
 	if !fixturesDir.IsNull() {
-		fixtures, err := testfixtures.New(
-			testfixtures.Database(db.db),
-			testfixtures.Dialect("sqlite"),
-			testfixtures.Directory("testdata/"+fixturesDir.String()),
-			// Necessary to work with an in-memory database.
-			testfixtures.DangerousSkipTestDatabaseCheck(),
-		)
-		assert.Nil(t, err)
-		err = fixtures.Load()
-		assert.Nil(t, err)
+		loadFixtures(t, db.db, "testdata/"+fixturesDir.String())
 	}
 
 	return db

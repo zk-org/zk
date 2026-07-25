@@ -103,6 +103,11 @@ $ cat .zk/config.toml
 ># Hashtags must be enabled for multi-word tags to work.
 >multiword-tags = false
 >
+>#[format.markdown.frontmatter]
+>
+># Define custom keys and properties of the frontmatter block
+>#creation-date-key = "created" # default is "date"
+>#modification-date-key = "changed" # default is "modified"
 >
 ># EXTERNAL TOOLS
 >[tool]

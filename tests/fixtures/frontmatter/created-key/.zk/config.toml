@@ -1,0 +1,7 @@
+[note]
+default-title = "Untitled"
+filename = "{{slug title}}"
+template = "default.md"
+
+[format.markdown.frontmatter]
+creation-date-key = "custom-creation-date-key"

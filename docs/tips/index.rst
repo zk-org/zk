@@ -15,4 +15,5 @@ Tips
    static-sites
    graph-visualization
    style
+   modification-date
 

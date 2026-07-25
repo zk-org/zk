@@ -11,10 +11,16 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 - Parse links to notes in frontmatter (by @tjex, 710)
 - Set filters for lsp completion items from the config (by @wrvsrx, 736)
+- Set a note's modification time in frontmatter and allow for custom key naming
+  for both creation and modification keys (by @BennoLossin and @tjex, 531)
 
 ### Fixed
 
 - Indexing made significantly more performant (by @Keluaa, 735)
+- Support filtering by date and time with `"<date> <time>"` instead of
+  `<date>T<time>` only (by @tjex, 743)
+- Exclude globs now prune matching directories from indexing, improving speed of
+  indexing (by @ehsash, 741)
 
 ## 0.15.5
 
