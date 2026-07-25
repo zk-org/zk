@@ -159,7 +159,7 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		doc:            doc,
 		pos:            protocol.Position{Line: 3, Character: 2},
 		noteFilter:     opt.NewString("--tag project"),
-		expectedLabels: []string{"Item 3 that contains spaces"},
+		expectedLabels: []string{"Item 4 that has tag 'project'"},
 	}}
 
 	for _, tt := range tests {
