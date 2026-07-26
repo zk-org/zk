@@ -51,7 +51,14 @@ be released.
 ## Install
 
 [Check out the latest release](https://github.com/zk-org/zk/releases) for
-pre-built binaries for macOS and Linux (`zk` was not tested on Windows).
+pre-built binaries for macOS, Linux and Windows.
+
+> [!WARNING]
+> The pre-built binaries are not code-signed. Windows Defender and other
+> security tools have flagged the Windows binary as malicious. Building `zk`
+> yourself is currently the recommended workaround on Windows — see
+> [Build from scratch](#build-from-scratch). See
+> [#740](https://github.com/zk-org/zk/issues/740) for details.
 
 ### Homebrew
 
