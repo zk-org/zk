@@ -54,10 +54,10 @@ be released.
 pre-built binaries for macOS, Linux and Windows.
 
 > [!WARNING]
-> The pre-built binaries are not code-signed. Windows Defender and other
-> security tools have flagged the Windows binary as malicious. Building `zk`
-> yourself is currently the recommended workaround on Windows — see
-> [Build from scratch](#build-from-scratch). See
+> The pre-built binaries are not code-signed. In the past Windows Defender and
+> other security tools have flagged some versions of the Windows binary as
+> malicious. Building `zk` yourself is currently the recommended workaround on
+> Windows — see [Build from scratch](#build-from-scratch). See
 > [#740](https://github.com/zk-org/zk/issues/740) for details.
 
 ### Homebrew
