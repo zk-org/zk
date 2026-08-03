@@ -4,8 +4,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
-    paths: [docs/**]
+    tags: ["v*.*.*"]
 
 concurrency:
   group: "pages"
@@ -21,5 +20,5 @@ jobs:
       pages: write
       id-token: write
     steps:
-    - id: deployment
-      uses: sphinx-notes/pages@v3
+      - id: deployment
+        uses: sphinx-notes/pages@v3

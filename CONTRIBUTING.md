@@ -132,15 +132,18 @@ Once merged to main, the site will be build and deployed.
 
 Once you're ready for a new relase, complete the following steps in order:
 
-1. Be sure you have the latest commits on `dev`. Then insert the version heading
-   for the new version in `CHANGELOG.md`, commit and push.
-2. Create a merge request from `dev` to `main`, titled "Release v<version>". Be
-   sure it passes CI and complete the merge.
-3. Pull the latest changes of `main` locally. Then create a new version tag with
-   `git tag -a <version>`(syntax example: `v0.13.0`). Make sure you follow the
-   [Semantic Versioning](https://semver.org) scheme.
-4. Push the tag (`git push --tags`). This will trigger the
-   [release action](.github/workflows/release.yml). This in turn calls the
+1. Update your local `main` branch to the latest commit.
+2. Check that CHANGELOG.md shows the correct incoming version number and the
+   changelog itself is formatted / structured as the preceding entries are. You
+   can format with `npx prettier CHANGELOG.md --write`.
+3. Commit the changes with `git commit`. On the first line add
+   `Release v<version>`, leave a blank line underneath, and under that paste in
+   the changelog entries (removing the markdown heading symbols). See example
+   below.
+4. Tag this commit with `git tag -a v<version>` and format the message same as
+   the commit message.
+5. Push the commit and tag (`git push --all`). This will trigger the
+   [release action](.github/workflows/release.yml), which in turn calls the
    [build-binaries action](.github/workflows/build-binaries.yml), creates a
    _draft_ release on GitHub and attaches the built binaries.
 
@@ -151,6 +154,27 @@ again manually download and attach the binaries.
 
 In both cases the description of the release can be edited after the release is
 created (i.e, adding or editing the changelog).
+
+### Example release commit/tag message:
+
+```
+Release v0.15.5
+
+Added:
+
+- List, edit and filter for broken links with `--broken-links` (by
+  @WhyNotHugo, 708)
+- Update strftime package, supporting `%g` and `%G` formats in the
+  `{{format-date}}` helper (by @tjex, 723)
+- Option to append links to selected text, instead of replacing (by @tjex, 724)
+
+Fixed:
+
+- Paths with `~` and env variables no longer error when passed to
+  `--notebook-dir` and `--working-dir` (by @tjex, 732)
+- Guard LSP against unnecessary erroring on missing textDocument/definition
+  capabilities (by @SAY-5, 718)
+```
 
 ## Benchmarks
 
