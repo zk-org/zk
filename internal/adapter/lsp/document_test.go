@@ -527,6 +527,125 @@ func TestDocument_IsTagPosition(t *testing.T) {
 	}
 }
 
+func TestByteOffsetToPosition_UTF16(t *testing.T) {
+	// Test that byteOffsetToPosition correctly converts byte offsets to UTF-16
+	// code unit positions (not rune positions).
+
+	tests := []struct {
+		content    string
+		byteOffset int
+		wantLine   uint32
+		wantChar   uint32
+	}{
+		{
+			content:    "hello world",
+			byteOffset: 6, // After "hello "
+			wantLine:   0,
+			wantChar:   6,
+		},
+		{
+			content:    "ビール",
+			byteOffset: 6, // After "ビー" (3 bytes per rune in UTF-8, so 6 bytes total)
+			wantLine:   0,
+			wantChar:   2,
+		},
+		{
+			content:    "hi😀world",
+			byteOffset: 6, // After "hi😀" (😀 is 4 bytes in UTF-8)
+			wantLine:   0,
+			wantChar:   4,
+		},
+		{
+			content:    "🌍abc🚀",
+			byteOffset: 7, // After "🌍abc" (4+1+1+1 = 7 bytes), before 🚀
+			wantLine:   0,
+			wantChar:   5, // 🌍=2, a=1, b=1, c=1 = 5 UTF-16 units
+		},
+		{
+			content:    "aビ😀b",
+			byteOffset: 8, // After "aビ😀" (1+3+4 = 8 bytes), before 'b'
+			wantLine:   0,
+			wantChar:   4, // a=1, ビ=1, 😀=2 = 4 UTF-16 units
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.content, func(t *testing.T) {
+			source := []byte(tt.content)
+			lineOffsets := buildLineOffsets(source)
+			got := byteOffsetToPosition(tt.byteOffset, source, lineOffsets)
+
+			if uint32(got.Line) != tt.wantLine {
+				t.Errorf("Line = %d, want %d", got.Line, tt.wantLine)
+			}
+			if uint32(got.Character) != tt.wantChar {
+				t.Errorf("Character = %d, want %d (this demonstrates the UTF-16 bug)", got.Character, tt.wantChar)
+			}
+		})
+	}
+}
+
+func TestDocumentLinkAt_UTF16Bug(t *testing.T) {
+	// Test that DocumentLinkAt correctly finds links when there are
+	// supplementary characters (emojis) before the link.
+
+	tests := []struct {
+		name         string
+		content      string
+		pos          protocol.Position
+		expectedHref string
+	}{
+		{
+			name:         "link without emoji - sanity check",
+			content:      "[[link]]",
+			pos:          protocol.Position{Line: 0, Character: 2}, // At first '['
+			expectedHref: "link",
+		},
+		{
+			name:         "cursor at first bracket after emoji",
+			content:      "😀 [[link]]",
+			pos:          protocol.Position{Line: 0, Character: 3}, // At first '[' in UTF-16
+			expectedHref: "link",
+		},
+		{
+			name:         "cursor at first bracket after two emojis",
+			content:      "🌍🚀 [[note]]",
+			pos:          protocol.Position{Line: 0, Character: 5}, // At first '['
+			expectedHref: "note",
+		},
+		{
+			name:         "cursor at space before link - should NOT find link",
+			content:      "😀 [[link]]",
+			pos:          protocol.Position{Line: 0, Character: 2}, // At space
+			expectedHref: "",                                       // No link at space
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			link, err := doc.DocumentLinkAt(tt.pos)
+			if err != nil {
+				t.Fatalf("DocumentLinkAt error: %v", err)
+			}
+			if tt.expectedHref == "" {
+				if link != nil {
+					t.Errorf("Expected no link, got %q", link.Href)
+				}
+			} else {
+				if link == nil {
+					t.Errorf("Expected link %q, got nil (this demonstrates the UTF-16 bug)", tt.expectedHref)
+				} else if link.Href != tt.expectedHref {
+					t.Errorf("Expected link %q, got %q", tt.expectedHref, link.Href)
+				}
+			}
+		})
+	}
+}
+
 func TestDocument_WordAt(t *testing.T) {
 	tests := []struct {
 		name     string
