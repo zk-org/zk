@@ -772,6 +772,44 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 		}
 
 		items = append(items, item)
+
+		aliases, ok := note.Metadata["aliases"]
+		// If there's no aliases just move to the next note
+		if !ok {
+			continue
+		}
+		switch aliases := aliases.(type) {
+		case []any:
+			for _, alias := range aliases {
+				noteTemp := core.MinimalNote{
+					ID:       note.ID,
+					Metadata: note.Metadata,
+					Path:     note.Path,
+					Title:    fmt.Sprint(alias),
+				}
+
+				item, err := s.newCompletionItem(notebook, noteTemp, doc, position, linkFormatter, templates)
+				if err != nil {
+					s.logger.Err(err)
+					continue
+				}
+				items = append(items, item)
+			}
+		case string:
+			noteTemp := core.MinimalNote{
+				ID:       note.ID,
+				Metadata: note.Metadata,
+				Path:     note.Path,
+				Title:    fmt.Sprint(aliases),
+			}
+
+			item, err := s.newCompletionItem(notebook, noteTemp, doc, position, linkFormatter, templates)
+			if err != nil {
+				s.logger.Err(err)
+				continue
+			}
+			items = append(items, item)
+		}
 	}
 
 	return items, nil

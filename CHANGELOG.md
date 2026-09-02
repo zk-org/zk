@@ -7,6 +7,8 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ## Unreleased
 
+-  add alias support to lsp link completion (by @nachoxmacho, 762)
+
 ## 0.15.6
 
 ### Added
