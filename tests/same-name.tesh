@@ -1,0 +1,18 @@
+$ cd same-name
+
+$ zk-fork list Daily/
+>2026-03-25 Daily/2026-03-25.md (1 hour ago)
+>
+>
+>2026-03-26 Daily/2026-03-26.md (1 hour ago)
+>
+>
+>2026-03-27 Daily/2026-03-27.md (1 hour ago)
+>
+>
+>Daily Daily.md (1 hour ago)
+>
+>  - This is the directory for daily notes.
+>
+2>
+2>Found 4 notes

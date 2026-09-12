@@ -1,0 +1,23 @@
+$ cd same-name
+# zk-fork is binary of cloned repository.
+$ zk-fork list Daily/
+>2026-03-25 Daily/2026-03-25.md (2 days ago)
+>
+>  - [[Daily]]
+>
+>2026-03-26 Daily/2026-03-26.md (2 days ago)
+>
+>
+>2026-03-27 Daily/2026-03-27.md (2 days ago)
+>
+>
+>Daily Daily.md (2 days ago)
+>
+>  - This is the directory for daily notes.
+>
+>Daily Flow Daily_flow.md (49 minutes ago)
+>
+>  - An explanation of the daily note-taking process.
+>
+2>
+2>Found 5 notes
