@@ -81,7 +81,10 @@ func (cmd *Edit) Run(container *cli.Container) error {
 func (cmd *Edit) newNoteDir(notebook *core.Notebook) *core.Dir {
 	switch len(cmd.Path) {
 	case 0:
-		dir := notebook.RootDir()
+		dir, err := notebook.DirAt(".")
+		if err != nil {
+			dir = notebook.RootDir()
+		}
 		return &dir
 	case 1:
 		dir, err := notebook.DirAt(cmd.Path[0])
