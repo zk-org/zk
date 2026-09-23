@@ -18,7 +18,10 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ### Changed
 
-- Tag filtering is now case-insensitive (by @tuxikus, 770)
+- Tag filtering is now case-insensitive (by @tuxikus, 770) the filesystem for
+  absolute paths (by @zmre, 745)
+- Use the working directory as the target of the `edit --interactive` new note
+  fzf binding (by @skbolton, 768)
 
 ## 0.15.6
 
