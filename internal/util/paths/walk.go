@@ -1,6 +1,8 @@
 package paths
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,18 +38,32 @@ func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnore
 
 			return filepath.Walk(root, func(abs string, info os.FileInfo, err error) error {
 				if err != nil {
-					return err
+					// Stopping would end the walk early, and the index would then
+					// drop every note not reached yet as removed.
+					logger.Println(err)
+					return nil
 				}
 				// The link itself was already checked before walking its target.
 				if abs == root {
 					return nil
 				}
 
+				filename := info.Name()
+				isHidden := strings.HasPrefix(filename, ".")
+				isNotebookRoot := filename == notebookRoot
+
 				isLink := info.Mode()&os.ModeSymlink != 0
 				if isLink {
+					// Hidden links are skipped before resolving them, as editors
+					// leave dangling ones behind (e.g. Emacs `.#note.md` locks).
+					if isHidden {
+						return nil
+					}
 					info, err = os.Stat(abs)
 					if err != nil {
-						logger.Println(err)
+						if !errors.Is(err, fs.ErrNotExist) {
+							logger.Println(err)
+						}
 						return nil
 					}
 				}
@@ -58,10 +74,6 @@ func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnore
 				if isLink {
 					skipDir = nil
 				}
-
-				filename := info.Name()
-				isHidden := strings.HasPrefix(filename, ".")
-				isNotebookRoot := filename == notebookRoot
 
 				path, err := filepath.Rel(root, abs)
 				if err != nil {

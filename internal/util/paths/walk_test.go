@@ -1,6 +1,7 @@
 package paths
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -143,6 +144,8 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 	symlink("../missing", "nb/e-broken")
 	symlink("../excluded", "nb/f-excluded")
 	symlink("../hidden", "nb/.hidden")
+	// Emacs lock file: a dangling, hidden link.
+	symlink("user@host.123", "nb/.#a.md")
 
 	// The link's own mtime would make zk re-parse the note on every index.
 	targetTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
@@ -155,10 +158,11 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 		return filepath.Ext(path) != ".md", nil
 	}
 
+	logger := &recordingLogger{}
 	path := filepath.Join(tmp, "nb")
 	actual := make([]string, 0)
 	modified := map[string]time.Time{}
-	for m := range Walk(path, &util.NullLogger, filepath.Base(path), shouldIgnore) {
+	for m := range Walk(path, logger, filepath.Base(path), shouldIgnore) {
 		actual = append(actual, m.Path)
 		modified[m.Path] = m.Modified
 	}
@@ -172,4 +176,68 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 		"inner/i.md",
 	})
 	assert.Equal(t, modified["d-file.md"], targetTime)
+	// Dangling links are skipped silently.
+	assert.Equal(t, logger.lines, []string(nil))
+}
+
+// Walk should skip a directory it can't read and keep going, instead of ending
+// the walk early and making the index drop every note it didn't reach.
+func TestWalkSkipsUnreadableDirs(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root can read any directory")
+	}
+
+	tmp := t.TempDir()
+	mkfile := func(path string) {
+		path = filepath.Join(tmp, path)
+		assert.Nil(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		assert.Nil(t, os.WriteFile(path, []byte("# Note\n"), 0o644))
+	}
+	lock := func(dir string) {
+		dir = filepath.Join(tmp, dir)
+		assert.Nil(t, os.Chmod(dir, 0))
+		// Restore access so t.TempDir can clean up.
+		t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	}
+
+	mkfile("shared/locked/l.md")
+	mkfile("shared/x.md")
+	mkfile("nb/a.md")
+	mkfile("nb/locked/l.md")
+	mkfile("nb/z.md")
+	assert.Nil(t, os.Symlink("../shared", filepath.Join(tmp, "nb/s")))
+	lock("shared/locked")
+	lock("nb/locked")
+
+	shouldIgnore := func(path string, isDir bool) (bool, error) {
+		return !isDir && filepath.Ext(path) != ".md", nil
+	}
+
+	path := filepath.Join(tmp, "nb")
+	logger := &recordingLogger{}
+	actual := make([]string, 0)
+	for m := range Walk(path, logger, filepath.Base(path), shouldIgnore) {
+		actual = append(actual, m.Path)
+	}
+
+	assert.Equal(t, actual, []string{"a.md", "s/x.md", "z.md"})
+	assert.Equal(t, len(logger.lines), 2)
+}
+
+type recordingLogger struct {
+	lines []string
+}
+
+func (l *recordingLogger) Printf(format string, v ...any) {
+	l.lines = append(l.lines, fmt.Sprintf(format, v...))
+}
+
+func (l *recordingLogger) Println(v ...any) {
+	l.lines = append(l.lines, fmt.Sprintln(v...))
+}
+
+func (l *recordingLogger) Err(err error) {
+	if err != nil {
+		l.lines = append(l.lines, err.Error())
+	}
 }
