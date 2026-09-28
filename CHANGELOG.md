@@ -9,6 +9,7 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ### Fixed
 
+- Follow symlinks when indexing notes (by @ahmedelgabri, 769)
 - Resolve links with a leading slash against the notebook root, falling back to
   the filesystem for absolute paths (by @zmre, 745)
 
