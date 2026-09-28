@@ -1,7 +1,7 @@
 package paths
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -118,24 +118,11 @@ func TestWalkExcludedDirsArePruned(t *testing.T) {
 // under the link's path, without looping on link cycles or emitting a note
 // twice.
 func TestWalkFollowsSymlinks(t *testing.T) {
-	// Symlinks are created at runtime because patch files can't carry them.
 	tmp := t.TempDir()
-	mkfile := func(path string) {
-		path = filepath.Join(tmp, path)
-		assert.Nil(t, os.MkdirAll(filepath.Dir(path), 0o755))
-		assert.Nil(t, os.WriteFile(path, []byte("# Note\n"), 0o644))
-	}
+	writeNotes(t, tmp, "shared/x.md", "shared/sub/y.md", "excluded/e.md", "hidden/h.md", "nb/a.md", "nb/g-after.md", "nb/inner/i.md")
 	symlink := func(target string, link string) {
 		assert.Nil(t, os.Symlink(target, filepath.Join(tmp, link)))
 	}
-
-	mkfile("shared/x.md")
-	mkfile("shared/sub/y.md")
-	mkfile("excluded/e.md")
-	mkfile("hidden/h.md")
-	mkfile("nb/a.md")
-	mkfile("nb/g-after.md")
-	mkfile("nb/inner/i.md")
 	symlink("../shared", "nb/b-shared")
 	symlink("../nb", "shared/back")
 	symlink(".", "shared/self")
@@ -144,10 +131,9 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 	symlink("../missing", "nb/e-broken")
 	symlink("../excluded", "nb/f-excluded")
 	symlink("../hidden", "nb/.hidden")
-	// Emacs lock file: a dangling, hidden link.
+	// Emacs lock file.
 	symlink("user@host.123", "nb/.#a.md")
 
-	// The link's own mtime would make zk re-parse the note on every index.
 	targetTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
 	assert.Nil(t, os.Chtimes(filepath.Join(tmp, "shared/x.md"), targetTime, targetTime))
 
@@ -158,11 +144,11 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 		return filepath.Ext(path) != ".md", nil
 	}
 
-	logger := &recordingLogger{}
+	var logs strings.Builder
 	path := filepath.Join(tmp, "nb")
 	actual := make([]string, 0)
 	modified := map[string]time.Time{}
-	for m := range Walk(path, logger, filepath.Base(path), shouldIgnore) {
+	for m := range Walk(path, util.StdLogger{Logger: log.New(&logs, "", 0)}, filepath.Base(path), shouldIgnore) {
 		actual = append(actual, m.Path)
 		modified[m.Path] = m.Modified
 	}
@@ -176,8 +162,7 @@ func TestWalkFollowsSymlinks(t *testing.T) {
 		"inner/i.md",
 	})
 	assert.Equal(t, modified["d-file.md"], targetTime)
-	// Dangling links are skipped silently.
-	assert.Equal(t, logger.lines, []string(nil))
+	assert.Equal(t, logs.String(), "")
 }
 
 // Walk should skip a directory it can't read and keep going, instead of ending
@@ -188,56 +173,34 @@ func TestWalkSkipsUnreadableDirs(t *testing.T) {
 	}
 
 	tmp := t.TempDir()
-	mkfile := func(path string) {
-		path = filepath.Join(tmp, path)
-		assert.Nil(t, os.MkdirAll(filepath.Dir(path), 0o755))
-		assert.Nil(t, os.WriteFile(path, []byte("# Note\n"), 0o644))
-	}
-	lock := func(dir string) {
+	writeNotes(t, tmp, "shared/locked/l.md", "shared/x.md", "nb/a.md", "nb/locked/l.md", "nb/z.md")
+	assert.Nil(t, os.Symlink("../shared", filepath.Join(tmp, "nb/s")))
+	for _, dir := range []string{"shared/locked", "nb/locked"} {
 		dir = filepath.Join(tmp, dir)
 		assert.Nil(t, os.Chmod(dir, 0))
 		// Restore access so t.TempDir can clean up.
 		t.Cleanup(func() { os.Chmod(dir, 0o755) })
 	}
 
-	mkfile("shared/locked/l.md")
-	mkfile("shared/x.md")
-	mkfile("nb/a.md")
-	mkfile("nb/locked/l.md")
-	mkfile("nb/z.md")
-	assert.Nil(t, os.Symlink("../shared", filepath.Join(tmp, "nb/s")))
-	lock("shared/locked")
-	lock("nb/locked")
-
 	shouldIgnore := func(path string, isDir bool) (bool, error) {
 		return !isDir && filepath.Ext(path) != ".md", nil
 	}
 
+	var logs strings.Builder
 	path := filepath.Join(tmp, "nb")
-	logger := &recordingLogger{}
 	actual := make([]string, 0)
-	for m := range Walk(path, logger, filepath.Base(path), shouldIgnore) {
+	for m := range Walk(path, util.StdLogger{Logger: log.New(&logs, "", 0)}, filepath.Base(path), shouldIgnore) {
 		actual = append(actual, m.Path)
 	}
 
 	assert.Equal(t, actual, []string{"a.md", "s/x.md", "z.md"})
-	assert.Equal(t, len(logger.lines), 2)
+	assert.Equal(t, strings.Count(logs.String(), "permission denied"), 2)
 }
 
-type recordingLogger struct {
-	lines []string
-}
-
-func (l *recordingLogger) Printf(format string, v ...any) {
-	l.lines = append(l.lines, fmt.Sprintf(format, v...))
-}
-
-func (l *recordingLogger) Println(v ...any) {
-	l.lines = append(l.lines, fmt.Sprintln(v...))
-}
-
-func (l *recordingLogger) Err(err error) {
-	if err != nil {
-		l.lines = append(l.lines, err.Error())
+func writeNotes(t *testing.T, dir string, paths ...string) {
+	for _, path := range paths {
+		path = filepath.Join(dir, path)
+		assert.Nil(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		assert.Nil(t, os.WriteFile(path, []byte("# Note\n"), 0o644))
 	}
 }

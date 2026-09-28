@@ -1,8 +1,6 @@
 package paths
 
 import (
-	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,123 +17,111 @@ import (
 // emitted under the link's path.
 func Walk(basePath string, logger util.Logger, notebookRoot string, shouldIgnorePath func(string, bool) (bool, error)) <-chan Metadata {
 	c := make(chan Metadata, 50)
-	go func() {
-		defer close(c)
 
-		// Directories are keyed by their resolved path and walked at most once,
-		// so symlink cycles terminate and no note is emitted twice.
-		visitedDirs := map[string]bool{}
+	if resolved, err := filepath.EvalSymlinks(basePath); err == nil {
+		basePath = resolved
+	}
 
-		// Link targets are compared against the notebook, so both need their
-		// resolved form.
-		if resolved, err := filepath.EvalSymlinks(basePath); err == nil {
-			basePath = resolved
-		}
+	visitedDirs := map[string]bool{}
+	var walk func(root string, prefix string) error
+	walk = func(root string, prefix string) error {
+		visitedDirs[root] = true
 
-		var walk func(root string, prefix string) error
-		walk = func(root string, prefix string) error {
-			visitedDirs[root] = true
+		return filepath.Walk(root, func(abs string, info os.FileInfo, err error) error {
+			if err != nil {
+				// Returning the error would stop the walk, and the index would
+				// then remove every note not reached yet.
+				logger.Println(err)
+				return nil
+			}
+			if abs == root {
+				return nil
+			}
 
-			return filepath.Walk(root, func(abs string, info os.FileInfo, err error) error {
+			filename := info.Name()
+			isHidden := strings.HasPrefix(filename, ".")
+			isNotebookRoot := filename == notebookRoot
+
+			isLink := info.Mode()&os.ModeSymlink != 0
+			if isLink {
+				info, err = os.Stat(abs)
 				if err != nil {
-					// Stopping would end the walk early, and the index would then
-					// drop every note not reached yet as removed.
-					logger.Println(err)
+					if !os.IsNotExist(err) {
+						logger.Println(err)
+					}
 					return nil
 				}
-				// The link itself was already checked before walking its target.
-				if abs == root {
-					return nil
+			}
+
+			// filepath.Walk only prunes real directories: returning SkipDir
+			// for a link would skip the remaining entries of its parent.
+			skipDir := filepath.SkipDir
+			if isLink {
+				skipDir = nil
+			}
+
+			path, err := filepath.Rel(root, abs)
+			if err != nil {
+				logger.Println(err)
+				return nil
+			}
+			path = filepath.Join(prefix, path)
+
+			if info.IsDir() {
+				if isHidden && !isNotebookRoot {
+					return skipDir
 				}
-
-				filename := info.Name()
-				isHidden := strings.HasPrefix(filename, ".")
-				isNotebookRoot := filename == notebookRoot
-
-				isLink := info.Mode()&os.ModeSymlink != 0
-				if isLink {
-					// Hidden links are skipped before resolving them, as editors
-					// leave dangling ones behind (e.g. Emacs `.#note.md` locks).
-					if isHidden {
-						return nil
-					}
-					info, err = os.Stat(abs)
-					if err != nil {
-						if !errors.Is(err, fs.ErrNotExist) {
-							logger.Println(err)
-						}
-						return nil
-					}
-				}
-
-				// filepath.Walk only prunes real directories: returning SkipDir
-				// for a link would skip the remaining entries of its parent.
-				skipDir := filepath.SkipDir
-				if isLink {
-					skipDir = nil
-				}
-
-				path, err := filepath.Rel(root, abs)
-				if err != nil {
-					logger.Println(err)
-					return nil
-				}
-				path = filepath.Join(prefix, path)
-
-				if info.IsDir() {
-					if isHidden && !isNotebookRoot {
-						return skipDir
-					}
-					// Prune excluded directories.
-					if !isNotebookRoot {
-						shouldIgnore, err := shouldIgnorePath(path, true)
-						if err != nil {
-							logger.Println(err)
-							return nil
-						}
-						if shouldIgnore {
-							return skipDir
-						}
-					}
-
-					if isLink {
-						target, err := filepath.EvalSymlinks(abs)
-						if err != nil {
-							logger.Println(err)
-							return nil
-						}
-						// A target inside the notebook is already reached
-						// through its real path.
-						if visitedDirs[target] || isDescendant(target, basePath) {
-							return nil
-						}
-						return walk(target, path)
-					}
-
-					if visitedDirs[abs] {
-						return filepath.SkipDir
-					}
-					visitedDirs[abs] = true
-
-				} else {
-					shouldIgnore, err := shouldIgnorePath(path, false)
+				// Prune excluded directories.
+				if !isNotebookRoot {
+					shouldIgnore, err := shouldIgnorePath(path, true)
 					if err != nil {
 						logger.Println(err)
 						return nil
 					}
-					if isHidden || shouldIgnore {
-						return nil
-					}
-
-					c <- Metadata{
-						Path:     path,
-						Modified: info.ModTime().UTC(),
+					if shouldIgnore {
+						return skipDir
 					}
 				}
 
-				return nil
-			})
-		}
+				if isLink {
+					target, err := filepath.EvalSymlinks(abs)
+					if err != nil {
+						logger.Println(err)
+						return nil
+					}
+					if visitedDirs[target] || isDescendant(target, basePath) {
+						return nil
+					}
+					return walk(target, path)
+				}
+
+				if visitedDirs[abs] {
+					return filepath.SkipDir
+				}
+				visitedDirs[abs] = true
+
+			} else {
+				shouldIgnore, err := shouldIgnorePath(path, false)
+				if err != nil {
+					logger.Println(err)
+					return nil
+				}
+				if isHidden || shouldIgnore {
+					return nil
+				}
+
+				c <- Metadata{
+					Path:     path,
+					Modified: info.ModTime().UTC(),
+				}
+			}
+
+			return nil
+		})
+	}
+
+	go func() {
+		defer close(c)
 
 		if err := walk(basePath, ""); err != nil {
 			logger.Println(err)
