@@ -591,7 +591,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 				if len(tag) == 0 {
 					continue
 				}
-				globs = append(globs, "t.name GLOB ?")
+				globs = append(globs, "LOWER(t.name) GLOB LOWER(?)")
 				args = append(args, tag)
 			}
 
