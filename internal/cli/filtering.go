@@ -219,52 +219,14 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 	opts.MissingBacklink = f.MissingBacklink
 	opts.BrokenLinks = f.BrokenLinks
 
-	if f.Created != "" {
-		start, end, err := parseDayRange(f.Created)
-		if err != nil {
-			return opts, err
-		}
-		opts.CreatedStart = &start
-		opts.CreatedEnd = &end
-	} else {
-		if f.CreatedBefore != "" {
-			date, err := dateutil.TimeFromNatural(f.CreatedBefore)
-			if err != nil {
-				return opts, err
-			}
-			opts.CreatedEnd = &date
-		}
-		if f.CreatedAfter != "" {
-			date, err := dateutil.TimeFromNatural(f.CreatedAfter)
-			if err != nil {
-				return opts, err
-			}
-			opts.CreatedStart = &date
-		}
+	opts.CreatedStart, opts.CreatedEnd, err = parseTimeRange(f.Created, f.CreatedBefore, f.CreatedAfter)
+	if err != nil {
+		return opts, err
 	}
 
-	if f.Modified != "" {
-		start, end, err := parseDayRange(f.Modified)
-		if err != nil {
-			return opts, err
-		}
-		opts.ModifiedStart = &start
-		opts.ModifiedEnd = &end
-	} else {
-		if f.ModifiedBefore != "" {
-			date, err := dateutil.TimeFromNatural(f.ModifiedBefore)
-			if err != nil {
-				return opts, err
-			}
-			opts.ModifiedEnd = &date
-		}
-		if f.ModifiedAfter != "" {
-			date, err := dateutil.TimeFromNatural(f.ModifiedAfter)
-			if err != nil {
-				return opts, err
-			}
-			opts.ModifiedStart = &date
-		}
+	opts.ModifiedStart, opts.ModifiedEnd, err = parseTimeRange(f.Modified, f.ModifiedBefore, f.ModifiedAfter)
+	if err != nil {
+		return opts, err
 	}
 
 	sorters, err := core.NoteSortersFromStrings(f.Sort)
@@ -305,4 +267,33 @@ func parseDayRange(date string) (start time.Time, end time.Time, err error) {
 func startOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
+// parseTimeRange converts the exact/before/after filter fields into optional start and end timestamps.
+// An exact day takes precedence over the before/after fields.
+func parseTimeRange(exact, before, after string) (start, end *time.Time, err error) {
+	if exact != "" {
+		s, e, err := parseDayRange(exact)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &s, &e, nil
+	}
+
+	if before != "" {
+		date, err := dateutil.TimeFromNatural(before)
+		if err != nil {
+			return nil, nil, err
+		}
+		end = &date
+	}
+	if after != "" {
+		date, err := dateutil.TimeFromNatural(after)
+		if err != nil {
+			return nil, nil, err
+		}
+		start = &date
+	}
+
+	return start, end, nil
 }
