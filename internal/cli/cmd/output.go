@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/util/strings"
@@ -108,4 +109,12 @@ func (f FormatFlags) Template(defaultFormat string, predefined map[string]string
 	}
 
 	return strings.ExpandWhitespaceLiterals(format)
+}
+
+// PrintFound prints the total number of found items on stderr, unless the
+// quiet flag is set. The noun must already be pluralised for the count.
+func (f FormatFlags) PrintFound(count int, noun string) {
+	if !f.Quiet {
+		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, noun)
+	}
 }

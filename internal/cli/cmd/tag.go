@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
@@ -59,9 +58,7 @@ func (cmd *TagList) Run(container *cli.Container) error {
 		return err
 	}
 
-	if !cmd.Quiet {
-		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, strings.Pluralize("tag", count))
-	}
+	cmd.FormatFlags.PrintFound(count, strings.Pluralize("tag", count))
 
 	return nil
 }
