@@ -56,35 +56,23 @@ func (cmd *List) Run(container *cli.Container) error {
 	}
 
 	count := len(notes)
-	if count > 0 {
-		err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
-			if cmd.Header != "" {
-				fmt.Fprint(out, cmd.Header)
-			}
-			for i, note := range notes {
-				if i > 0 {
-					fmt.Fprint(out, cmd.Delimiter)
-				}
-
-				ft, err := format(note)
-				if err != nil {
-					return err
-				}
-				fmt.Fprint(out, ft)
-			}
-			if cmd.Footer != "" {
-				fmt.Fprint(out, cmd.Footer)
-			}
-
-			return nil
-		})
+	err = cmd.FormatFlags.Paginate(container, count, func(out io.Writer, i int) error {
+		ft, err := format(notes[i])
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(out, ft)
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
-	if err == nil && !cmd.Quiet {
+	if !cmd.Quiet {
 		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
-	return err
+	return nil
 }
 
 func (cmd *List) noteTemplate() string {

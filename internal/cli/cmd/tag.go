@@ -47,35 +47,23 @@ func (cmd *TagList) Run(container *cli.Container) error {
 	}
 
 	count := len(tags)
-	if count > 0 {
-		err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
-			if cmd.Header != "" {
-				fmt.Fprint(out, cmd.Header)
-			}
-			for i, tag := range tags {
-				if i > 0 {
-					fmt.Fprint(out, cmd.Delimiter)
-				}
-
-				ft, err := format(tag)
-				if err != nil {
-					return err
-				}
-				fmt.Fprint(out, ft)
-			}
-			if cmd.Footer != "" {
-				fmt.Fprint(out, cmd.Footer)
-			}
-
-			return nil
-		})
+	err = cmd.FormatFlags.Paginate(container, count, func(out io.Writer, i int) error {
+		ft, err := format(tags[i])
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(out, ft)
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
-	if err == nil && !cmd.Quiet {
+	if !cmd.Quiet {
 		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, strings.Pluralize("tag", count))
 	}
 
-	return err
+	return nil
 }
 
 func (cmd *TagList) tagTemplate() string {

@@ -47,40 +47,30 @@ func (cmd *Config) Run(container *cli.Container) error {
 
 	format := cmd.mapTemplate()
 
-	var err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
-		if cmd.Header != "" {
-			fmt.Fprint(out, cmd.Header)
-		}
-		for i, o := range keys {
-
-			if i > 0 {
-				fmt.Fprint(out, cmd.Delimiter)
+	err := cmd.FormatFlags.Paginate(container, count, func(out io.Writer, i int) error {
+		o := keys[i]
+		if cmd.Format == "" || cmd.Format == "short" {
+			fmt.Fprintf(out, format, o)
+		} else if cmd.Format == "json" {
+			jsonData, err := json.Marshal(objects[o])
+			if err != nil {
+				fmt.Println("Error marshaling JSON:", err)
+				os.Exit(1)
 			}
-			if cmd.Format == "" || cmd.Format == "short" {
-				fmt.Fprintf(out, format, o)
-			} else if cmd.Format == "json" {
-				jsonData, err := json.Marshal(objects[o])
-				if err != nil {
-					fmt.Println("Error marshaling JSON:", err)
-					os.Exit(1)
-				}
-				fmt.Fprintf(out, format, o, jsonData)
-			} else {
-				fmt.Fprintf(out, format, o, objects[o])
-			}
-
-			i += 1
-		}
-		if cmd.Footer != "" {
-			fmt.Fprint(out, cmd.Footer)
+			fmt.Fprintf(out, format, o, jsonData)
+		} else {
+			fmt.Fprintf(out, format, o, objects[o])
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
-	if err == nil && !cmd.Quiet {
+	if !cmd.Quiet {
 		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, cmd.List)
 	}
-	return err
+	return nil
 }
 
 func (cmd *Config) mapTemplate() string {
