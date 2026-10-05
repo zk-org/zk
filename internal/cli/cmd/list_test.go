@@ -15,7 +15,7 @@ func TestListFormatDefault(t *testing.T) {
 
 func TestListFormatPredefined(t *testing.T) {
 	test := func(format, expectedTemplate string) {
-		cmd := List{Format: format}
+		cmd := List{FormatFlags: FormatFlags{Format: format}}
 		assert.Equal(t, cmd.noteTemplate(), expectedTemplate)
 	}
 
@@ -56,7 +56,7 @@ Tags: {{join tags ", "}}
 
 func TestListFormatCustom(t *testing.T) {
 	test := func(format, expectedTemplate string) {
-		cmd := List{Format: format}
+		cmd := List{FormatFlags: FormatFlags{Format: format}}
 		assert.Equal(t, cmd.noteTemplate(), expectedTemplate)
 	}
 

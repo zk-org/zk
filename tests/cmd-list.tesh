@@ -19,15 +19,14 @@ $ zk list --help
 >
 >Formatting
 >  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
->                           of the predefined formats: oneline, short, medium,
->                           long, full, json, jsonl.
+>                           of the predefined formats.
 >      --header=STRING      Arbitrary text printed at the start of the list.
->      --footer="\\n"       Arbitrary text printed at the end of the list.
->  -d, --delimiter="\n"     Print notes delimited by the given separator.
->  -0, --delimiter0         Print notes delimited by ASCII NUL characters. This
+>      --footer="\n"        Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print items delimited by the given separator.
+>  -0, --delimiter0         Print items delimited by ASCII NUL characters. This
 >                           is useful when used in conjunction with `xargs -0`.
 >  -P, --no-pager           Do not pipe output into a pager.
->  -q, --quiet              Do not print the total number of notes found.
+>  -q, --quiet              Do not print the total number of items found.
 >
 >Filtering
 >  -i, --interactive                Select notes interactively with fzf.
