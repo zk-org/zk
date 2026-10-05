@@ -19,6 +19,7 @@ import (
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/opt"
 	strutil "github.com/zk-org/zk/internal/util/strings"
+	"gopkg.in/yaml.v3"
 )
 
 // Server holds the state of the Language Server.
@@ -404,6 +405,8 @@ func NewServer(opts ServerOpts) *Server {
 
 		missingBacklinkActions := server.getMissingBacklinkCodeActions(doc, params.TextDocument.URI, params.Range)
 		actions = append(actions, missingBacklinkActions...)
+
+		actions = append(actions, server.getConvertToFrontmatterCodeAction(doc, params.TextDocument.URI, params.Range)...)
 
 		// Only add "New note" actions if range is not empty.
 		if !isRangeEmpty(params.Range) {
@@ -1162,6 +1165,50 @@ func findLastSectionLine(lines []string) uint32 {
 		}
 	}
 	return lastHeadingLine
+}
+
+// getConvertToFrontmatterCodeAction returns a code action converting the note
+// title heading into a YAML frontmatter block.
+func (s *Server) getConvertToFrontmatterCodeAction(doc *document, docURI protocol.DocumentUri, requestRange protocol.Range) []protocol.CodeAction {
+	notebook, err := s.notebookOf(doc)
+	if err != nil {
+		return nil
+	}
+
+	content, err := notebook.Parser.ParseNoteContent(doc.Content)
+	if err != nil {
+		return nil
+	}
+
+	if content.HasFrontmatter || content.Title.IsNull() || content.TitleStart == content.TitleEnd {
+		return nil
+	}
+
+	source := []byte(doc.Content)
+	lineOffsets := buildLineOffsets(source)
+	headingRange := protocol.Range{
+		Start: byteOffsetToPosition(content.TitleStart, source, lineOffsets),
+		End:   byteOffsetToPosition(content.TitleEnd, source, lineOffsets),
+	}
+	if requestRange.Start.Line != headingRange.Start.Line {
+		return nil
+	}
+
+	titleYAML, err := yaml.Marshal(map[string]string{"title": content.Title.String()})
+	if err != nil {
+		return nil
+	}
+	newText := "---\n" + strings.TrimSuffix(string(titleYAML), "\n") + "\n---\n\n"
+
+	return []protocol.CodeAction{{
+		Title: "Convert to frontmatter",
+		Kind:  stringPtr(protocol.CodeActionKindRefactor),
+		Edit: &protocol.WorkspaceEdit{
+			Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+				docURI: {{Range: headingRange, NewText: newText}},
+			},
+		},
+	}}
 }
 
 // getMissingBacklinkCodeActions returns code actions for adding missing backlinks.
