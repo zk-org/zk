@@ -182,33 +182,8 @@ func (f Filtering) NewNoteFindOpts(notebook *core.Notebook) (core.NoteFindOpts, 
 		opts.MentionedBy = f.MentionedBy
 	}
 
-	if paths, ok := relPaths(notebook, f.LinkedBy); ok {
-		opts.LinkedBy = &core.LinkFilter{
-			Hrefs:       paths,
-			Negate:      false,
-			Recursive:   f.Recursive,
-			MaxDistance: f.MaxDistance,
-		}
-	} else if paths, ok := relPaths(notebook, f.NoLinkedBy); ok {
-		opts.LinkedBy = &core.LinkFilter{
-			Hrefs:  paths,
-			Negate: true,
-		}
-	}
-
-	if paths, ok := relPaths(notebook, f.LinkTo); ok {
-		opts.LinkTo = &core.LinkFilter{
-			Hrefs:       paths,
-			Negate:      false,
-			Recursive:   f.Recursive,
-			MaxDistance: f.MaxDistance,
-		}
-	} else if paths, ok := relPaths(notebook, f.NoLinkTo); ok {
-		opts.LinkTo = &core.LinkFilter{
-			Hrefs:  paths,
-			Negate: true,
-		}
-	}
+	opts.LinkedBy = linkFilterFromPaths(notebook, f.LinkedBy, f.NoLinkedBy, f.Recursive, f.MaxDistance)
+	opts.LinkTo = linkFilterFromPaths(notebook, f.LinkTo, f.NoLinkTo, f.Recursive, f.MaxDistance)
 
 	if paths, ok := relPaths(notebook, f.Related); ok {
 		opts.Related = paths
@@ -249,6 +224,27 @@ func relPaths(notebook *core.Notebook, paths []string) ([]string, bool) {
 		}
 	}
 	return relPaths, len(relPaths) > 0
+}
+
+// linkFilterFromPaths builds a LinkFilter from a positive and a negative list of hrefs. Positive items take precedence.
+func linkFilterFromPaths(notebook *core.Notebook, hrefs, negatedHrefs []string, recursive bool, maxDistance int) *core.LinkFilter {
+	if paths, ok := relPaths(notebook, hrefs); ok {
+		return &core.LinkFilter{
+			Hrefs:       paths,
+			Negate:      false,
+			Recursive:   recursive,
+			MaxDistance: maxDistance,
+		}
+	}
+
+	if paths, ok := relPaths(notebook, negatedHrefs); ok {
+		return &core.LinkFilter{
+			Hrefs:  paths,
+			Negate: true,
+		}
+	}
+
+	return nil
 }
 
 func parseDayRange(date string) (start time.Time, end time.Time, err error) {
