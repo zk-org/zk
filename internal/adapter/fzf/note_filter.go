@@ -83,28 +83,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		}
 	}
 
-	zkBin, err := os.Executable()
-	if err != nil {
-		return selectedNotes, err
-	}
-
-	bindings := []Binding{}
-
-	if dir := f.opts.NewNoteDir; dir != nil {
-		suffix := ""
-		if dir.Name != "" {
-			suffix = " in " + dir.Name + "/"
-		}
-
-		newBinding := f.opts.NewBinding.OrString("Ctrl-E").String()
-		if newBinding != "" {
-			bindings = append(bindings, Binding{
-				Keys:        newBinding,
-				Description: "create a note with the query as title" + suffix,
-				Action:      fmt.Sprintf(`become("%s" new "%s" --title {q} < /dev/tty > /dev/tty)`, zkBin, dir.Path),
-			})
-		}
-	}
+	bindings := f.Bindings()
 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
 
@@ -166,6 +145,34 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	}
 
 	return selectedNotes, nil
+}
+
+// Bindings returns key bindings configured for fzf filtering.
+func (f *NoteFilter) Bindings() []Binding {
+	zkBin, err := os.Executable()
+	if err != nil {
+		return nil
+	}
+
+	bindings := []Binding{}
+
+	if dir := f.opts.NewNoteDir; dir != nil {
+		suffix := ""
+		if dir.Name != "" {
+			suffix = " in " + dir.Name + "/"
+		}
+
+		newBinding := f.opts.NewBinding.OrString("Ctrl-E").String()
+		if newBinding != "" {
+			bindings = append(bindings, Binding{
+				Keys:        newBinding,
+				Description: "create a note with the query as title" + suffix,
+				Action:      fmt.Sprintf(`become("%s" new "%s" --title {q}%s)`, zkBin, dir.Path, CMD_SUFFIX),
+			})
+		}
+	}
+
+	return bindings
 }
 
 var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`
