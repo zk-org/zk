@@ -37,6 +37,13 @@ type NoteContent struct {
 	Links []Link
 	// Additional metadata. For example, extracted from a YAML frontmatter.
 	Metadata map[string]any
+	// Zero if there's no title or when it comes from frontmatter.
+	TitleStart int
+	// Start of the AST node following the heading (or EOF).
+	TitleEnd   int
+	// HasFrontmatter reports whether the content opens with a YAML frontmatter
+	// block.
+	HasFrontmatter bool
 }
 
 // ParseNoteAt implements NoteParser.
