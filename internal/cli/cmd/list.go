@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,49 +17,8 @@ type List struct {
 }
 
 func (cmd *List) Run(container *cli.Container) error {
-	cmd.Header = strings.ExpandWhitespaceLiterals(cmd.Header)
-	cmd.Footer = strings.ExpandWhitespaceLiterals(cmd.Footer)
-	cmd.Delimiter = strings.ExpandWhitespaceLiterals(cmd.Delimiter)
-
-	if cmd.Delimiter0 {
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter and --delimiter0 can't be used together")
-		}
-		if cmd.Header != "" {
-			return errors.New("--header and --delimiter0 can't be used together")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer and --delimiter0 can't be used together")
-		}
-
-		cmd.Delimiter = "\x00"
-		cmd.Footer = "\x00"
-	}
-
-	if cmd.Format == "json" || cmd.Format == "jsonl" {
-		if cmd.Header != "" {
-			return errors.New("--header can't be used with JSON format")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer can't be used with JSON format")
-		}
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter can't be used with JSON format")
-		}
-
-		switch cmd.Format {
-		case "json":
-			cmd.Delimiter = ","
-			cmd.Header = "["
-			cmd.Footer = "]\n"
-
-		case "jsonl":
-			// > The last character in the file may be a line separator, and it
-			// > will be treated the same as if there was no line separator
-			// > present.
-			// > https://jsonlines.org/
-			cmd.Footer = "\n"
-		}
+	if err := cmd.FormatFlags.Prepare("[", "]\n", true); err != nil {
+		return err
 	}
 
 	notebook, err := container.CurrentNotebook()

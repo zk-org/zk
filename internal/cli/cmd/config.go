@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,41 +18,8 @@ type Config struct {
 }
 
 func (cmd *Config) Run(container *cli.Container) error {
-	cmd.Header = strings.ExpandWhitespaceLiterals(cmd.Header)
-	cmd.Footer = strings.ExpandWhitespaceLiterals(cmd.Footer)
-	cmd.Delimiter = strings.ExpandWhitespaceLiterals(cmd.Delimiter)
-
-	if cmd.Delimiter0 {
-		if cmd.Header != "" {
-			return errors.New("--header and --delimiter0 can't be used together")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer and --delimiter0 can't be used together")
-		}
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter and --delimiter0 can't be used together")
-		}
-
-		cmd.Delimiter = "\x00"
-		cmd.Footer = "\x00"
-	}
-
-	if cmd.Format == "json" {
-		if cmd.Header != "" {
-			return errors.New("--header can't be used with JSON format")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer can't be used with JSON format")
-		}
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter can't be used with JSON format")
-		}
-
-		if cmd.Format == "json" {
-			cmd.Delimiter = ","
-			cmd.Header = "{"
-			cmd.Footer = "}\n"
-		}
+	if err := cmd.FormatFlags.Prepare("{", "}\n", false); err != nil {
+		return err
 	}
 
 	var objects = make(map[string]string)
