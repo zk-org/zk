@@ -35,6 +35,16 @@ func DirExists(path string) (bool, error) {
 	}
 }
 
+// FileExists returns whether the given path exists and is a regular file.
+func FileExists(path string) (bool, error) {
+	fi, err := fileInfo(path)
+	if err != nil {
+		return false, err
+	} else {
+		return fi != nil && (*fi).Mode().IsRegular(), nil
+	}
+}
+
 func fileInfo(path string) (*os.FileInfo, error) {
 	if fi, err := os.Stat(path); err == nil {
 		return &fi, nil
@@ -61,6 +71,12 @@ func DropExt(path string) string {
 // WriteString writes the given content into a new file at the given path,
 // creating any intermediate directories if needed.
 func WriteString(path string, content string) error {
+	return WriteFile(path, []byte(content))
+}
+
+// WriteFile writes the given content into a new file at the given path,
+// creating any intermediate directories if needed.
+func WriteFile(path string, content []byte) error {
 	dir := filepath.Dir(path)
 	if dir != "." && dir != ".." {
 		err := os.MkdirAll(dir, os.ModePerm)
@@ -75,7 +91,7 @@ func WriteString(path string, content string) error {
 	}
 
 	defer f.Close()
-	_, err = f.WriteString(content)
+	_, err = f.Write(content)
 	return err
 }
 
