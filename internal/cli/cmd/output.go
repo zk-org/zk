@@ -95,3 +95,17 @@ func (f FormatFlags) Paginate(container *cli.Container, count int, render func(o
 		return nil
 	})
 }
+
+// Template resolves the configured format to a handlebars template, falling to the given default.
+func (f FormatFlags) Template(defaultFormat string, predefined map[string]string) string {
+	format := f.Format
+	if format == "" {
+		format = defaultFormat
+	}
+
+	if templ, ok := predefined[format]; ok {
+		return templ
+	}
+
+	return strings.ExpandWhitespaceLiterals(format)
+}

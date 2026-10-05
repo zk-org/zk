@@ -76,17 +76,7 @@ func (cmd *List) Run(container *cli.Container) error {
 }
 
 func (cmd *List) noteTemplate() string {
-	format := cmd.Format
-	if format == "" {
-		format = "short"
-	}
-
-	templ, ok := defaultNoteFormats[format]
-	if !ok {
-		templ = strings.ExpandWhitespaceLiterals(format)
-	}
-
-	return templ
+	return cmd.Template("short", defaultNoteFormats)
 }
 
 var defaultNoteFormats = map[string]string{

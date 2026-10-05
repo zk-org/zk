@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/zk-org/zk/internal/cli"
-	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // AliasList lists all the aliases.
@@ -74,17 +73,7 @@ func (cmd *Config) Run(container *cli.Container) error {
 }
 
 func (cmd *Config) mapTemplate() string {
-	format := cmd.Format
-	if format == "" {
-		format = "short"
-	}
-
-	templ, ok := defaultMapFormats[format]
-	if !ok {
-		templ = strings.ExpandWhitespaceLiterals(format)
-	}
-
-	return templ
+	return cmd.Template("short", defaultMapFormats)
 }
 
 var defaultMapFormats = map[string]string{
