@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/zk-org/zk/internal/util"
+	"github.com/zk-org/zk/internal/util/paths"
 )
 
 // FileStorage implements the port core.FileStorage.
@@ -68,27 +69,11 @@ func (fs *FileStorage) Canonical(path string) string {
 }
 
 func (fs *FileStorage) FileExists(path string) (bool, error) {
-	fi, err := fs.fileInfo(path)
-	if err != nil {
-		return false, err
-	} else {
-		return fi != nil && (*fi).Mode().IsRegular(), nil
-	}
+	return paths.FileExists(path)
 }
 
 func (fs *FileStorage) DirExists(path string) (bool, error) {
-	fi, err := fs.fileInfo(path)
-	return !os.IsNotExist(err) && fi != nil && (*fi).Mode().IsDir(), nil
-}
-
-func (fs *FileStorage) fileInfo(path string) (*os.FileInfo, error) {
-	if fi, err := os.Stat(path); err == nil {
-		return &fi, nil
-	} else if os.IsNotExist(err) {
-		return nil, nil
-	} else {
-		return nil, err
-	}
+	return paths.DirExists(path)
 }
 
 func (fs *FileStorage) IsDescendantOf(dir string, path string) (bool, error) {
@@ -117,20 +102,5 @@ func (fs *FileStorage) Read(path string) ([]byte, error) {
 }
 
 func (fs *FileStorage) Write(path string, content []byte) error {
-	dir := filepath.Dir(path)
-	if dir != "." && dir != ".." {
-		err := os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-	_, err = f.Write(content)
-	return err
+	return paths.WriteFile(path, content)
 }
