@@ -67,17 +67,7 @@ func (cmd *TagList) Run(container *cli.Container) error {
 }
 
 func (cmd *TagList) tagTemplate() string {
-	format := cmd.Format
-	if format == "" {
-		format = "full"
-	}
-
-	templ, ok := defaultTagFormats[format]
-	if !ok {
-		templ = strings.ExpandWhitespaceLiterals(format)
-	}
-
-	return templ
+	return cmd.Template("full", defaultTagFormats)
 }
 
 var defaultTagFormats = map[string]string{
