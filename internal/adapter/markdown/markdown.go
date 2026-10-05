@@ -91,10 +91,7 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	}
 	links = append(links, fmLinks...)
 
-	title, bodyStart, err := parseTitle(frontmatter, root, bytes)
-	if err != nil {
-		return nil, err
-	}
+	title, bodyStart, titleStart, titleEnd := parseTitle(frontmatter, root, bytes)
 	body := parseBody(bodyStart, bytes)
 
 	tags, err := parseTags(frontmatter, root)
@@ -103,24 +100,61 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	}
 
 	return &core.NoteContent{
-		Title:    title,
-		Body:     body,
-		Lead:     parseLead(body),
-		Links:    links,
-		Tags:     tags,
-		Metadata: frontmatter.values,
+		Title:          title,
+		Body:           body,
+		Lead:           parseLead(body),
+		Links:          links,
+		Tags:           tags,
+		Metadata:       frontmatter.values,
+		TitleStart:     titleStart,
+		TitleEnd:       titleEnd,
+		HasFrontmatter: frontmatter.end > 0,
 	}, nil
 }
 
-// parseTitle extracts the note title with its node.
-func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title opt.String, bodyStart int, err error) {
+// parseTitle extracts the note title along with the source range of the
+// heading it came from.
+func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title opt.String, bodyStart, titleStart, titleEnd int) {
 	if title = frontmatter.getString("title", "Title"); !title.IsNull() {
 		bodyStart = frontmatter.end
 		return
 	}
 
+	titleNode := findTitleHeading(root)
+	if titleNode == nil {
+		return
+	}
+
+	title = opt.NewNotEmptyString(string(titleNode.Text(source)))
+	if title.IsNull() {
+		return
+	}
+
+	lines := titleNode.Lines()
+	if lines.Len() == 0 {
+		return
+	}
+	bodyStart = lines.At(lines.Len() - 1).Stop
+
+	titleStart = lines.At(0).Start
+	for titleStart > 0 && source[titleStart-1] != '\n' {
+		titleStart--
+	}
+
+	if next := nextNodeInAST(titleNode); next != nil {
+		titleEnd = next.Pos()
+	} else {
+		titleEnd = len(source)
+	}
+
+	return
+}
+
+// findTitleHeading returns the heading used as the note title: the first
+// heading with the lowest level.
+func findTitleHeading(root ast.Node) *ast.Heading {
 	var titleNode *ast.Heading
-	err = ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if heading, ok := n.(*ast.Heading); ok && entering &&
 			(titleNode == nil || heading.Level < titleNode.Level) {
 
@@ -132,18 +166,7 @@ func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title op
 
 		return ast.WalkContinue, nil
 	})
-	if err != nil {
-		return
-	}
-
-	if titleNode != nil {
-		title = opt.NewNotEmptyString(string(titleNode.Text(source)))
-
-		if lines := titleNode.Lines(); lines.Len() > 0 {
-			bodyStart = lines.At(lines.Len() - 1).Stop
-		}
-	}
-	return
+	return titleNode
 }
 
 // parseBody extracts the whole content after the title.
