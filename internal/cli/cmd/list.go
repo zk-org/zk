@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
@@ -68,9 +67,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		return err
 	}
 
-	if !cmd.Quiet {
-		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, strings.Pluralize("note", count))
-	}
+	cmd.FormatFlags.PrintFound(count, strings.Pluralize("note", count))
 
 	return nil
 }

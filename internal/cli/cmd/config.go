@@ -66,9 +66,7 @@ func (cmd *Config) Run(container *cli.Container) error {
 		return err
 	}
 
-	if !cmd.Quiet {
-		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, cmd.List)
-	}
+	cmd.FormatFlags.PrintFound(count, cmd.List)
 	return nil
 }
 
