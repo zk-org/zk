@@ -1,7 +1,9 @@
 package paths
 
 import (
+	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -40,4 +42,24 @@ func TestExpandPath(t *testing.T) {
 	test("~foo", "~foo")
 	test("not a path", "not a path")
 	test("E.T phone ${HOME}", etph)
+}
+
+func TestExistsUnderFile(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "note.md")
+	if err := os.WriteFile(file, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	path := filepath.Join(file, "child")
+	for name, check := range map[string]func(string) (bool, error){
+		"Exists":     Exists,
+		"DirExists":  DirExists,
+		"FileExists": FileExists,
+	} {
+		exists, err := check(path)
+		if err != nil {
+			t.Errorf("%s(%q) returned error: %v", name, path, err)
+		}
+		assert.False(t, exists)
+	}
 }
