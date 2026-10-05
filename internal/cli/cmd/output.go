@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"io"
 
+	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -64,4 +67,31 @@ func (f *FormatFlags) Prepare(jsonHeader, jsonFooter string, supportsJSONL bool)
 	}
 
 	return nil
+}
+
+// Paginate prints the given number of items using the configured header,
+// delimiter and footer, piping the result through the user's pager if needed.
+// The render callback is responsible for printing the item at index i.
+func (f FormatFlags) Paginate(container *cli.Container, count int, render func(out io.Writer, i int) error) error {
+	if count == 0 {
+		return nil
+	}
+
+	return container.Paginate(f.NoPager, func(out io.Writer) error {
+		if f.Header != "" {
+			fmt.Fprint(out, f.Header)
+		}
+		for i := 0; i < count; i++ {
+			if i > 0 {
+				fmt.Fprint(out, f.Delimiter)
+			}
+			if err := render(out, i); err != nil {
+				return err
+			}
+		}
+		if f.Footer != "" {
+			fmt.Fprint(out, f.Footer)
+		}
+		return nil
+	})
 }
