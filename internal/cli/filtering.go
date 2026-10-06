@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/kballard/go-shellquote"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // Filtering holds filtering options to select notes.
@@ -70,7 +70,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 	actualPaths := []string{}
 
 	for _, path := range f.Path {
-		if filter, ok := filters[path]; ok && !strings.Contains(expandedFilters, path) {
+		if filter, ok := filters[path]; ok && !slices.Contains(expandedFilters, path) {
 			parsedFilter, err := ParseFilter(filter)
 			if err != nil {
 				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
