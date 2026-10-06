@@ -11,31 +11,9 @@ import "database/sql"
 // handled by `WithTransaction`), those methods are not included here.
 type Transaction interface {
 	Exec(query string, args ...any) (sql.Result, error)
-	ExecStmts(stmts []string) error
 	Prepare(query string) (*sql.Stmt, error)
-	PrepareLazy(query string) *LazyStmt
 	Query(query string, args ...any) (*sql.Rows, error)
 	QueryRow(query string, args ...any) *sql.Row
-}
-
-// txWrapper wraps a native sql.Tx to fully implement the Transaction interface.
-type txWrapper struct {
-	*sql.Tx
-}
-
-func (tx *txWrapper) PrepareLazy(query string) *LazyStmt {
-	return NewLazyStmt(tx.Tx, query)
-}
-
-func (tx *txWrapper) ExecStmts(stmts []string) error {
-	var err error
-	for _, stmt := range stmts {
-		if err != nil {
-			break
-		}
-		_, err = tx.Exec(stmt)
-	}
-	return err
 }
 
 // TxFn is a function that will be called with an initialized Transaction
@@ -63,6 +41,6 @@ func (db *DB) WithTransaction(fn TxFn) error {
 		}
 	}()
 
-	err = fn(&txWrapper{tx})
+	err = fn(tx)
 	return err
 }

@@ -234,9 +234,10 @@ func (db *DB) migrate() error {
 			}
 
 			stmts := append(migration.SQL, fmt.Sprintf("PRAGMA user_version = %d", i+1))
-			err = tx.ExecStmts(stmts)
-			if err != nil {
-				return err
+			for _, stmt := range stmts {
+				if _, err = tx.Exec(stmt); err != nil {
+					return err
+				}
 			}
 
 			needsReindexing = needsReindexing || migration.NeedsReindexing

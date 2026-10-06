@@ -28,18 +28,18 @@ func NewLinkDAO(tx Transaction, logger util.Logger) *LinkDAO {
 		logger: logger,
 
 		// Add a new link.
-		addLinkStmt: tx.PrepareLazy(`
+		addLinkStmt: NewLazyStmt(tx, `
 			INSERT INTO links (source_id, target_id, title, href, type, external, rels, snippet, snippet_start, snippet_end)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Remove all the outbound links of a note.
-		removeLinksStmt: tx.PrepareLazy(`
+		removeLinksStmt: NewLazyStmt(tx, `
 			DELETE FROM links
 			 WHERE source_id = ?
 		`),
 
-		updateTargetIDStmt: tx.PrepareLazy(`
+		updateTargetIDStmt: NewLazyStmt(tx, `
 			UPDATE links
 			   SET target_id = ?
 			 WHERE id = ?
