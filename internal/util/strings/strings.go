@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -123,12 +122,6 @@ func ExpandWhitespaceLiterals(s string) string {
 	s = strings.ReplaceAll(s, `\n`, "\n")
 	s = strings.ReplaceAll(s, `\t`, "\t")
 	return s
-}
-
-// Contains returns whether the given slice of strings contains the given
-// string.
-func Contains(s []string, e string) bool {
-	return slices.Contains(s, e)
 }
 
 // WordAt returns the word found at the given character position.
