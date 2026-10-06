@@ -44,52 +44,52 @@ func NewNoteDAO(tx Transaction, logger util.Logger, extension string) *NoteDAO {
 		extension: extension,
 
 		// Get file info about all indexed notes.
-		indexedStmt: tx.PrepareLazy(`
+		indexedStmt: NewLazyStmt(tx, `
 			SELECT path, modified from notes
 			 ORDER BY sortable_path ASC
 		`),
 
 		// Add a new note to the index.
-		addStmt: tx.PrepareLazy(`
+		addStmt: NewLazyStmt(tx, `
 			INSERT INTO notes (path, sortable_path, filename, title, lead, body, raw_content, word_count, metadata, checksum, created, modified)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`),
 
 		// Update the content of a note.
-		updateStmt: tx.PrepareLazy(`
+		updateStmt: NewLazyStmt(tx, `
 			UPDATE notes
 			   SET title = ?, lead = ?, body = ?, raw_content = ?, word_count = ?, metadata = ?, checksum = ?, modified = ?
 			 WHERE path = ?
 		`),
 
 		// Remove a note.
-		removeStmt: tx.PrepareLazy(`
+		removeStmt: NewLazyStmt(tx, `
 			DELETE FROM notes
 			 WHERE id = ?
 		`),
 
 		// Find a note ID from its exact path.
-		findIDByPathStmt: tx.PrepareLazy(`
+		findIDByPathStmt: NewLazyStmt(tx, `
 			SELECT id FROM notes
 			 WHERE path = ?
 		`),
 
 		// Find note IDs by filename LIKE pattern.
-		findIDsByFilenameLikeStmt: tx.PrepareLazy(`
+		findIDsByFilenameLikeStmt: NewLazyStmt(tx, `
 			SELECT id FROM notes
 			 WHERE filename LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find note IDs by path LIKE pattern.
-		findIDsByPathLikeStmt: tx.PrepareLazy(`
+		findIDsByPathLikeStmt: NewLazyStmt(tx, `
 			SELECT id FROM notes
 			 WHERE path LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
 		`),
 
 		// Find note IDs where href is a complete leading path component.
-		findIDsByPathPrefixStmt: tx.PrepareLazy(`
+		findIDsByPathPrefixStmt: NewLazyStmt(tx, `
 			SELECT id FROM notes
 			 WHERE (path LIKE ? ESCAPE '\' AND path NOT LIKE ? ESCAPE '\')
 			    OR path LIKE ? ESCAPE '\'
@@ -97,7 +97,7 @@ func NewNoteDAO(tx Transaction, logger util.Logger, extension string) *NoteDAO {
 		`),
 
 		// Find a note from its ID.
-		findByIDStmt: tx.PrepareLazy(`
+		findByIDStmt: NewLazyStmt(tx, `
 			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
 			  FROM notes_with_metadata
 			 WHERE id = ?
