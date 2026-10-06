@@ -9,18 +9,21 @@ import (
 )
 
 func True(t *testing.T, value bool) {
+	t.Helper()
 	if !value {
 		t.Errorf("Expected to be true")
 	}
 }
 
 func Nil(t *testing.T, value any) {
+	t.Helper()
 	if !isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to be nil", value, reflect.TypeOf(value))
 	}
 }
 
 func NotNil(t *testing.T, value any) {
+	t.Helper()
 	if isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to not be nil", value, reflect.TypeOf(value))
 	}
@@ -32,6 +35,7 @@ func isNil(value any) bool {
 }
 
 func Equal(t *testing.T, actual, expected any) {
+	t.Helper()
 	if !reflect.DeepEqual(actual, expected) && !cmp.Equal(actual, expected) {
 		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), actual)
 		t.Errorf("\n---\n")
@@ -42,6 +46,7 @@ func Equal(t *testing.T, actual, expected any) {
 }
 
 func NotEqual(t *testing.T, actual, other any) {
+	t.Helper()
 	if reflect.DeepEqual(actual, other) || cmp.Equal(actual, other) {
 		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), actual)
 		t.Errorf("\n---\n")
@@ -51,6 +56,7 @@ func NotEqual(t *testing.T, actual, other any) {
 }
 
 func Err(t *testing.T, err error, expected string) {
+	t.Helper()
 	switch {
 	case err == nil:
 		t.Errorf("Expected error `%v`, received nil", expected)
