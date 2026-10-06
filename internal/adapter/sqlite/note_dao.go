@@ -32,7 +32,6 @@ type NoteDAO struct {
 	findIDsByFilenameLikeStmt *LazyStmt
 	findIDsByPathLikeStmt     *LazyStmt
 	findIDsByPathPrefixStmt   *LazyStmt
-	findByIDStmt              *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -94,13 +93,6 @@ func NewNoteDAO(tx Transaction, logger util.Logger, extension string) *NoteDAO {
 			 WHERE (path LIKE ? ESCAPE '\' AND path NOT LIKE ? ESCAPE '\')
 			    OR path LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
-		`),
-
-		// Find a note from its ID.
-		findByIDStmt: tx.PrepareLazy(`
-			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
-			  FROM notes_with_metadata
-			 WHERE id = ?
 		`),
 	}
 }
