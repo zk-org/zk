@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode/utf16"
 
@@ -321,7 +322,7 @@ func (d *document) DocumentLinks() ([]documentLink, error) {
 
 // IsTagPosition returns whether the given caret position is inside a tag (YAML frontmatter, #hashtag, etc.).
 func (d *document) IsTagPosition(position protocol.Position, noteContentParser core.NoteContentParser) bool {
-	lines := strutil.CopyList(d.GetLines())
+	lines := slices.Clone(d.GetLines())
 	lineIdx := int(position.Line)
 	charIdx := int(position.Character)
 	if len(lines) <= lineIdx {
