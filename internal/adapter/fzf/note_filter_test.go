@@ -3,7 +3,7 @@ package fzf
 import (
 	"testing"
 
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -22,7 +22,7 @@ func TestNoteFilterFzfOptions(t *testing.T) {
 
 	test("keep the configured fzf options when the notes are sorted",
 		NoteFilterOpts{
-			FzfOptions: opt.NewNotEmptyString("--height 50%"),
+			FzfOptions: ptr.String("--height 50%"),
 			Sorted:     true,
 		},
 		"--height 50% --no-sort")

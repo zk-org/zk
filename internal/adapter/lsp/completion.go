@@ -16,14 +16,14 @@ type completionTemplates struct {
 }
 
 func newCompletionTemplates(loader core.TemplateLoader, templates core.LSPCompletionTemplates) (result completionTemplates, err error) {
-	if !templates.Label.IsNull() {
-		result.Label, err = loader.LoadTemplate(*templates.Label.Value)
+	if templates.Label != nil {
+		result.Label, err = loader.LoadTemplate(*templates.Label)
 	}
-	if !templates.FilterText.IsNull() {
-		result.FilterText, err = loader.LoadTemplate(*templates.FilterText.Value)
+	if templates.FilterText != nil {
+		result.FilterText, err = loader.LoadTemplate(*templates.FilterText)
 	}
-	if !templates.Detail.IsNull() {
-		result.Detail, err = loader.LoadTemplate(*templates.Detail.Value)
+	if templates.Detail != nil {
+		result.Detail, err = loader.LoadTemplate(*templates.Detail)
 	}
 
 	return

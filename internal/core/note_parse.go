@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/relvacode/iso8601"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 	"gopkg.in/djherbis/times.v1"
 )
@@ -26,11 +26,11 @@ type NoteContentParser interface {
 // NoteContent holds the data parsed from the note content.
 type NoteContent struct {
 	// Title is the heading of the note.
-	Title opt.String
+	Title *string
 	// Lead is the opening paragraph or section of the note.
-	Lead opt.String
+	Lead *string
 	// Body is the content of the note, including the Lead but without the Title.
-	Body opt.String
+	Body *string
 	// Tags is the list of tags found in the note content.
 	Tags []string
 	// Links is the list of outbound links found in the note.
@@ -40,7 +40,7 @@ type NoteContent struct {
 	// Zero if there's no title or when it comes from frontmatter.
 	TitleStart int
 	// Start of the AST node following the heading (or EOF).
-	TitleEnd   int
+	TitleEnd int
 	// HasFrontmatter reports whether the content opens with a YAML frontmatter
 	// block.
 	HasFrontmatter bool
@@ -70,9 +70,9 @@ func (n *Notebook) ParseNoteWithContent(absPath string, content []byte) (*Note, 
 
 	note := Note{
 		Path:       relPath,
-		Title:      contentParts.Title.String(),
-		Lead:       contentParts.Lead.String(),
-		Body:       contentParts.Body.String(),
+		Title:      ptr.Value(contentParts.Title),
+		Lead:       ptr.Value(contentParts.Lead),
+		Body:       ptr.Value(contentParts.Body),
 		RawContent: contentStr,
 		WordCount:  len(strings.Fields(contentStr)),
 		Links:      make([]Link, 0),

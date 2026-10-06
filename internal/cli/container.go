@@ -76,8 +76,8 @@ func NewContainer(version string) (*Container, error) {
 
 	// Set the default notebook if not already set
 	// might be overrided if --notebook-dir flag is present
-	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR").IsNull() && !config.Notebook.Dir.IsNull() {
-		notebookDir, err := paths.ExpandPath(config.Notebook.Dir.Unwrap())
+	if osutil.GetOptEnv("ZK_NOTEBOOK_DIR") == nil && config.Notebook.Dir != nil {
+		notebookDir, err := paths.ExpandPath(*config.Notebook.Dir)
 		if err != nil {
 			return nil, fmt.Errorf("expanding notebook dir failed: %w", err)
 		}
@@ -246,7 +246,7 @@ func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, erro
 //
 // You can write to the pager only in the run callback.
 func (c *Container) Paginate(noPager bool, run func(out io.Writer) error) error {
-	pager, err := c.pager(noPager || c.Config.Tool.Pager.IsEmpty())
+	pager, err := c.pager(noPager || (c.Config.Tool.Pager != nil && *c.Config.Tool.Pager == ""))
 	if err != nil {
 		return err
 	}

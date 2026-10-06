@@ -11,7 +11,7 @@ import (
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/fixtures"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -125,7 +125,7 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		name           string
 		doc            *document
 		pos            protocol.Position
-		noteFilter     opt.String
+		noteFilter     *string
 		expectedLabels []string
 		// check that returns completions.
 		checkItem bool
@@ -158,7 +158,7 @@ func TestServer_buildInvokedCompletionList(t *testing.T) {
 		name:           "Filter link completion notes from config",
 		doc:            doc,
 		pos:            protocol.Position{Line: 3, Character: 2},
-		noteFilter:     opt.NewString("--tag project"),
+		noteFilter:     ptr.String("--tag project"),
 		expectedLabels: []string{"Item 4 that has tag 'project'"},
 	}}
 

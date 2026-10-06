@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
 
 	"github.com/zk-org/zk/internal/util/test/assert"
@@ -77,7 +76,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			Path:         "note1.md",
 			AbsPath:      "/notebook/note1.md",
 			Title:        "Note 1",
-			Link:         opt.NewString("[Note 1](note1)"),
+			Link:         newLazyStringer(func() string { return "[Note 1](note1)" }),
 			Lead:         "Lead 1",
 			Body:         "Body 1",
 			Snippets:     []string{"snippet1", "snippet2"},
@@ -98,7 +97,7 @@ func TestNewNoteFormatter(t *testing.T) {
 			Path:         "dir/note2.md",
 			AbsPath:      "/notebook/dir/note2.md",
 			Title:        "Note 2",
-			Link:         opt.NewString("[Note 2](dir/note2)"),
+			Link:         newLazyStringer(func() string { return "[Note 2](dir/note2)" }),
 			Lead:         "Lead 2",
 			Body:         "Body 2",
 			Snippets:     []string{},
@@ -132,7 +131,7 @@ func TestNoteFormatterMakesPathRelative(t *testing.T) {
 				FilenameStem: paths.FilenameStem(expected),
 				Path:         expected,
 				AbsPath:      expectedFull,
-				Link:         opt.NewString("[](" + paths.DropExt(expected) + ")"),
+				Link:         newLazyStringer(func() string { return "[](" + paths.DropExt(expected) + ")" }),
 				Snippets:     []string{},
 			},
 		})
@@ -165,7 +164,7 @@ func TestNoteFormatterStylesSnippetTerm(t *testing.T) {
 				FilenameStem: ".",
 				Path:         ".",
 				AbsPath:      "/notebook",
-				Link:         opt.NewString("[]()"),
+				Link:         newLazyStringer(func() string { return "[]()" }),
 				Snippets:     []string{expected},
 			},
 		})

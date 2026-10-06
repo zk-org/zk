@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 type newNoteTask struct {
@@ -17,7 +17,7 @@ type newNoteTask struct {
 	env              map[string]string
 	fs               FileStorage
 	filenameTemplate string
-	bodyTemplatePath opt.String
+	bodyTemplatePath *string
 	templates        TemplateLoader
 	genID            IDGenerator
 	dryRun           bool
@@ -30,7 +30,7 @@ func (t *newNoteTask) execute() (string, string, error) {
 	}
 
 	var contentTemplate Template = NullTemplate
-	if templatePath := t.bodyTemplatePath.Unwrap(); templatePath != "" {
+	if templatePath := ptr.Value(t.bodyTemplatePath); templatePath != "" {
 		contentTemplate, err = t.templates.LoadTemplateAt(templatePath)
 		if err != nil {
 			return "", "", err
