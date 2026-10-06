@@ -10,7 +10,7 @@ import (
 	"github.com/zk-org/zk/internal/adapter/markdown"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -67,9 +67,9 @@ func TestEditInteractiveNewNote(t *testing.T) {
 			fs, err := fs.NewFileStorage(tt.workingDir, &util.NullLogger)
 			assert.Equal(t, err, nil)
 			config := core.NewDefaultConfig()
-			config.Note.BodyTemplatePath = opt.NewString("default.md")
+			config.Note.BodyTemplatePath = ptr.String("default.md")
 			journalNote := config.Note
-			journalNote.BodyTemplatePath = opt.NewString("journal.md")
+			journalNote.BodyTemplatePath = ptr.String("journal.md")
 			config.Groups["journal"] = core.GroupConfig{Paths: []string{"journal"}, Note: journalNote}
 			notebook := core.NewNotebook(notebookDir, config, core.NotebookPorts{
 				FS:                fs,
@@ -88,8 +88,8 @@ func TestEditInteractiveNewNote(t *testing.T) {
 
 			dir := (&Edit{}).newNoteDir(notebook)
 			note, err := notebook.NewNote(core.NewNoteOpts{
-				Directory: opt.NewNotEmptyString(dir.Path),
-				Title:     opt.NewNotEmptyString("Test"),
+				Directory: ptr.NotEmptyString(dir.Path),
+				Title:     ptr.NotEmptyString("Test"),
 				DryRun:    true,
 			})
 			assert.Equal(t, err, nil)

@@ -17,7 +17,7 @@ import (
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 	"gopkg.in/yaml.v3"
 )
@@ -31,14 +31,14 @@ type Server struct {
 	templateLoader         core.TemplateLoader
 	fs                     core.FileStorage
 	logger                 util.Logger
-	useAdditionalTextEdits opt.Bool
+	useAdditionalTextEdits *bool
 }
 
 // ServerOpts holds the options to create a new Server.
 type ServerOpts struct {
 	Name           string
 	Version        string
-	LogFile        opt.String
+	LogFile        *string
 	Logger         *util.ProxyLogger
 	Notebooks      *core.NotebookStore
 	TemplateLoader core.TemplateLoader
@@ -48,9 +48,9 @@ type ServerOpts struct {
 // NewServer creates a new Server instance.
 func NewServer(opts ServerOpts) *Server {
 	fs := opts.FS
-	debug := !opts.LogFile.IsNull()
+	debug := opts.LogFile != nil
 	if debug {
-		logging.Configure(10, opts.LogFile.Value)
+		logging.Configure(10, opts.LogFile)
 	}
 
 	handler := protocol.Handler{}
@@ -69,7 +69,7 @@ func NewServer(opts ServerOpts) *Server {
 		templateLoader:         opts.TemplateLoader,
 		fs:                     fs,
 		logger:                 opts.Logger,
-		useAdditionalTextEdits: opt.NullBool,
+		useAdditionalTextEdits: nil,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -88,7 +88,7 @@ func NewServer(opts ServerOpts) *Server {
 				// Visual Studio Code doesn't seem to support inl
 				// VSCode doesn't support deleting the trigger characters with
 				// the main TextEdit. We'll use additional text edits instead.
-				server.useAdditionalTextEdits = opt.True
+				server.useAdditionalTextEdits = ptr.Bool(true)
 			}
 		}
 
@@ -804,11 +804,11 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 func noteCompletionFindOpts(notebook *core.Notebook) (core.NoteFindOpts, error) {
 	filter := notebook.Config.LSP.Completion.NoteFilter
-	if filter.IsNull() {
+	if filter == nil {
 		return core.NoteFindOpts{}, nil
 	}
 
-	filtering, err := cli.ParseFilter(*filter.Value)
+	filtering, err := cli.ParseFilter(*filter)
 	if err != nil {
 		return core.NoteFindOpts{}, fmt.Errorf("failed to parse lsp.completion.note-filter: %w", err)
 	}
@@ -944,10 +944,13 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 }
 
 func (s *Server) useAdditionalTextEditsWithNotebook(nb *core.Notebook) bool {
-	return nb.Config.LSP.Completion.UseAdditionalTextEdits.
-		Or(s.useAdditionalTextEdits).
-		OrBool(false).
-		Unwrap()
+	if v := ptr.First(
+		nb.Config.LSP.Completion.UseAdditionalTextEdits,
+		s.useAdditionalTextEdits,
+	); v != nil {
+		return *v
+	}
+	return false
 }
 
 func positionInRange(content string, rng protocol.Range, pos protocol.Position) bool {
@@ -1180,7 +1183,7 @@ func (s *Server) getConvertToFrontmatterCodeAction(doc *document, docURI protoco
 		return nil
 	}
 
-	if content.HasFrontmatter || content.Title.IsNull() || content.TitleStart == content.TitleEnd {
+	if content.HasFrontmatter || content.Title == nil || content.TitleStart == content.TitleEnd {
 		return nil
 	}
 
@@ -1194,7 +1197,7 @@ func (s *Server) getConvertToFrontmatterCodeAction(doc *document, docURI protoco
 		return nil
 	}
 
-	titleYAML, err := yaml.Marshal(map[string]string{"title": content.Title.String()})
+	titleYAML, err := yaml.Marshal(map[string]string{"title": *content.Title})
 	if err != nil {
 		return nil
 	}

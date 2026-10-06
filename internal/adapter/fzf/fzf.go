@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/kballard/go-shellquote"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	stringsutil "github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -26,9 +26,9 @@ var (
 // Opts holds the options used to run fzf.
 type Opts struct {
 	// Preview command executed by fzf when hovering a line.
-	PreviewCmd opt.String
+	PreviewCmd *string
 	// Optionally provide additional arguments, taken from the config `fzf-options` property.
-	Options opt.String
+	Options *string
 	// Amount of space between two non-empty fields.
 	Padding int
 	// Delimiter used by fzf between fields.
@@ -82,9 +82,9 @@ func New(opts Opts) (*Fzf, error) {
 	}
 
 	// Additional options.
-	additionalArgs, err := shellquote.Split(opts.Options.String())
+	additionalArgs, err := shellquote.Split(ptr.Value(opts.Options))
 	if err != nil {
-		return nil, fmt.Errorf("can't split the fzf-options: %s: %w", opts.Options.String(), err)
+		return nil, fmt.Errorf("can't split the fzf-options: %s: %w", ptr.Value(opts.Options), err)
 	}
 	args = append(args, additionalArgs...)
 
@@ -104,8 +104,8 @@ func New(opts Opts) (*Fzf, error) {
 		args = append(args, "--bind", strings.Join(binds, ","))
 	}
 
-	if !opts.PreviewCmd.IsNull() {
-		args = append(args, "--preview", opts.PreviewCmd.String())
+	if opts.PreviewCmd != nil {
+		args = append(args, "--preview", *opts.PreviewCmd)
 	}
 
 	fzfPath, err := exec.LookPath("fzf")

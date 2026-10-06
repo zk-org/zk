@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // Notebook handles queries and commands performed on an opened notebook.
@@ -88,15 +88,15 @@ func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change pa
 // NewNoteOpts holds the options used to create a new note in a Notebook.
 type NewNoteOpts struct {
 	// Title of the new note.
-	Title opt.String
+	Title *string
 	// Initial content of the note.
 	Content string
 	// Directory in which to create the note, relative to the root of the notebook.
-	Directory opt.String
+	Directory *string
 	// Group this note belongs to.
-	Group opt.String
+	Group *string
 	// Path to a custom template used to render the note.
-	Template opt.String
+	Template *string
 	// Extra variables passed to the templates.
 	Extra map[string]string
 	// Creation date provided to the templates.
@@ -122,12 +122,12 @@ func (e ErrNoteExists) Error() string {
 //
 // Returns ErrNoteExists if no free filename can be generated for this note.
 func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
-	dir, err := n.RequireDirAt(opts.Directory.OrString(n.Path).Unwrap())
+	dir, err := n.RequireDirAt(ptr.OrString(opts.Directory, n.Path))
 	if err != nil {
 		return nil, fmt.Errorf("new note: %w", err)
 	}
 
-	config, err := n.Config.GroupConfigNamed(opts.Group.OrString(dir.Group).Unwrap())
+	config, err := n.Config.GroupConfigNamed(ptr.OrString(opts.Group, dir.Group))
 	if err != nil {
 		return nil, fmt.Errorf("new note: %w", err)
 	}
@@ -151,14 +151,14 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 
 	task := newNoteTask{
 		dir:              dir,
-		title:            opts.Title.OrString(config.Note.DefaultTitle).Unwrap(),
+		title:            ptr.OrString(opts.Title, config.Note.DefaultTitle),
 		content:          opts.Content,
 		date:             opts.Date,
 		extra:            extra,
 		env:              n.osEnv(),
 		fs:               n.fs,
 		filenameTemplate: config.Note.FilenameTemplate + "." + config.Note.Extension,
-		bodyTemplatePath: opts.Template.Or(config.Note.BodyTemplatePath),
+		bodyTemplatePath: ptr.First(opts.Template, config.Note.BodyTemplatePath),
 		templates:        templates,
 		genID:            idGenerator,
 		dryRun:           opts.DryRun,
