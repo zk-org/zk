@@ -109,8 +109,6 @@ github.com/yuin/goldmark-meta v1.1.0 h1:pWw+JLHGZe8Rk0EGsMVssiNb/AaPMHfSRszZeUei
 github.com/yuin/goldmark-meta v1.1.0/go.mod h1:U4spWENafuA7Zyg+Lj5RqK/MF+ovMYtBvXi1lBb2VP0=
 github.com/zchee/color/v2 v2.0.6 h1:+mD95jTXou3Bi8+ZWn3SOEDts36SNROILd9JId7VI9A=
 github.com/zchee/color/v2 v2.0.6/go.mod h1:mtte+U+f1/0xODbqR9J+TfcTjd86MMv6KNmpnC8MiXk=
-github.com/zk-org/pretty v0.2.4 h1:pxf2E61IDO1I9cSNVoESQqK/y129Xophlp6XOH59130=
-github.com/zk-org/pretty v0.2.4/go.mod h1:GIPC7TRqGw0VDdumZQ6JP21n0xCsXBd+rnVHeyEjN10=
 golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
 golang.org/x/crypto v0.52.0 h1:RMs7fP2rXdep0CftQlK8Uf+kibLm7qkCcradZWYz988=
 golang.org/x/crypto v0.52.0/go.mod h1:1QgfPxDqh0T2M/elOJtp9RvuR95kVjir0e6/BvEmGbc=

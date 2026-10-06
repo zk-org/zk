@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/zk-org/pretty"
 )
 
 func True(t *testing.T, value bool) {
@@ -34,22 +33,19 @@ func isNil(value any) bool {
 
 func Equal(t *testing.T, actual, expected any) {
 	if !reflect.DeepEqual(actual, expected) && !cmp.Equal(actual, expected) {
-		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
+		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), actual)
 		t.Errorf("\n---\n")
-		t.Errorf("But expected (type %v):\n% #v", reflect.TypeOf(expected), pretty.Formatter(expected))
+		t.Errorf("But expected (type %v):\n% #v", reflect.TypeOf(expected), expected)
 		t.Errorf("\n---\n")
-		t.Errorf("Diff:\n")
-		for _, diff := range pretty.Diff(actual, expected) {
-			t.Errorf("\t% #v", diff)
-		}
+		t.Errorf("Diff (-expected +actual):\n%s", cmp.Diff(expected, actual))
 	}
 }
 
 func NotEqual(t *testing.T, actual, other any) {
 	if reflect.DeepEqual(actual, other) || cmp.Equal(actual, other) {
-		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), pretty.Formatter(actual))
+		t.Errorf("Received (type %v):\n% #v", reflect.TypeOf(actual), actual)
 		t.Errorf("\n---\n")
-		t.Errorf("Expected to be different from (type %v):\n% #v", reflect.TypeOf(other), pretty.Formatter(other))
+		t.Errorf("Expected to be different from (type %v):\n% #v", reflect.TypeOf(other), other)
 		t.Errorf("\n---\n")
 	}
 }
