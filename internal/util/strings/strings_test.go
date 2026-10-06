@@ -116,19 +116,6 @@ func TestExpandWhitespaceLiterals(t *testing.T) {
 	test(`newline\ntab\t`, "newline\ntab\t")
 }
 
-func TestContains(t *testing.T) {
-	test := func(items []string, s string, expected bool) {
-		assert.Equal(t, Contains(items, s), expected)
-	}
-
-	test([]string{}, "", false)
-	test([]string{}, "none", false)
-	test([]string{"one"}, "none", false)
-	test([]string{"one"}, "one", true)
-	test([]string{"one", "two"}, "one", true)
-	test([]string{"one", "two"}, "three", false)
-}
-
 func TestWordAt(t *testing.T) {
 	test := func(s string, pos int, expected string) {
 		assert.Equal(t, WordAt(s, pos), expected)

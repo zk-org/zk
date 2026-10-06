@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode/utf16"
 
@@ -348,7 +349,7 @@ func (d *document) IsTagPosition(position protocol.Position, noteContentParser c
 	if err != nil {
 		return false
 	}
-	return strutil.Contains(note.Tags, targetWord)
+	return slices.Contains(note.Tags, targetWord)
 }
 
 type documentLink struct {

@@ -3,12 +3,12 @@ package lsp
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	strutil "github.com/zk-org/zk/internal/util/strings"
 )
 
 const cmdList = "zk.list"
@@ -74,21 +74,21 @@ type listSelection struct {
 
 func newListSelection(fields []string) listSelection {
 	return listSelection{
-		Filename:     strutil.Contains(fields, "filename"),
-		FilenameStem: strutil.Contains(fields, "filenameStem"),
-		Path:         strutil.Contains(fields, "path"),
-		AbsPath:      strutil.Contains(fields, "absPath"),
-		Title:        strutil.Contains(fields, "title"),
-		Lead:         strutil.Contains(fields, "lead"),
-		Body:         strutil.Contains(fields, "body"),
-		Snippets:     strutil.Contains(fields, "snippets"),
-		RawContent:   strutil.Contains(fields, "rawContent"),
-		WordCount:    strutil.Contains(fields, "wordCount"),
-		Tags:         strutil.Contains(fields, "tags"),
-		Metadata:     strutil.Contains(fields, "metadata"),
-		Created:      strutil.Contains(fields, "created"),
-		Modified:     strutil.Contains(fields, "modified"),
-		Checksum:     strutil.Contains(fields, "checksum"),
+		Filename:     slices.Contains(fields, "filename"),
+		FilenameStem: slices.Contains(fields, "filenameStem"),
+		Path:         slices.Contains(fields, "path"),
+		AbsPath:      slices.Contains(fields, "absPath"),
+		Title:        slices.Contains(fields, "title"),
+		Lead:         slices.Contains(fields, "lead"),
+		Body:         slices.Contains(fields, "body"),
+		Snippets:     slices.Contains(fields, "snippets"),
+		RawContent:   slices.Contains(fields, "rawContent"),
+		WordCount:    slices.Contains(fields, "wordCount"),
+		Tags:         slices.Contains(fields, "tags"),
+		Metadata:     slices.Contains(fields, "metadata"),
+		Created:      slices.Contains(fields, "created"),
+		Modified:     slices.Contains(fields, "modified"),
+		Checksum:     slices.Contains(fields, "checksum"),
 	}
 }
 
