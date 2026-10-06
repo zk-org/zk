@@ -15,12 +15,6 @@ func True(t *testing.T, value bool) {
 	}
 }
 
-func False(t *testing.T, value bool) {
-	if value {
-		t.Errorf("Expected to be false")
-	}
-}
-
 func Nil(t *testing.T, value any) {
 	if !isNil(value) {
 		t.Errorf("Expected `%v` (type %v) to be nil", value, reflect.TypeOf(value))
