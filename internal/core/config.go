@@ -8,8 +8,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	toml "github.com/pelletier/go-toml"
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // Config holds the user configuration.
@@ -33,12 +33,12 @@ type Config struct {
 func NewDefaultConfig() Config {
 	return Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir: nil,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
-			BodyTemplatePath: opt.NullString,
+			BodyTemplatePath: nil,
 			Lang:             "en",
 			DefaultTitle:     "Untitled",
 			IDOptions: IDOptions{
@@ -66,9 +66,9 @@ func NewDefaultConfig() Config {
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
 				Note: LSPCompletionTemplates{
-					Label:      opt.NullString,
-					FilterText: opt.NullString,
-					Detail:     opt.NullString,
+					Label:      nil,
+					FilterText: nil,
+					Detail:     nil,
 				},
 			},
 			Diagnostics: LSPDiagnosticConfig{
@@ -182,13 +182,13 @@ type YamlFrontmatterConfig struct {
 
 // ToolConfig holds the external tooling configuration.
 type ToolConfig struct {
-	Editor     opt.String
-	Shell      opt.String
-	Pager      opt.String
-	FzfPreview opt.String
-	FzfLine    opt.String
-	FzfOptions opt.String
-	FzfBindNew opt.String
+	Editor     *string
+	Shell      *string
+	Pager      *string
+	FzfPreview *string
+	FzfLine    *string
+	FzfOptions *string
+	FzfBindNew *string
 }
 
 // LSPConfig holds the Language Server Protocol configuration.
@@ -200,16 +200,16 @@ type LSPConfig struct {
 // LSPCompletionConfig holds the LSP auto-completion configuration.
 type LSPCompletionConfig struct {
 	Note                   LSPCompletionTemplates
-	NoteFilter             opt.String
-	UseAdditionalTextEdits opt.Bool
+	NoteFilter             *string
+	UseAdditionalTextEdits *bool
 }
 
 // LSPCompletionTemplates holds the LSP completion templates for a particular
 // completion item type (e.g. note or tag).
 type LSPCompletionTemplates struct {
-	Label      opt.String
-	FilterText opt.String
-	Detail     opt.String
+	Label      *string
+	FilterText *string
+	Detail     *string
 }
 
 // LSPDiagnosticConfig holds the LSP diagnostics configuration.
@@ -254,7 +254,7 @@ type MissingBacklinkConfig struct {
 
 // NotebookConfig holds configuration about the default notebook
 type NotebookConfig struct {
-	Dir opt.String
+	Dir *string
 }
 
 // NoteConfig holds the user configuration used when generating new notes.
@@ -264,7 +264,7 @@ type NoteConfig struct {
 	// Extension appended to the filename.
 	Extension string
 	// Path to the handlebars template used when generating the note content.
-	BodyTemplatePath opt.String
+	BodyTemplatePath *string
 	// Language of the note content.
 	Lang string
 	// Default title to use when none is provided.
@@ -345,7 +345,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	notebook := tomlConf.Notebook
 	if notebook.Dir != "" {
 		if isGlobal {
-			config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
+			config.Notebook.Dir = ptr.NotEmptyString(notebook.Dir)
 		} else {
 			return config, fmt.Errorf("notebook.dir should not be set on local configuration")
 		}
@@ -364,7 +364,7 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		if err != nil {
 			return config, fmt.Errorf("failed to expand template path from config: %w", err)
 		}
-		config.Note.BodyTemplatePath = opt.NewNotEmptyString(expanded)
+		config.Note.BodyTemplatePath = ptr.NotEmptyString(expanded)
 	}
 	if note.IDLength != 0 {
 		config.Note.IDOptions.Length = note.IDLength
@@ -441,42 +441,42 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	// Tool
 	tool := tomlConf.Tool
 	if tool.Editor != nil {
-		config.Tool.Editor = opt.NewNotEmptyString(*tool.Editor)
+		config.Tool.Editor = ptr.NotEmptyString(*tool.Editor)
 	}
 	if tool.Shell != nil {
-		config.Tool.Shell = opt.NewNotEmptyString(*tool.Shell)
+		config.Tool.Shell = ptr.NotEmptyString(*tool.Shell)
 	}
 	if tool.Pager != nil {
-		config.Tool.Pager = opt.NewStringWithPtr(tool.Pager)
+		config.Tool.Pager = tool.Pager
 	}
 	if tool.FzfPreview != nil {
-		config.Tool.FzfPreview = opt.NewStringWithPtr(tool.FzfPreview)
+		config.Tool.FzfPreview = tool.FzfPreview
 	}
 	if tool.FzfLine != nil {
-		config.Tool.FzfLine = opt.NewNotEmptyString(*tool.FzfLine)
+		config.Tool.FzfLine = ptr.NotEmptyString(*tool.FzfLine)
 	}
 	if tool.FzfOptions != nil {
-		config.Tool.FzfOptions = opt.NewNotEmptyString(*tool.FzfOptions)
+		config.Tool.FzfOptions = ptr.NotEmptyString(*tool.FzfOptions)
 	}
 	if tool.FzfBindNew != nil {
-		config.Tool.FzfBindNew = opt.NewStringWithPtr(tool.FzfBindNew)
+		config.Tool.FzfBindNew = tool.FzfBindNew
 	}
 
 	// LSP completion
 	lspCompl := tomlConf.LSP.Completion
 	if lspCompl.NoteLabel != nil {
-		config.LSP.Completion.Note.Label = opt.NewNotEmptyString(*lspCompl.NoteLabel)
+		config.LSP.Completion.Note.Label = ptr.NotEmptyString(*lspCompl.NoteLabel)
 	}
 	if lspCompl.NoteFilterText != nil {
-		config.LSP.Completion.Note.FilterText = opt.NewNotEmptyString(*lspCompl.NoteFilterText)
+		config.LSP.Completion.Note.FilterText = ptr.NotEmptyString(*lspCompl.NoteFilterText)
 	}
 	if lspCompl.NoteDetail != nil {
-		config.LSP.Completion.Note.Detail = opt.NewNotEmptyString(*lspCompl.NoteDetail)
+		config.LSP.Completion.Note.Detail = ptr.NotEmptyString(*lspCompl.NoteDetail)
 	}
 	if lspCompl.NoteFilter != nil {
-		config.LSP.Completion.NoteFilter = opt.NewNotEmptyString(*lspCompl.NoteFilter)
+		config.LSP.Completion.NoteFilter = ptr.NotEmptyString(*lspCompl.NoteFilter)
 	}
-	config.LSP.Completion.UseAdditionalTextEdits = opt.NewBoolWithPtr(lspCompl.UseAdditionalTextEdits)
+	config.LSP.Completion.UseAdditionalTextEdits = lspCompl.UseAdditionalTextEdits
 
 	// LSP diagnostics
 	lspDiags := tomlConf.LSP.Diagnostics
@@ -541,7 +541,7 @@ func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
 		res.Note.Extension = note.Extension
 	}
 	if note.Template != "" {
-		res.Note.BodyTemplatePath = opt.NewNotEmptyString(note.Template)
+		res.Note.BodyTemplatePath = ptr.NotEmptyString(note.Template)
 	}
 	if note.IDLength != 0 {
 		res.Note.IDOptions.Length = note.IDLength

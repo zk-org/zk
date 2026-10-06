@@ -5,14 +5,14 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 func TestParseTitle(t *testing.T) {
 	test := func(source string, expectedTitle string) {
 		content := parse(t, source)
-		assert.Equal(t, content.Title, opt.NewNotEmptyString(expectedTitle))
+		assert.Equal(t, content.Title, ptr.NotEmptyString(expectedTitle))
 	}
 
 	test("", "")
@@ -47,7 +47,7 @@ Paragraph
 func TestParseBody(t *testing.T) {
 	test := func(source string, expectedBody string) {
 		content := parse(t, source)
-		assert.Equal(t, content.Body, opt.NewNotEmptyString(expectedBody))
+		assert.Equal(t, content.Body, ptr.NotEmptyString(expectedBody))
 	}
 
 	test("", "")
@@ -91,7 +91,7 @@ Paragraph
 func TestParseLead(t *testing.T) {
 	test := func(source string, expectedLead string) {
 		content := parse(t, source)
-		assert.Equal(t, content.Lead, opt.NewNotEmptyString(expectedLead))
+		assert.Equal(t, content.Lead, ptr.NotEmptyString(expectedLead))
 	}
 
 	test("", "")

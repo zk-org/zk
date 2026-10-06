@@ -5,13 +5,11 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
-
-	"github.com/zk-org/zk/internal/util/opt"
 )
 
 // ResolveShell returns the shell to use. On Windows, this always returns "cmd"
 // as the shell configuration is not applicable.
-func ResolveShell(configShell opt.String) string {
+func ResolveShell(configShell *string) string {
 	return "cmd"
 }
 

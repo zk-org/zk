@@ -9,8 +9,8 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/mattn/go-isatty"
 	executil "github.com/zk-org/zk/internal/util/exec"
-	"github.com/zk-org/zk/internal/util/opt"
 	osutil "github.com/zk-org/zk/internal/util/os"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // Editor represents an external editor able to edit the notes.
@@ -21,17 +21,19 @@ type Editor struct {
 
 // NewEditor creates a new Editor from the given editor user setting or the
 // matching environment variables.
-func NewEditor(editor opt.String, shell string) (*Editor, error) {
-	editor = osutil.GetOptEnv("ZK_EDITOR").
-		Or(editor).
-		Or(osutil.GetOptEnv("VISUAL")).
-		Or(osutil.GetOptEnv("EDITOR"))
+func NewEditor(editor *string, shell string) (*Editor, error) {
+	editor = ptr.First(
+		osutil.GetOptEnv("ZK_EDITOR"),
+		editor,
+		osutil.GetOptEnv("VISUAL"),
+		osutil.GetOptEnv("EDITOR"),
+	)
 
-	if editor.IsNull() {
+	if editor == nil {
 		return nil, fmt.Errorf("no editor set in config")
 	}
 
-	return &Editor{editor: editor.Unwrap(), shell: shell}, nil
+	return &Editor{editor: *editor, shell: shell}, nil
 }
 
 // Open launches the editor with the notes at given paths.
