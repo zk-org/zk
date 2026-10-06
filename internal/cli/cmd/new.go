@@ -11,7 +11,7 @@ import (
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // New adds a new note to the notebook.
@@ -51,11 +51,11 @@ func (cmd *New) Run(container *cli.Container) error {
 	}
 
 	note, err := notebook.NewNote(core.NewNoteOpts{
-		Title:     opt.NewNotEmptyString(cmd.Title),
+		Title:     ptr.NotEmptyString(cmd.Title),
 		Content:   string(content),
-		Directory: opt.NewNotEmptyString(cmd.Directory),
-		Group:     opt.NewNotEmptyString(cmd.Group),
-		Template:  opt.NewNotEmptyString(cmd.Template),
+		Directory: ptr.NotEmptyString(cmd.Directory),
+		Group:     ptr.NotEmptyString(cmd.Group),
+		Template:  ptr.NotEmptyString(cmd.Template),
 		Extra:     cmd.Extra,
 		Date:      date,
 		DryRun:    cmd.DryRun,

@@ -11,8 +11,8 @@ import (
 	"github.com/kballard/go-shellquote"
 	"github.com/zk-org/zk/internal/util"
 	executil "github.com/zk-org/zk/internal/util/exec"
-	"github.com/zk-org/zk/internal/util/opt"
 	osutil "github.com/zk-org/zk/internal/util/os"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // Pager writes text to a terminal using the user's pager.
@@ -31,13 +31,13 @@ var PassthroughPager = &Pager{
 }
 
 // New creates a pager.Pager to be used to write a paginated text to the terminal.
-func New(pagerCmd opt.String, shell string, logger util.Logger) (*Pager, error) {
+func New(pagerCmd *string, shell string, logger util.Logger) (*Pager, error) {
 	pagerCmd = selectPagerCmd(pagerCmd)
-	if pagerCmd.IsNull() {
+	if pagerCmd == nil {
 		return PassthroughPager, nil
 	}
 
-	cmd := executil.CommandFromString(shell, pagerCmd.String())
+	cmd := executil.CommandFromString(shell, *pagerCmd)
 
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -103,11 +103,13 @@ func (p *Pager) WriteString(text string) error {
 //
 // By order of precedence: ZK_PAGER, config.pager, PAGER then the default
 // pagers.
-func selectPagerCmd(userPager opt.String) opt.String {
-	return osutil.GetOptEnv("ZK_PAGER").
-		Or(userPager).
-		Or(osutil.GetOptEnv("PAGER")).
-		Or(selectDefaultPager())
+func selectPagerCmd(userPager *string) *string {
+	return ptr.First(
+		osutil.GetOptEnv("ZK_PAGER"),
+		userPager,
+		osutil.GetOptEnv("PAGER"),
+		selectDefaultPager(),
+	)
 }
 
 var defaultPagers = []string{
@@ -116,7 +118,7 @@ var defaultPagers = []string{
 
 // selectDefaultPager returns the first pager in the list of defaultPagers
 // available on the execution paths.
-func selectDefaultPager() opt.String {
+func selectDefaultPager() *string {
 	for _, pager := range defaultPagers {
 		parts, err := shellquote.Split(pager)
 		if err != nil {
@@ -126,8 +128,8 @@ func selectDefaultPager() opt.String {
 		pager, err := exec.LookPath(parts[0])
 		parts[0] = pager
 		if err == nil {
-			return opt.NewNotEmptyString(strings.Join(parts, " "))
+			return ptr.NotEmptyString(strings.Join(parts, " "))
 		}
 	}
-	return opt.NullString
+	return nil
 }

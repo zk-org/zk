@@ -4,16 +4,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // GetOptEnv returns an optional String for the environment variable with given
 // key.
-func GetOptEnv(key string) opt.String {
+func GetOptEnv(key string) *string {
 	if value, ok := os.LookupEnv(key); ok {
-		return opt.NewNotEmptyString(value)
+		return ptr.NotEmptyString(value)
 	}
-	return opt.NullString
+	return nil
 }
 
 // Env returns a map of environment variables.

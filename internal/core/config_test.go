@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -15,12 +15,12 @@ func TestParseDefaultConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir: nil,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
 			Extension:        "md",
-			BodyTemplatePath: opt.NullString,
+			BodyTemplatePath: nil,
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetAlphanum,
@@ -46,11 +46,11 @@ func TestParseDefaultConfig(t *testing.T) {
 			},
 		},
 		Tool: ToolConfig{
-			Editor:     opt.NullString,
-			Shell:      opt.NullString,
-			Pager:      opt.NullString,
-			FzfPreview: opt.NullString,
-			FzfLine:    opt.NullString,
+			Editor:     nil,
+			Shell:      nil,
+			Pager:      nil,
+			FzfPreview: nil,
+			FzfLine:    nil,
 		},
 		LSP: LSPConfig{
 			Diagnostics: LSPDiagnosticConfig{
@@ -159,12 +159,12 @@ func TestParseComplete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NewString("~/notebook"),
+			Dir: ptr.String("~/notebook"),
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "txt",
-			BodyTemplatePath: opt.NewString("default.note"),
+			BodyTemplatePath: ptr.String("default.note"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetAlphanum,
@@ -180,7 +180,7 @@ func TestParseComplete(t *testing.T) {
 				Note: NoteConfig{
 					FilenameTemplate: "{{date}}.md",
 					Extension:        "note",
-					BodyTemplatePath: opt.NewString("log.md"),
+					BodyTemplatePath: ptr.String("log.md"),
 					IDOptions: IDOptions{
 						Length:  8,
 						Charset: CharsetLetters,
@@ -201,7 +201,7 @@ func TestParseComplete(t *testing.T) {
 				Note: NoteConfig{
 					FilenameTemplate: "{{slug title}}.md",
 					Extension:        "txt",
-					BodyTemplatePath: opt.NewString("default.note"),
+					BodyTemplatePath: ptr.String("default.note"),
 					IDOptions: IDOptions{
 						Length:  4,
 						Charset: CharsetAlphanum,
@@ -221,7 +221,7 @@ func TestParseComplete(t *testing.T) {
 				Note: NoteConfig{
 					FilenameTemplate: "{{id}}.note",
 					Extension:        "txt",
-					BodyTemplatePath: opt.NewString("default.note"),
+					BodyTemplatePath: ptr.String("default.note"),
 					IDOptions: IDOptions{
 						Length:  4,
 						Charset: CharsetAlphanum,
@@ -252,23 +252,23 @@ func TestParseComplete(t *testing.T) {
 			},
 		},
 		Tool: ToolConfig{
-			Editor:     opt.NewString("vim"),
-			Shell:      opt.NewString("/bin/bash"),
-			Pager:      opt.NewString("less"),
-			FzfPreview: opt.NewString("bat {1}"),
-			FzfLine:    opt.NewString("{{title}}"),
-			FzfOptions: opt.NewString("--border --height 40%"),
-			FzfBindNew: opt.NewString("Ctrl-C"),
+			Editor:     ptr.String("vim"),
+			Shell:      ptr.String("/bin/bash"),
+			Pager:      ptr.String("less"),
+			FzfPreview: ptr.String("bat {1}"),
+			FzfLine:    ptr.String("{{title}}"),
+			FzfOptions: ptr.String("--border --height 40%"),
+			FzfBindNew: ptr.String("Ctrl-C"),
 		},
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
 				Note: LSPCompletionTemplates{
-					Label:      opt.NewString("notelabel"),
-					FilterText: opt.NewString("notefiltertext"),
-					Detail:     opt.NewString("notedetail"),
+					Label:      ptr.String("notelabel"),
+					FilterText: ptr.String("notefiltertext"),
+					Detail:     ptr.String("notedetail"),
 				},
-				NoteFilter:             opt.NewString("--tag project"),
-				UseAdditionalTextEdits: opt.True,
+				NoteFilter:             ptr.String("--tag project"),
+				UseAdditionalTextEdits: ptr.Bool(true),
 			},
 			Diagnostics: LSPDiagnosticConfig{
 				WikiTitle:       LSPDiagnosticHint,
@@ -376,7 +376,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "root-filename",
 			Extension:        "txt",
-			BodyTemplatePath: opt.NewString("root-template"),
+			BodyTemplatePath: ptr.String("root-template"),
 			IDOptions: IDOptions{
 				Length:  42,
 				Charset: CharsetLetters,
@@ -392,7 +392,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				Note: NoteConfig{
 					FilenameTemplate: "log-filename",
 					Extension:        "txt",
-					BodyTemplatePath: opt.NewString("log-template"),
+					BodyTemplatePath: ptr.String("log-template"),
 					IDOptions: IDOptions{
 						Length:  8,
 						Charset: CharsetNumbers,
@@ -413,7 +413,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 				Note: NoteConfig{
 					FilenameTemplate: "root-filename",
 					Extension:        "txt",
-					BodyTemplatePath: opt.NewString("root-template"),
+					BodyTemplatePath: ptr.String("root-template"),
 					IDOptions: IDOptions{
 						Length:  42,
 						Charset: CharsetLetters,
@@ -446,9 +446,9 @@ func TestParseMergesGroupConfig(t *testing.T) {
 		LSP: LSPConfig{
 			Completion: LSPCompletionConfig{
 				Note: LSPCompletionTemplates{
-					Label:      opt.NullString,
-					FilterText: opt.NullString,
-					Detail:     opt.NullString,
+					Label:      nil,
+					FilterText: nil,
+					Detail:     nil,
 				},
 			},
 			Diagnostics: LSPDiagnosticConfig{
@@ -476,10 +476,10 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 	`), ".zk/config.toml", NewDefaultConfig(), false)
 
 	assert.Nil(t, err)
-	assert.Equal(t, conf.Tool.Pager.IsNull(), false)
-	assert.Equal(t, conf.Tool.Pager, opt.NewString(""))
-	assert.Equal(t, conf.Tool.FzfPreview.IsNull(), false)
-	assert.Equal(t, conf.Tool.FzfPreview, opt.NewString(""))
+	assert.NotNil(t, conf.Tool.Pager)
+	assert.Equal(t, conf.Tool.Pager, ptr.String(""))
+	assert.NotNil(t, conf.Tool.FzfPreview)
+	assert.Equal(t, conf.Tool.FzfPreview, ptr.String(""))
 }
 
 func TestParseNotebook(t *testing.T) {
@@ -490,7 +490,7 @@ func TestParseNotebook(t *testing.T) {
 	// Should parse notebook if isGlobal == true
 	conf, err := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), true)
 	assert.Nil(t, err)
-	assert.Equal(t, conf.Notebook.Dir, opt.NewString("/home/user/folder"))
+	assert.Equal(t, conf.Notebook.Dir, ptr.String("/home/user/folder"))
 
 	// Should not parse notebook if isGlobal == false
 	conf, err = ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
@@ -654,7 +654,7 @@ func TestGroupConfigClone(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "md",
-			BodyTemplatePath: opt.NewString("default.note"),
+			BodyTemplatePath: ptr.String("default.note"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetAlphanum,
@@ -676,7 +676,7 @@ func TestGroupConfigClone(t *testing.T) {
 	clone.Paths = []string{"cloned"}
 	clone.Note.FilenameTemplate = "modified"
 	clone.Note.Extension = "txt"
-	clone.Note.BodyTemplatePath = opt.NewString("modified")
+	clone.Note.BodyTemplatePath = ptr.String("modified")
 	clone.Note.IDOptions.Length = 41
 	clone.Note.IDOptions.Charset = CharsetNumbers
 	clone.Note.IDOptions.Case = CaseUpper
@@ -691,7 +691,7 @@ func TestGroupConfigClone(t *testing.T) {
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
 			Extension:        "md",
-			BodyTemplatePath: opt.NewString("default.note"),
+			BodyTemplatePath: ptr.String("default.note"),
 			IDOptions: IDOptions{
 				Length:  4,
 				Charset: CharsetAlphanum,

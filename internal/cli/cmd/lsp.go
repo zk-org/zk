@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/zk-org/zk/internal/adapter/lsp"
 	"github.com/zk-org/zk/internal/cli"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 // LSP starts a server implementing the Language Server Protocol.
@@ -16,7 +16,7 @@ func (cmd *LSP) Run(container *cli.Container) error {
 		Name:           "zk",
 		Version:        container.Version,
 		Logger:         container.Logger,
-		LogFile:        opt.NewNotEmptyString(cmd.Log),
+		LogFile:        ptr.NotEmptyString(cmd.Log),
 		Notebooks:      container.Notebooks,
 		TemplateLoader: container.TemplateLoader,
 		FS:             container.FS,

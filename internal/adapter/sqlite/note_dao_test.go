@@ -8,8 +8,8 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -1186,7 +1186,7 @@ func testNoteDAO(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
 }
 
 func testNoteDAOWithFixtures(t *testing.T, fixtures string, callback func(tx Transaction, dao *NoteDAO)) {
-	testTransactionWithFixtures(t, opt.NewNotEmptyString(fixtures), func(tx Transaction) {
+	testTransactionWithFixtures(t, ptr.NotEmptyString(fixtures), func(tx Transaction) {
 		callback(tx, NewNoteDAO(tx, &util.NullLogger, "md"))
 	})
 }

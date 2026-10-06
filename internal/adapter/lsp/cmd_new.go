@@ -9,7 +9,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 )
 
 const cmdNew = "zk.new"
@@ -48,11 +48,11 @@ func executeCommandNew(notebook *core.Notebook, documents *documentStore, contex
 	}
 
 	note, err := notebook.NewNote(core.NewNoteOpts{
-		Title:     opt.NewNotEmptyString(opts.Title),
+		Title:     ptr.NotEmptyString(opts.Title),
 		Content:   opts.Content,
-		Directory: opt.NewNotEmptyString(opts.Dir),
-		Group:     opt.NewNotEmptyString(opts.Group),
-		Template:  opt.NewNotEmptyString(opts.Template),
+		Directory: ptr.NotEmptyString(opts.Dir),
+		Group:     ptr.NotEmptyString(opts.Group),
+		Template:  ptr.NotEmptyString(opts.Template),
 		Extra:     opts.Extra,
 		DryRun:    bool(opts.DryRun),
 		Date:      date,
