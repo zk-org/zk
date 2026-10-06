@@ -6,6 +6,12 @@ import (
 	"sync"
 )
 
+// Preparer is the subset of a transaction or connection able to prepare SQL
+// statements.
+type Preparer interface {
+	Prepare(query string) (*sql.Stmt, error)
+}
+
 // LazyStmt is a wrapper around a sql.Stmt which will be evaluated on first use.
 type LazyStmt struct {
 	query  string
@@ -15,11 +21,11 @@ type LazyStmt struct {
 	once   sync.Once
 }
 
-// NewLazyStmt creates a new lazy statement bound to the given transaction.
-func NewLazyStmt(tx *sql.Tx, query string) *LazyStmt {
+// NewLazyStmt creates a new lazy statement bound to the given Preparer.
+func NewLazyStmt(p Preparer, query string) *LazyStmt {
 	return &LazyStmt{
 		query:  query,
-		create: func() (*sql.Stmt, error) { return tx.Prepare(query) },
+		create: func() (*sql.Stmt, error) { return p.Prepare(query) },
 	}
 }
 
