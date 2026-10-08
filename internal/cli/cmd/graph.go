@@ -51,6 +51,7 @@ func (cmd *Graph) Run(container *cli.Container) error {
 		Interactive:  cmd.Interactive,
 		AlwaysFilter: false,
 		NotebookDir:  notebook.Path,
+		Sorters:      findOpts.Sorters,
 	})
 
 	notes, err = filter.Apply(notes)
