@@ -9,6 +9,8 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ### Fixed
 
+- Note ordering requested with `--sort` is kept by fzf while filtering
+  interactively (by @paoValle, #783)
 - Resolve links with a leading slash against the notebook root, falling back to
   the filesystem for absolute paths (by @zmre, #745)
 - `NoteIndex.Commit` now passes a complete `NoteIndex` to its transaction
