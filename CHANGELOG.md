@@ -14,6 +14,10 @@ Format: `<description> (by <contributor>, <pr number>)`
 - `NoteIndex.Commit` now passes a complete `NoteIndex` to its transaction
   instead of one missing the notebook path and note extension (by @ehsash)
 
+### Changed
+
+- Tag filtering is now case-insensitive (by @tuxikus, 770)
+
 ## 0.15.6
 
 ### Added
