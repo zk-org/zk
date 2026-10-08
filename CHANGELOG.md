@@ -3,14 +3,14 @@
 All notable changes to this project will be documented in this file. Pull
 requests can be viewed online at https://github.com/zk-org/zk/pulls
 
-Format: `<description> (by <contributor>, <pr number>)`
+Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
 ### Fixed
 
 - Resolve links with a leading slash against the notebook root, falling back to
-  the filesystem for absolute paths (by @zmre, 745)
+  the filesystem for absolute paths (by @zmre, #745)
 - `NoteIndex.Commit` now passes a complete `NoteIndex` to its transaction
   instead of one missing the notebook path and note extension (by @ehsash)
 
@@ -22,77 +22,77 @@ Format: `<description> (by <contributor>, <pr number>)`
 
 ### Added
 
-- Parse links to notes in frontmatter (by @tjex, 710)
-- Set filters for lsp completion items from the config (by @wrvsrx, 736)
+- Parse links to notes in frontmatter (by @tjex, #710)
+- Set filters for lsp completion items from the config (by @wrvsrx, #736)
 - Set a note's modification time in frontmatter and allow for custom key naming
-  for both creation and modification keys (by @BennoLossin, 531)
+  for both creation and modification keys (by @BennoLossin, #531)
 
 ### Fixed
 
-- Indexing made significantly more performant (by @Keluaa, 735)
+- Indexing made significantly more performant (by @Keluaa, #735)
 - Support filtering by date and time with `"<date> <time>"` instead of
-  `<date>T<time>` only (by @tjex, 743)
+  `<date>T<time>` only (by @tjex, #743)
 - Exclude globs now prune matching directories from indexing, improving speed of
-  indexing (by @ehsash, 741)
+  indexing (by @ehsash, #741)
 
 ## 0.15.5
 
 ### Added
 
-- List, edit and filter for broken links with `--broken-links` (by
-  @WhyNotHugo, 708)
+- List, edit and filter for broken links with `--broken-links` (by @WhyNotHugo,
+  #708)
 - Update strftime package, supporting `%g` and `%G` formats in the
-  `{{format-date}}` helper (by @tjex, 723)
-- Option to append links to selected text, instead of replacing (by @tjex, 724)
+  `{{format-date}}` helper (by @tjex, #723)
+- Option to append links to selected text, instead of replacing (by @tjex, #724)
 
 ### Fixed
 
 - Paths with `~` and env variables no longer error when passed to
-  `--notebook-dir` and `--working-dir` (by @tjex, 732)
+  `--notebook-dir` and `--working-dir` (by @tjex, #732)
 - Guard LSP against unnecessary erroring on missing textDocument/definition
-  capabilities (by @SAY-5, 718)
+  capabilities (by @SAY-5, #718)
 
 ## 0.15.4
 
 ### Fixed
 
-- "jump to definition" follows wrong link (by @WhyNotHugo, 703)
+- "jump to definition" follows wrong link (by @WhyNotHugo, #703)
 
 ## 0.15.3
 
 ### Added
 
-- `zk config --list <object>` (by @andrebauer, 484)
+- `zk config --list <object>` (by @andrebauer, #484)
 
 ### Fixed
 
 - Ignore commented links for LSP diagnostics. Use an AST to parse files, fixing
-  other similar edge cases. (by @WhyNotHugo, 638)
-- Links in markdown footnotes now included in :ZkLinks (by @WhyNotHugo, 639)
+  other similar edge cases. (by @WhyNotHugo, #638)
+- Links in markdown footnotes now included in :ZkLinks (by @WhyNotHugo, #639)
 - Indexing notebook now 35% and 74% faster for full and incremental indexing
-  respectively (by @WhyNotHugo, 642)
+  respectively (by @WhyNotHugo, #642)
 - Stop crashing lsp server when server received `textDocument/completion`
-  request with out of range parameters. (by @virusbb001, 667)
+  request with out of range parameters. (by @virusbb001, #667)
 - lsp: Provide completion after [[ on lines with multi-byte characters (by
-  @virusbb001, 671)
+  @virusbb001, #671)
 - Prevent crash in LookForward when the parameters is out of characters number.
-  (by @virusbb001, 673)
+  (by @virusbb001, #673)
 
 ## 0.15.2
 
 ### Added
 
 - Find notes with missing backlinks using `zk list --missing-backlink` (by
-  @WhyNotHugo, 578)
+  @WhyNotHugo, #578)
 - LSP diagnostic for missing backlinks when other notes link to current note
-  without reciprocal links (by @WhyNotHugo, 577)
-- Code action to add missing backlinks (by @WhyNotHugo, 581)
-- LSP diagnostic for self-referential links (by @WhyNotHugo, 622)
+  without reciprocal links (by @WhyNotHugo, #577)
+- Code action to add missing backlinks (by @WhyNotHugo, #581)
+- LSP diagnostic for self-referential links (by @WhyNotHugo, #622)
 
 ### Fixed
 
-- Release tarballs now output the program version (by @WhyNotHugo, 556)
-- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, 575)
+- Release tarballs now output the program version (by @WhyNotHugo, #556)
+- Config path can be set with `$ZK_CONFIG_DIR` (by @Alb-O, #575)
 
 ## 0.15.1
 
