@@ -1,0 +1,18 @@
+$ cd symlinks/notebook
+
+# Link a directory from outside the notebook, and link back to the notebook
+# from inside it to form a cycle.
+$ ln -s ../shared shared && ln -s ../notebook ../shared/notebook
+
+# Notes behind the directory link are indexed once, under the link's path.
+$ zk index -q && zk list -qfpath --sort path
+>apple.md
+>shared/banana.md
+>shared/sub/cherry.md
+
+# Linked notes are not re-indexed when unchanged.
+$ zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed

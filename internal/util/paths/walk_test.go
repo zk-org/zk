@@ -1,9 +1,12 @@
 package paths
 
 import (
+	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/zk-org/zk/internal/util"
 	"github.com/zk-org/zk/internal/util/fixtures"
@@ -108,5 +111,96 @@ func TestWalkExcludedDirsArePruned(t *testing.T) {
 		if strings.HasPrefix(p, "dir1"+string(filepath.Separator)) {
 			t.Errorf("walker descended into pruned directory: %q", p)
 		}
+	}
+}
+
+// Walk should follow symbolic links, emitting the notes of a linked directory
+// under the link's path, without looping on link cycles or emitting a note
+// twice.
+func TestWalkFollowsSymlinks(t *testing.T) {
+	tmp := t.TempDir()
+	writeNotes(t, tmp, "shared/x.md", "shared/sub/y.md", "excluded/e.md", "hidden/h.md", "nb/a.md", "nb/g-after.md", "nb/inner/i.md")
+	symlink := func(target string, link string) {
+		assert.Nil(t, os.Symlink(target, filepath.Join(tmp, link)))
+	}
+	symlink("../shared", "nb/b-shared")
+	symlink("../nb", "shared/back")
+	symlink(".", "shared/self")
+	symlink("inner", "nb/c-inner")
+	symlink("../shared/x.md", "nb/d-file.md")
+	symlink("../missing", "nb/e-broken")
+	symlink("../excluded", "nb/f-excluded")
+	symlink("../hidden", "nb/.hidden")
+	// Emacs lock file.
+	symlink("user@host.123", "nb/.#a.md")
+
+	targetTime := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
+	assert.Nil(t, os.Chtimes(filepath.Join(tmp, "shared/x.md"), targetTime, targetTime))
+
+	shouldIgnore := func(path string, isDir bool) (bool, error) {
+		if isDir {
+			return path == "f-excluded", nil
+		}
+		return filepath.Ext(path) != ".md", nil
+	}
+
+	var logs strings.Builder
+	path := filepath.Join(tmp, "nb")
+	actual := make([]string, 0)
+	modified := map[string]time.Time{}
+	for m := range Walk(path, util.StdLogger{Logger: log.New(&logs, "", 0)}, filepath.Base(path), shouldIgnore) {
+		actual = append(actual, m.Path)
+		modified[m.Path] = m.Modified
+	}
+
+	assert.Equal(t, actual, []string{
+		"a.md",
+		"b-shared/sub/y.md",
+		"b-shared/x.md",
+		"d-file.md",
+		"g-after.md",
+		"inner/i.md",
+	})
+	assert.Equal(t, modified["d-file.md"], targetTime)
+	assert.Equal(t, logs.String(), "")
+}
+
+// Walk should skip a directory it can't read and keep going, instead of ending
+// the walk early and making the index drop every note it didn't reach.
+func TestWalkSkipsUnreadableDirs(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root can read any directory")
+	}
+
+	tmp := t.TempDir()
+	writeNotes(t, tmp, "shared/locked/l.md", "shared/x.md", "nb/a.md", "nb/locked/l.md", "nb/z.md")
+	assert.Nil(t, os.Symlink("../shared", filepath.Join(tmp, "nb/s")))
+	for _, dir := range []string{"shared/locked", "nb/locked"} {
+		dir = filepath.Join(tmp, dir)
+		assert.Nil(t, os.Chmod(dir, 0))
+		// Restore access so t.TempDir can clean up.
+		t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	}
+
+	shouldIgnore := func(path string, isDir bool) (bool, error) {
+		return !isDir && filepath.Ext(path) != ".md", nil
+	}
+
+	var logs strings.Builder
+	path := filepath.Join(tmp, "nb")
+	actual := make([]string, 0)
+	for m := range Walk(path, util.StdLogger{Logger: log.New(&logs, "", 0)}, filepath.Base(path), shouldIgnore) {
+		actual = append(actual, m.Path)
+	}
+
+	assert.Equal(t, actual, []string{"a.md", "s/x.md", "z.md"})
+	assert.Equal(t, strings.Count(logs.String(), "permission denied"), 2)
+}
+
+func writeNotes(t *testing.T, dir string, paths ...string) {
+	for _, path := range paths {
+		path = filepath.Join(dir, path)
+		assert.Nil(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		assert.Nil(t, os.WriteFile(path, []byte("# Note\n"), 0o644))
 	}
 }
