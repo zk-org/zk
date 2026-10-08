@@ -245,7 +245,20 @@ func (n *Notebook) FindCollections(kind CollectionKind, sorters []CollectionSort
 
 // RelPath returns the path relative to the notebook root to the given path.
 func (n *Notebook) RelPath(originalPath string) (string, error) {
-	path, err := n.fs.Abs(originalPath)
+	path := originalPath
+	if !filepath.IsAbs(path) {
+		isInsideNotebook, err := n.fs.IsDescendantOf(n.Path, n.fs.WorkingDir())
+		if err != nil {
+			return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
+		}
+		if isInsideNotebook {
+			path = filepath.Join(n.fs.WorkingDir(), path)
+		} else {
+			path = filepath.Join(n.Path, path)
+		}
+	}
+
+	path, err := n.fs.Abs(path)
 	if err != nil {
 		return path, fmt.Errorf("%v: not a valid notebook path: %w", originalPath, err)
 	}

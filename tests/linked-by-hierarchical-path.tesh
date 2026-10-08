@@ -1,0 +1,11 @@
+# Running from notebook directory.
+$ cd full-sample
+$ zk list -qf\{{title}} --linked-by inbox/er4k.md
+>Channel
+>Ownership in Rust
+
+# Running from outside notebook with --notebook-dir.
+$ cd ..
+$ zk list --notebook-dir=full-sample -qf\{{title}} --linked-by inbox/er4k.md
+>Channel
+>Ownership in Rust
