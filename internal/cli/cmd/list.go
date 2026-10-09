@@ -93,6 +93,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		Interactive:  cmd.Interactive,
 		AlwaysFilter: false,
 		NotebookDir:  notebook.Path,
+		Sorted:       len(findOpts.Sorters) > 0,
 	})
 
 	notes, err = filter.Apply(notes)
