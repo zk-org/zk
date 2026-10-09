@@ -3,7 +3,6 @@ package fzf
 import (
 	"testing"
 
-	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
@@ -18,13 +17,13 @@ func TestNoteFilterFzfOptions(t *testing.T) {
 		NoteFilterOpts{}, defaultOptions)
 
 	test("disable fzf sorting when the notes are sorted",
-		NoteFilterOpts{Sorters: []core.NoteSorter{{Field: core.NoteSortPath, Ascending: true}}},
+		NoteFilterOpts{Sorted: true},
 		defaultOptions+" --no-sort")
 
 	test("keep the configured fzf options when the notes are sorted",
 		NoteFilterOpts{
 			FzfOptions: opt.NewNotEmptyString("--height 50%"),
-			Sorters:    []core.NoteSorter{{Field: core.NoteSortPath, Ascending: true}},
+			Sorted:     true,
 		},
 		"--height 50% --no-sort")
 }

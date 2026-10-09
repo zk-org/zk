@@ -44,8 +44,9 @@ type NoteFilterOpts struct {
 	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
 	NotebookDir string
-	// Sorters applied to the notes before they are handed over to fzf.
-	Sorters []core.NoteSorter
+	// Indicates whether the notes were already sorted by the caller. When they
+	// were, fzf keeps that order instead of ranking the matches by relevance.
+	Sorted bool
 }
 
 func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal, templateLoader core.TemplateLoader) *NoteFilter {
@@ -175,7 +176,7 @@ var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" 
 // that fzf keeps that order instead of ranking the matches by relevance.
 func (f *NoteFilter) fzfOptions() string {
 	options := f.opts.FzfOptions.OrString(defaultOptions).String()
-	if len(f.opts.Sorters) > 0 {
+	if f.opts.Sorted {
 		options += " " + noSortOption
 	}
 	return options

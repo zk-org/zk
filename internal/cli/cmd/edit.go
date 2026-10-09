@@ -37,7 +37,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		AlwaysFilter: true,
 		NewNoteDir:   cmd.newNoteDir(notebook),
 		NotebookDir:  notebook.Path,
-		Sorters:      findOpts.Sorters,
+		Sorted:       len(findOpts.Sorters) > 0,
 	})
 
 	notes, err = filter.Apply(notes)
