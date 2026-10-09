@@ -85,10 +85,13 @@ func (cmd *Edit) newNoteDir(notebook *core.Notebook) *core.Dir {
 		dir := notebook.RootDir()
 		return &dir
 	case 1:
-		dir, err := notebook.DirAt(cmd.Path[0])
-		if err != nil {
-			return nil
+		if dir, err := notebook.RequireDirAt(cmd.Path[0]); err == nil {
+			return &dir
 		}
+		if dir, err := notebook.RequireDirAt(filepath.Dir(cmd.Path[0])); err == nil {
+			return &dir
+		}
+		dir := notebook.RootDir()
 		return &dir
 	default:
 		// More than one directory, it's ambiguous for the "new note" fzf binding.
