@@ -146,12 +146,6 @@ func WordAt(str string, index int) string {
 
 var wordRegex = regexp.MustCompile(`[^ \t\n\f\r,;\[\]\"\']+`)
 
-func CopyList(list []string) []string {
-	out := make([]string, len(list))
-	copy(out, list)
-	return out
-}
-
 func ByteIndexToRuneIndex(s string, i int) int {
 	res := 0
 	for j := range s {
