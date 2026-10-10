@@ -2,64 +2,23 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sort"
 
 	"github.com/zk-org/zk/internal/cli"
-	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // AliasList lists all the aliases.
 type Config struct {
-	List       string `short:"l" placeholder:"OBJECT" help:"List configuration objects. Listable objects are: aliases, filters and extras."`
-	Format     string `group:"format" short:"f" placeholder:"TEMPLATE" help:"Pretty print the list using a custom template or predefined formats: short, full, json."`
-	Header     string `group:"format" help:"Arbitrary text printed at the start of the list."`
-	Footer     string `group:"format" default:"\n" help:"Arbitrary text printed at the end of the list."`
-	Delimiter  string `group:"format" short:"d" default:"\n" help:"Print tags delimited by the given separator."`
-	Delimiter0 bool   `group:"format" short:"0" name:"delimiter0" help:"Print tags delimited by ASCII NUL characters. Useful with xargs -0."`
-	NoPager    bool   `group:"format" short:"P" help:"Do not pipe output into a pager."`
-	Quiet      bool   `group:"format" short:"q" help:"Do not print the total number of tags found."`
+	List string `short:"l" placeholder:"OBJECT" help:"List configuration objects. Listable objects are: aliases, filters and extras."`
+	FormatFlags
 }
 
 func (cmd *Config) Run(container *cli.Container) error {
-	cmd.Header = strings.ExpandWhitespaceLiterals(cmd.Header)
-	cmd.Footer = strings.ExpandWhitespaceLiterals(cmd.Footer)
-	cmd.Delimiter = strings.ExpandWhitespaceLiterals(cmd.Delimiter)
-
-	if cmd.Delimiter0 {
-		if cmd.Header != "" {
-			return errors.New("--header and --delimiter0 can't be used together")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer and --delimiter0 can't be used together")
-		}
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter and --delimiter0 can't be used together")
-		}
-
-		cmd.Delimiter = "\x00"
-		cmd.Footer = "\x00"
-	}
-
-	if cmd.Format == "json" {
-		if cmd.Header != "" {
-			return errors.New("--header can't be used with JSON format")
-		}
-		if cmd.Footer != "\n" {
-			return errors.New("--footer can't be used with JSON format")
-		}
-		if cmd.Delimiter != "\n" {
-			return errors.New("--delimiter can't be used with JSON format")
-		}
-
-		if cmd.Format == "json" {
-			cmd.Delimiter = ","
-			cmd.Header = "{"
-			cmd.Footer = "}\n"
-		}
+	if err := cmd.FormatFlags.Prepare("{", "}\n", false); err != nil {
+		return err
 	}
 
 	var objects = make(map[string]string)
@@ -87,54 +46,32 @@ func (cmd *Config) Run(container *cli.Container) error {
 
 	format := cmd.mapTemplate()
 
-	var err = container.Paginate(cmd.NoPager, func(out io.Writer) error {
-		if cmd.Header != "" {
-			fmt.Fprint(out, cmd.Header)
-		}
-		for i, o := range keys {
-
-			if i > 0 {
-				fmt.Fprint(out, cmd.Delimiter)
+	err := cmd.FormatFlags.Paginate(container, count, func(out io.Writer, i int) error {
+		o := keys[i]
+		if cmd.Format == "" || cmd.Format == "short" {
+			fmt.Fprintf(out, format, o)
+		} else if cmd.Format == "json" {
+			jsonData, err := json.Marshal(objects[o])
+			if err != nil {
+				fmt.Println("Error marshaling JSON:", err)
+				os.Exit(1)
 			}
-			if cmd.Format == "" || cmd.Format == "short" {
-				fmt.Fprintf(out, format, o)
-			} else if cmd.Format == "json" {
-				jsonData, err := json.Marshal(objects[o])
-				if err != nil {
-					fmt.Println("Error marshaling JSON:", err)
-					os.Exit(1)
-				}
-				fmt.Fprintf(out, format, o, jsonData)
-			} else {
-				fmt.Fprintf(out, format, o, objects[o])
-			}
-
-			i += 1
-		}
-		if cmd.Footer != "" {
-			fmt.Fprint(out, cmd.Footer)
+			fmt.Fprintf(out, format, o, jsonData)
+		} else {
+			fmt.Fprintf(out, format, o, objects[o])
 		}
 		return nil
 	})
-
-	if err == nil && !cmd.Quiet {
-		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, cmd.List)
+	if err != nil {
+		return err
 	}
-	return err
+
+	cmd.FormatFlags.PrintFound(count, cmd.List)
+	return nil
 }
 
 func (cmd *Config) mapTemplate() string {
-	format := cmd.Format
-	if format == "" {
-		format = "short"
-	}
-
-	templ, ok := defaultMapFormats[format]
-	if !ok {
-		templ = strings.ExpandWhitespaceLiterals(format)
-	}
-
-	return templ
+	return cmd.Template("short", defaultMapFormats)
 }
 
 var defaultMapFormats = map[string]string{
