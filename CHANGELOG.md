@@ -7,6 +7,10 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
+...
+
+## 0.15.7
+
 ### Fixed
 
 - Note ordering requested with `--sort` is kept by fzf while filtering
