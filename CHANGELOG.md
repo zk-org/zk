@@ -18,14 +18,13 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 - Resolve links with a leading slash against the notebook root, falling back to
   the filesystem for absolute paths (by @zmre, #745)
 - `NoteIndex.Commit` now passes a complete `NoteIndex` to its transaction
-  instead of one missing the notebook path and note extension (by @ehsash)
+  instead of one missing the notebook path and note extension (by @ehsash, #750)
 
 ### Changed
 
-- Tag filtering is now case-insensitive (by @tuxikus, 770) the filesystem for
-  absolute paths (by @zmre, 745)
+- Tag filtering is now case-insensitive (by @tuxikus, #770)
 - Use the working directory as the target of the `edit --interactive` new note
-  fzf binding (by @skbolton, 768)
+  fzf binding (by @skbolton, #768)
 
 ## 0.15.6
 
