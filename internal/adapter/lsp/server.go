@@ -185,8 +185,15 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		_, err = notebook.Index(core.NoteIndexOpts{})
-		server.logger.Err(err)
+		if notebook.Config.Notebook.Scan {
+			_, err = notebook.Index(core.NoteIndexOpts{})
+			server.logger.Err(err)
+		} else {
+			// The notebook is not scanned, so the saved document is indexed
+			// instead: the notes zk knows about stay up to date.
+			err = notebook.RefreshNote(doc.Path)
+			server.logger.Err(err)
+		}
 		return nil
 	}
 

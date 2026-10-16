@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"path/filepath"
@@ -67,13 +68,14 @@ func (n *Notebook) Index(opts NoteIndexOpts) (stats NoteIndexingStats, err error
 func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change paths.DiffChange)) (stats NoteIndexingStats, err error) {
 	err = n.index.Commit(func(index NoteIndex) error {
 		task := indexTask{
-			path:    n.Path,
-			config:  n.Config,
-			force:   opts.Force,
-			verbose: opts.Verbose,
-			index:   index,
-			parser:  n,
-			logger:  n.logger,
+			path:      n.Path,
+			config:    n.Config,
+			force:     opts.Force,
+			verbose:   opts.Verbose,
+			automatic: opts.Automatic,
+			index:     index,
+			parser:    n,
+			logger:    n.logger,
 		}
 		stats, err = task.execute(callback)
 		return err
@@ -83,6 +85,76 @@ func (n *Notebook) IndexWithCallback(opts NoteIndexOpts, callback func(change pa
 		err = fmt.Errorf("indexing: %w", err)
 	}
 	return
+}
+
+// RefreshNote indexes the note at the given path with its current content.
+// The note is added to the index if it was not indexed yet, and dropped from
+// it if the file is gone.
+//
+// It is used to keep the index up to date for the notes that zk writes itself,
+// when the notebook is not scanned before each command.
+func (n *Notebook) RefreshNote(path string) error {
+	exists, err := n.fs.FileExists(path)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// The note was removed or renamed while it was edited.
+		return n.removeFromIndex(path)
+	}
+
+	// The path is canonicalized, so that it can be compared with the
+	// notebook path.
+	path = n.fs.Canonical(path)
+
+	relPath, err := n.RelPath(path)
+	if err != nil {
+		return err
+	}
+
+	// The note is not indexed if it is excluded, or if it is not a note.
+	reason, err := n.Config.ignoreReason(relPath, false)
+	if err != nil {
+		return err
+	}
+	if reason != "" {
+		return nil
+	}
+
+	note, err := n.ParseNoteAt(path)
+	if err != nil {
+		return err
+	}
+	if note == nil {
+		return nil
+	}
+
+	return n.index.Commit(func(index NoteIndex) error {
+		if err := index.Update(*note); err != nil {
+			if !errors.Is(err, ErrNoteNotIndexed) {
+				return err
+			}
+			// The note is not in the index yet.
+			_, err := index.Add(*note, true)
+			return err
+		}
+		return nil
+	})
+}
+
+// removeFromIndex drops the note at the given path from the index.
+func (n *Notebook) removeFromIndex(path string) error {
+	relPath, err := n.RelPath(path)
+	if err != nil {
+		// The path is not inside the notebook: there is nothing to remove.
+		return nil
+	}
+	return n.index.Commit(func(index NoteIndex) error {
+		if err := index.Remove(relPath); err != nil && !errors.Is(err, ErrNoteNotIndexed) {
+			return err
+		}
+		return nil
+	})
 }
 
 // NewNoteOpts holds the options used to create a new note in a Notebook.
