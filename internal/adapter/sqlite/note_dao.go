@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -170,7 +169,7 @@ func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
 		return 0, err
 	}
 	if !id.IsValid() {
-		return 0, errors.New("note not found in the index")
+		return 0, core.ErrNoteNotIndexed
 	}
 
 	metadata := d.metadataToJSON(note)
@@ -199,11 +198,21 @@ func (d *NoteDAO) Remove(path string) error {
 		return err
 	}
 	if !id.IsValid() {
-		return errors.New("note not found in the index")
+		return core.ErrNoteNotIndexed
 	}
 
 	_, err = d.removeStmt.Exec(id)
 	return err
+}
+
+// IsEmpty returns whether the index contains any note.
+func (d *NoteDAO) IsEmpty() (bool, error) {
+	row := d.tx.QueryRow("SELECT EXISTS(SELECT 1 FROM notes)")
+	var exists bool
+	if err := row.Scan(&exists); err != nil {
+		return false, fmt.Errorf("failed to check if the index is empty: %w", err)
+	}
+	return !exists, nil
 }
 
 func (d *NoteDAO) FindIDByPath(path string) (core.NoteID, error) {

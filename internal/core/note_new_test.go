@@ -507,6 +507,7 @@ func (m *noteIndexAddMock) FindCollections(kind CollectionKind, sorters []Collec
 	return nil, nil
 }
 func (m *noteIndexAddMock) IndexedPaths() (<-chan paths.Metadata, error)        { return nil, nil }
+func (m *noteIndexAddMock) IsEmpty() (bool, error)                              { return true, nil }
 func (m *noteIndexAddMock) Add(note Note, fixLinks bool) (NoteID, error)        { return m.ReturnedID, nil }
 func (m *noteIndexAddMock) Update(note Note) error                              { return nil }
 func (m *noteIndexAddMock) Remove(path string) error                            { return nil }

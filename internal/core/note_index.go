@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -10,6 +11,9 @@ import (
 	"github.com/zk-org/zk/internal/util/paths"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 )
+
+// ErrNoteNotIndexed is returned when a note is not in the index.
+var ErrNoteNotIndexed = errors.New("note not found in the index")
 
 // NoteIndex persists and grants access to indexed information about the notes.
 type NoteIndex interface {
@@ -27,6 +31,8 @@ type NoteIndex interface {
 
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)
+	// IsEmpty returns whether the index contains any note.
+	IsEmpty() (bool, error)
 	// Add indexes a new note.
 	Add(note Note, fixLinks bool) (NoteID, error)
 	// Update resets the metadata of an already indexed note.
@@ -77,17 +83,21 @@ type NoteIndexOpts struct {
 	// When true, existing notes will be reindexed.
 	Force   bool
 	Verbose bool
+	// When true, the index is refreshed before a command, as opposed to an
+	// explicit `zk index`.
+	Automatic bool
 }
 
 // indexTask indexes the notes in the given directory with the NoteIndex.
 type indexTask struct {
-	path    string
-	config  Config
-	force   bool
-	verbose bool
-	index   NoteIndex
-	parser  NoteParser
-	logger  util.Logger
+	path      string
+	config    Config
+	force     bool
+	verbose   bool
+	automatic bool
+	index     NoteIndex
+	parser    NoteParser
+	logger    util.Logger
 }
 
 func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexingStats, error) {
@@ -114,47 +124,40 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	ignoredFiles := []IgnoredFile{}
 
 	shouldIgnorePath := func(path string, isDir bool) (bool, error) {
-		notifyIgnored := func(reason string) {
-			ignoredFiles = append(ignoredFiles, IgnoredFile{
-				Path:   path,
-				Reason: reason,
-			})
-		}
-
-		group, err := t.config.GroupConfigForPath(path)
+		reason, err := t.config.ignoreReason(path, isDir)
 		if err != nil {
 			return true, err
 		}
-
-		// The note extension only applies to files. A directory is matched
-		// against the exclude globs alone, so that an excluded directory can be
-		// pruned from the walk instead of being traversed file by file.
-		if !isDir && filepath.Ext(path) != "."+group.Note.Extension {
-			notifyIgnored("expected extension \"" + group.Note.Extension + "\"")
-			return true, nil
+		if reason == "" {
+			return false, nil
 		}
-
-		for _, ignoreGlob := range group.ExcludeGlobs() {
-			var matches bool
-			var err error
-			if isDir {
-				matches, err = globPrunesDir(ignoreGlob, path)
-			} else {
-				matches, err = doublestar.PathMatch(ignoreGlob, path)
-			}
-			if err != nil {
-				return true, fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
-			}
-			if matches {
-				notifyIgnored("matched exclude glob \"" + ignoreGlob + "\"")
-				return true, nil
-			}
-		}
-
-		return false, nil
+		ignoredFiles = append(ignoredFiles, IgnoredFile{
+			Path:   path,
+			Reason: reason,
+		})
+		return true, nil
 	}
 
 	notebookPath := &NotebookPath{Path: t.path}
+
+	// Walking the notebook is the only way to detect the notes that were added,
+	// renamed or removed outside of zk, but it is expensive on large or
+	// network-mounted notebooks. With `notebook.scan` disabled the notebook is
+	// left alone: the index is then only refreshed by an explicit `zk index`, or
+	// by zk itself when it writes a note.
+	//
+	// A notebook that was never indexed is still scanned once, otherwise it
+	// would stay empty, and so is a notebook that needs to be reindexed.
+	if t.automatic && !t.config.Notebook.Scan && !needsReindexing {
+		empty, err := t.index.IsEmpty()
+		if err != nil {
+			return stats, fmt.Errorf("checking if the index is empty failed: %w", err)
+		}
+		if !empty {
+			return stats, nil
+		}
+	}
+
 	source := paths.Walk(t.path, t.logger, notebookPath.Filename(), shouldIgnorePath)
 
 	target, err := t.index.IndexedPaths()

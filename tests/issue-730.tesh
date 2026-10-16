@@ -1,0 +1,82 @@
+# The notebook is scanned before each command, to detect the notes that were
+# added, changed or removed outside of zk. The scan walks the whole notebook
+# directory, which is expensive on a large or network-mounted notebook.
+# https://github.com/zk-org/zk/issues/730
+
+$ cd index
+
+# A note added outside of zk is picked up.
+$ touch new.md
+$ zk list -qfpath
+>new.md
+>banana.md
+>eggplant/clementine.md
+>litchee.md
+
+# With `notebook.scan` disabled, the notebook is left alone: the note added
+# outside of zk is not picked up anymore.
+$ printf "\n[notebook]\nscan = false\n" >> .zk/config.toml
+$ printf "# Orange\n" > orange.md
+$ zk list -qfpath
+>new.md
+>banana.md
+>eggplant/clementine.md
+>litchee.md
+
+# An explicit `zk index` still scans the notebook.
+$ zk index
+>Indexed 5 notes in 0s
+>  + 1 added
+>  ~ 0 modified
+>  - 0 removed
+$ zk list -qfpath
+>new.md
+>banana.md
+>eggplant/clementine.md
+>litchee.md
+>orange.md
+
+# A note changed outside of zk is not picked up either, and a note deleted
+# outside of zk stays in the index.
+$ echo "More" >> banana.md && rm litchee.md
+$ zk list -qfpath
+>new.md
+>banana.md
+>eggplant/clementine.md
+>litchee.md
+>orange.md
+
+# Until the notebook is indexed again.
+$ zk index
+>Indexed 4 notes in 0s
+>  + 0 added
+>  ~ 1 modified
+>  - 1 removed
+$ zk list -qfpath
+>new.md
+>banana.md
+>eggplant/clementine.md
+>orange.md
+
+# The notes zk writes itself are indexed, even when the notebook is not
+# scanned.
+$ printf '#!/bin/sh\necho "# Changed" >> "$1"\n' > editor.sh && chmod +x editor.sh
+$ EDITOR="$PWD/editor.sh" zk edit banana.md
+$ zk list -qfpath -m Changed
+>banana.md
+
+# A note removed in the editor is dropped from the index.
+$ printf '#!/bin/sh\nrm "$1"\n' > rm-editor.sh && chmod +x rm-editor.sh
+$ EDITOR="$PWD/rm-editor.sh" zk edit banana.md
+$ zk list -qfpath
+>new.md
+>eggplant/clementine.md
+>orange.md
+
+# A notebook that was never indexed is scanned once, so that it is not left
+# empty.
+$ rm .zk/notebook.db
+$ zk list -qfpath
+>new.md
+>eggplant/clementine.md
+>orange.md
