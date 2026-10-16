@@ -1,0 +1,72 @@
+$ cd index
+$ printf "\n[notebook]\nindex = \"mtime\"\n" >> .zk/config.toml
+
+# The first index walks the notebook, since the index is still empty.
+$ zk index
+>Indexed 3 notes in 0s
+>  + 3 added
+>  ~ 0 modified
+>  - 0 removed
+
+# A note added outside of zk is not picked up.
+$ touch new.md && zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# A note modified outside of zk is.
+$ echo "More" >> banana.md && zk index
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 1 modified
+>  - 0 removed
+
+# So is a note deleted outside of zk.
+$ rm banana.md && zk index
+>Indexed 2 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 1 removed
+
+# A note renamed outside of zk looks deleted, since its new path is not indexed.
+$ mv litchee.md lychee.md && zk index
+>Indexed 1 note in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 1 removed
+
+# --force walks the notebook again and finds it.
+$ zk index --force
+>Indexed 3 notes in 0s
+>  + 2 added
+>  ~ 1 modified
+>  - 0 removed
+
+# Verbose mode reports which strategy is used.
+$ zk index --verbose
+>checking the modification time of the indexed notes
+>- unchanged eggplant/clementine.md
+>- unchanged lychee.md
+>- unchanged new.md
+>
+>Indexed 3 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 0 removed
+
+# A note named like the beginning of a directory is not dropped when a note
+# inside that directory is deleted.
+$ mkdir -p figs && printf "# File\n" > figs.md && printf "# Setup\n" > figs/setup.md && zk index --force --quiet
+$ rm figs/setup.md && zk index --verbose
+>checking the modification time of the indexed notes
+>- unchanged eggplant/clementine.md
+>- unchanged figs.md
+>- removed figs/setup.md
+>- unchanged lychee.md
+>- unchanged new.md
+>
+>Indexed 4 notes in 0s
+>  + 0 added
+>  ~ 0 modified
+>  - 1 removed

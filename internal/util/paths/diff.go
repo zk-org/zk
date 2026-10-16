@@ -55,33 +55,32 @@ func (k DiffKind) Symbol() string {
 	}
 }
 
-// Diff compares two sources of Metadata and report the file changes, using the
-// file modification date.
+// Diff compares a source of Metadata with the indexed target and reports the
+// file changes, using the file modification date.
 //
 // Returns the number of files in the source.
 //
 // Warning: The Metadata have to be sorted by their Path for the diffing to
 // work properly.
-func Diff(source, target <-chan Metadata, forceModified bool, callback func(DiffChange) error) (int, error) {
+func Diff(source <-chan Metadata, target []Metadata, forceModified bool, callback func(DiffChange) error) (int, error) {
 	var err error
-	var sourceFile, targetFile Metadata
-	var sourceOpened, targetOpened = true, true
+	var sourceFile Metadata
+	var sourceOpened = true
+	targetIndex := 0
 	sourceCount := 0
 	pair := diffPair{}
 
-	for err == nil && (sourceOpened || targetOpened) {
-		if pair.source == nil {
+	for err == nil && (sourceOpened || targetIndex < len(target)) {
+		if pair.source == nil && sourceOpened {
 			sourceFile, sourceOpened = <-source
 			if sourceOpened {
 				sourceCount += 1
 				pair.source = &sourceFile
 			}
 		}
-		if pair.target == nil {
-			targetFile, targetOpened = <-target
-			if targetOpened {
-				pair.target = &targetFile
-			}
+		if pair.target == nil && targetIndex < len(target) {
+			pair.target = &target[targetIndex]
+			targetIndex += 1
 		}
 		change := pair.diff(forceModified)
 		if change != nil {

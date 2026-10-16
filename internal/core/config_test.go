@@ -15,7 +15,8 @@ func TestParseDefaultConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir:   opt.NullString,
+			Index: NotebookIndexWalk,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
@@ -159,7 +160,8 @@ func TestParseComplete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NewString("~/notebook"),
+			Dir:   opt.NewString("~/notebook"),
+			Index: NotebookIndexWalk,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
@@ -373,6 +375,9 @@ func TestParseMergesGroupConfig(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Index: NotebookIndexWalk,
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "root-filename",
 			Extension:        "txt",
@@ -480,6 +485,27 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 	assert.Equal(t, conf.Tool.Pager, opt.NewString(""))
 	assert.Equal(t, conf.Tool.FzfPreview.IsNull(), false)
 	assert.Equal(t, conf.Tool.FzfPreview, opt.NewString(""))
+}
+
+func TestParseNotebookIndex(t *testing.T) {
+	conf, err := ParseConfig([]byte(`
+		[notebook]
+		index = "mtime"
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Notebook.Index, NotebookIndexMtime)
+
+	conf, err = ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Notebook.Index, NotebookIndexWalk)
+
+	_, err = ParseConfig([]byte(`
+		[notebook]
+		index = "sometimes"
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.NotNil(t, err)
+	assert.Err(t, err, `notebook.index should be either "walk" or "mtime", got "sometimes"`)
 }
 
 func TestParseNotebook(t *testing.T) {

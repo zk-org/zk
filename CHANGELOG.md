@@ -7,6 +7,13 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
+### Added
+
+- `notebook.index = "mtime"` refreshes the note index by checking the
+  modification time of the notes already indexed instead of walking the whole
+  notebook directory, which is much faster on large or network-mounted notebooks
+  (by @paoValle, #788)
+
 ...
 
 ## 0.15.7
