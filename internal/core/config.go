@@ -33,7 +33,8 @@ type Config struct {
 func NewDefaultConfig() Config {
 	return Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir:   opt.NullString,
+			Index: NotebookIndexWalk,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
@@ -252,9 +253,23 @@ type MissingBacklinkConfig struct {
 	Position LSPDiagnosticPosition
 }
 
+// Strategies to refresh the note index before running a command.
+const (
+	// NotebookIndexWalk walks the notebook directory to detect notes added,
+	// modified, removed or renamed outside of zk.
+	NotebookIndexWalk = "walk"
+	// NotebookIndexMtime only checks the modification time of the notes already
+	// indexed, which is much faster on large or network-mounted notebooks but
+	// misses notes added, renamed or removed outside of zk.
+	NotebookIndexMtime = "mtime"
+)
+
 // NotebookConfig holds configuration about the default notebook
 type NotebookConfig struct {
 	Dir opt.String
+	// Strategy used to refresh the note index: NotebookIndexWalk (default) or
+	// NotebookIndexMtime.
+	Index string
 }
 
 // NoteConfig holds the user configuration used when generating new notes.
@@ -348,6 +363,17 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 			config.Notebook.Dir = opt.NewNotEmptyString(notebook.Dir)
 		} else {
 			return config, fmt.Errorf("notebook.dir should not be set on local configuration")
+		}
+	}
+	if notebook.Index != "" {
+		switch notebook.Index {
+		case NotebookIndexWalk, NotebookIndexMtime:
+			config.Notebook.Index = notebook.Index
+		default:
+			return config, fmt.Errorf(
+				"notebook.index should be either \"%v\" or \"%v\", got \"%v\"",
+				NotebookIndexWalk, NotebookIndexMtime, notebook.Index,
+			)
 		}
 	}
 
@@ -581,7 +607,8 @@ type tomlConfig struct {
 }
 
 type tomlNotebookConfig struct {
-	Dir string
+	Dir   string
+	Index string
 }
 
 type tomlNoteConfig struct {

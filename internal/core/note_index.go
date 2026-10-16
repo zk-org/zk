@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -155,18 +156,36 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	}
 
 	notebookPath := &NotebookPath{Path: t.path}
-	source := paths.Walk(t.path, t.logger, notebookPath.Filename(), shouldIgnorePath)
 
-	target, err := t.index.IndexedPaths()
+	indexedPaths, err := t.index.IndexedPaths()
 	if err != nil {
 		return stats, fmt.Errorf("finding indexed paths failed: %w", err)
+	}
+	indexed := paths.Collect(indexedPaths)
+
+	// Walking the notebook is the only way to detect notes added, renamed or
+	// removed outside of zk, but it is expensive on large or network-mounted
+	// notebooks, where the index can be refreshed by checking the notes already
+	// indexed instead (see NotebookConfig.Index).
+	var source <-chan paths.Metadata
+	if t.config.Notebook.Index == NotebookIndexMtime && !force && len(indexed) > 0 {
+		print("checking the modification time of the indexed notes")
+		// The source is a subset of the indexed notes, so both have to be sorted
+		// the same way for Diff to pair them up: the index returns the notes
+		// ordered by their sortable path, which differs from the path
+		// comparison Diff uses when a note is named like the beginning of a
+		// directory (docs.md beside docs/).
+		sort.Slice(indexed, func(i, j int) bool { return indexed[i].Path < indexed[j].Path })
+		source = paths.Stat(t.path, indexed, t.logger)
+	} else {
+		source = paths.Walk(t.path, t.logger, notebookPath.Filename(), shouldIgnorePath)
 	}
 
 	addedNotes := make([]NoteID, 0)
 	addedPaths := make([]string, 0)
 
 	// FIXME: Use the FS?
-	count, err := paths.Diff(source, target, force, func(change paths.DiffChange) error {
+	count, err := paths.Diff(source, indexed, force, func(change paths.DiffChange) error {
 		callback(change)
 		print("- " + change.Kind.String() + " " + change.Path)
 		absPath := filepath.Join(t.path, change.Path)
