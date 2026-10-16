@@ -230,3 +230,28 @@ func assertTagExistsOrNot(t *testing.T, db *DB, shouldExist bool, tag string) {
 func assertTaggedOrNot(t *testing.T, db *DB, shouldBeTagged bool, noteID core.NoteID, tag string) {
 	assertExistOrNot(t, db, shouldBeTagged, "SELECT id FROM notes_collections WHERE note_id = ? AND collection_id IS (SELECT id FROM collections WHERE kind = 'tag' AND name = ?)", noteID, tag)
 }
+
+func TestNoteIndexIsEmpty(t *testing.T) {
+	// An empty database, without the fixtures.
+	db, err := OpenInMemory()
+	assert.Nil(t, err)
+	index := NewNoteIndex("", db, &util.NullLogger, "md")
+
+	empty, err := index.IsEmpty()
+	assert.Nil(t, err)
+	assert.Equal(t, empty, true)
+
+	_, err = index.Add(core.Note{Path: "note.md"}, false)
+	assert.Nil(t, err)
+
+	empty, err = index.IsEmpty()
+	assert.Nil(t, err)
+	assert.Equal(t, empty, false)
+
+	err = index.Remove("note.md")
+	assert.Nil(t, err)
+
+	empty, err = index.IsEmpty()
+	assert.Nil(t, err)
+	assert.Equal(t, empty, true)
+}

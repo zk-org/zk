@@ -106,6 +106,20 @@ func (ni *NoteIndex) IndexedPaths() (metadata <-chan paths.Metadata, err error) 
 	return
 }
 
+// IsEmpty implements core.NoteIndex.
+func (ni *NoteIndex) IsEmpty() (bool, error) {
+	empty := false
+	err := ni.commit(func(dao *dao) error {
+		var err error
+		empty, err = dao.notes.IsEmpty()
+		return err
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to check if the index is empty: %w", err)
+	}
+	return empty, nil
+}
+
 // Add implements core.NoteIndex.
 func (ni *NoteIndex) Add(note core.Note, fixLinks bool) (id core.NoteID, err error) {
 	err = ni.commit(func(dao *dao) error {
