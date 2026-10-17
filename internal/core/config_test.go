@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -508,6 +510,70 @@ func TestParseInheritsLSPCompletionUseAdditionalTextEdits(t *testing.T) {
 	assert.Equal(t, conf.LSP.Completion.UseAdditionalTextEdits.IsNull(), true)
 }
 
+func TestParseDoesNotMutateParentConfig(t *testing.T) {
+	parent, err := ParseConfig([]byte(`
+		[note]
+		exclude = ["x"]
+		[extra]
+		a = "1"
+		[filter]
+		f1 = "--tag f1"
+		[alias]
+		a1 = "zk list"
+		[group.g1]
+	`), "~/.config/zk/config.toml", NewDefaultConfig(), true)
+	assert.Nil(t, err)
+
+	confA, err := ParseConfig([]byte(`
+		[note]
+		exclude = ["y"]
+		[extra]
+		b = "2"
+		[filter]
+		f2 = "--tag f2"
+		[alias]
+		a2 = "zk edit"
+		[group.g2]
+	`), ".zk/config.toml", parent, false)
+	assert.Nil(t, err)
+	assert.Equal(t, confA.Note.Exclude, []string{"x", "y"})
+	assert.Equal(t, confA.Extra, map[string]string{"a": "1", "b": "2"})
+	assert.Equal(t, slices.Sorted(maps.Keys(confA.Groups)), []string{"g1", "g2"})
+
+	assertParentEntriesOnly := func(conf Config) {
+		assert.Equal(t, conf.Note.Exclude, []string{"x"})
+		assert.Equal(t, conf.Extra, map[string]string{"a": "1"})
+		assert.Equal(t, conf.Filters, map[string]string{"f1": "--tag f1"})
+		assert.Equal(t, conf.Aliases, map[string]string{"a1": "zk list"})
+		assert.Equal(t, slices.Sorted(maps.Keys(conf.Groups)), []string{"g1"})
+	}
+	assertParentEntriesOnly(parent)
+
+	confB, err := ParseConfig([]byte(""), ".zk/config.toml", parent, false)
+	assert.Nil(t, err)
+	assertParentEntriesOnly(confB)
+}
+
+func TestParseDoesNotShareNoteExcludeBetweenNotebooks(t *testing.T) {
+	parent := NewDefaultConfig()
+	parent.Note.Exclude = append(make([]string, 0, 10), "x")
+
+	confA, err := ParseConfig([]byte(`
+		[note]
+		exclude = ["a"]
+	`), ".zk/config.toml", parent, false)
+	assert.Nil(t, err)
+
+	confB, err := ParseConfig([]byte(`
+		[note]
+		exclude = ["b"]
+	`), ".zk/config.toml", parent, false)
+	assert.Nil(t, err)
+
+	assert.Equal(t, confA.Note.Exclude, []string{"x", "a"})
+	assert.Equal(t, confB.Note.Exclude, []string{"x", "b"})
+}
+
 func TestParseNotebook(t *testing.T) {
 	toml := `
 			[notebook]
@@ -708,7 +774,7 @@ func TestGroupConfigClone(t *testing.T) {
 	clone.Note.IDOptions.Case = CaseUpper
 	clone.Note.Lang = "de"
 	clone.Note.DefaultTitle = "Ohne Titel"
-	clone.Note.Exclude = []string{"other-ignored"}
+	clone.Note.Exclude[0] = "other-ignored"
 	clone.Extra["test"] = "modified"
 
 	// Check that we didn't modify the original
@@ -731,4 +797,52 @@ func TestGroupConfigClone(t *testing.T) {
 			"hello": "world",
 		},
 	})
+}
+
+func TestConfigClone(t *testing.T) {
+	original := NewDefaultConfig()
+	original.Note.Exclude = []string{"ignored", ".git"}
+	original.Groups = map[string]GroupConfig{
+		"journal": {
+			Paths: []string{"journal"},
+			Note: NoteConfig{
+				Exclude: []string{"drafts"},
+			},
+			Extra: map[string]string{
+				"hello": "world",
+			},
+		},
+	}
+	original.Filters = map[string]string{"recents": "--sort created"}
+	original.Aliases = map[string]string{"ls": "zk list"}
+	original.Extra = map[string]string{"author": "Mickaël"}
+
+	clone := original.Clone()
+	// Check that the clone is equivalent
+	assert.Equal(t, clone, original)
+
+	clone.Note.Exclude[0] = "other-ignored"
+	clone.Groups["journal"].Note.Exclude[0] = "other-drafts"
+	clone.Groups["journal"].Extra["test"] = "modified"
+	clone.Groups["other"] = GroupConfig{}
+	clone.Filters["test"] = "modified"
+	clone.Aliases["test"] = "modified"
+	clone.Extra["test"] = "modified"
+
+	// Check that we didn't modify the original
+	assert.Equal(t, original.Note.Exclude, []string{"ignored", ".git"})
+	assert.Equal(t, original.Groups, map[string]GroupConfig{
+		"journal": {
+			Paths: []string{"journal"},
+			Note: NoteConfig{
+				Exclude: []string{"drafts"},
+			},
+			Extra: map[string]string{
+				"hello": "world",
+			},
+		},
+	})
+	assert.Equal(t, original.Filters, map[string]string{"recents": "--sort created"})
+	assert.Equal(t, original.Aliases, map[string]string{"ls": "zk list"})
+	assert.Equal(t, original.Extra, map[string]string{"author": "Mickaël"})
 }

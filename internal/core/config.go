@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -305,8 +306,26 @@ func (c GroupConfig) Clone() GroupConfig {
 	clone.Paths = make([]string, len(c.Paths))
 	copy(clone.Paths, c.Paths)
 
+	clone.Note.Exclude = slices.Clone(c.Note.Exclude)
+
 	clone.Extra = make(map[string]string)
 	maps.Copy(clone.Extra, c.Extra)
+	return clone
+}
+
+// Clone creates a copy of the Config receiver.
+func (c Config) Clone() Config {
+	clone := c
+	clone.Note.Exclude = slices.Clone(c.Note.Exclude)
+	if c.Groups != nil {
+		clone.Groups = make(map[string]GroupConfig, len(c.Groups))
+		for name, group := range c.Groups {
+			clone.Groups[name] = group.Clone()
+		}
+	}
+	clone.Filters = maps.Clone(c.Filters)
+	clone.Aliases = maps.Clone(c.Aliases)
+	clone.Extra = maps.Clone(c.Extra)
 	return clone
 }
 
@@ -333,7 +352,7 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 //
 // The parentConfig will be used to inherit default config settings.
 func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool) (Config, error) {
-	config := parentConfig
+	config := parentConfig.Clone()
 
 	var tomlConf tomlConfig
 	err := toml.Unmarshal(content, &tomlConf)
