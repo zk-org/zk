@@ -7,7 +7,11 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
-...
+### Fixed
+
+- `lsp.completion.use-additional-text-edits` set in the global config is no
+  longer ignored when the notebook config doesn't set it (by @marktsuchida,
+  #XXX)
 
 ## 0.15.7
 
