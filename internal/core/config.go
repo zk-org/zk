@@ -476,7 +476,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if lspCompl.NoteFilter != nil {
 		config.LSP.Completion.NoteFilter = opt.NewNotEmptyString(*lspCompl.NoteFilter)
 	}
-	config.LSP.Completion.UseAdditionalTextEdits = opt.NewBoolWithPtr(lspCompl.UseAdditionalTextEdits)
+	if lspCompl.UseAdditionalTextEdits != nil {
+		config.LSP.Completion.UseAdditionalTextEdits = opt.NewBool(*lspCompl.UseAdditionalTextEdits)
+	}
 
 	// LSP diagnostics
 	lspDiags := tomlConf.LSP.Diagnostics
