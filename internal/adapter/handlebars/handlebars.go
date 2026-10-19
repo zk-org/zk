@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"path/filepath"
+	"sync"
 
 	"github.com/aymerick/raymond"
 	"github.com/zk-org/zk/internal/adapter/handlebars/helpers"
@@ -12,15 +13,19 @@ import (
 	"github.com/zk-org/zk/internal/util/paths"
 )
 
+var initOnce sync.Once
+
 func Init(supportsUTF8 bool, logger util.Logger) {
-	helpers.RegisterConcat()
-	helpers.RegisterDate(logger)
-	helpers.RegisterFormatDate(logger)
-	helpers.RegisterJoin()
-	helpers.RegisterJSON(logger)
-	helpers.RegisterList(supportsUTF8)
-	helpers.RegisterPrepend(logger)
-	helpers.RegisterSubstring()
+	initOnce.Do(func() {
+		helpers.RegisterConcat()
+		helpers.RegisterDate(logger)
+		helpers.RegisterFormatDate(logger)
+		helpers.RegisterJoin()
+		helpers.RegisterJSON(logger)
+		helpers.RegisterList(supportsUTF8)
+		helpers.RegisterPrepend(logger)
+		helpers.RegisterSubstring()
+	})
 }
 
 // Template renders a parsed handlebars template.
