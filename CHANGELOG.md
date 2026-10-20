@@ -7,6 +7,16 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
+### Added
+
+- `notebook.scan = false` stops `zk` from walking the whole notebook directory
+  before each command, which is much faster on large or network-mounted
+  notebooks. The index is then only refreshed by `zk index`, or by `zk` itself
+  when it writes a note. A note added, changed or removed outside of `zk` is
+  not picked up until the next `zk index`, and a removed note stays listed
+  until then. A notebook that was never indexed, or that needs to be
+  reindexed, is still scanned (by @paoValle, #788)
+
 ### Fixed
 
 - `lsp.completion.use-additional-text-edits` set in the global config is no

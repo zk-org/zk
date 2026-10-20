@@ -33,7 +33,8 @@ type Config struct {
 func NewDefaultConfig() Config {
 	return Config{
 		Notebook: NotebookConfig{
-			Dir: opt.NullString,
+			Dir:  opt.NullString,
+			Scan: true,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
@@ -255,6 +256,10 @@ type MissingBacklinkConfig struct {
 // NotebookConfig holds configuration about the default notebook
 type NotebookConfig struct {
 	Dir opt.String
+	// Scan indicates whether the notebook is scanned before each command, to
+	// detect the notes that were added, changed or removed outside of zk.
+	// Defaults to true.
+	Scan bool
 }
 
 // NoteConfig holds the user configuration used when generating new notes.
@@ -327,6 +332,39 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 	return ParseConfig(content, path, parentConfig, isGlobal)
 }
 
+// ignoreReason returns why the given path is not indexed, or an empty string
+// when it is indexed.
+func (c Config) ignoreReason(path string, isDir bool) (string, error) {
+	group, err := c.GroupConfigForPath(path)
+	if err != nil {
+		return "", err
+	}
+
+	// The note extension only applies to files. A directory is matched
+	// against the exclude globs alone, so that an excluded directory can be
+	// pruned from the walk instead of being traversed file by file.
+	if !isDir && filepath.Ext(path) != "."+group.Note.Extension {
+		return "expected extension \"" + group.Note.Extension + "\"", nil
+	}
+
+	for _, ignoreGlob := range group.ExcludeGlobs() {
+		var matches bool
+		if isDir {
+			matches, err = globPrunesDir(ignoreGlob, path)
+		} else {
+			matches, err = doublestar.PathMatch(ignoreGlob, path)
+		}
+		if err != nil {
+			return "", fmt.Errorf("failed to match exclude glob %s to %s: %w", ignoreGlob, path, err)
+		}
+		if matches {
+			return "matched exclude glob \"" + ignoreGlob + "\"", nil
+		}
+	}
+
+	return "", nil
+}
+
 // ParseConfig creates a new Config instance from its TOML representation.
 // path is the config absolute path, from which will be derived the base path
 // for templates.
@@ -349,6 +387,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		} else {
 			return config, fmt.Errorf("notebook.dir should not be set on local configuration")
 		}
+	}
+	if notebook.Scan != nil {
+		config.Notebook.Scan = *notebook.Scan
 	}
 
 	// Note
@@ -583,7 +624,8 @@ type tomlConfig struct {
 }
 
 type tomlNotebookConfig struct {
-	Dir string
+	Dir  string
+	Scan *bool
 }
 
 type tomlNoteConfig struct {
