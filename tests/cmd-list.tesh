@@ -19,16 +19,17 @@ $ zk list --help
 >
 >Formatting
 >  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
->                           of the predefined formats.
+>                           of the predefined formats: oneline, short, medium,
+>                           long, full, json, jsonl, uri.
 >      --link               Print the zk:// URI of each note (shorthand for
 >                           --format uri).
 >      --header=STRING      Arbitrary text printed at the start of the list.
->      --footer="\n"        Arbitrary text printed at the end of the list.
->  -d, --delimiter="\n"     Print items delimited by the given separator.
->  -0, --delimiter0         Print items delimited by ASCII NUL characters. This
+>      --footer="\\n"       Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print notes delimited by the given separator.
+>  -0, --delimiter0         Print notes delimited by ASCII NUL characters. This
 >                           is useful when used in conjunction with `xargs -0`.
 >  -P, --no-pager           Do not pipe output into a pager.
->  -q, --quiet              Do not print the total number of items found.
+>  -q, --quiet              Do not print the total number of notes found.
 >
 >Filtering
 >  -i, --interactive                Select notes interactively with fzf.
@@ -61,7 +62,7 @@ $ zk list --help
 >                                   given ones.
 >      --max-distance=COUNT         Maximum distance between two linked notes.
 >  -r, --recursive                  Follow links recursively.
->      --created=DATE
+>      --created=DATE               Find notes created on the given date.
 >      --created-before=DATE        Find notes created before the given date.
 >      --created-after=DATE         Find notes created after the given date.
 >      --modified=DATE              Find notes modified on the given date.

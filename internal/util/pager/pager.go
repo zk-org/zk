@@ -25,10 +25,23 @@ type Pager struct {
 
 // PassthroughPager is a Pager writing the content directly to stdout without
 // pagination.
-var PassthroughPager = &Pager{
-	WriteCloser: os.Stdout,
-	isCloseable: false,
+var PassthroughPager = NewPassthroughPager(os.Stdout)
+
+// NewPassthroughPager returns a Pager writing the content directly to out,
+// without pagination.
+func NewPassthroughPager(out io.Writer) *Pager {
+	return &Pager{
+		WriteCloser: nopCloser{out},
+		isCloseable: false,
+	}
 }
+
+// nopCloser lets a plain writer stand in for the pager's pipe.
+type nopCloser struct {
+	io.Writer
+}
+
+func (nopCloser) Close() error { return nil }
 
 // New creates a pager.Pager to be used to write a paginated text to the terminal.
 func New(pagerCmd *string, shell string, logger util.Logger) (*Pager, error) {

@@ -33,3 +33,8 @@ jobs:
       shell: 'script --return --quiet --command "bash {0}"'
       run: make tesh
 
+    # The Kong front-end is not built by default, so build it here to keep it
+    # from drifting from the command specs it reads.
+    - name: Build the Kong front-end
+      run: make build-kong
+

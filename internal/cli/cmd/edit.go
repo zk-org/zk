@@ -2,18 +2,39 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 )
 
 // Edit opens notes matching a set of criteria with the user editor.
 type Edit struct {
-	Force bool `short:f help:"Do not confirm before editing many notes at the same time."`
+	Force bool
 	cli.Filtering
+}
+
+// EditSpec describes the `zk edit` command.
+func EditSpec(container *cli.Container) *spec.Command {
+	cmd := Edit{}
+	arg := cmd.PathArg()
+	arg.Complete = completeNotePaths(container)
+
+	flags := []spec.Flag{
+		{Name: "force", Short: "f", Target: &cmd.Force,
+			Help: "Do not confirm before editing many notes at the same time."},
+	}
+
+	return &spec.Command{
+		Name:  "edit",
+		Short: "Edit notes matching the given criteria.",
+		Group: GroupNotes,
+		Args:  []spec.Arg{arg},
+		Flags: append(flags, filteringFlags(container, &cmd.Filtering)...),
+		Run:   func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *Edit) Run(container *cli.Container) error {
@@ -86,7 +107,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		return nil
 
 	} else {
-		fmt.Fprintln(os.Stderr, "Found 0 notes.")
+		fmt.Fprintln(container.Stderr, "Found 0 notes.")
 		return nil
 	}
 }

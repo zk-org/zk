@@ -3,19 +3,43 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // Graph produces a directed graph of the notes matching a set of criteria.
 type Graph struct {
-	Format string `group:format short:f                        help:"Format of the graph among: json." enum:"json" required`
-	Quiet  bool   `group:format short:q help:"Do not print the total number of notes found."`
+	Format string
+	Quiet  bool
 	cli.Filtering
+}
+
+// GraphSpec describes the `zk graph` command.
+func GraphSpec(container *cli.Container) *spec.Command {
+	cmd := Graph{}
+	arg := cmd.PathArg()
+	arg.Complete = completeNotePaths(container)
+
+	flags := []spec.Flag{
+		{Name: "format", Short: "f", Group: spec.GroupFormat, Target: &cmd.Format,
+			Help:     "Format of the graph among: json.",
+			Required: true, OneOf: []string{"json"}, Complete: spec.Values("json")},
+		{Name: "quiet", Short: "q", Group: spec.GroupFormat, Target: &cmd.Quiet,
+			Help: "Do not print the total number of notes found."},
+	}
+
+	return &spec.Command{
+		Name:  "graph",
+		Short: "Produce a graph of the notes matching the given criteria.",
+		Group: GroupNotes,
+		Args:  []spec.Arg{arg},
+		Flags: append(flags, filteringFlags(container, &cmd.Filtering)...),
+		Run:   func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *Graph) Run(container *cli.Container) error {
@@ -62,36 +86,36 @@ func (cmd *Graph) Run(container *cli.Container) error {
 		return err
 	}
 
-	fmt.Print("{\n  \"notes\": [\n")
+	fmt.Fprint(container.Stdout, "{\n  \"notes\": [\n")
 	for i, note := range notes {
 		if i > 0 {
-			fmt.Print(",\n")
+			fmt.Fprint(container.Stdout, ",\n")
 		}
 		ft, err := format(note)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("    %s", ft)
+		fmt.Fprintf(container.Stdout, "    %s", ft)
 	}
 
-	fmt.Print("\n  ],\n  \"links\": [\n")
+	fmt.Fprint(container.Stdout, "\n  ],\n  \"links\": [\n")
 	for i, link := range links {
 		if i > 0 {
-			fmt.Print(",\n")
+			fmt.Fprint(container.Stdout, ",\n")
 		}
 		ft, err := json.Marshal(link)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("    %s", string(ft))
+		fmt.Fprintf(container.Stdout, "    %s", string(ft))
 	}
 
-	fmt.Print("\n  ]\n}\n")
+	fmt.Fprint(container.Stdout, "\n  ]\n}\n")
 
 	// FIXME; bad error check
 	if err == nil && !cmd.Quiet {
 		count := len(notes)
-		fmt.Fprintf(os.Stderr, "\n\nFound %d %s\n", count, strings.Pluralize("note", count))
+		fmt.Fprintf(container.Stderr, "\n\nFound %d %s\n", count, strings.Pluralize("note", count))
 	}
 
 	return err

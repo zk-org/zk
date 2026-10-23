@@ -7,14 +7,41 @@ import (
 
 	"github.com/zk-org/zk/internal/adapter/fzf"
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // List displays notes matching a set of criteria.
 type List struct {
 	FormatFlags
-	Link bool `group:format help:"Print the zk:// URI of each note (shorthand for --format uri)."`
+	Link bool
 	cli.Filtering
+}
+
+// ListSpec describes the `zk list` command.
+func ListSpec(container *cli.Container) *spec.Command {
+	cmd := List{}
+	arg := cmd.PathArg()
+	arg.Complete = completeNotePaths(container)
+
+	flags := cmd.FormatFlags.Spec(FormatFlagsSpec{
+		Noun:       "notes",
+		FormatHelp: "Pretty print the list using a custom template or one of the predefined formats: oneline, short, medium, long, full, json, jsonl, uri.",
+		Formats:    []string{"oneline", "short", "medium", "long", "full", "json", "jsonl", "uri", "path", "link"},
+		Extra: []spec.Flag{
+			{Name: "link", Group: spec.GroupFormat, Target: &cmd.Link,
+				Help: "Print the zk:// URI of each note (shorthand for --format uri)."},
+		},
+	})
+
+	return &spec.Command{
+		Name:  "list",
+		Short: "List notes matching the given criteria.",
+		Group: GroupNotes,
+		Args:  []spec.Arg{arg},
+		Flags: append(flags, filteringFlags(container, &cmd.Filtering)...),
+		Run:   func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *List) Run(container *cli.Container) error {
@@ -77,7 +104,7 @@ func (cmd *List) Run(container *cli.Container) error {
 		return err
 	}
 
-	cmd.FormatFlags.PrintFound(count, strings.Pluralize("note", count))
+	cmd.FormatFlags.PrintFound(container, count, strings.Pluralize("note", count))
 
 	return nil
 }

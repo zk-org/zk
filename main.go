@@ -11,64 +11,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alecthomas/kong"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/cli/cmd"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 	executil "github.com/zk-org/zk/internal/util/exec"
 	"github.com/zk-org/zk/internal/util/paths"
 )
 
 var Version = "dev"
-
-var root struct {
-	Init   cmd.Init   `cmd group:"zk" help:"Create a new notebook in the given directory."`
-	Index  cmd.Index  `cmd group:"zk" help:"Index the notes to be searchable."`
-	Config cmd.Config `cmd group:"zk" help:"List configuration parameters."`
-
-	New   cmd.New   `cmd group:"notes" help:"Create a new note in the given notebook directory."`
-	List  cmd.List  `cmd group:"notes" help:"List notes matching the given criteria."`
-	Graph cmd.Graph `cmd group:"notes" help:"Produce a graph of the notes matching the given criteria."`
-	Edit  cmd.Edit  `cmd group:"notes" help:"Edit notes matching the given criteria."`
-	Open  cmd.Open  `cmd group:"notes" help:"Open the file referenced by a zk:// URI in your editor."`
-	URI   cmd.URI   `cmd name:"uri" group:"notes" help:"Print the zk:// URI of a note."`
-	Tag   cmd.Tag   `cmd group:"notes" help:"Manage the note tags."`
-
-	NotebookDir string  `type:path placeholder:PATH help:"Turn off notebook auto-discovery and set manually the notebook where commands are run."`
-	WorkingDir  string  `short:W type:path placeholder:PATH help:"Run as if zk was started in <PATH> instead of the current working directory."`
-	NoInput     NoInput `help:"Never prompt or ask for confirmation."`
-	// ForceInput is a debugging flag overriding the default value of interaction prompts.
-	ForceInput string `hidden xor:"input"`
-	Debug      bool   `default:"0" hidden help:"Print a debug stacktrace on SIGINT."`
-	DebugStyle bool   `default:"0" hidden help:"Force styling output as XML tags."`
-
-	ShowHelp ShowHelp         `cmd hidden default:"1"`
-	LSP      cmd.LSP          `cmd hidden`
-	Version  kong.VersionFlag `hidden help:"Print zk version."`
-}
-
-// NoInput is a flag preventing any user prompt when enabled.
-type NoInput bool
-
-func (f NoInput) BeforeApply(container *cli.Container) error {
-	container.Terminal.NoInput = true
-	return nil
-}
-
-// ShowHelp is the default command run. It's equivalent to `zk --help`.
-type ShowHelp struct{}
-
-func (cmd *ShowHelp) Run(container *cli.Container) error {
-	parser, err := kong.New(&root, options(container)...)
-	if err != nil {
-		return err
-	}
-	ctx, err := parser.Parse([]string{"--help"})
-	if err != nil {
-		return err
-	}
-	return ctx.Run(container)
-}
 
 func main() {
 	args := os.Args[1:]
@@ -88,87 +39,61 @@ func main() {
 	// Run the alias or command.
 	if isAlias, err := runAlias(container, args); isAlias {
 		fatalIfError(err)
-	} else {
-		parser, err := kong.New(&root, options(container)...)
-		fatalIfError(err)
-		ctx, err := parser.Parse(args)
-		fatalIfError(err)
+		return
+	}
 
-		if root.Debug {
+	var globals cmd.Globals
+	app := cmd.App(container, &globals)
+
+	// Everything the commands share is set up here, once the front-end has
+	// read the global flags and knows which command was selected.
+	before := func(command *spec.Command) error {
+		if globals.NoInput {
+			container.Terminal.NoInput = true
+		}
+		container.Terminal.ForceInput = globals.ForceInput
+		if globals.Debug {
 			setupDebugMode()
 		}
-		if root.DebugStyle {
+		if globals.DebugStyle {
 			container.Styler.Styler = core.TagStyler
 		}
 
-		container.Terminal.ForceInput = root.ForceInput
-
-		// Index the current notebook except if the user is running the `index`
-		// command, otherwise it would hide the stats.
-		if !skipsAutoIndex(ctx.Command()) {
-			if notebook, err := container.CurrentNotebook(); err == nil {
-				index := cmd.Index{Quiet: true, Automatic: true}
-				err = index.RunWithNotebook(container, notebook)
-				ctx.FatalIfErrorf(err)
-			}
+		if command.SkipAutoIndex {
+			return nil
 		}
-
-		err = ctx.Run(container)
-		ctx.FatalIfErrorf(err)
+		// Index the current notebook, so that every command works on an
+		// up-to-date index without having to ask for it.
+		notebook, err := container.CurrentNotebook()
+		if err != nil {
+			// Not being in a notebook is reported by the command itself, if
+			// it needs one.
+			return nil
+		}
+		index := cmd.Index{Quiet: true, Automatic: true}
+		return index.RunWithNotebook(container, notebook)
 	}
+
+	fatalIfError(runFrontend(app, args, before))
 }
 
-// skipsAutoIndex returns whether the given Kong command doesn't need an
-// up-to-date notebook index.
-//
-// Kong renders a command taking positional arguments as e.g. "open <uri>", so
-// only the first word is significant.
-func skipsAutoIndex(command string) bool {
-	name, _, _ := strings.Cut(command, " ")
-	switch name {
-	// Indexing would hide the stats `index` itself prints.
-	case "index":
-		return true
-	// `open` resolves its notebook from the URI, so indexing whichever
-	// notebook we were started in would be beside the point.
-	case "open":
-		return true
-	default:
-		return false
-	}
-}
-
-func options(container *cli.Container) []kong.Option {
-	term := container.Terminal
-	return []kong.Option{
-		kong.Bind(container),
-		kong.Name("zk"),
-		kong.UsageOnError(),
-		kong.HelpOptions{
-			Compact:             true,
-			FlagsLast:           true,
-			WrapUpperBound:      100,
-			NoExpandSubcommands: true,
-		},
-		kong.Vars{
-			"version": "zk " + strings.TrimPrefix(Version, "v"),
-		},
-		kong.Groups(map[string]string{
-			"cmd":    "Commands:",
-			"filter": "Filtering",
-			"sort":   "Sorting",
-			"format": "Formatting",
-			"notes":  term.MustStyle("NOTES", core.StyleYellow, core.StyleBold) + "\n" + term.MustStyle("Edit or browse your notes", core.StyleBold),
-			"zk":     term.MustStyle("NOTEBOOK", core.StyleYellow, core.StyleBold) + "\n" + term.MustStyle("A notebook is a directory containing a collection of notes", core.StyleBold),
-		}),
-	}
-}
+// errorLeader prefixes every error zk reports.
+const errorLeader = "zk: error: "
 
 func fatalIfError(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "zk: error: %v\n", err)
-		os.Exit(1)
+	if err == nil {
+		return
 	}
+
+	// An error spanning several lines, such as one listing the values a flag
+	// accepts, is indented under the leader so that it reads as one message.
+	lines := strings.Split(err.Error(), "\n")
+	fmt.Fprintf(os.Stderr, "%s%s\n", errorLeader, lines[0])
+	for _, line := range lines[1:] {
+		fmt.Fprintf(os.Stderr, "%*s%s\n", len(errorLeader), " ", line)
+	}
+
+	os.Exit(1)
 }
 
 func setupDebugMode() {
@@ -274,8 +199,9 @@ func notebookSearchDirs(dirs cli.Dirs) ([]cli.Dirs, error) {
 // parseDirs returns the paths specified with the --notebook-dir and
 // --working-dir flags.
 //
-// We need to parse these flags before Kong, because we might need it to
-// resolve zk command aliases before parsing the CLI.
+// We need to parse these flags before the front-end does, because resolving
+// a notebook's aliases needs them and happens before the command line is
+// parsed.
 func parseDirs(args []string) (cli.Dirs, []string, error) {
 	var d cli.Dirs
 	var err error

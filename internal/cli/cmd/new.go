@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
 	"github.com/zk-org/zk/internal/util/ptr"
@@ -16,16 +16,59 @@ import (
 
 // New adds a new note to the notebook.
 type New struct {
-	Directory   string            `arg optional default:"." help:"Directory in which to create the note."`
-	Interactive bool              `short:i                  help:"Read contents from standard input."`
-	Title       string            `short:t   placeholder:TITLE help:"Title of the new note."`
-	Date        string            `          placeholder:DATE  help:"Set the current date."`
-	Group       string            `short:g   placeholder:NAME  help:"Name of the config group this note belongs to. Takes precedence over the config of the directory."`
-	Extra       map[string]string `                            help:"Extra variables passed to the templates." mapsep:","`
-	Template    string            `          placeholder:PATH  help:"Custom template used to render the note."`
-	PrintPath   bool              `short:p                     help:"Print the path of the created note instead of editing it."`
-	DryRun      bool              `short:n                     help:"Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."`
-	ID          string            `          placeholder:ID    help:"Skip id generation and use provided value."`
+	Directory   string
+	Interactive bool
+	Title       string
+	Date        string
+	Group       string
+	Extra       map[string]string
+	Template    string
+	PrintPath   bool
+	DryRun      bool
+	ID          string
+}
+
+// NewSpec describes the `zk new` command.
+func NewSpec(container *cli.Container) *spec.Command {
+	cmd := New{}
+
+	return &spec.Command{
+		Name:  "new",
+		Short: "Create a new note in the given notebook directory.",
+		Group: GroupNotes,
+		Args: []spec.Arg{
+			{
+				Name:          "directory",
+				Help:          "Directory in which to create the note.",
+				Optional:      true,
+				Default:       ".",
+				Target:        &cmd.Directory,
+				CompleteFiles: true,
+			},
+		},
+		Flags: []spec.Flag{
+			{Name: "interactive", Short: "i", Target: &cmd.Interactive,
+				Help: "Read contents from standard input."},
+			{Name: "title", Short: "t", Placeholder: "TITLE", Target: &cmd.Title,
+				Help: "Title of the new note."},
+			{Name: "date", Placeholder: "DATE", Target: &cmd.Date,
+				Help: "Set the current date."},
+			{Name: "group", Short: "g", Placeholder: "NAME", Target: &cmd.Group,
+				Help:     "Name of the config group this note belongs to. Takes precedence over the config of the directory.",
+				Complete: completeGroups(container)},
+			{Name: "extra", Target: &cmd.Extra,
+				Help: "Extra variables passed to the templates."},
+			{Name: "template", Placeholder: "PATH", Target: &cmd.Template,
+				Help: "Custom template used to render the note.", CompleteFiles: true},
+			{Name: "print-path", Short: "p", Target: &cmd.PrintPath,
+				Help: "Print the path of the created note instead of editing it."},
+			{Name: "dry-run", Short: "n", Target: &cmd.DryRun,
+				Help: "Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr."},
+			{Name: "id", Placeholder: "ID", Target: &cmd.ID,
+				Help: "Skip id generation and use provided value."},
+		},
+		Run: func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *New) Run(container *cli.Container) error {
@@ -36,7 +79,7 @@ func (cmd *New) Run(container *cli.Container) error {
 
 	var content []byte
 	if cmd.Interactive {
-		content, err = io.ReadAll(os.Stdin)
+		content, err = io.ReadAll(container.Stdin)
 		if err != nil {
 			return err
 		}
@@ -67,8 +110,8 @@ func (cmd *New) Run(container *cli.Container) error {
 			return err
 		}
 		path := filepath.Join(notebook.Path, note.Path)
-		fmt.Fprintln(os.Stderr, path)
-		fmt.Print(note.RawContent)
+		fmt.Fprintln(container.Stderr, path)
+		fmt.Fprint(container.Stdout, note.RawContent)
 		return nil
 	}
 
@@ -93,7 +136,7 @@ func (cmd *New) Run(container *cli.Container) error {
 	}
 
 	if cmd.PrintPath {
-		fmt.Printf("%+v\n", path)
+		fmt.Fprintf(container.Stdout, "%+v\n", path)
 		return nil
 	} else {
 		editor, err := container.NewNoteEditor(notebook)

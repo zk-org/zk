@@ -30,7 +30,13 @@ type Dirs struct {
 }
 
 type Container struct {
-	Version            string
+	Version string
+	// Stdout, Stderr and Stdin are where the commands write their output and
+	// read their input. They default to the process's own, and are what a
+	// front-end which is not a terminal replaces to capture them.
+	Stdout             io.Writer
+	Stderr             io.Writer
+	Stdin              io.Reader
 	Config             core.Config
 	Logger             *util.ProxyLogger
 	Styler             *core.ProxyStyler
@@ -90,6 +96,9 @@ func NewContainer(version string) (*Container, error) {
 
 	return &Container{
 		Version:        version,
+		Stdout:         os.Stdout,
+		Stderr:         os.Stderr,
+		Stdin:          os.Stdin,
 		Config:         config,
 		Logger:         logger,
 		Styler:         styler,
@@ -268,7 +277,7 @@ func (c *Container) Paginate(noPager bool, run func(out io.Writer) error) error 
 
 func (c *Container) pager(noPager bool) (*pager.Pager, error) {
 	if noPager || !c.Terminal.IsInteractive() {
-		return pager.PassthroughPager, nil
+		return pager.NewPassthroughPager(c.Stdout), nil
 	} else {
 		shell := executil.ResolveShell(c.Config.Tool.Shell)
 		return pager.New(c.Config.Tool.Pager, shell, c.Logger)

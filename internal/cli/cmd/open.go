@@ -8,12 +8,35 @@ import (
 
 	"github.com/zk-org/zk/internal/adapter/editor"
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 )
 
 // Open opens the file referenced by a zk:// URI with the user editor.
 type Open struct {
-	URI string `arg help:"zk:// URI to open, e.g. 'zk://?v=/path/to/notebook&f=note.md&l=12&c=4'."`
+	URI string
+}
+
+// OpenSpec describes the `zk open` command.
+func OpenSpec(container *cli.Container) *spec.Command {
+	cmd := Open{}
+
+	return &spec.Command{
+		Name:  "open",
+		Short: "Open the file referenced by a zk:// URI in your editor.",
+		Group: GroupNotes,
+		// The notebook is resolved from the URI, so indexing whichever
+		// notebook zk was started in would be beside the point.
+		SkipAutoIndex: true,
+		Args: []spec.Arg{
+			{
+				Name:   "uri",
+				Help:   "zk:// URI to open, e.g. 'zk://?v=/path/to/notebook&f=note.md&l=12&c=4'.",
+				Target: &cmd.URI,
+			},
+		},
+		Run: func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *Open) Run(container *cli.Container) error {

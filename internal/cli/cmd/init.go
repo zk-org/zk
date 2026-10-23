@@ -8,12 +8,36 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 )
 
 // Init creates a notebook in the given directory
 type Init struct {
-	Directory string `arg optional type:"path" default:"." help:"Directory containing the notebook."`
+	Directory string
+}
+
+// InitSpec describes the `zk init` command.
+func InitSpec(container *cli.Container) *spec.Command {
+	cmd := Init{}
+
+	return &spec.Command{
+		Name:  "init",
+		Short: "Create a new notebook in the given directory.",
+		Group: GroupNotebook,
+		Args: []spec.Arg{
+			{
+				Name:          "directory",
+				Help:          "Directory containing the notebook.",
+				Optional:      true,
+				Default:       ".",
+				Path:          true,
+				Target:        &cmd.Directory,
+				CompleteFiles: true,
+			},
+		},
+		Run: func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *Init) Run(container *cli.Container) error {
@@ -25,7 +49,7 @@ func (cmd *Init) Run(container *cli.Container) error {
 		return err
 	}
 
-	fmt.Println()
+	fmt.Fprintln(container.Stdout)
 
 	notebook, err := container.Notebooks.Init(cmd.Directory, opts)
 	if err != nil {
@@ -43,7 +67,7 @@ func (cmd *Init) Run(container *cli.Container) error {
 		path = cmd.Directory
 	}
 
-	fmt.Printf("Initialized a notebook in %v\n", path)
+	fmt.Fprintf(container.Stdout, "Initialized a notebook in %v\n", path)
 	return nil
 }
 

@@ -3,6 +3,7 @@ $ zk --help
 >Usage: zk <command>
 >
 >Commands:
+>  completion    Print a shell completion script.
 >
 >NOTEBOOK
 >  A notebook is a directory containing a collection of notes
@@ -31,3 +32,4 @@ $ zk --help
 >      --no-input             Never prompt or ask for confirmation.
 >
 >Run "zk <command> --help" for more information on a command.
+

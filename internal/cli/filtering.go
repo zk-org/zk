@@ -5,64 +5,147 @@ import (
 	"slices"
 	"time"
 
-	"github.com/alecthomas/kong"
 	"github.com/kballard/go-shellquote"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 	dateutil "github.com/zk-org/zk/internal/util/date"
 )
 
 // Filtering holds filtering options to select notes.
 type Filtering struct {
-	Path []string `kong:"group='filter',arg,optional,placeholder='PATH',help='Find notes matching the given path, including its descendants.'" json:"hrefs"`
+	Path []string `json:"hrefs"`
 
-	Interactive     bool     `kong:"group='filter',short='i',help='Select notes interactively with fzf.'" json:"-"`
-	Limit           int      `kong:"group='filter',short='n',placeholder='COUNT',help='Limit the number of notes found.'" json:"limit"`
-	Match           []string `kong:"group='filter',short='m',placeholder='QUERY',help='Terms to search for in the notes.'" json:"match"`
-	MatchStrategy   string   `kong:"group='filter',short='M',default='fts',placeholder='STRATEGY',help='Text matching strategy among: fts, re, exact.'" json:"matchStrategy"`
-	Exclude         []string `kong:"group='filter',short='x',placeholder='PATH',help='Ignore notes matching the given path, including its descendants.'" json:"excludeHrefs"`
-	Tag             []string `kong:"group='filter',short='t',help='Find notes tagged with the given tags.'" json:"tags"`
-	Mention         []string `kong:"group='filter',placeholder='PATH',help='Find notes mentioning the title of the given ones.'" json:"mention"`
-	MentionedBy     []string `kong:"group='filter',placeholder='PATH',help='Find notes whose title is mentioned in the given ones.'" json:"mentionedBy"`
-	LinkTo          []string `kong:"group='filter',short='l',placeholder='PATH',help='Find notes which are linking to the given ones.'" json:"linkTo"`
-	NoLinkTo        []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linking to the given notes.'" json:"-"`
-	LinkedBy        []string `kong:"group='filter',short='L',placeholder='PATH',help='Find notes which are linked by the given ones.'" json:"linkedBy"`
-	NoLinkedBy      []string `kong:"group='filter',placeholder='PATH',help='Find notes which are not linked by the given ones.'" json:"-"`
-	Orphan          bool     `kong:"group='filter',help='Find notes which are not linked by any other note.'" json:"orphan"`
-	Tagless         bool     `kong:"group='filter',help='Find notes which have no tags.'" json:"tagless"`
-	MissingBacklink bool     `kong:"group='filter',help='Find notes with at least one missing backlink.'" json:"missingBacklink"`
-	BrokenLinks     bool     `kong:"group='filter',help='Find notes with at least one broken internal link.'" json:"brokenLinks"`
-	Related         []string `kong:"group='filter',placeholder='PATH',help='Find notes which might be related to the given ones.'" json:"related"`
-	MaxDistance     int      `kong:"group='filter',placeholder='COUNT',help='Maximum distance between two linked notes.'" json:"maxDistance"`
-	Recursive       bool     `kong:"group='filter',short='r',help='Follow links recursively.'" json:"recursive"`
-	Created         string   `kong:"group='filter',placeholder='DATE',help:'Find notes created on the given date.'" json:"created"`
-	CreatedBefore   string   `kong:"group='filter',placeholder='DATE',help='Find notes created before the given date.'" json:"createdBefore"`
-	CreatedAfter    string   `kong:"group='filter',placeholder='DATE',help='Find notes created after the given date.'" json:"createdAfter"`
-	Modified        string   `kong:"group='filter',placeholder='DATE',help='Find notes modified on the given date.'" json:"modified"`
-	ModifiedBefore  string   `kong:"group='filter',placeholder='DATE',help='Find notes modified before the given date.'" json:"modifiedBefore"`
-	ModifiedAfter   string   `kong:"group='filter',placeholder='DATE',help='Find notes modified after the given date.'" json:"modifiedAfter"`
+	Interactive     bool     `json:"-"`
+	Limit           int      `json:"limit"`
+	Match           []string `json:"match"`
+	MatchStrategy   string   `json:"matchStrategy"`
+	Exclude         []string `json:"excludeHrefs"`
+	Tag             []string `json:"tags"`
+	Mention         []string `json:"mention"`
+	MentionedBy     []string `json:"mentionedBy"`
+	LinkTo          []string `json:"linkTo"`
+	NoLinkTo        []string `json:"-"`
+	LinkedBy        []string `json:"linkedBy"`
+	NoLinkedBy      []string `json:"-"`
+	Orphan          bool     `json:"orphan"`
+	Tagless         bool     `json:"tagless"`
+	MissingBacklink bool     `json:"missingBacklink"`
+	BrokenLinks     bool     `json:"brokenLinks"`
+	Related         []string `json:"related"`
+	MaxDistance     int      `json:"maxDistance"`
+	Recursive       bool     `json:"recursive"`
+	Created         string   `json:"created"`
+	CreatedBefore   string   `json:"createdBefore"`
+	CreatedAfter    string   `json:"createdAfter"`
+	Modified        string   `json:"modified"`
+	ModifiedBefore  string   `json:"modifiedBefore"`
+	ModifiedAfter   string   `json:"modifiedAfter"`
 
-	Sort []string `kong:"group='sort',short='s',placeholder='TERM',help='Order the notes by the given criterion.'" json:"sort"`
+	Sort []string `json:"sort"`
 
 	// Deprecated
-	ExactMatch bool `kong:"hidden,short='e'" json:"exactMatch"`
+	ExactMatch bool `json:"exactMatch"`
 }
 
-// ParseFilter parses a shell-like filtering string into Filtering.
-func ParseFilter(filter string) (Filtering, error) {
-	var parsedFilter Filtering
-	parser, err := kong.New(&parsedFilter)
-	if err != nil {
-		return parsedFilter, err
+// Flags describes the filtering options, for a front-end to present and
+// fill in. The <path> arguments are declared by each command, as positional
+// arguments.
+func (f *Filtering) Flags() []spec.Flag {
+	return []spec.Flag{
+		{Name: "interactive", Short: "i", Group: spec.GroupFilter, Target: &f.Interactive,
+			Help: "Select notes interactively with fzf."},
+		{Name: "limit", Short: "n", Group: spec.GroupFilter, Placeholder: "COUNT", Target: &f.Limit,
+			Help: "Limit the number of notes found."},
+		{Name: "match", Short: "m", Group: spec.GroupFilter, Placeholder: "QUERY", Target: &f.Match,
+			Help: "Terms to search for in the notes."},
+		{Name: "match-strategy", Short: "M", Group: spec.GroupFilter, Placeholder: "STRATEGY", Default: "fts", Target: &f.MatchStrategy,
+			Help: "Text matching strategy among: fts, re, exact."},
+		{Name: "exclude", Short: "x", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.Exclude,
+			Help: "Ignore notes matching the given path, including its descendants."},
+		{Name: "tag", Short: "t", Group: spec.GroupFilter, Target: &f.Tag,
+			Help: "Find notes tagged with the given tags."},
+		{Name: "mention", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.Mention,
+			Help: "Find notes mentioning the title of the given ones."},
+		{Name: "mentioned-by", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.MentionedBy,
+			Help: "Find notes whose title is mentioned in the given ones."},
+		{Name: "link-to", Short: "l", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.LinkTo,
+			Help: "Find notes which are linking to the given ones."},
+		{Name: "no-link-to", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.NoLinkTo,
+			Help: "Find notes which are not linking to the given notes."},
+		{Name: "linked-by", Short: "L", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.LinkedBy,
+			Help: "Find notes which are linked by the given ones."},
+		{Name: "no-linked-by", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.NoLinkedBy,
+			Help: "Find notes which are not linked by the given ones."},
+		{Name: "orphan", Group: spec.GroupFilter, Target: &f.Orphan,
+			Help: "Find notes which are not linked by any other note."},
+		{Name: "tagless", Group: spec.GroupFilter, Target: &f.Tagless,
+			Help: "Find notes which have no tags."},
+		{Name: "missing-backlink", Group: spec.GroupFilter, Target: &f.MissingBacklink,
+			Help: "Find notes with at least one missing backlink."},
+		{Name: "broken-links", Group: spec.GroupFilter, Target: &f.BrokenLinks,
+			Help: "Find notes with at least one broken internal link."},
+		{Name: "related", Group: spec.GroupFilter, Placeholder: "PATH", Target: &f.Related,
+			Help: "Find notes which might be related to the given ones."},
+		{Name: "max-distance", Group: spec.GroupFilter, Placeholder: "COUNT", Target: &f.MaxDistance,
+			Help: "Maximum distance between two linked notes."},
+		{Name: "recursive", Short: "r", Group: spec.GroupFilter, Target: &f.Recursive,
+			Help: "Follow links recursively."},
+		{Name: "created", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.Created,
+			Help: "Find notes created on the given date."},
+		{Name: "created-before", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.CreatedBefore,
+			Help: "Find notes created before the given date."},
+		{Name: "created-after", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.CreatedAfter,
+			Help: "Find notes created after the given date."},
+		{Name: "modified", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.Modified,
+			Help: "Find notes modified on the given date."},
+		{Name: "modified-before", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.ModifiedBefore,
+			Help: "Find notes modified before the given date."},
+		{Name: "modified-after", Group: spec.GroupFilter, Placeholder: "DATE", Target: &f.ModifiedAfter,
+			Help: "Find notes modified after the given date."},
+
+		{Name: "sort", Short: "s", Group: spec.GroupSort, Placeholder: "TERM", Target: &f.Sort,
+			Help: "Order the notes by the given criterion."},
+
+		// Deprecated, kept to report a helpful error.
+		{Name: "exact-match", Short: "e", Hidden: true, Target: &f.ExactMatch},
 	}
+}
+
+// PathArg describes the <path> positional arguments every filtering command
+// takes.
+func (f *Filtering) PathArg() spec.Arg {
+	return spec.Arg{
+		Name:     "path",
+		Help:     "Find notes matching the given path, including its descendants.",
+		Optional: true,
+		Variadic: true,
+		Target:   &f.Path,
+	}
+}
+
+// ParseFilter parses a named filter, defined in a notebook's configuration as
+// the command line it mimics.
+//
+// It is a variable so that a front-end can install its own parser and keep a
+// notebook's filters reading exactly like the commands it accepts.
+var ParseFilter = func(args []string) (Filtering, error) {
+	var f Filtering
+	rest, err := spec.ParseFlags(f.Flags(), args)
+	if err != nil {
+		return f, err
+	}
+	f.Path = append(f.Path, rest...)
+	return f, nil
+}
+
+// ParseFilterString parses a named filter written as a single string, splitting
+// it the way a shell would before handing it to ParseFilter.
+func ParseFilterString(filter string) (Filtering, error) {
 	args, err := shellquote.Split(filter)
 	if err != nil {
-		return parsedFilter, err
+		return Filtering{}, err
 	}
-	_, err = parser.Parse(args)
-	if err != nil {
-		return parsedFilter, err
-	}
-	return parsedFilter, nil
+	return ParseFilter(args)
 }
 
 // ExpandNamedFilters expands recursively any named filter found in the Path field.
@@ -71,7 +154,7 @@ func (f Filtering) ExpandNamedFilters(filters map[string]string, expandedFilters
 
 	for _, path := range f.Path {
 		if filter, ok := filters[path]; ok && !slices.Contains(expandedFilters, path) {
-			parsedFilter, err := ParseFilter(filter)
+			parsedFilter, err := ParseFilterString(filter)
 			if err != nil {
 				return f, fmt.Errorf("failed to expand named filter `%v`: %w", path, err)
 			}

@@ -52,7 +52,7 @@ $ zk graph --help
 >                                   given ones.
 >      --max-distance=COUNT         Maximum distance between two linked notes.
 >  -r, --recursive                  Follow links recursively.
->      --created=DATE
+>      --created=DATE               Find notes created on the given date.
 >      --created-before=DATE        Find notes created before the given date.
 >      --created-after=DATE         Find notes created after the given date.
 >      --modified=DATE              Find notes modified on the given date.
