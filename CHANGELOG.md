@@ -14,7 +14,9 @@ Format: `<description> (by @<contributor>, #<pr number>)`
   #789)
 - Settings from one notebook's config (`extra`, `filter`, `alias`, `group`,
   `note.exclude`) no longer leak into other notebooks opened by the same
-  process, such as the LSP server (by @marktsuchida, #XXX)
+  process, such as the LSP server. Extra variables passed when creating a note
+  (e.g., via the LSP `zk.new` command) no longer persist into notes created
+  later by the same process (by @marktsuchida, #XXX)
 
 ## 0.15.7
 
