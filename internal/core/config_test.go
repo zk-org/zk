@@ -554,6 +554,33 @@ func TestParseDoesNotMutateParentConfig(t *testing.T) {
 	assertParentEntriesOnly(confB)
 }
 
+func TestOpenConfigMissingFileDoesNotShareParentState(t *testing.T) {
+	parent := NewDefaultConfig()
+	parent.Note.Exclude = []string{"x"}
+	parent.Groups = map[string]GroupConfig{
+		"g1": {Paths: []string{"g1"}, Extra: map[string]string{}},
+	}
+	parent.Filters = map[string]string{"f1": "--tag f1"}
+	parent.Aliases = map[string]string{"a1": "zk list"}
+	parent.Extra = map[string]string{"a": "1"}
+
+	conf, err := OpenConfig("/notebook/.zk/config.toml", parent, newFileStorageMock("/", []string{}), false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf, parent)
+
+	conf.Note.Exclude[0] = "y"
+	conf.Groups["g2"] = GroupConfig{}
+	conf.Filters["f2"] = "--tag f2"
+	conf.Aliases["a2"] = "zk edit"
+	conf.Extra["b"] = "2"
+
+	assert.Equal(t, parent.Note.Exclude, []string{"x"})
+	assert.Equal(t, slices.Sorted(maps.Keys(parent.Groups)), []string{"g1"})
+	assert.Equal(t, parent.Filters, map[string]string{"f1": "--tag f1"})
+	assert.Equal(t, parent.Aliases, map[string]string{"a1": "zk list"})
+	assert.Equal(t, parent.Extra, map[string]string{"a": "1"})
+}
+
 func TestParseDoesNotShareNoteExcludeBetweenNotebooks(t *testing.T) {
 	parent := NewDefaultConfig()
 	parent.Note.Exclude = append(make([]string, 0, 10), "x")

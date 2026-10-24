@@ -335,12 +335,12 @@ func OpenConfig(path string, parentConfig Config, fs FileStorage, isGlobal bool)
 	// The local config is optional.
 	exists, err := fs.FileExists(path)
 	if err == nil && !exists {
-		return parentConfig, nil
+		return parentConfig.Clone(), nil
 	}
 
 	content, err := fs.Read(path)
 	if err != nil {
-		return parentConfig, fmt.Errorf("failed to open config file at %s: %w", path, err)
+		return parentConfig.Clone(), fmt.Errorf("failed to open config file at %s: %w", path, err)
 	}
 
 	return ParseConfig(content, path, parentConfig, isGlobal)
