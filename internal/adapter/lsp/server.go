@@ -547,15 +547,37 @@ func (s *Server) noteForLink(link documentLink, notebook *core.Notebook) (*Note,
 
 // noteForHref returns the Note object for the note targeted by the given HREF
 // relative to relativeToDir.
+//
+// If there's a leading slash, resolve against the notebook root first to match
+// most Markdown renderers. Fallback to the filesystem root.
 func (s *Server) noteForHref(href string, relativeToDir string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if strutil.IsURL(href) {
 		return nil, nil
+	}
+
+	if strings.HasPrefix(href, "/") || filepath.IsAbs(href) {
+		note, err := s.noteForPath(filepath.Join(notebook.Path, href), href, notebook)
+		if note != nil || err != nil {
+			return note, err
+		}
+		if !filepath.IsAbs(href) {
+			// A rooted but non-absolute path (e.g. /foo on Windows) can't be
+			// made relative to the notebook, so don't attempt the fallback.
+			return nil, nil
+		}
+		return s.noteForPath(filepath.Clean(href), href, notebook)
 	}
 
 	path := href
 	if relativeToDir != "" {
 		path = filepath.Clean(filepath.Join(relativeToDir, path))
 	}
+	return s.noteForPath(path, href, notebook)
+}
+
+// noteForPath returns the Note object for the note at the given absolute
+// filesystem path, or nil if it doesn't target a note in the notebook.
+func (s *Server) noteForPath(path string, href string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	path, err := filepath.Rel(notebook.Path, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve href: %s: %w", href, err)

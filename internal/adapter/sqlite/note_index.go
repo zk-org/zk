@@ -345,10 +345,15 @@ func (ni *NoteIndex) Remove(path string) error {
 // Commit implements core.NoteIndex.
 func (ni *NoteIndex) Commit(transaction func(idx core.NoteIndex) error) error {
 	return ni.commit(func(dao *dao) error {
+		// Carry every field over so the index handed to the transaction
+		// behaves like its receiver; a partial copy leaves zero-value fields
+		// that silently diverge from the outer index.
 		return transaction(&NoteIndex{
-			db:     ni.db,
-			dao:    dao,
-			logger: ni.logger,
+			notebookPath: ni.notebookPath,
+			db:           ni.db,
+			dao:          dao,
+			logger:       ni.logger,
+			extension:    ni.extension,
 		})
 	})
 }

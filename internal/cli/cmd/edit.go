@@ -37,6 +37,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		AlwaysFilter: true,
 		NewNoteDir:   cmd.newNoteDir(notebook),
 		NotebookDir:  notebook.Path,
+		Sorted:       len(findOpts.Sorters) > 0,
 	})
 
 	notes, err = filter.Apply(notes)
@@ -81,7 +82,10 @@ func (cmd *Edit) Run(container *cli.Container) error {
 func (cmd *Edit) newNoteDir(notebook *core.Notebook) *core.Dir {
 	switch len(cmd.Path) {
 	case 0:
-		dir := notebook.RootDir()
+		dir, err := notebook.DirAt(".")
+		if err != nil {
+			dir = notebook.RootDir()
+		}
 		return &dir
 	case 1:
 		dir, err := notebook.DirAt(cmd.Path[0])
