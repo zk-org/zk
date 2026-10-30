@@ -200,6 +200,7 @@ $ zk list -Mr -m ".+@.+"
 
 You can filter your notes by their [tags](tags.md) using `--tags` (or `-t`).
 
+Tag matching is case-insensitive for ASCII letters (including glob patterns).
 Find the notes having several tags by separating them with a comma.
 
 ```sh

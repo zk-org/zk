@@ -142,10 +142,10 @@ Once you're ready for a new relase, complete the following steps in order:
    below.
 4. Tag this commit with `git tag -a v<version>` and format the message same as
    the commit message.
-5. Push the commit and tag (`git push --all`). This will trigger the
-   [release action](.github/workflows/release.yml), which in turn calls the
-   [build-binaries action](.github/workflows/build-binaries.yml), creates a
-   _draft_ release on GitHub and attaches the built binaries.
+5. Push the commit to main, and then the tag (`git push --tags`). This will
+   trigger the [release action](.github/workflows/release.yml), which in turn
+   calls the [build-binaries action](.github/workflows/build-binaries.yml),
+   creates a _draft_ release on GitHub and attaches the built binaries.
 
 Alternatively, you can manually create a release via the GitHub interface, also
 creating a release tag. Then you would run the

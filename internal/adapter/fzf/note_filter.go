@@ -44,6 +44,9 @@ type NoteFilterOpts struct {
 	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
 	NotebookDir string
+	// Indicates whether the notes were already sorted by the caller. When they
+	// were, fzf keeps that order instead of ranking the matches by relevance.
+	Sorted bool
 }
 
 func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal, templateLoader core.TemplateLoader) *NoteFilter {
@@ -106,7 +109,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
 
 	fzf, err := New(Opts{
-		Options:    f.opts.FzfOptions.OrString(defaultOptions),
+		Options:    opt.NewNotEmptyString(f.fzfOptions()),
 		PreviewCmd: opt.NewNotEmptyString(previewCmd),
 		Padding:    2,
 		Bindings:   bindings,
@@ -166,6 +169,22 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 }
 
 var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`
+
+// fzfOptions returns the options passed to the fzf process.
+//
+// When the notes were already ordered by the caller, sorting is disabled so
+// that fzf keeps that order instead of ranking the matches by relevance.
+func (f *NoteFilter) fzfOptions() string {
+	options := f.opts.FzfOptions.OrString(defaultOptions).String()
+	if f.opts.Sorted {
+		options += " " + noSortOption
+	}
+	return options
+}
+
+// noSortOption tells fzf not to sort its input, preserving the order in which
+// the notes were sent to it.
+const noSortOption = "--no-sort"
 
 // defaultOptions are the default fzf options used when filtering notes.
 var defaultOptions = strings.Join([]string{

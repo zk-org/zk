@@ -482,6 +482,32 @@ func TestParsePreservePropertiesAllowingEmptyValues(t *testing.T) {
 	assert.Equal(t, conf.Tool.FzfPreview, opt.NewString(""))
 }
 
+func TestParseInheritsLSPCompletionUseAdditionalTextEdits(t *testing.T) {
+	global, err := ParseConfig([]byte(`
+		[lsp.completion]
+		use-additional-text-edits = true
+	`), "~/.config/zk/config.toml", NewDefaultConfig(), true)
+	assert.Nil(t, err)
+
+	conf, err := ParseConfig([]byte(`
+		[lsp.completion]
+		note-label = "x"
+	`), ".zk/config.toml", global, false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.LSP.Completion.UseAdditionalTextEdits, opt.True)
+
+	conf, err = ParseConfig([]byte(`
+		[lsp.completion]
+		use-additional-text-edits = false
+	`), ".zk/config.toml", global, false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.LSP.Completion.UseAdditionalTextEdits, opt.False)
+
+	conf, err = ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.LSP.Completion.UseAdditionalTextEdits.IsNull(), true)
+}
+
 func TestParseNotebook(t *testing.T) {
 	toml := `
 			[notebook]
