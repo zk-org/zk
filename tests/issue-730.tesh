@@ -80,3 +80,23 @@ $ zk list -qfpath
 >new.md
 >eggplant/clementine.md
 >orange.md
+
+# A successfully indexed empty notebook is not scanned again.
+$ rm new.md eggplant/clementine.md orange.md
+$ zk index -q
+$ printf "# Late\n" > late.md
+$ zk list -qfpath
+
+# An explicit index still picks up additions to an empty index.
+$ zk index -q
+$ zk list -qfpath
+>late.md
+
+# The initial scan of a fresh empty notebook is not repeated either.
+$ rm late.md .zk/notebook.db
+$ zk list -qfpath
+$ printf "# Later\n" > later.md
+$ zk list -qfpath
+$ zk index -q
+$ zk list -qfpath
+>later.md

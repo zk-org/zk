@@ -23,6 +23,12 @@ The following properties are customizable:
     outside of `zk` is not picked up until the next `zk index` — and a note
     removed outside of `zk` stays listed until then. A notebook that was never
     indexed, or that needs to be reindexed, is still scanned.
+  - With `false`, `zk new` and `zk edit` refresh edited notes when the editor
+    process exits. Use a blocking editor command (for example, `code --wait`)
+    so that your changes are saved before it exits. For nonblocking editors,
+    use the `zk` language server, which indexes documents on save, or run
+    `zk index` after saving. An editor launch alone does not keep later saves
+    indexed.
 - `dir` (string)
   - Path of the default notebook.
   - Only available in the global config file (`$ZK_CONFIG_DIR/config.toml` or `$XDG_CONFIG_HOME/zk/config.toml`).
