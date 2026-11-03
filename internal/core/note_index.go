@@ -31,8 +31,6 @@ type NoteIndex interface {
 
 	// Indexed returns the list of indexed note file metadata.
 	IndexedPaths() (<-chan paths.Metadata, error)
-	// IsEmpty returns whether the index contains any note.
-	IsEmpty() (bool, error)
 	// Add indexes a new note.
 	Add(note Note, fixLinks bool) (NoteID, error)
 	// Update resets the metadata of an already indexed note.
@@ -148,14 +146,8 @@ func (t *indexTask) execute(callback func(change paths.DiffChange)) (NoteIndexin
 	//
 	// A notebook that was never indexed is still scanned once, otherwise it
 	// would stay empty, and so is a notebook that needs to be reindexed.
-	if t.automatic && !t.config.Notebook.Scan && !needsReindexing {
-		empty, err := t.index.IsEmpty()
-		if err != nil {
-			return stats, fmt.Errorf("checking if the index is empty failed: %w", err)
-		}
-		if !empty {
-			return stats, nil
-		}
+	if t.automatic && !t.config.Notebook.Scan && !force {
+		return stats, nil
 	}
 
 	source := paths.Walk(t.path, t.logger, notebookPath.Filename(), shouldIgnorePath)

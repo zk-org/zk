@@ -205,16 +205,6 @@ func (d *NoteDAO) Remove(path string) error {
 	return err
 }
 
-// IsEmpty returns whether the index contains any note.
-func (d *NoteDAO) IsEmpty() (bool, error) {
-	row := d.tx.QueryRow("SELECT EXISTS(SELECT 1 FROM notes)")
-	var exists bool
-	if err := row.Scan(&exists); err != nil {
-		return false, fmt.Errorf("failed to check if the index is empty: %w", err)
-	}
-	return !exists, nil
-}
-
 func (d *NoteDAO) FindIDByPath(path string) (core.NoteID, error) {
 	row, err := d.findIDByPathStmt.QueryRow(path)
 	if err != nil {
