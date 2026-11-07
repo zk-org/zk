@@ -202,6 +202,7 @@ type LSPCompletionConfig struct {
 	Note                   LSPCompletionTemplates
 	NoteFilter             opt.String
 	UseAdditionalTextEdits opt.Bool
+	UseAliases             opt.Bool
 }
 
 // LSPCompletionTemplates holds the LSP completion templates for a particular
@@ -476,6 +477,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 	if lspCompl.NoteFilter != nil {
 		config.LSP.Completion.NoteFilter = opt.NewNotEmptyString(*lspCompl.NoteFilter)
 	}
+	if lspCompl.UseAliases != nil {
+		config.LSP.Completion.UseAliases = opt.NewBoolWithPtr(lspCompl.UseAliases)
+	}
 	config.LSP.Completion.UseAdditionalTextEdits = opt.NewBoolWithPtr(lspCompl.UseAdditionalTextEdits)
 
 	// LSP diagnostics
@@ -639,6 +643,7 @@ type tomlLSPConfig struct {
 		NoteFilter             *string `toml:"note-filter"`
 		NoteDetail             *string `toml:"note-detail"`
 		UseAdditionalTextEdits *bool   `toml:"use-additional-text-edits"`
+		UseAliases             *bool   `toml:"use-aliases"`
 	}
 	Diagnostics struct {
 		WikiTitle       *string                    `toml:"wiki-title"`

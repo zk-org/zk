@@ -773,6 +773,10 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 		items = append(items, item)
 
+		if notebook.Config.LSP.Completion.UseAliases.Value == nil || !*notebook.Config.LSP.Completion.UseAliases.Value {
+			continue
+		}
+
 		aliases, ok := note.Metadata["aliases"]
 		// If there's no aliases just move to the next note
 		if !ok {
