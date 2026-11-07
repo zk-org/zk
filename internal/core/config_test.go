@@ -513,6 +513,25 @@ func TestParseInheritsLSPCompletionUseAdditionalTextEdits(t *testing.T) {
 	assert.Nil(t, conf.LSP.Completion.UseAdditionalTextEdits)
 }
 
+func TestParseLSPCompletionUseAliases(t *testing.T) {
+	for _, tt := range []struct {
+		value    string
+		expected *bool
+	}{
+		{value: "true", expected: ptr.Bool(true)},
+		{value: "false", expected: ptr.Bool(false)},
+		{value: "", expected: nil},
+	} {
+		content := "[lsp.completion]"
+		if tt.value != "" {
+			content += "\nuse-aliases = " + tt.value
+		}
+		conf, err := ParseConfig([]byte(content), ".zk/config.toml", NewDefaultConfig(), false)
+		assert.Nil(t, err)
+		assert.Equal(t, tt.expected, conf.LSP.Completion.UseAliases)
+	}
+}
+
 func TestParseNotebookScan(t *testing.T) {
 	conf, err := ParseConfig([]byte(`
 		[notebook]
