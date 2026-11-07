@@ -12,6 +12,11 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 - `lsp.completion.use-additional-text-edits` set in the global config is no
   longer ignored when the notebook config doesn't set it (by @marktsuchida,
   #789)
+- Settings from one notebook's config (`extra`, `filter`, `alias`, `group`,
+  `note.exclude`) no longer leak into other notebooks opened by the same
+  process, such as the LSP server. Extra variables passed when creating a note
+  (e.g., via the LSP `zk.new` command) no longer persist into notes created
+  later by the same process (by @marktsuchida, #791)
 
 ## 0.15.7
 

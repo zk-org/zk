@@ -132,7 +132,8 @@ func (n *Notebook) NewNote(opts NewNoteOpts) (*Note, error) {
 		return nil, fmt.Errorf("new note: %w", err)
 	}
 
-	extra := config.Extra
+	extra := make(map[string]string)
+	maps.Copy(extra, config.Extra)
 	maps.Copy(extra, opts.Extra)
 
 	templates, err := n.templateLoaderFactory(config.Note.Lang)

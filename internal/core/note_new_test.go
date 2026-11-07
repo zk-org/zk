@@ -313,6 +313,48 @@ func TestNotebookNewNoteWithUnknownGroup(t *testing.T) {
 	assert.Err(t, err, "no group named `group-a` found in the config")
 }
 
+func TestNotebookNewNoteDoesNotMutateConfigExtra(t *testing.T) {
+	test := newNoteTest{
+		rootDir: "/notebook",
+		groups: map[string]GroupConfig{
+			"group-a": {
+				Paths: []string{"a-dir"},
+				Note: NoteConfig{
+					FilenameTemplate: "filename",
+					Extension:        "ext",
+					BodyTemplatePath: opt.NewString("default"),
+				},
+				Extra: map[string]string{
+					"group-extra": "e48rs",
+				},
+			},
+		},
+	}
+	test.setup()
+
+	for _, group := range []opt.String{opt.NullString, opt.NewString("group-a")} {
+		_, err := test.run(NewNoteOpts{
+			Group:  group,
+			Extra:  map[string]string{"add-extra": "ec83da"},
+			Date:   now,
+			DryRun: true,
+		})
+		assert.Nil(t, err)
+	}
+
+	_, err := test.run(NewNoteOpts{Date: now, DryRun: true})
+	assert.Nil(t, err)
+	_, err = test.run(NewNoteOpts{Group: opt.NewString("group-a"), Date: now, DryRun: true})
+	assert.Nil(t, err)
+
+	contexts := test.bodyTemplate.Contexts
+	assert.Equal(t, contexts[2].(newNoteTemplateContext).Extra, map[string]string{"conf-extra": "38srnw"})
+	assert.Equal(t, contexts[3].(newNoteTemplateContext).Extra, map[string]string{"group-extra": "e48rs"})
+
+	assert.Equal(t, test.config.Extra, map[string]string{"conf-extra": "38srnw"})
+	assert.Equal(t, test.config.Groups["group-a"].Extra, map[string]string{"group-extra": "e48rs"})
+}
+
 func TestNotebookNewNoteWithCustomTemplate(t *testing.T) {
 	test := newNoteTest{
 		rootDir: "/notebook",
