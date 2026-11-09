@@ -12,6 +12,8 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 - `lsp.completion.use-additional-text-edits` set in the global config is no
   longer ignored when the notebook config doesn't set it (by @marktsuchida,
   #789)
+- `zk list Dir/` lists the folder when a note named `Dir.md` sits next to it
+  (by @jayhemnani9910, #799)
 
 ## 0.15.7
 
