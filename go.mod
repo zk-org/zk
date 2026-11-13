@@ -24,7 +24,6 @@ require (
 	github.com/tliron/kutil v0.1.59
 	github.com/yuin/goldmark v1.8.1
 	github.com/yuin/goldmark-meta v1.1.0
-	github.com/zk-org/pretty v0.2.4
 	golang.org/x/sync v0.20.0
 	gopkg.in/djherbis/times.v1 v1.3.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -34,7 +33,6 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
