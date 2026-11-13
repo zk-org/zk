@@ -15,7 +15,8 @@ func TestParseDefaultConfig(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: nil,
+			Dir:  nil,
+			Scan: true,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}",
@@ -159,7 +160,8 @@ func TestParseComplete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
 		Notebook: NotebookConfig{
-			Dir: ptr.String("~/notebook"),
+			Dir:  ptr.String("~/notebook"),
+			Scan: true,
 		},
 		Note: NoteConfig{
 			FilenameTemplate: "{{id}}.note",
@@ -373,6 +375,9 @@ func TestParseMergesGroupConfig(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, conf, Config{
+		Notebook: NotebookConfig{
+			Scan: true,
+		},
 		Note: NoteConfig{
 			FilenameTemplate: "root-filename",
 			Extension:        "txt",
@@ -506,6 +511,20 @@ func TestParseInheritsLSPCompletionUseAdditionalTextEdits(t *testing.T) {
 	conf, err = ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig(), false)
 	assert.Nil(t, err)
 	assert.Nil(t, conf.LSP.Completion.UseAdditionalTextEdits)
+}
+
+func TestParseNotebookScan(t *testing.T) {
+	conf, err := ParseConfig([]byte(`
+		[notebook]
+		scan = false
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Notebook.Scan, false)
+
+	conf, err = ParseConfig([]byte(""), ".zk/config.toml", NewDefaultConfig(), false)
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Notebook.Scan, true)
 }
 
 func TestParseNotebook(t *testing.T) {

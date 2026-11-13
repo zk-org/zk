@@ -7,6 +7,11 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 ## Unreleased
 
+### Added
+
+- Disable full notebook scans when running regular commands
+  `notebook.scan = false` (by @paoValle, #788)
+
 ### Fixed
 
 - `lsp.completion.use-additional-text-edits` set in the global config is no
