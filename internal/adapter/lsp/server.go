@@ -592,6 +592,36 @@ func (s *Server) noteForPath(path string, href string, notebook *core.Notebook) 
 	return note, err
 }
 
+// fileExistsForLink returns whether the given link resolves to an existing
+// file on disk. Non-note files (images, attachments, etc.) should not be
+// flagged with a "not found" diagnostic.
+// https://github.com/zk-org/zk/issues/761
+func (s *Server) fileExistsForLink(link documentLink, notebook *core.Notebook) bool {
+	href := link.Href
+	if strutil.IsURL(href) {
+		return false
+	}
+
+	if strings.HasPrefix(href, "/") || filepath.IsAbs(href) {
+		exists, err := s.fs.FileExists(filepath.Join(notebook.Path, href))
+		if exists || err != nil {
+			return exists
+		}
+		if !filepath.IsAbs(href) {
+			return false
+		}
+		exists, err = s.fs.FileExists(filepath.Clean(href))
+		return err == nil && exists
+	}
+
+	path := href
+	if link.RelativeToDir != "" {
+		path = filepath.Clean(filepath.Join(link.RelativeToDir, path))
+	}
+	exists, err := s.fs.FileExists(path)
+	return err == nil && exists
+}
+
 type Note struct {
 	core.MinimalNote
 	URI protocol.DocumentUri
@@ -640,6 +670,9 @@ func (s *Server) refreshDiagnosticsOfDocument(doc *document, notify glsp.NotifyF
 			var severity protocol.DiagnosticSeverity
 			var message string
 			if target == nil {
+				if s.fileExistsForLink(link, notebook) {
+					continue
+				}
 				if diagConfig.DeadLink == core.LSPDiagnosticNone {
 					continue
 				}

@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -333,6 +334,83 @@ func TestServer_noteForHref(t *testing.T) {
 				}
 				assert.Equal(t, note.Path, tt.wantPath)
 			}
+		})
+	}
+}
+
+func TestServer_fileExistsForLink(t *testing.T) {
+	dir := t.TempDir()
+
+	err := os.WriteFile(filepath.Join(dir, "image.png"), []byte("png"), 0o644)
+	assert.Nil(t, err)
+	err = os.MkdirAll(filepath.Join(dir, "sub"), 0o755)
+	assert.Nil(t, err)
+	err = os.WriteFile(filepath.Join(dir, "sub", "doc.pdf"), []byte("pdf"), 0o644)
+	assert.Nil(t, err)
+
+	f, err := fs.NewFileStorage(dir, &util.NullLogger)
+	assert.Nil(t, err)
+
+	server := &Server{fs: f}
+	notebook := &core.Notebook{Path: dir}
+	subDir := filepath.Join(dir, "sub")
+
+	tests := []struct {
+		name          string
+		href          string
+		relativeToDir string
+		want          bool
+	}{{
+		name:          "relative link to existing file",
+		href:          "doc.pdf",
+		relativeToDir: subDir,
+		want:          true,
+	}, {
+		name:          "relative link with parent traversal",
+		href:          "../image.png",
+		relativeToDir: subDir,
+		want:          true,
+	}, {
+		name:          "relative link to missing file",
+		href:          "missing.png",
+		relativeToDir: subDir,
+		want:          false,
+	}, {
+		name:          "notebook-root path to existing file",
+		href:          "/image.png",
+		relativeToDir: subDir,
+		want:          true,
+	}, {
+		name:          "notebook-root path to missing file",
+		href:          "/missing.png",
+		relativeToDir: subDir,
+		want:          false,
+	}, {
+		name:          "filesystem absolute path to existing file",
+		href:          filepath.Join(dir, "image.png"),
+		relativeToDir: subDir,
+		want:          true,
+	}, {
+		name:          "filesystem absolute path to missing file",
+		href:          filepath.Join(dir, "missing.png"),
+		relativeToDir: subDir,
+		want:          false,
+	}, {
+		name:          "directory is not a file",
+		href:          ".",
+		relativeToDir: subDir,
+		want:          false,
+	}, {
+		name:          "URL is ignored",
+		href:          "https://example.com/image.png",
+		relativeToDir: subDir,
+		want:          false,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			link := documentLink{Href: tt.href, RelativeToDir: tt.relativeToDir}
+			assert.Equal(t, server.fileExistsForLink(link, notebook), tt.want)
 		})
 	}
 }
