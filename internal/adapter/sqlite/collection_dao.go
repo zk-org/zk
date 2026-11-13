@@ -30,31 +30,31 @@ func NewCollectionDAO(tx Transaction, logger util.Logger) *CollectionDAO {
 		logger: logger,
 
 		// Create a new collection.
-		createCollectionStmt: tx.PrepareLazy(`
+		createCollectionStmt: NewLazyStmt(tx, `
 			INSERT INTO collections (kind, name)
 			VALUES (?, ?)
 		`),
 
 		// Finds a collection's ID from its kind and name.
-		findCollectionStmt: tx.PrepareLazy(`
+		findCollectionStmt: NewLazyStmt(tx, `
 			SELECT id FROM collections
 			 WHERE kind = ? AND name = ?
 		`),
 
 		// Returns whether a note and a collection are associated.
-		findAssociationStmt: tx.PrepareLazy(`
+		findAssociationStmt: NewLazyStmt(tx, `
 			SELECT id FROM notes_collections
 			 WHERE note_id = ? AND collection_id = ?
 		`),
 
 		// Creates a new association between a note and a collection.
-		createAssociationStmt: tx.PrepareLazy(`
+		createAssociationStmt: NewLazyStmt(tx, `
 			INSERT INTO notes_collections (note_id, collection_id)
 			VALUES (?, ?)
 		`),
 
 		// Removes all associations for the given note.
-		removeAssociationsStmt: tx.PrepareLazy(`
+		removeAssociationsStmt: NewLazyStmt(tx, `
 			DELETE FROM notes_collections
 			 WHERE note_id = ?
 		`),

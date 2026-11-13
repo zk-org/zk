@@ -22,10 +22,10 @@ type MetadataDAO struct {
 func NewMetadataDAO(tx Transaction) *MetadataDAO {
 	return &MetadataDAO{
 		tx: tx,
-		getStmt: tx.PrepareLazy(`
+		getStmt: NewLazyStmt(tx, `
 			SELECT key, value FROM metadata WHERE key = ?
 		`),
-		setStmt: tx.PrepareLazy(`
+		setStmt: NewLazyStmt(tx, `
 			INSERT OR REPLACE INTO metadata(key, value)
 			VALUES (?, ?)
 		`),
