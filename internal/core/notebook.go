@@ -332,6 +332,10 @@ func (n *Notebook) RelPath(originalPath string) (string, error) {
 	if path == "." {
 		path = ""
 	}
+	// Keep the trailing slash: "Daily/" asks for the folder, not a note named Daily.
+	if path != "" && strings.HasSuffix(originalPath, string(filepath.Separator)) {
+		path += "/"
+	}
 	return path, nil
 }
 
