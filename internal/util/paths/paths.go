@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -35,10 +36,22 @@ func DirExists(path string) (bool, error) {
 	}
 }
 
+// FileExists returns whether the given path exists and is a regular file.
+func FileExists(path string) (bool, error) {
+	fi, err := fileInfo(path)
+	if err != nil {
+		return false, err
+	} else {
+		return fi != nil && (*fi).Mode().IsRegular(), nil
+	}
+}
+
 func fileInfo(path string) (*os.FileInfo, error) {
 	if fi, err := os.Stat(path); err == nil {
 		return &fi, nil
-	} else if os.IsNotExist(err) {
+	} else if os.IsNotExist(err) || errors.Is(err, syscall.ENOTDIR) {
+		// A path nested under a regular file does not exist, but os.Stat
+		// reports ENOTDIR instead of a not-exist error.
 		return nil, nil
 	} else {
 		return nil, err
@@ -61,6 +74,12 @@ func DropExt(path string) string {
 // WriteString writes the given content into a new file at the given path,
 // creating any intermediate directories if needed.
 func WriteString(path string, content string) error {
+	return WriteFile(path, []byte(content))
+}
+
+// WriteFile writes the given content into a new file at the given path,
+// creating any intermediate directories if needed.
+func WriteFile(path string, content []byte) error {
 	dir := filepath.Dir(path)
 	if dir != "." && dir != ".." {
 		err := os.MkdirAll(dir, os.ModePerm)
@@ -75,7 +94,7 @@ func WriteString(path string, content string) error {
 	}
 
 	defer f.Close()
-	_, err = f.WriteString(content)
+	_, err = f.Write(content)
 	return err
 }
 
