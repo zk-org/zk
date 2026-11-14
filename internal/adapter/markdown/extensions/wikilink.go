@@ -59,6 +59,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		openerCharCount = 0     // Number of [ encountered
 		closerCharCount = 0     // Number of ] encountered
 		endPos          = 0     // Last position of the link in the line
+		closedAtLineEnd = false // Link closed on the line's final character, so the loop never advanced past the closing brackets
 	)
 
 	appendRune := func(c rune) {
@@ -73,6 +74,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 		endPos = i
 
 		if closed {
+			closedAtLineEnd = false
 			// Supports trailing hash syntax for Neuron's Folgezettel, e.g. [[id]]#
 			if char == '#' {
 				rel = core.LinkRelationDown
@@ -112,6 +114,7 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 				closerCharCount += 1
 				if closerCharCount == openerCharCount {
 					closed = true
+					closedAtLineEnd = true
 					// Neuron's legacy [[[Folgezettel]]].
 					if closerCharCount == 3 {
 						rel = core.LinkRelationDown
@@ -135,6 +138,12 @@ func (p *wlParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) 
 
 	if !closed || len(href) == 0 {
 		return nil
+	}
+
+	if closedAtLineEnd {
+		// The closing brackets are the last characters on the line, so the
+		// loop stopped on them instead of advancing past them. Include them.
+		endPos++
 	}
 
 	block.Advance(endPos)
