@@ -11,6 +11,7 @@ Format: `<description> (by @<contributor>, #<pr number>)`
 
 - Disable full notebook scans when running regular commands
   `notebook.scan = false` (by @paoValle, #788)
+-  add alias support to lsp link completion (by @nachoxmacho, 762)
 
 ### Fixed
 
