@@ -37,6 +37,7 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		AlwaysFilter: true,
 		NewNoteDir:   cmd.newNoteDir(notebook),
 		NotebookDir:  notebook.Path,
+		Sorted:       len(findOpts.Sorters) > 0,
 	})
 
 	notes, err = filter.Apply(notes)
@@ -68,7 +69,21 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		if err != nil {
 			return err
 		}
-		return editor.Open(paths...)
+		if err := editor.Open(paths...); err != nil {
+			return err
+		}
+
+		// When the notebook is not scanned before each command, the index is
+		// not refreshed with the notes that were just edited.
+		if !notebook.Config.Notebook.Scan {
+			for _, path := range paths {
+				if err := notebook.RefreshNote(path); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
 
 	} else {
 		fmt.Fprintln(os.Stderr, "Found 0 notes.")
@@ -81,7 +96,10 @@ func (cmd *Edit) Run(container *cli.Container) error {
 func (cmd *Edit) newNoteDir(notebook *core.Notebook) *core.Dir {
 	switch len(cmd.Path) {
 	case 0:
-		dir := notebook.RootDir()
+		dir, err := notebook.DirAt(".")
+		if err != nil {
+			dir = notebook.RootDir()
+		}
 		return &dir
 	case 1:
 		dir, err := notebook.DirAt(cmd.Path[0])

@@ -3,22 +3,22 @@ package sqlite
 import (
 	"testing"
 
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
 // testDB is an utility function to create a database loaded with the default fixtures.
 func testDB(t *testing.T) *DB {
-	return testDBWithFixtures(t, opt.NewString("default"))
+	return testDBWithFixtures(t, ptr.String("default"))
 }
 
 // testDB is an utility function to create a database loaded with a set of DB fixtures.
-func testDBWithFixtures(t *testing.T, fixturesDir opt.String) *DB {
+func testDBWithFixtures(t *testing.T, fixturesDir *string) *DB {
 	db, err := OpenInMemory()
 	assert.Nil(t, err)
 
-	if !fixturesDir.IsNull() {
-		loadFixtures(t, db.db, "testdata/"+fixturesDir.String())
+	if fixturesDir != nil {
+		loadFixtures(t, db.db, "testdata/"+*fixturesDir)
 	}
 
 	return db
@@ -27,12 +27,12 @@ func testDBWithFixtures(t *testing.T, fixturesDir opt.String) *DB {
 // testTransaction is an utility function used to test a SQLite transaction to
 // the DB, which loads the default set of DB fixtures.
 func testTransaction(t *testing.T, test func(tx Transaction)) {
-	testTransactionWithFixtures(t, opt.NewString("default"), test)
+	testTransactionWithFixtures(t, ptr.String("default"), test)
 }
 
 // testTransactionWithFixtures is an utility function used to test a SQLite transaction to
 // the DB, which loads the given set of DB fixtures.
-func testTransactionWithFixtures(t *testing.T, fixturesDir opt.String, test func(tx Transaction)) {
+func testTransactionWithFixtures(t *testing.T, fixturesDir *string, test func(tx Transaction)) {
 	err := testDBWithFixtures(t, fixturesDir).WithTransaction(func(tx Transaction) error {
 		test(tx)
 		return nil

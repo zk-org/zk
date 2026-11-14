@@ -17,6 +17,9 @@ Or want to see it in action? Checkout [Shivan's](https://github.com/shivan-s)
 video,
 [_Note-taking System ALL Programmers Should Consider_](https://www.youtube.com/watch?v=UzhZb7e4l4Y).
 
+Join us on Matrix for general, support and development discussion:
+[\#zk-org:pub.solar](https://matrix.to/#/#zk-org:pub.solar).
+
 ### Highlights
 
 - [Creating notes from templates](https://zk-org.github.io/zk/notes/note-creation.html)
@@ -46,18 +49,18 @@ be released.
 ### What `zk` is not
 
 - A note editor.
-- A tool to serve your notes on the web – for this, there are some [static site solutions](docs/tips/static-sites.md).
+- A tool to serve your notes on the web – for this, there are some
+  [static site solutions](docs/tips/static-sites.md).
 
 ## Install
 
 [Check out the latest release](https://github.com/zk-org/zk/releases) for
 pre-built binaries for macOS, Linux and Windows.
 
-> [!WARNING]
-> The pre-built binaries are not code-signed. In the past Windows Defender and
-> other security tools have flagged some versions of the Windows binary as
-> malicious. Building `zk` yourself is currently the recommended workaround on
-> Windows — see [Build from scratch](#build-from-scratch). See
+> [!WARNING] The pre-built binaries are not code-signed. In the past Windows
+> Defender and other security tools have flagged some versions of the Windows
+> binary as malicious. Building `zk` yourself is currently the recommended
+> workaround on Windows — see [Build from scratch](#build-from-scratch). See
 > [#740](https://github.com/zk-org/zk/issues/740) for details.
 
 ### Homebrew
@@ -74,19 +77,25 @@ brew install --HEAD zk
 
 ### Nix
 
-`zk` is available in nixpkgs and has a [Home Manager](https://github.com/nix-community/home-manager) module.
+`zk` is available in nixpkgs and has a
+[Home Manager](https://github.com/nix-community/home-manager) module.
 
 If you want to run `zk` without permanently installing it:
+
 ```
 nix run nixpkgs#zk
 ```
 
 Or, if you want to create an ephemeral shell with `zk` available:
+
 ```
 nix shell nixpkgs#zk
 ```
 
-To permanently install `zk` on NixOS at the system level, include `nixpkgs.zk` in `environment.systemPackages` in your system configuration (`/etc/nixos/configuration.nix` by default):
+To permanently install `zk` on NixOS at the system level, include `nixpkgs.zk`
+in `environment.systemPackages` in your system configuration
+(`/etc/nixos/configuration.nix` by default):
+
 ```
 environment.systemPackages = [
   # Your other packages here
@@ -95,7 +104,11 @@ environment.systemPackages = [
 
 ```
 
-If you are using [Home Manager](https://github.com/nix-community/home-manager), instead of installing for all users on the system, you can permanently install and configure `zk` just for your user via the Home Manager module. Add this to your Home Manager configuration:
+If you are using [Home Manager](https://github.com/nix-community/home-manager),
+instead of installing for all users on the system, you can permanently install
+and configure `zk` just for your user via the Home Manager module. Add this to
+your Home Manager configuration:
+
 ```
 programs.zk.enable = true;
 
@@ -140,8 +153,8 @@ cd zk
 make build
 ```
 
-The latest state of main can be considered the stable _pre-release_ state.
-To use the absolute latest state (bugs to be expected) and to contribute:
+The latest state of main can be considered the stable _pre-release_ state. To
+use the absolute latest state (bugs to be expected) and to contribute:
 
 ```
 git checkout dev
@@ -169,12 +182,13 @@ Here you can read
 
 - [Neuron](https://github.com/srid/neuron) – a great tool to publish a
   Zettelkasten on the web
-- [Emanote](https://emanote.srid.ca/) – an improved successor to Neuron (see [Emanote configuration for zk](https://emanote.srid.ca/zk))
+- [Emanote](https://emanote.srid.ca/) – an improved successor to Neuron (see
+  [Emanote configuration for zk](https://emanote.srid.ca/zk))
 - [Weave](https://github.com/matze/weave) – another tool to publish Zettelkasten
   on the web
 - [sirupsen's zk](https://github.com/sirupsen/zk) – a collection of scripts with
   a similar purpose
 - [zk-spaced](https://github.com/matze/zk-spaced) – spaced repetition plugin for
   zk
-- [zk-graph-view](https://github.com/cyberSapoPerro/zk-graph-view) -
-interactive graph visualization plugin for zk
+- [zk-graph-view](https://github.com/cyberSapoPerro/zk-graph-view) - interactive
+  graph visualization plugin for zk

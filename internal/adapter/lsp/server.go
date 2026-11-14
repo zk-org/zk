@@ -17,8 +17,9 @@ import (
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	strutil "github.com/zk-org/zk/internal/util/strings"
+	"gopkg.in/yaml.v3"
 )
 
 // Server holds the state of the Language Server.
@@ -30,14 +31,14 @@ type Server struct {
 	templateLoader         core.TemplateLoader
 	fs                     core.FileStorage
 	logger                 util.Logger
-	useAdditionalTextEdits opt.Bool
+	useAdditionalTextEdits *bool
 }
 
 // ServerOpts holds the options to create a new Server.
 type ServerOpts struct {
 	Name           string
 	Version        string
-	LogFile        opt.String
+	LogFile        *string
 	Logger         *util.ProxyLogger
 	Notebooks      *core.NotebookStore
 	TemplateLoader core.TemplateLoader
@@ -47,9 +48,9 @@ type ServerOpts struct {
 // NewServer creates a new Server instance.
 func NewServer(opts ServerOpts) *Server {
 	fs := opts.FS
-	debug := !opts.LogFile.IsNull()
+	debug := opts.LogFile != nil
 	if debug {
-		logging.Configure(10, opts.LogFile.Value)
+		logging.Configure(10, opts.LogFile)
 	}
 
 	handler := protocol.Handler{}
@@ -68,7 +69,7 @@ func NewServer(opts ServerOpts) *Server {
 		templateLoader:         opts.TemplateLoader,
 		fs:                     fs,
 		logger:                 opts.Logger,
-		useAdditionalTextEdits: opt.NullBool,
+		useAdditionalTextEdits: nil,
 	}
 
 	var clientCapabilities protocol.ClientCapabilities
@@ -87,7 +88,7 @@ func NewServer(opts ServerOpts) *Server {
 				// Visual Studio Code doesn't seem to support inl
 				// VSCode doesn't support deleting the trigger characters with
 				// the main TextEdit. We'll use additional text edits instead.
-				server.useAdditionalTextEdits = opt.True
+				server.useAdditionalTextEdits = ptr.Bool(true)
 			}
 		}
 
@@ -185,8 +186,15 @@ func NewServer(opts ServerOpts) *Server {
 			return nil
 		}
 
-		_, err = notebook.Index(core.NoteIndexOpts{})
-		server.logger.Err(err)
+		if notebook.Config.Notebook.Scan {
+			_, err = notebook.Index(core.NoteIndexOpts{})
+			server.logger.Err(err)
+		} else {
+			// The notebook is not scanned, so the saved document is indexed
+			// instead: the notes zk knows about stay up to date.
+			err = notebook.RefreshNote(doc.Path)
+			server.logger.Err(err)
+		}
 		return nil
 	}
 
@@ -405,6 +413,8 @@ func NewServer(opts ServerOpts) *Server {
 		missingBacklinkActions := server.getMissingBacklinkCodeActions(doc, params.TextDocument.URI, params.Range)
 		actions = append(actions, missingBacklinkActions...)
 
+		actions = append(actions, server.getConvertToFrontmatterCodeAction(doc, params.TextDocument.URI, params.Range)...)
+
 		// Only add "New note" actions if range is not empty.
 		if !isRangeEmpty(params.Range) {
 			addAction := func(dir string, actionTitle string) error {
@@ -547,15 +557,37 @@ func (s *Server) noteForLink(link documentLink, notebook *core.Notebook) (*Note,
 
 // noteForHref returns the Note object for the note targeted by the given HREF
 // relative to relativeToDir.
+//
+// If there's a leading slash, resolve against the notebook root first to match
+// most Markdown renderers. Fallback to the filesystem root.
 func (s *Server) noteForHref(href string, relativeToDir string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	if strutil.IsURL(href) {
 		return nil, nil
+	}
+
+	if strings.HasPrefix(href, "/") || filepath.IsAbs(href) {
+		note, err := s.noteForPath(filepath.Join(notebook.Path, href), href, notebook)
+		if note != nil || err != nil {
+			return note, err
+		}
+		if !filepath.IsAbs(href) {
+			// A rooted but non-absolute path (e.g. /foo on Windows) can't be
+			// made relative to the notebook, so don't attempt the fallback.
+			return nil, nil
+		}
+		return s.noteForPath(filepath.Clean(href), href, notebook)
 	}
 
 	path := href
 	if relativeToDir != "" {
 		path = filepath.Clean(filepath.Join(relativeToDir, path))
 	}
+	return s.noteForPath(path, href, notebook)
+}
+
+// noteForPath returns the Note object for the note at the given absolute
+// filesystem path, or nil if it doesn't target a note in the notebook.
+func (s *Server) noteForPath(path string, href string, notebook *core.Notebook) (*core.MinimalNote, error) {
 	path, err := filepath.Rel(notebook.Path, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve href: %s: %w", href, err)
@@ -821,11 +853,11 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 func noteCompletionFindOpts(notebook *core.Notebook) (core.NoteFindOpts, error) {
 	filter := notebook.Config.LSP.Completion.NoteFilter
-	if filter.IsNull() {
+	if filter == nil {
 		return core.NoteFindOpts{}, nil
 	}
 
-	filtering, err := cli.ParseFilter(*filter.Value)
+	filtering, err := cli.ParseFilter(*filter)
 	if err != nil {
 		return core.NoteFindOpts{}, fmt.Errorf("failed to parse lsp.completion.note-filter: %w", err)
 	}
@@ -961,10 +993,13 @@ func (s *Server) newTextEditForLink(notebook *core.Notebook, note core.MinimalNo
 }
 
 func (s *Server) useAdditionalTextEditsWithNotebook(nb *core.Notebook) bool {
-	return nb.Config.LSP.Completion.UseAdditionalTextEdits.
-		Or(s.useAdditionalTextEdits).
-		OrBool(false).
-		Unwrap()
+	if v := ptr.First(
+		nb.Config.LSP.Completion.UseAdditionalTextEdits,
+		s.useAdditionalTextEdits,
+	); v != nil {
+		return *v
+	}
+	return false
 }
 
 func positionInRange(content string, rng protocol.Range, pos protocol.Position) bool {
@@ -1182,6 +1217,50 @@ func findLastSectionLine(lines []string) uint32 {
 		}
 	}
 	return lastHeadingLine
+}
+
+// getConvertToFrontmatterCodeAction returns a code action converting the note
+// title heading into a YAML frontmatter block.
+func (s *Server) getConvertToFrontmatterCodeAction(doc *document, docURI protocol.DocumentUri, requestRange protocol.Range) []protocol.CodeAction {
+	notebook, err := s.notebookOf(doc)
+	if err != nil {
+		return nil
+	}
+
+	content, err := notebook.Parser.ParseNoteContent(doc.Content)
+	if err != nil {
+		return nil
+	}
+
+	if content.HasFrontmatter || content.Title == nil || content.TitleStart == content.TitleEnd {
+		return nil
+	}
+
+	source := []byte(doc.Content)
+	lineOffsets := buildLineOffsets(source)
+	headingRange := protocol.Range{
+		Start: byteOffsetToPosition(content.TitleStart, source, lineOffsets),
+		End:   byteOffsetToPosition(content.TitleEnd, source, lineOffsets),
+	}
+	if requestRange.Start.Line != headingRange.Start.Line {
+		return nil
+	}
+
+	titleYAML, err := yaml.Marshal(map[string]string{"title": *content.Title})
+	if err != nil {
+		return nil
+	}
+	newText := "---\n" + strings.TrimSuffix(string(titleYAML), "\n") + "\n---\n\n"
+
+	return []protocol.CodeAction{{
+		Title: "Convert to frontmatter",
+		Kind:  stringPtr(protocol.CodeActionKindRefactor),
+		Edit: &protocol.WorkspaceEdit{
+			Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+				docURI: {{Range: headingRange, NewText: newText}},
+			},
+		},
+	}}
 }
 
 // getMissingBacklinkCodeActions returns code actions for adding missing backlinks.

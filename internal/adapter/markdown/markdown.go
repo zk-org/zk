@@ -17,7 +17,7 @@ import (
 	"github.com/zk-org/zk/internal/adapter/markdown/extensions"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	strutil "github.com/zk-org/zk/internal/util/strings"
 	"github.com/zk-org/zk/internal/util/yaml"
 )
@@ -91,7 +91,7 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	}
 	links = append(links, fmLinks...)
 
-	title, bodyStart, err := parseTitle(frontmatter, root, bytes)
+	title, bodyStart, titleStart, titleEnd, err := parseTitle(frontmatter, root, bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -103,18 +103,21 @@ func (p *Parser) ParseNoteContent(content string) (*core.NoteContent, error) {
 	}
 
 	return &core.NoteContent{
-		Title:    title,
-		Body:     body,
-		Lead:     parseLead(body),
-		Links:    links,
-		Tags:     tags,
-		Metadata: frontmatter.values,
+		Title:          title,
+		Body:           body,
+		Lead:           parseLead(body),
+		Links:          links,
+		Tags:           tags,
+		Metadata:       frontmatter.values,
+		TitleStart:     titleStart,
+		TitleEnd:       titleEnd,
+		HasFrontmatter: frontmatter.end > 0,
 	}, nil
 }
 
 // parseTitle extracts the note title with its node.
-func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title opt.String, bodyStart int, err error) {
-	if title = frontmatter.getString("title", "Title"); !title.IsNull() {
+func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title *string, bodyStart, titleStart, titleEnd int, err error) {
+	if title = frontmatter.getString("title", "Title"); title != nil {
 		bodyStart = frontmatter.end
 		return
 	}
@@ -136,19 +139,37 @@ func parseTitle(frontmatter frontmatter, root ast.Node, source []byte) (title op
 		return
 	}
 
-	if titleNode != nil {
-		title = opt.NewNotEmptyString(string(titleNode.Text(source)))
+	if titleNode == nil {
+		return
+	}
 
-		if lines := titleNode.Lines(); lines.Len() > 0 {
-			bodyStart = lines.At(lines.Len() - 1).Stop
-		}
+	title = ptr.NotEmptyString(string(titleNode.Text(source)))
+	if title == nil {
+		return
+	}
+
+	lines := titleNode.Lines()
+	if lines.Len() == 0 {
+		return
+	}
+	bodyStart = lines.At(lines.Len() - 1).Stop
+
+	titleStart = lines.At(0).Start
+	for titleStart > 0 && source[titleStart-1] != '\n' {
+		titleStart--
+	}
+
+	if next := nextNodeInAST(titleNode); next != nil {
+		titleEnd = next.Pos()
+	} else {
+		titleEnd = len(source)
 	}
 	return
 }
 
 // parseBody extracts the whole content after the title.
-func parseBody(startIndex int, source []byte) opt.String {
-	return opt.NewNotEmptyString(
+func parseBody(startIndex int, source []byte) *string {
+	return ptr.NotEmptyString(
 		strings.TrimSpace(
 			string(source[startIndex:]),
 		),
@@ -156,9 +177,9 @@ func parseBody(startIndex int, source []byte) opt.String {
 }
 
 // parseLead extracts the body content until the first blank line.
-func parseLead(body opt.String) opt.String {
+func parseLead(body *string) *string {
 	var lead strings.Builder
-	scanner := bufio.NewScanner(strings.NewReader(body.String()))
+	scanner := bufio.NewScanner(strings.NewReader(ptr.Value(body)))
 	for scanner.Scan() {
 		if strings.TrimSpace(scanner.Text()) == "" {
 			break
@@ -166,7 +187,7 @@ func parseLead(body opt.String) opt.String {
 		lead.WriteString(scanner.Text() + "\n")
 	}
 
-	return opt.NewNotEmptyString(strings.TrimSpace(lead.String()))
+	return ptr.NotEmptyString(strings.TrimSpace(lead.String()))
 }
 
 // parseTags extracts tags as #hashtags, :colon:tags: or from the YAML frontmatter.
@@ -180,10 +201,10 @@ func parseTags(frontmatter frontmatter, root ast.Node) ([]string, error) {
 		if tags, ok := frontmatter.getStrings(key); ok {
 			return tags
 
-		} else if tags := frontmatter.getString(key); !tags.IsNull() {
+		} else if tags := frontmatter.getString(key); tags != nil {
 			// Parse a space-separated string list
 			res := []string{}
-			for s := range strings.FieldsSeq(tags.Unwrap()) {
+			for s := range strings.FieldsSeq(*tags) {
 				s = strings.TrimSpace(s)
 				if len(s) > 0 {
 					res = append(res, s)
@@ -354,20 +375,20 @@ func parseFrontmatter(context parser.Context, source []byte) (frontmatter, error
 }
 
 // getString returns the first string value found for any of the given keys.
-func (m frontmatter) getString(keys ...string) opt.String {
+func (m frontmatter) getString(keys ...string) *string {
 	if m.values == nil {
-		return opt.NullString
+		return nil
 	}
 
 	for _, key := range keys {
 		key = strings.ToLower(key)
 		if val, ok := m.values[key]; ok {
 			if val, ok := val.(string); ok {
-				return opt.NewNotEmptyString(val)
+				return ptr.NotEmptyString(val)
 			}
 		}
 	}
-	return opt.NullString
+	return nil
 }
 
 // getStrings returns the first string list found for any of the given keys.

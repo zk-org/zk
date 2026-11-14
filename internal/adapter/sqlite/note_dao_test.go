@@ -8,8 +8,8 @@ import (
 
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -403,17 +403,36 @@ func TestNoteDAOFindTag(t *testing.T) {
 	}
 
 	test([]string{"fiction"}, []string{"log/2021-01-03.md"})
+	test([]string{"FICTION"}, []string{"log/2021-01-03.md"})
+	test([]string{"FiCtIoN"}, []string{"log/2021-01-03.md"})
 	test([]string{" adventure "}, []string{"ref/test/b.md", "log/2021-01-03.md"})
 	test([]string{"fiction", "adventure"}, []string{"log/2021-01-03.md"})
 	test([]string{"fiction|fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"FICTION|FANTASY"}, []string{"f39c8.md", "log/2021-01-03.md"})
+	test([]string{"FIC*"}, []string{"log/2021-01-03.md"})
 	test([]string{"fiction  |   fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
 	test([]string{"fiction  OR  fantasy"}, []string{"f39c8.md", "log/2021-01-03.md"})
 	test([]string{"fiction | adventure | fantasy"}, []string{"ref/test/b.md", "f39c8.md", "log/2021-01-03.md"})
 	test([]string{"fiction | history", "adventure"}, []string{"ref/test/b.md", "log/2021-01-03.md"})
 	test([]string{"fiction", "unknown"}, []string{})
 	test([]string{"-fiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+	test([]string{"-FICTION"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
 	test([]string{"NOT   fiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
 	test([]string{"NOTfiction"}, []string{"ref/test/ref.md", "ref/test/b.md", "f39c8.md", "ref/test/a.md", "log/2021-02-04.md", "index.md", "log/2021-01-04.md"})
+}
+
+func TestNoteDAOFindTagMixedCaseStored(t *testing.T) {
+	testNoteDAO(t, func(tx Transaction, dao *NoteDAO) {
+		_, err := tx.Exec("UPDATE collections SET name = 'FiCtIoN' WHERE kind = 'tag' AND name = 'fiction'")
+		assert.Nil(t, err)
+
+		for _, tag := range []string{"fiction", "FICTION", "fic*"} {
+			matches, err := dao.Find(core.NoteFindOpts{Tags: []string{tag}})
+			assert.Nil(t, err)
+			assert.Equal(t, len(matches), 1)
+			assert.Equal(t, matches[0].Path, "log/2021-01-03.md")
+		}
+	})
 }
 
 func TestNoteDAOFindMatch(t *testing.T) {
@@ -1186,7 +1205,7 @@ func testNoteDAO(t *testing.T, callback func(tx Transaction, dao *NoteDAO)) {
 }
 
 func testNoteDAOWithFixtures(t *testing.T, fixtures string, callback func(tx Transaction, dao *NoteDAO)) {
-	testTransactionWithFixtures(t, opt.NewNotEmptyString(fixtures), func(tx Transaction) {
+	testTransactionWithFixtures(t, ptr.NotEmptyString(fixtures), func(tx Transaction) {
 		callback(tx, NewNoteDAO(tx, &util.NullLogger, "md"))
 	})
 }

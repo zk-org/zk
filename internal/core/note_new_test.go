@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/zk-org/zk/internal/util"
-	"github.com/zk-org/zk/internal/util/opt"
 	"github.com/zk-org/zk/internal/util/paths"
+	"github.com/zk-org/zk/internal/util/ptr"
 	"github.com/zk-org/zk/internal/util/test/assert"
 )
 
@@ -18,7 +18,7 @@ func TestNotebookNewNote(t *testing.T) {
 	test.setup()
 
 	note, err := test.run(NewNoteOpts{
-		Title:   opt.NewString("Note title"),
+		Title:   ptr.String("Note title"),
 		Content: "Note content",
 		Extra: map[string]string{
 			"add-extra": "ec83da",
@@ -94,7 +94,7 @@ func TestNotebookNewNoteInUnknownDir(t *testing.T) {
 	test.setup()
 
 	_, err := test.run(NewNoteOpts{
-		Directory: opt.NewString("a-dir"),
+		Directory: ptr.String("a-dir"),
 	})
 
 	assert.Err(t, err, "a-dir: directory not found")
@@ -108,8 +108,8 @@ func TestNotebookNewNoteInDir(t *testing.T) {
 	test.setup()
 
 	note, err := test.run(NewNoteOpts{
-		Title:     opt.NewString("Note title"),
-		Directory: opt.NewString("a-dir"),
+		Title:     ptr.String("Note title"),
+		Directory: ptr.String("a-dir"),
 		Date:      now,
 	})
 
@@ -156,7 +156,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 		Note: NoteConfig{
 			DefaultTitle:     "Group default title",
 			FilenameTemplate: "group-filename",
-			BodyTemplatePath: opt.NewString("group-body"),
+			BodyTemplatePath: ptr.String("group-body"),
 			Extension:        "group-ext",
 			Lang:             "de",
 			IDOptions: IDOptions{
@@ -183,7 +183,7 @@ func TestNotebookNewNoteInDirWithGroup(t *testing.T) {
 	bodyTemplate := test.templateLoader.SpyFile("group-body", "group template body")
 
 	note, err := test.run(NewNoteOpts{
-		Directory: opt.NewString("a-dir"),
+		Directory: ptr.String("a-dir"),
 		Date:      now,
 	})
 
@@ -231,7 +231,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 		Note: NoteConfig{
 			DefaultTitle:     "Group default title",
 			FilenameTemplate: "group-filename",
-			BodyTemplatePath: opt.NewString("group-body"),
+			BodyTemplatePath: ptr.String("group-body"),
 			Extension:        "group-ext",
 			Lang:             "de",
 			IDOptions: IDOptions{
@@ -257,7 +257,7 @@ func TestNotebookNewNoteWithGroup(t *testing.T) {
 	bodyTemplate := test.templateLoader.SpyFile("group-body", "group template body")
 
 	note, err := test.run(NewNoteOpts{
-		Group: opt.NewString("group-a"),
+		Group: ptr.String("group-a"),
 		Date:  now,
 	})
 
@@ -306,7 +306,7 @@ func TestNotebookNewNoteWithUnknownGroup(t *testing.T) {
 	test.setup()
 
 	_, err := test.run(NewNoteOpts{
-		Group: opt.NewString("group-a"),
+		Group: ptr.String("group-a"),
 		Date:  now,
 	})
 
@@ -321,7 +321,7 @@ func TestNotebookNewNoteWithCustomTemplate(t *testing.T) {
 	test.templateLoader.SpyFile("custom-body", "custom body template")
 
 	note, err := test.run(NewNoteOpts{
-		Template: opt.NewString("custom-body"),
+		Template: ptr.String("custom-body"),
 		Date:     now,
 	})
 
@@ -449,7 +449,7 @@ func (t *newNoteTest) setup() {
 		Note: NoteConfig{
 			FilenameTemplate: "filename",
 			Extension:        "ext",
-			BodyTemplatePath: opt.NewString("default"),
+			BodyTemplatePath: ptr.String("default"),
 			Lang:             "fr",
 			DefaultTitle:     "Titre par défaut",
 			IDOptions: IDOptions{

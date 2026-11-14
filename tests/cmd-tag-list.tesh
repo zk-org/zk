@@ -16,14 +16,14 @@ $ zk tag list --help
 >
 >Formatting
 >  -f, --format=TEMPLATE    Pretty print the list using a custom template or one
->                           of the predefined formats: name, full, json, jsonl.
+>                           of the predefined formats.
 >      --header=STRING      Arbitrary text printed at the start of the list.
->      --footer="\\n"       Arbitrary text printed at the end of the list.
->  -d, --delimiter="\n"     Print tags delimited by the given separator.
->  -0, --delimiter0         Print tags delimited by ASCII NUL characters. This is
->                           useful when used in conjunction with `xargs -0`.
+>      --footer="\n"        Arbitrary text printed at the end of the list.
+>  -d, --delimiter="\n"     Print items delimited by the given separator.
+>  -0, --delimiter0         Print items delimited by ASCII NUL characters. This
+>                           is useful when used in conjunction with `xargs -0`.
 >  -P, --no-pager           Do not pipe output into a pager.
->  -q, --quiet              Do not print the total number of tags found.
+>  -q, --quiet              Do not print the total number of items found.
 >
 >Sorting
 >  -s, --sort=TERM,...    Order the tags by the given criterion.

@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -32,7 +31,6 @@ type NoteDAO struct {
 	findIDsByFilenameLikeStmt *LazyStmt
 	findIDsByPathLikeStmt     *LazyStmt
 	findIDsByPathPrefixStmt   *LazyStmt
-	findByIDStmt              *LazyStmt
 }
 
 // NewNoteDAO creates a new instance of a DAO working on the given database
@@ -94,13 +92,6 @@ func NewNoteDAO(tx Transaction, logger util.Logger, extension string) *NoteDAO {
 			 WHERE (path LIKE ? ESCAPE '\' AND path NOT LIKE ? ESCAPE '\')
 			    OR path LIKE ? ESCAPE '\'
 			 ORDER BY LENGTH(path) ASC
-		`),
-
-		// Find a note from its ID.
-		findByIDStmt: tx.PrepareLazy(`
-			SELECT id, path, title, lead, body, raw_content, word_count, created, modified, metadata, checksum, tags, lead AS snippet
-			  FROM notes_with_metadata
-			 WHERE id = ?
 		`),
 	}
 }
@@ -178,7 +169,7 @@ func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
 		return 0, err
 	}
 	if !id.IsValid() {
-		return 0, errors.New("note not found in the index")
+		return 0, core.ErrNoteNotIndexed
 	}
 
 	metadata := d.metadataToJSON(note)
@@ -207,7 +198,7 @@ func (d *NoteDAO) Remove(path string) error {
 		return err
 	}
 	if !id.IsValid() {
-		return errors.New("note not found in the index")
+		return core.ErrNoteNotIndexed
 	}
 
 	_, err = d.removeStmt.Exec(id)
@@ -599,7 +590,7 @@ func (d *NoteDAO) findRows(opts core.NoteFindOpts, selection noteSelection) (*sq
 				if len(tag) == 0 {
 					continue
 				}
-				globs = append(globs, "t.name GLOB ?")
+				globs = append(globs, "LOWER(t.name) GLOB LOWER(?)")
 				args = append(args, tag)
 			}
 

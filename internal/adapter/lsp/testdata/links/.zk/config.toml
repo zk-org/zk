@@ -1,0 +1,11 @@
+[note]
+template = "default.md"
+
+[format.markdown]
+
+link-format = "markdown"
+
+[lsp]
+
+[lsp.diagnostics]
+dead-link = "error"

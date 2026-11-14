@@ -9,7 +9,7 @@ import (
 
 	"github.com/zk-org/zk/internal/adapter/term"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/opt"
+	"github.com/zk-org/zk/internal/util/ptr"
 	stringsutil "github.com/zk-org/zk/internal/util/strings"
 )
 
@@ -32,18 +32,21 @@ type NoteFilterOpts struct {
 	// Indicates whether fzf is opened for every query, even if empty.
 	AlwaysFilter bool
 	// Format for a single line, taken from the config `fzf-line` property.
-	LineTemplate opt.String
+	LineTemplate *string
 	// Optionally provide additional arguments, taken from the config `fzf-options` property.
-	FzfOptions opt.String
+	FzfOptions *string
 	// Key binding for the new action.
-	NewBinding opt.String
+	NewBinding *string
 	// Preview command to run when selecting a note.
-	PreviewCmd opt.String
+	PreviewCmd *string
 	// When non null, a "create new note from query" binding will be added to
 	// fzf to create a note in this directory.
 	NewNoteDir *core.Dir
 	// Absolute path to the notebook.
 	NotebookDir string
+	// Indicates whether the notes were already sorted by the caller. When they
+	// were, fzf keeps that order instead of ranking the matches by relevance.
+	Sorted bool
 }
 
 func NewNoteFilter(opts NoteFilterOpts, fs core.FileStorage, terminal *term.Terminal, templateLoader core.TemplateLoader) *NoteFilter {
@@ -65,7 +68,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		return notes, nil
 	}
 
-	lineTemplate, err := f.templateLoader.LoadTemplate(f.opts.LineTemplate.OrString(defaultLineTemplate).String())
+	lineTemplate, err := f.templateLoader.LoadTemplate(ptr.OrString(f.opts.LineTemplate, defaultLineTemplate))
 	if err != nil {
 		return selectedNotes, err
 	}
@@ -93,7 +96,7 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 			suffix = " in " + dir.Name + "/"
 		}
 
-		newBinding := f.opts.NewBinding.OrString("Ctrl-E").String()
+		newBinding := ptr.OrString(f.opts.NewBinding, "Ctrl-E")
 		if newBinding != "" {
 			bindings = append(bindings, Binding{
 				Keys:        newBinding,
@@ -103,11 +106,11 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 		}
 	}
 
-	previewCmd := f.opts.PreviewCmd.OrString("cat {-1}").Unwrap()
+	previewCmd := ptr.OrString(f.opts.PreviewCmd, "cat {-1}")
 
 	fzf, err := New(Opts{
-		Options:    f.opts.FzfOptions.OrString(defaultOptions),
-		PreviewCmd: opt.NewNotEmptyString(previewCmd),
+		Options:    ptr.NotEmptyString(f.fzfOptions()),
+		PreviewCmd: ptr.NotEmptyString(previewCmd),
 		Padding:    2,
 		Bindings:   bindings,
 	})
@@ -166,6 +169,22 @@ func (f *NoteFilter) Apply(notes []core.ContextualNote) ([]core.ContextualNote, 
 }
 
 var defaultLineTemplate = `{{style "title" title-or-path}} {{style "understate" body}} {{style "understate" (json metadata)}}`
+
+// fzfOptions returns the options passed to the fzf process.
+//
+// When the notes were already ordered by the caller, sorting is disabled so
+// that fzf keeps that order instead of ranking the matches by relevance.
+func (f *NoteFilter) fzfOptions() string {
+	options := ptr.OrString(f.opts.FzfOptions, defaultOptions)
+	if f.opts.Sorted {
+		options += " " + noSortOption
+	}
+	return options
+}
+
+// noSortOption tells fzf not to sort its input, preserving the order in which
+// the notes were sent to it.
+const noSortOption = "--no-sort"
 
 // defaultOptions are the default fzf options used when filtering notes.
 var defaultOptions = strings.Join([]string{

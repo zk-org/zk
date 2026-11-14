@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -125,12 +124,6 @@ func ExpandWhitespaceLiterals(s string) string {
 	return s
 }
 
-// Contains returns whether the given slice of strings contains the given
-// string.
-func Contains(s []string, e string) bool {
-	return slices.Contains(s, e)
-}
-
 // WordAt returns the word found at the given character position.
 // Credit https://github.com/aca/neuron-language-server/blob/450a7cff71c14e291ee85ff8a0614fa9d4dd5145/utils.go#L13
 func WordAt(str string, index int) string {
@@ -145,12 +138,6 @@ func WordAt(str string, index int) string {
 }
 
 var wordRegex = regexp.MustCompile(`[^ \t\n\f\r,;\[\]\"\']+`)
-
-func CopyList(list []string) []string {
-	out := make([]string, len(list))
-	copy(out, list)
-	return out
-}
 
 func ByteIndexToRuneIndex(s string, i int) int {
 	res := 0

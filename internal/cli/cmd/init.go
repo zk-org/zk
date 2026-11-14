@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/zk-org/zk/internal/cli"
 	"github.com/zk-org/zk/internal/core"
-	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // Init creates a notebook in the given directory
@@ -90,9 +90,9 @@ func startInitWizard() (core.InitOpts, error) {
 
 	opts.WikiLinks = answers.WikiLink
 
-	opts.Hashtags = strings.Contains(answers.Tags, hashtag)
-	opts.MultiwordTags = strings.Contains(answers.Tags, multiwordTag)
-	opts.ColonTags = strings.Contains(answers.Tags, colonTag)
+	opts.Hashtags = slices.Contains(answers.Tags, hashtag)
+	opts.MultiwordTags = slices.Contains(answers.Tags, multiwordTag)
+	opts.ColonTags = slices.Contains(answers.Tags, colonTag)
 
 	return opts, nil
 }
