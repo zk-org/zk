@@ -522,9 +522,9 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 		config.LSP.Completion.UseAdditionalTextEdits = lspCompl.UseAdditionalTextEdits
 	}
 	if lspCompl.UseAliases != nil {
-		config.LSP.Completion.UseAliases = opt.NewBoolWithPtr(lspCompl.UseAliases)
+		config.LSP.Completion.UseAliases = lspCompl.UseAliases
 	}
-  
+
 	// LSP diagnostics
 	lspDiags := tomlConf.LSP.Diagnostics
 	if lspDiags.WikiTitle != nil {

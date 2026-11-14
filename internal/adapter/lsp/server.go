@@ -805,7 +805,7 @@ func (s *Server) buildLinkCompletionList(notebook *core.Notebook, doc *document,
 
 		items = append(items, item)
 
-		if notebook.Config.LSP.Completion.UseAliases.Value == nil || !*notebook.Config.LSP.Completion.UseAliases.Value {
+		if notebook.Config.LSP.Completion.UseAliases == nil || !*notebook.Config.LSP.Completion.UseAliases {
 			continue
 		}
 
