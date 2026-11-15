@@ -54,6 +54,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         end
       elseif in_frontmatter and line:match("^changed:%s") then
         local new_line = "changed: " .. os.date("%Y-%m-%d %H:%M")
+        vim.cmd("undojoin") -- combine the last edit and the modification date update together in undo history
         vim.api.nvim_buf_set_lines(args.buf, i - 1, i, false, { new_line })
         return
       end

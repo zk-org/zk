@@ -16,6 +16,9 @@ type Index struct {
 	Force   bool `short:"f" help:"Force indexing all the notes."`
 	Verbose bool `short:"v" xor:"print" help:"Print detailed information about the indexing process."`
 	Quiet   bool `short:"q" xor:"print" help:"Do not print statistics nor progress."`
+	// Automatic is set when the index is refreshed before a command, as opposed
+	// to an explicit `zk index`. It is not a command line flag.
+	Automatic bool `kong:"-"`
 }
 
 func (cmd *Index) Help() string {
@@ -44,8 +47,9 @@ func (cmd *Index) RunWithNotebook(container *cli.Container, notebook *core.Noteb
 	}
 
 	opts := core.NoteIndexOpts{
-		Force:   cmd.Force,
-		Verbose: cmd.Verbose,
+		Force:     cmd.Force,
+		Verbose:   cmd.Verbose,
+		Automatic: cmd.Automatic,
 	}
 
 	stats, err := notebook.IndexWithCallback(opts, func(change paths.DiffChange) {
