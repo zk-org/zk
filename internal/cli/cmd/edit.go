@@ -69,7 +69,21 @@ func (cmd *Edit) Run(container *cli.Container) error {
 		if err != nil {
 			return err
 		}
-		return editor.Open(paths...)
+		if err := editor.Open(paths...); err != nil {
+			return err
+		}
+
+		// When the notebook is not scanned before each command, the index is
+		// not refreshed with the notes that were just edited.
+		if !notebook.Config.Notebook.Scan {
+			for _, path := range paths {
+				if err := notebook.RefreshNote(path); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
 
 	} else {
 		fmt.Fprintln(os.Stderr, "Found 0 notes.")

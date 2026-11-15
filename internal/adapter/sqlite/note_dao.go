@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -170,7 +169,7 @@ func (d *NoteDAO) Update(note core.Note) (core.NoteID, error) {
 		return 0, err
 	}
 	if !id.IsValid() {
-		return 0, errors.New("note not found in the index")
+		return 0, core.ErrNoteNotIndexed
 	}
 
 	metadata := d.metadataToJSON(note)
@@ -199,7 +198,7 @@ func (d *NoteDAO) Remove(path string) error {
 		return err
 	}
 	if !id.IsValid() {
-		return errors.New("note not found in the index")
+		return core.ErrNoteNotIndexed
 	}
 
 	_, err = d.removeStmt.Exec(id)

@@ -100,6 +100,18 @@ func (cmd *New) Run(container *cli.Container) error {
 		if err != nil {
 			return err
 		}
-		return editor.Open(path)
+		if err := editor.Open(path); err != nil {
+			return err
+		}
+
+		// When the notebook is not scanned before each command, the index is
+		// not refreshed with the note that was just written.
+		if !notebook.Config.Notebook.Scan {
+			if err := notebook.RefreshNote(path); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 }

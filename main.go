@@ -105,7 +105,7 @@ func main() {
 		// command, otherwise it would hide the stats.
 		if ctx.Command() != "index" {
 			if notebook, err := container.CurrentNotebook(); err == nil {
-				index := cmd.Index{Quiet: true}
+				index := cmd.Index{Quiet: true, Automatic: true}
 				err = index.RunWithNotebook(container, notebook)
 				ctx.FatalIfErrorf(err)
 			}
