@@ -241,6 +241,17 @@ func (c *Container) NewNoteEditor(notebook *core.Notebook) (*editor.Editor, erro
 	return editor.NewEditor(notebook.Config.Tool.Editor, shell)
 }
 
+// NewEditor creates an editor from the user's own configuration, without
+// consulting the configuration of any particular notebook.
+//
+// This is what must be used when the notebook to open is designated by
+// untrusted input, such as a zk:// URI coming from another program: a
+// notebook's `tool.editor` is an arbitrary shell command.
+func (c *Container) NewEditor() (*editor.Editor, error) {
+	shell := executil.ResolveShell(c.Config.Tool.Shell)
+	return editor.NewEditor(c.Config.Tool.Editor, shell)
+}
+
 // Paginate creates an auto-closing io.Writer which will be automatically
 // paginated if noPager is false, using the user's pager.
 //

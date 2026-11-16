@@ -18,6 +18,8 @@ $ zk --help
 >  list     List notes matching the given criteria.
 >  graph    Produce a graph of the notes matching the given criteria.
 >  edit     Edit notes matching the given criteria.
+>  open     Open the file referenced by a zk:// URI in your editor.
+>  uri      Print the zk:// URI of a note.
 >  tag      Manage the note tags.
 >
 >Flags:
