@@ -24,6 +24,7 @@ func TestListFormatPredefined(t *testing.T) {
 	test("jsonl", `{{json .}}`)
 	test("path", `{{path}}`)
 	test("link", `{{link}}`)
+	test("uri", `{{uri}}`)
 
 	test("oneline", `{{style "title" title}} {{style "path" path}} ({{format-date created "elapsed"}})`)
 

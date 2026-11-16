@@ -49,3 +49,7 @@ venv.bak/
 pyrightconfig.json
 
 docs/version.txt
+
+# Binary built with the Kong front-end, see `make tesh-kong`.
+.kong-bin/
+zk-kong

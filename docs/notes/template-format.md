@@ -10,6 +10,7 @@ notes, for example with `zk list --format <template>`.
 | `path`          | string   | File path to the note, relative to the current directory                 |
 | `abs-path`      | string   | File path to the note, absolute path including the notebook directory    |
 | `title`         | string   | Note title                                                               |
+| `uri`           | string   | [`zk://` URI](note-uri.md) of the note, for linking from other programs  |
 | `link`          | string   | Markdown link to the note, relative to the current directory<sup>1</sup> |
 | `lead`          | string   | First paragraph extracted from the note content                          |
 | `body`          | string   | All of the note content, minus the heading                               |

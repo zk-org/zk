@@ -38,6 +38,9 @@ func newNoteFormatter(basePath string, template Template, linkFormatter LinkForm
 			Path:         relPath,
 			AbsPath:      path.AbsPath(),
 			Title:        note.Title,
+			// note.Path, not relPath, which is relative to the working
+			// directory and would make the URI depend on where zk was run.
+			URI: NoteURI{NotebookPath: basePath, Path: note.Path}.String(),
 			Link: newLazyStringer(func() string {
 				context, err := NewLinkFormatterContext(path, note.Title, note.Metadata)
 				if err != nil {
@@ -71,6 +74,7 @@ type noteFormatRenderContext struct {
 	Path         string            `json:"path"`
 	AbsPath      string            `json:"absPath" handlebars:"abs-path"`
 	Title        string            `json:"title"`
+	URI          string            `json:"uri" handlebars:"uri"`
 	Link         fmt.Stringer      `json:"link"`
 	Lead         string            `json:"lead"`
 	Body         string            `json:"body"`

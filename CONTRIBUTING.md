@@ -29,6 +29,36 @@ CGO_ENABLED=1 GOARCH=arm64 go build -tags "fts5" -ldflags "-X=main.Version=`git 
   will automatically set `zk`'s build and version numbers using the latest Git
   tag and commit SHA.
 
+### How the command line is put together
+
+The commands themselves live in `internal/cli/cmd`. Each one declares what it
+takes — its flags, its positional arguments, the values it accepts — as a
+`spec.Command`, and keeps a `Run` method doing the actual work. Those specs are
+collected by `cmd.App`, in `internal/cli/cmd/cmd.go`, which is the one place
+`zk`'s whole command line is described.
+
+A *front-end*, under `internal/cli/frontend`, reads that description and
+presents it:
+
+- `cobracli` builds a [Cobra](https://github.com/spf13/cobra) command tree. It
+  is what `zk` is built with, and what generates the shell completion scripts
+  `zk completion` prints.
+- `kongcli` builds a [Kong](https://github.com/alecthomas/kong) grammar, which
+  `zk` used before. Build it with `make build-kong`, and run the end-to-end
+  tests against it with `make tesh-kong`.
+
+So adding a flag is a one-line change to a spec: it then shows up in the help,
+in the shell completions, and in both front-ends, without being restated
+anywhere. The same description is what a non-terminal front-end would read, and
+why the commands write to `container.Stdout`/`Stderr` rather than to the
+process's own.
+
+The Cobra front-end is the reference for `zk`'s output. The Kong one has no
+`completion` command, and prints the default of `--delimiter` as `"\\n"`
+rather than `"\n"`, so `make tesh-kong` reports five failures by design:
+`cmd-completion.tesh` and `flag-help.tesh` for the first, `cmd-config-list.tesh`,
+`cmd-list.tesh` and `cmd-tag-list.tesh` for the second.
+
 ### Automated tests
 
 The project is vetted with two different kind of automated tests: unit tests and

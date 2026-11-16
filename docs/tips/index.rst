@@ -5,6 +5,7 @@ Tips
    :maxdepth: 3
 
    getting-started
+   shell-completion
    automation
    daily-journal
    notebook-housekeeping

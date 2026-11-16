@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/core"
 	"github.com/zk-org/zk/internal/util/strings"
 )
@@ -17,7 +18,40 @@ type Tag struct {
 // TagList lists all the note tags.
 type TagList struct {
 	FormatFlags
-	Sort []string `group:sort short:s placeholder:TERM help:"Order the tags by the given criterion."`
+	Sort []string
+}
+
+// TagSpec describes the `zk tag` command and its subcommands.
+func TagSpec(container *cli.Container) *spec.Command {
+	return &spec.Command{
+		Name:  "tag",
+		Short: "Manage the note tags.",
+		Group: GroupNotes,
+		Children: []*spec.Command{
+			tagListSpec(container),
+		},
+		DefaultChild: "list",
+	}
+}
+
+func tagListSpec(container *cli.Container) *spec.Command {
+	cmd := TagList{}
+
+	return &spec.Command{
+		Name:  "list",
+		Short: "List all the note tags.",
+		Flags: append(
+			cmd.FormatFlags.Spec(FormatFlagsSpec{
+				Noun:       "tags",
+				FormatHelp: "Pretty print the list using a custom template or one of the predefined formats: name, full, json, jsonl.",
+				Formats:    []string{"name", "full", "json", "jsonl"},
+			}),
+			spec.Flag{Name: "sort", Short: "s", Group: spec.GroupSort, Placeholder: "TERM", Target: &cmd.Sort,
+				Help:     "Order the tags by the given criterion.",
+				Complete: completeTagSortTerms()},
+		),
+		Run: func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *TagList) Run(container *cli.Container) error {
@@ -58,7 +92,7 @@ func (cmd *TagList) Run(container *cli.Container) error {
 		return err
 	}
 
-	cmd.FormatFlags.PrintFound(count, strings.Pluralize("tag", count))
+	cmd.FormatFlags.PrintFound(container, count, strings.Pluralize("tag", count))
 
 	return nil
 }

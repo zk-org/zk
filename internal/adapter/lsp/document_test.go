@@ -574,3 +574,69 @@ func TestDocument_WordAt(t *testing.T) {
 		})
 	}
 }
+
+func TestDocument_RuneColumnAt(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		pos      protocol.Position
+		expected int
+	}{
+		{
+			name:     "start of an empty document",
+			content:  "",
+			pos:      protocol.Position{Line: 0, Character: 0},
+			expected: 1,
+		},
+		{
+			name:     "ascii",
+			content:  "Hello World",
+			pos:      protocol.Position{Line: 0, Character: 6},
+			expected: 7,
+		},
+		{
+			name:     "second line",
+			content:  "Hello\nWorld",
+			pos:      protocol.Position{Line: 1, Character: 3},
+			expected: 4,
+		},
+		{
+			// One UTF-16 unit per rune here, so the offset and the column
+			// only differ by the one-based shift.
+			name:     "multi-byte runes",
+			content:  "ビール 焼酎 ジン",
+			pos:      protocol.Position{Line: 0, Character: 4},
+			expected: 5,
+		},
+		{
+			// An emoji outside the BMP takes two UTF-16 units but is a single
+			// rune, so the column lags behind the offset.
+			name:     "surrogate pairs",
+			content:  "🍺🍺ab",
+			pos:      protocol.Position{Line: 0, Character: 4},
+			expected: 3,
+		},
+		{
+			name:     "out-of-bound character is clamped to the end of the line",
+			content:  "Hello",
+			pos:      protocol.Position{Line: 0, Character: 100},
+			expected: 6,
+		},
+		{
+			name:     "out-of-bound line falls back to the offset",
+			content:  "Hello",
+			pos:      protocol.Position{Line: 42, Character: 3},
+			expected: 4,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doc := &document{
+				Content: tt.content,
+				Path:    "/test/note.md",
+			}
+			assert.Equal(t, doc.RuneColumnAt(tt.pos), tt.expected)
+		})
+	}
+}

@@ -9,6 +9,7 @@ Notes
    note-creation
    note-filtering
    note-format
+   note-uri
    note-frontmatter
    tags
    note-id

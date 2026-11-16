@@ -3,6 +3,7 @@ $ zk --help
 >Usage: zk <command>
 >
 >Commands:
+>  completion    Print a shell completion script.
 >
 >NOTEBOOK
 >  A notebook is a directory containing a collection of notes
@@ -18,6 +19,8 @@ $ zk --help
 >  list     List notes matching the given criteria.
 >  graph    Produce a graph of the notes matching the given criteria.
 >  edit     Edit notes matching the given criteria.
+>  open     Open the file referenced by a zk:// URI in your editor.
+>  uri      Print the zk:// URI of a note.
 >  tag      Manage the note tags.
 >
 >Flags:
@@ -29,3 +32,4 @@ $ zk --help
 >      --no-input             Never prompt or ask for confirmation.
 >
 >Run "zk <command> --help" for more information on a command.
+

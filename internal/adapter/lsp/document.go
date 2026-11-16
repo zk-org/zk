@@ -116,6 +116,19 @@ func (d *document) WordAt(pos protocol.Position) string {
 	return strutil.WordAt(line, strChar)
 }
 
+// RuneColumnAt converts the UTF-16 character offset of an LSP position into the
+// 1-based rune column that text editors count in.
+func (d *document) RuneColumnAt(pos protocol.Position) int {
+	line, ok := d.GetLine(int(pos.Line))
+	if !ok {
+		return int(pos.Character) + 1
+	}
+	utf16Bytes := utf16.Encode([]rune(line))
+	charIdx := min(int(pos.Character), len(utf16Bytes))
+
+	return len(utf16.Decode(utf16Bytes[0:charIdx])) + 1
+}
+
 // ContentAtRange returns the document text at given range.
 func (d *document) ContentAtRange(rng protocol.Range) string {
 	startIndex, endIndex := rng.IndexesIn(d.Content)

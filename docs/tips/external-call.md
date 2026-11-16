@@ -13,3 +13,11 @@ The following options can be useful to make sure `zk` behaves properly in a back
 * `--no-input` disables all user prompts and ignores `--interactive`
 * `--quiet` reduces unnecessary output
 
+
+## Linking into `zk` from other programs
+
+To go the other way — from another program back into a note — use a
+[`zk://` URI](../notes/note-uri.md). `zk uri` prints one for a given note, line
+and column, and `zk open` opens it in your editor. `zk` can be registered as
+the system handler for the scheme, so that such links become clickable
+anywhere.

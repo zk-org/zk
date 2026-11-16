@@ -1,0 +1,73 @@
+$ cd tags
+
+# Print help for `zk completion`.
+$ zk completion --help
+>Usage: zk completion <command>
+>
+>Print a shell completion script.
+>
+>Print the script which teaches your shell to complete zk's commands and flags,
+>and, inside a notebook, its notes and tags.
+>
+>Run `zk completion <shell> --help` to see where your shell expects it.
+>
+>Commands:
+>  completion bash          Print the bash completion script.
+>  completion zsh           Print the zsh completion script.
+>  completion fish          Print the fish completion script.
+>  completion powershell    Print the powershell completion script.
+>
+>Flags:
+>  -h, --help                 Show context-sensitive help.
+>      --notebook-dir=PATH    Turn off notebook auto-discovery and set manually
+>                             the notebook where commands are run.
+>  -W, --working-dir=PATH     Run as if zk was started in <PATH> instead of the
+>                             current working directory.
+>      --no-input             Never prompt or ask for confirmation.
+
+# A completion script is printed for each supported shell.
+$ zk completion bash | head -1
+># bash completion V2 for zk                                   -*- shell-script -*-
+
+$ zk completion zsh | head -1
+>#compdef zk
+
+$ zk completion fish | head -1
+># fish completion for zk                                   -*- shell-script -*-
+
+# The shells ask zk itself what to suggest, so the suggestions follow the
+# commands rather than drifting from them.
+$ zk __complete tag list --format "" 2> /dev/null | grep -v '^:'
+>name
+>full
+>json
+>jsonl
+
+$ zk __complete list --match-strategy "" 2> /dev/null | grep -v '^:'
+>fts
+>re
+>exact
+
+# Suggestions which depend on the notebook are read from its index.
+$ zk __complete list --tag "" 2> /dev/null | grep -v '^:'
+>biography
+>biology
+>book
+>dystopia
+>feminism
+>fiction
+>history
+>non-fiction
+>philosophy
+>physics
+>romance
+>science
+>science-fiction
+
+$ zk __complete tag list --sort "" 2> /dev/null | grep -v '^:'
+>name
+>name-
+>name+
+>note-count
+>note-count-
+>note-count+
