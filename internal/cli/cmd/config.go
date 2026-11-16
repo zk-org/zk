@@ -8,12 +8,37 @@ import (
 	"sort"
 
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 )
 
-// AliasList lists all the aliases.
+// Config lists the configuration objects of a notebook.
 type Config struct {
-	List string `short:"l" placeholder:"OBJECT" help:"List configuration objects. Listable objects are: aliases, filters and extras."`
+	List string
 	FormatFlags
+}
+
+// ConfigSpec describes the `zk config` command.
+func ConfigSpec(container *cli.Container) *spec.Command {
+	cmd := Config{}
+
+	return &spec.Command{
+		Name:  "config",
+		Short: "List configuration parameters.",
+		Group: GroupNotebook,
+		Flags: append(
+			[]spec.Flag{
+				{Name: "list", Short: "l", Placeholder: "OBJECT", Target: &cmd.List,
+					Help:     "List configuration objects. Listable objects are: aliases, filters and extras.",
+					Complete: spec.Values("aliases", "filters", "extras")},
+			},
+			cmd.FormatFlags.Spec(FormatFlagsSpec{
+				Noun:       "items",
+				FormatHelp: "Pretty print the list using a custom template or predefined formats: short, full, json.",
+				Formats:    []string{"short", "full", "json"},
+			})...,
+		),
+		Run: func() error { return cmd.Run(container) },
+	}
 }
 
 func (cmd *Config) Run(container *cli.Container) error {
@@ -22,12 +47,19 @@ func (cmd *Config) Run(container *cli.Container) error {
 	}
 
 	var objects = make(map[string]string)
+	// An alias may carry a description, which the `full` format prints after
+	// the command it runs. The other objects have none.
+	var descriptions = make(map[string]string)
 
 	switch cmd.List {
 	case "filters":
 		objects = container.Config.Filters
 	case "aliases":
-		objects = container.Config.Aliases
+		objects = make(map[string]string, len(container.Config.Aliases))
+		for name, alias := range container.Config.Aliases {
+			objects[name] = alias.Command
+			descriptions[name] = alias.Description
+		}
 	case "extras":
 		objects = container.Config.Extra
 	default:
@@ -59,6 +91,9 @@ func (cmd *Config) Run(container *cli.Container) error {
 			fmt.Fprintf(out, format, o, jsonData)
 		} else {
 			fmt.Fprintf(out, format, o, objects[o])
+			if cmd.Format == "full" && descriptions[o] != "" {
+				fmt.Fprintf(out, "    # %s", descriptions[o])
+			}
 		}
 		return nil
 	})
@@ -66,7 +101,7 @@ func (cmd *Config) Run(container *cli.Container) error {
 		return err
 	}
 
-	cmd.FormatFlags.PrintFound(count, cmd.List)
+	cmd.FormatFlags.PrintFound(container, count, cmd.List)
 	return nil
 }
 

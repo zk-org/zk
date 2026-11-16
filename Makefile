@@ -6,6 +6,19 @@ build:
 install:
 	$(call go,install)
 
+# Build zk with the Kong front-end instead of the default Cobra one. Both read
+# the same command tree from internal/cli/spec; only Cobra can generate the
+# shell completion scripts.
+build-kong:
+	$(ENV_PREFIX) go build -buildvcs=false -tags "fts5 zk_kong" -ldflags "-X=main.Version=$(VERSION)" -o zk-kong
+
+# Run the end-to-end tests against the Kong front-end. Five help formatting
+# differences are expected; see CONTRIBUTING.md.
+tesh-kong:
+	mkdir -p .kong-bin
+	$(ENV_PREFIX) go build -buildvcs=false -tags "fts5 zk_kong" -ldflags "-X=main.Version=$(VERSION)" -o .kong-bin/zk
+	@PATH="$(shell pwd)/.kong-bin:$(PATH)" tesh tests tests/fixtures
+
 # Run unit tests.
 test:
 	$(call go,test,./...)
@@ -35,6 +48,7 @@ alpine:
 # Clean build and docs products.
 clean:
 	rm -rf zk*
+	rm -rf .kong-bin
 	rm -rf docs-build
 	rm -rf testdata
 

@@ -27,6 +27,58 @@ override the default options of native commands, for example:
 edit = 'zk edit --interactive "$@"'
 ```
 
+## Describing an alias
+
+Declared as above, an alias is only its command. Declare it as a table instead
+and you can say what it is for:
+
+```toml
+[alias.log]
+alias = "zk list --quiet --format path --delimiter0 $@ | xargs -0 git log --patch --"
+description = "Browse the Git history of the selected notes"
+```
+
+The `alias` property is the command to run, and `description` is optional. Both
+forms can be mixed in the same `[alias]` section, so there is nothing to change
+about the aliases you already have:
+
+```toml
+[alias]
+ls = "zk list $@"
+
+[alias.lucky]
+alias = "zk list --quiet --format full --sort random --limit 1"
+description = "Print a random note"
+```
+
+A description is worth writing because `zk` shows it back to you. Your aliases
+are listed in `zk --help` alongside the native commands:
+
+```sh
+$ zk --help
+...
+ALIASES
+  Your own commands, declared in the notebook's configuration
+
+  ls       zk list $@
+  lucky    Print a random note
+```
+
+and your shell suggests them, with their description, once
+[completion is installed](../tips/shell-completion.md):
+
+```sh
+$ zk lu<TAB>
+lucky  -- Print a random note
+```
+
+An alias without a description is shown by the command it runs, which is better
+than nothing but rarely as clear.
+
+Note that an alias overriding one of `zk`'s own commands — the `edit` example
+above — is not listed, as the help already documents the command of that name.
+It still runs in front of it.
+
 When running an alias, the `ZK_NOTEBOOK_DIR` environment variable is set to the
 absolute path of the current notebook. You can use it to run commands working no
 matter the location of the working directory.
@@ -220,7 +272,9 @@ This alias does not call `zk` at all! This shows how you can use `zk` as a hub
 for everything related to your notes.
 
 ```toml
-save = 'git add . && git commit -m "$*"'
+[alias.save]
+alias = 'git add . && git commit -m "$*"'
+description = "Commit the changes to the notes"
 ```
 
 Usage: `zk save Expand the note on command aliases`
@@ -247,4 +301,11 @@ Usage: `zk cp output/ --created-after 'last two weeks'`
 ## Listing aliases
 
 You can list all the aliases found in your configuration file using
-`zk config --list aliases`.
+`zk config --list aliases`. Add `--format full` to see the command each one
+runs, followed by its description when it has one.
+
+```sh
+$ zk config --list aliases --format full
+          ls    zk list $@
+       lucky    zk list --quiet --format full --sort random --limit 1    # Print a random note
+```

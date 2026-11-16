@@ -4,21 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/zk-org/zk/internal/cli"
+	"github.com/zk-org/zk/internal/cli/spec"
 	"github.com/zk-org/zk/internal/util/strings"
 )
 
 // FormatFlags holds the output formatting options shared by commands that print lists of items.
 type FormatFlags struct {
-	Format     string `group:format short:f placeholder:TEMPLATE help:"Pretty print the list using a custom template or one of the predefined formats."`
-	Header     string `group:format help:"Arbitrary text printed at the start of the list."`
-	Footer     string "group:format default:\n help:\"Arbitrary text printed at the end of the list.\""
-	Delimiter  string "group:format short:d default:\n help:\"Print items delimited by the given separator.\""
-	Delimiter0 bool   "group:format short:0 name:delimiter0 help:\"Print items delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.\""
-	NoPager    bool   `group:format short:P help:"Do not pipe output into a pager."`
-	Quiet      bool   `group:format short:q help:"Do not print the total number of items found."`
+	Format     string
+	Header     string
+	Footer     string
+	Delimiter  string
+	Delimiter0 bool
+	NoPager    bool
+	Quiet      bool
 }
 
 // Prepare normalises the formatting flags and rejects mutually exclusive options.
@@ -111,10 +111,61 @@ func (f FormatFlags) Template(defaultFormat string, predefined map[string]string
 	return strings.ExpandWhitespaceLiterals(format)
 }
 
-// PrintFound prints the total number of found items on stderr, unless the
-// quiet flag is set. The noun must already be pluralised for the count.
-func (f FormatFlags) PrintFound(count int, noun string) {
+// PrintFound prints the total number of found items on the container's
+// standard error, unless the quiet flag is set. The noun must already be
+// pluralised for the count.
+func (f FormatFlags) PrintFound(container *cli.Container, count int, noun string) {
 	if !f.Quiet {
-		fmt.Fprintf(os.Stderr, "\nFound %d %s\n", count, noun)
+		fmt.Fprintf(container.Stderr, "\nFound %d %s\n", count, noun)
 	}
+}
+
+// FormatFlagsSpec is what one command's output flags differ in: the formats it
+// knows, and the word its help uses for the things it prints.
+type FormatFlagsSpec struct {
+	// Noun names what is being printed, as the help text says it: "notes" for
+	// `zk list`, "tags" for `zk tag list`.
+	Noun string
+	// FormatHelp is the help of --format, which names that command's
+	// predefined formats.
+	FormatHelp string
+	// Formats are the names a shell offers for --format.
+	Formats []string
+	// Extra are further flags belonging to the formatting group, inserted
+	// after --format: `zk list` puts --link there.
+	Extra []spec.Flag
+}
+
+// Spec describes the shared output flags, so that a command declares them in
+// one line rather than repeating all seven.
+//
+// It is the counterpart of the struct above: the fields are shared, so their
+// descriptions are too, and a change to the wording reaches every command
+// which prints a list.
+func (f *FormatFlags) Spec(s FormatFlagsSpec) []spec.Flag {
+	flags := []spec.Flag{
+		{Name: "format", Short: "f", Group: spec.GroupFormat, Placeholder: "TEMPLATE", Target: &f.Format,
+			Help:     s.FormatHelp,
+			Complete: spec.Values(s.Formats...)},
+	}
+	flags = append(flags, s.Extra...)
+
+	return append(flags,
+		spec.Flag{Name: "header", Group: spec.GroupFormat, Target: &f.Header,
+			Help: "Arbitrary text printed at the start of the list."},
+		// The default of --footer is the two characters `\n`, which
+		// ExpandWhitespaceLiterals turns into a newline, while --delimiter
+		// defaults to a real one. Both end up as a newline, but the help shows
+		// them differently, as it always has.
+		spec.Flag{Name: "footer", Group: spec.GroupFormat, Default: `\n`, Target: &f.Footer,
+			Help: "Arbitrary text printed at the end of the list."},
+		spec.Flag{Name: "delimiter", Short: "d", Group: spec.GroupFormat, Default: "\n", Target: &f.Delimiter,
+			Help: fmt.Sprintf("Print %s delimited by the given separator.", s.Noun)},
+		spec.Flag{Name: "delimiter0", Short: "0", Group: spec.GroupFormat, Target: &f.Delimiter0,
+			Help: fmt.Sprintf("Print %s delimited by ASCII NUL characters. This is useful when used in conjunction with `xargs -0`.", s.Noun)},
+		spec.Flag{Name: "no-pager", Short: "P", Group: spec.GroupFormat, Target: &f.NoPager,
+			Help: "Do not pipe output into a pager."},
+		spec.Flag{Name: "quiet", Short: "q", Group: spec.GroupFormat, Target: &f.Quiet,
+			Help: fmt.Sprintf("Do not print the total number of %s found.", s.Noun)},
+	)
 }

@@ -61,7 +61,7 @@ func TestParseDefaultConfig(t *testing.T) {
 			},
 		},
 		Filters: make(map[string]string),
-		Aliases: make(map[string]string),
+		Aliases: make(map[string]Alias),
 		Extra:   make(map[string]string),
 	})
 }
@@ -282,9 +282,9 @@ func TestParseComplete(t *testing.T) {
 			"recents": "--created-after '2 weeks ago'",
 			"journal": "journal --sort created",
 		},
-		Aliases: map[string]string{
-			"ls": "zk list $@",
-			"ed": "zk edit $@",
+		Aliases: map[string]Alias{
+			"ls": {Command: "zk list $@"},
+			"ed": {Command: "zk edit $@"},
 		},
 		Extra: map[string]string{
 			"hello": "world",
@@ -463,7 +463,7 @@ func TestParseMergesGroupConfig(t *testing.T) {
 			},
 		},
 		Filters: make(map[string]string),
-		Aliases: make(map[string]string),
+		Aliases: make(map[string]Alias),
 		Extra: map[string]string{
 			"hello": "world",
 			"salut": "le monde",
@@ -750,4 +750,51 @@ func TestGroupConfigClone(t *testing.T) {
 			"hello": "world",
 		},
 	})
+}
+
+func TestParseAliases(t *testing.T) {
+	// A plain string and a table declaring a description can be mixed in the
+	// same `[alias]` section.
+	conf, err := ParseConfig([]byte(`
+		[alias]
+		ls = "zk list $@"
+
+		[alias.log]
+		alias = "zk list --quiet --format path --delimiter0 $@ | xargs -0 git log --patch --"
+		description = "Browse the Git history of the selected notes"
+
+		[alias.lucky]
+		alias = "zk list --sort random --limit 1"
+	`), ".zk/config.toml", NewDefaultConfig(), false)
+
+	assert.Nil(t, err)
+	assert.Equal(t, conf.Aliases, map[string]Alias{
+		"ls": {Command: "zk list $@"},
+		"log": {
+			Command:     "zk list --quiet --format path --delimiter0 $@ | xargs -0 git log --patch --",
+			Description: "Browse the Git history of the selected notes",
+		},
+		"lucky": {Command: "zk list --sort random --limit 1"},
+	})
+}
+
+func TestParseInvalidAliases(t *testing.T) {
+	test := func(toml string, err string) {
+		_, parseErr := ParseConfig([]byte(toml), ".zk/config.toml", NewDefaultConfig(), false)
+		assert.Err(t, parseErr, err)
+	}
+
+	// The table form must say which command to run.
+	test("[alias.log]\ndescription = \"Browse the history\"",
+		"failed to read alias `log`: missing the `alias` property with the command to run")
+
+	// A misspelled property is reported rather than ignored.
+	test("[alias.log]\nalias = \"git log\"\ndescriptn = \"Browse the history\"",
+		"failed to read alias `log`: unknown property `descriptn`, expected `alias` or `description`")
+
+	test("[alias.log]\nalias = 42",
+		"failed to read alias `log`: `alias` must be a string")
+
+	test("[alias]\nlog = 42",
+		"failed to read alias `log`: expected a command string or a table with an `alias` property, got int64")
 }
