@@ -1,9 +1,11 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -21,8 +23,18 @@ type Config struct {
 	Tool     ToolConfig
 	LSP      LSPConfig
 	Filters  map[string]string
-	Aliases  map[string]string
+	Aliases  map[string]Alias
 	Extra    map[string]string
+}
+
+// Alias is a user command, as declared in the `[alias]` section of the
+// configuration.
+type Alias struct {
+	// Command is the shell command the alias runs.
+	Command string
+	// Description says what the alias does, for the help and the shell
+	// completions. It is optional.
+	Description string
 }
 
 // NOTE: config generation occurs in internal/core/notebook_store.go. The below function is used
@@ -79,7 +91,7 @@ func NewDefaultConfig() Config {
 			},
 		},
 		Filters: map[string]string{},
-		Aliases: map[string]string{},
+		Aliases: map[string]Alias{},
 		Extra:   map[string]string{},
 	}
 }
@@ -559,10 +571,88 @@ func ParseConfig(content []byte, path string, parentConfig Config, isGlobal bool
 
 	// Aliases
 	if tomlConf.Aliases != nil {
-		maps.Copy(config.Aliases, tomlConf.Aliases)
+		aliases, err := parseAliases(tomlConf.Aliases)
+		if err != nil {
+			return config, err
+		}
+		maps.Copy(config.Aliases, aliases)
 	}
 
 	return config, nil
+}
+
+// parseAliases reads the `[alias]` section, which accepts an alias in two
+// forms: the shell command on its own, or a table also carrying a
+// description.
+//
+//	[alias]
+//	ls = "zk list $@"
+//
+//	[alias.log]
+//	alias = "zk list --quiet --format path --delimiter0 $@ | xargs -0 git log --patch --"
+//	description = "Browse the Git history of the selected notes"
+func parseAliases(tomlAliases map[string]any) (map[string]Alias, error) {
+	// Sorted, so that a configuration with several faulty aliases always
+	// reports the same one.
+	names := make([]string, 0, len(tomlAliases))
+	for name := range tomlAliases {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	aliases := make(map[string]Alias, len(tomlAliases))
+	for _, name := range names {
+		alias, err := parseAlias(tomlAliases[name])
+		if err != nil {
+			return nil, fmt.Errorf("failed to read alias `%s`: %w", name, err)
+		}
+		aliases[name] = alias
+	}
+	return aliases, nil
+}
+
+func parseAlias(value any) (Alias, error) {
+	switch value := value.(type) {
+	case string:
+		return Alias{Command: value}, nil
+
+	case map[string]any:
+		var alias Alias
+		for _, property := range sortedKeys(value) {
+			switch property {
+			case "alias":
+				command, ok := value[property].(string)
+				if !ok {
+					return alias, errors.New("`alias` must be a string")
+				}
+				alias.Command = command
+			case "description":
+				description, ok := value[property].(string)
+				if !ok {
+					return alias, errors.New("`description` must be a string")
+				}
+				alias.Description = description
+			default:
+				return alias, fmt.Errorf("unknown property `%s`, expected `alias` or `description`", property)
+			}
+		}
+		if alias.Command == "" {
+			return alias, errors.New("missing the `alias` property with the command to run")
+		}
+		return alias, nil
+
+	default:
+		return Alias{}, fmt.Errorf("expected a command string or a table with an `alias` property, got %T", value)
+	}
+}
+
+func sortedKeys(values map[string]any) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func (c GroupConfig) merge(tomlConf tomlGroupConfig, name string) GroupConfig {
@@ -620,7 +710,7 @@ type tomlConfig struct {
 	LSP      tomlLSPConfig
 	Extra    map[string]string
 	Filters  map[string]string `toml:"filter"`
-	Aliases  map[string]string `toml:"alias"`
+	Aliases  map[string]any    `toml:"alias"`
 }
 
 type tomlNotebookConfig struct {

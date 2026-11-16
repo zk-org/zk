@@ -194,6 +194,10 @@ type Command struct {
 	// SkipAutoIndex keeps the runner from indexing the notebook before the
 	// command runs.
 	SkipAutoIndex bool
+	// PassThroughArgs hands every remaining argument to the command as it was
+	// typed, flags included, instead of parsing it. A command alias needs it:
+	// its arguments belong to the shell command it runs, not to zk.
+	PassThroughArgs bool
 	// Run executes the command, once its flags and arguments have been filled
 	// in. It is nil for a command which only groups subcommands.
 	Run func() error

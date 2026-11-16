@@ -131,6 +131,8 @@ func (b *builder) command(command *spec.Command) *cobra.Command {
 		GroupID: command.Group,
 		Hidden:  command.Hidden,
 		Args:    argsValidator(command),
+
+		DisableFlagParsing: command.PassThroughArgs,
 	}
 	b.specs[c] = command
 

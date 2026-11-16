@@ -39,3 +39,59 @@ $ zk xargs
 >==> yellow-sun.md <==
 ># Yellow sun
 
+# An alias can also be declared as a table, which is how it gets a
+# description.
+$ echo -e "[alias.nbdir]\nalias = 'echo \$ZK_NOTEBOOK_DIR'\ndescription = 'Print the notebook directory'" > .zk/config.toml
+
+$ zk nbdir
+>{{working-dir}}
+
+# The description is listed with the command the alias runs.
+$ zk config --list aliases --format full
+>       nbdir    echo $ZK_NOTEBOOK_DIR    # Print the notebook directory
+2>
+2>Found 1 aliases
+
+# Both forms can be mixed in the same section.
+$ echo -e "[alias]\nls = 'zk list \$@'\n[alias.nbdir]\nalias = 'echo \$ZK_NOTEBOOK_DIR'\ndescription = 'Print the notebook directory'" > .zk/config.toml
+
+$ zk config --list aliases --format full
+>          ls    zk list $@
+>       nbdir    echo $ZK_NOTEBOOK_DIR    # Print the notebook directory
+2>
+2>Found 2 aliases
+
+# The table form must say which command to run.
+$ echo -e "[alias.nbdir]\ndescription = 'Print the notebook directory'" > .zk/config.toml
+
+1$ zk nbdir
+2>zk: error: failed to open notebook config: failed to read alias `nbdir`: missing the `alias` property with the command to run
+
+# A misspelled property is reported rather than ignored.
+$ echo -e "[alias.nbdir]\nalias = 'echo'\ndescriptn = 'Oops'" > .zk/config.toml
+
+1$ zk nbdir
+2>zk: error: failed to open notebook config: failed to read alias `nbdir`: unknown property `descriptn`, expected `alias` or `description`
+
+# The aliases are presented as commands of their own, so that the help lists
+# them. An alias with no description of its own is shown by the command it
+# runs. The shell completions are covered by cmd-completion.tesh.
+$ echo -e "[alias]\nlucky = 'zk list --sort random --limit 1'\n[alias.nbdir]\nalias = 'echo \$ZK_NOTEBOOK_DIR'\ndescription = 'Print the notebook directory'" > .zk/config.toml
+
+$ zk --help | grep -A4 ALIASES
+>ALIASES
+>  Your own commands, declared in the notebook's configuration
+>
+>  lucky    zk list --sort random --limit 1
+>  nbdir    Print the notebook directory
+
+# An alias overriding one of zk's own commands is not listed twice: the
+# command keeps its place, and the alias still runs in front of it.
+$ echo -e "[alias]\nlist = 'echo overridden'" > .zk/config.toml
+
+1$ zk --help | grep -c ALIASES
+>0
+
+$ zk list
+>overridden
+

@@ -71,3 +71,11 @@ $ zk __complete tag list --sort "" 2> /dev/null | grep -v '^:'
 >note-count
 >note-count-
 >note-count+
+
+# The command aliases declared in the notebook are suggested as the commands
+# they stand for, with their description.
+$ echo -e "[alias]\nlucky = 'zk list --sort random --limit 1'\n[alias.nbdir]\nalias = 'echo \$ZK_NOTEBOOK_DIR'\ndescription = 'Print the notebook directory'" >> .zk/config.toml
+
+$ zk __complete "" 2> /dev/null | grep -e nbdir -e lucky
+>lucky	zk list --sort random --limit 1
+>nbdir	Print the notebook directory

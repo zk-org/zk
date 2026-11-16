@@ -116,13 +116,15 @@ func runAlias(container *cli.Container, args []string) (bool, error) {
 	}
 
 	runningAlias := os.Getenv("ZK_RUNNING_ALIAS")
-	for alias, cmdStr := range container.Config.Aliases {
+	for alias, spec := range container.Config.Aliases {
 		if alias == runningAlias || alias != args[0] {
 			continue
 		}
 
 		// Prevent infinite loop if an alias calls itself.
 		os.Setenv("ZK_RUNNING_ALIAS", alias)
+
+		cmdStr := spec.Command
 
 		// Move to the current notebook's root directory before running the alias.
 		if notebook, err := container.CurrentNotebook(); err == nil {

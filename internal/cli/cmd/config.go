@@ -47,12 +47,19 @@ func (cmd *Config) Run(container *cli.Container) error {
 	}
 
 	var objects = make(map[string]string)
+	// An alias may carry a description, which the `full` format prints after
+	// the command it runs. The other objects have none.
+	var descriptions = make(map[string]string)
 
 	switch cmd.List {
 	case "filters":
 		objects = container.Config.Filters
 	case "aliases":
-		objects = container.Config.Aliases
+		objects = make(map[string]string, len(container.Config.Aliases))
+		for name, alias := range container.Config.Aliases {
+			objects[name] = alias.Command
+			descriptions[name] = alias.Description
+		}
 	case "extras":
 		objects = container.Config.Extra
 	default:
@@ -84,6 +91,9 @@ func (cmd *Config) Run(container *cli.Container) error {
 			fmt.Fprintf(out, format, o, jsonData)
 		} else {
 			fmt.Fprintf(out, format, o, objects[o])
+			if cmd.Format == "full" && descriptions[o] != "" {
+				fmt.Fprintf(out, "    # %s", descriptions[o])
+			}
 		}
 		return nil
 	})

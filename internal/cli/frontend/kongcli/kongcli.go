@@ -151,6 +151,13 @@ func (g *grammar) commandField(command *spec.Command, at []int, names []string, 
 	if command.Hidden {
 		tags = append(tags, "hidden")
 	}
+	if command.PassThroughArgs {
+		// Kong stops parsing at the first argument and hands the rest over as
+		// it was typed, flags included. It accepts this only for a command
+		// with no subcommands and a single variadic argument, which is what a
+		// command passing its arguments on looks like.
+		tags = append(tags, "passthrough")
+	}
 	if command.Short != "" {
 		tags = append(tags, "help='"+escape(command.Short)+"'")
 	}

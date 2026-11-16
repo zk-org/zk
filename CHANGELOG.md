@@ -24,6 +24,12 @@ Format: `<description> (by @<contributor>, #<pr number>)`
   `zk.uri` LSP command returns one for the cursor position, and
   `zk open <uri>` opens the referenced file in your editor at the right line
   and column (by @sudores, #801)
+- A command alias can now declare what it is for. Write it as a table with an
+  `alias` property and a `description`, and the description shows up in
+  `zk --help` alongside the native commands, in the shell completions, and in
+  `zk config --list aliases --format full`. The plain `name = "command"` form
+  keeps working, and both can be mixed in the same `[alias]` section
+  (by @sudores, #803)
 
 ### Changed
 

@@ -13,6 +13,7 @@ import (
 const (
 	GroupNotebook = "zk"
 	GroupNotes    = "notes"
+	GroupAliases  = "aliases"
 )
 
 // Globals holds the flags every command accepts.
@@ -53,7 +54,7 @@ func (g *Globals) Flags() []spec.Flag {
 func App(container *cli.Container, globals *Globals) *spec.App {
 	term := container.Terminal
 
-	return &spec.App{
+	app := &spec.App{
 		Name:    "zk",
 		Version: container.Version,
 		Flags:   globals.Flags(),
@@ -90,6 +91,19 @@ func App(container *cli.Container, globals *Globals) *spec.App {
 			{ID: spec.GroupSort, Title: "Sorting"},
 		},
 	}
+
+	// The aliases are appended last, as they are only known once a notebook
+	// has been opened. The group is declared only when there is one to list.
+	if aliases := aliasCommands(container, app); len(aliases) > 0 {
+		app.Commands = append(app.Commands, aliases...)
+		app.CommandGroups = append(app.CommandGroups, spec.Group{
+			ID:          GroupAliases,
+			Title:       term.MustStyle("ALIASES", core.StyleYellow, core.StyleBold),
+			Description: term.MustStyle("Your own commands, declared in the notebook's configuration", core.StyleBold),
+		})
+	}
+
+	return app
 }
 
 // expandPath resolves a path argument the way zk's path options always did:
