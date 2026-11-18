@@ -8,13 +8,14 @@ fine-tune the [LSP editors integration](../tips/editors-integration.md).
 Customize how completion items appear in your editor when auto-completing links
 with the `[lsp.completion]` sub-section.
 
-| Setting                     | Type       | Description                                                                           |
-| --------------------------- | ---------- | ------------------------------------------------------------------------------------- |
-| `note-label`                | `template` | Label displayed in the completion pop-up for each note                                |
-| `note-filter`               | `string`   | CLI filtering options used to select which notes are offered for link completion      |
-| `note-filter-text`          | `template` | Text used as a source when filtering the completion pop-up with keystrokes            |
-| `note-detail`               | `template` | Additional information about a completion item                                        |
-| `use-additional-text-edits` | `boolean`  | Indicates whether `additionalTextEdits` will be used to remove the trigger characters |
+| Setting                     | Type       | Description                                                                                  |
+| --------------------------- | ---------- | -------------------------------------------------------------------------------------------- |
+| `note-label`                | `template` | Label displayed in the completion pop-up for each note                                      |
+| `note-filter`               | `string`   | CLI filtering options used to select which notes are offered for link completion            |
+| `note-filter-text`          | `template` | Text used as a source when filtering the completion pop-up with keystrokes                  |
+| `note-detail`               | `template` | Additional information about a completion item                                              |
+| `use-additional-text-edits` | `boolean`  | Indicates whether `additionalTextEdits` will be used to remove the trigger characters       |
+| `use-aliases`               | `boolean`  | Add each [note alias](../notes/note-frontmatter.md) as a link completion item (disabled by default) |
 
 `note-filter` accepts the same filtering options as `zk list`, for example
 `"--tag project --sort modified-"`. Named filters declared in `[filter]` can
@@ -93,6 +94,8 @@ missing-backlink = { level = "hint", position = "bottom" }
 [lsp.completion]
 # Show the note title in the completion pop-up, or fallback on its path if empty.
 note-label = "{{title-or-path}}"
+# Include YAML frontmatter aliases as additional link completion items.
+use-aliases = true
 # Only suggest notes matching the given filtering options.
 note-filter = "--tag project --sort modified-"
 # Filter out the completion pop-up using the note title or its path.
