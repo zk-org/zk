@@ -60,6 +60,9 @@ func newCompletionItemRenderContext(note core.MinimalNote, notebookDir string, c
 		Metadata:     note.Metadata,
 	}
 	if context.TitleOrPath == "" {
+		context.TitleOrPath = context.Filename
+	}
+	if context.TitleOrPath == "" {
 		context.TitleOrPath = note.Path
 	}
 	return context, nil
