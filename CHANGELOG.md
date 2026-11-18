@@ -19,7 +19,7 @@ Format: `<description> (by @<contributor>, #<pr number>)`
   longer ignored when the notebook config doesn't set it (by @marktsuchida,
   #789)
 - The `{{substring}}` template helper no longer panics on out-of-range indexes
-  and counts characters instead of bytes (by @aliassar, #TBD)
+  and counts characters instead of bytes (by @aliassar, #806)
 
 ## 0.15.7
 
