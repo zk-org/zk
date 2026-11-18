@@ -1,0 +1,5 @@
+$ cd same-name
+
+# A trailing slash asks for the folder, not the note of the same name.
+$ zk list Daily/ -qf\{{path}}
+>Daily/2026-03-25.md

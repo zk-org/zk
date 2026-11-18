@@ -279,6 +279,10 @@ func (d *NoteDAO) FindIdsByHref(href string, allowPartialHref bool) ([]core.Note
 
 	href = strings.NewReplacer("%", "\\%", "_", "\\_").Replace(href)
 
+	if strings.HasSuffix(href, "/") {
+		return d.findIDsWithStmt(d.findIDsByPathPrefixStmt, href+"%", href+"%/%", href+"%")
+	}
+
 	// Prioritise exact match with extension.
 	id, err := d.FindIDByPath(href + "." + d.extension)
 	if err != nil {
