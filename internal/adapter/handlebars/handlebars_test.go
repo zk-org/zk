@@ -143,6 +143,14 @@ func TestSubstringHelper(t *testing.T) {
 	testString(t, "{{substring 'A full quote' 40 4}}", nil, "")
 	testString(t, "{{substring 'A full quote' -5 5}}", nil, "quote")
 	testString(t, "{{substring 'A full quote' -5 6}}", nil, "quote")
+	// Out-of-range input is clamped instead of panicking.
+	testString(t, "{{substring 'Beta' -10 2}}", nil, "Be")
+	testString(t, "{{substring 'Beta' 1 -1}}", nil, "")
+	testString(t, "{{substring 'Beta' 1 0}}", nil, "")
+	// Indexes count characters, not bytes.
+	testString(t, "{{substring 'Éclair recipe' 0 1}}", nil, "É")
+	testString(t, "{{substring 'crème brûlée' -6 6}}", nil, "brûlée")
+	testString(t, "{{substring '日本語' 1 1}}", nil, "本")
 }
 
 func TestJoinHelper(t *testing.T) {
