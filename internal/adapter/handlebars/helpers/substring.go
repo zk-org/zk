@@ -11,13 +11,14 @@ import (
 // {{substring 'A full quote' -5 5}} -> "quote"
 func RegisterSubstring() {
 	raymond.RegisterHelper("substring", func(str string, index int, length int) string {
+		runes := []rune(str)
 		if index < 0 {
-			index = len(str) + index
+			index = max(len(runes)+index, 0)
 		}
-		if index >= len(str) {
+		if index >= len(runes) || length <= 0 {
 			return ""
 		}
-		end := min(index+length, len(str))
-		return str[index:end]
+		length = min(length, len(runes)-index)
+		return string(runes[index : index+length])
 	})
 }
