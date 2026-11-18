@@ -335,6 +335,9 @@ dead-link = "error"
 [lsp.completion]
 # Customize the completion pop-up of your LSP client.
 
+# Include note aliases in link completion results.
+#use-aliases = false
+
 # Show the note title in the completion pop-up, or fallback on its path if empty.
 #note-label = "\{{title-or-path}}"
 # Filter the notes offered as completion items using CLI filtering options.
