@@ -27,6 +27,13 @@ func TestParseTitle(t *testing.T) {
 	test("## Small Heading\n# Bigger Heading", "Bigger Heading")
 	test("# A **title** with [formatting](http://stripped)", "A title with formatting")
 
+	// A Wikilink ending the heading must not leak a trailing "]" (zk-org/zk#784).
+	test("# [[ffmpeg]]", "ffmpeg")
+	test("# [[href | label]]", "label")
+	test("# [[[folgezettel]]]", "folgezettel")
+	// A Wikilink mid-heading already worked and must keep working.
+	test("# [[Exceptions]] are serializable", "Exceptions are serializable")
+
 	// From a YAML frontmatter
 	test(`---
 Title:     A title
