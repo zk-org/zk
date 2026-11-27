@@ -3,6 +3,7 @@ package core
 import (
 	"path/filepath"
 	"slices"
+	"strings"
 )
 
 // fileStorageMock implements an in-memory FileStorage for testing purposes.
@@ -61,7 +62,11 @@ func (fs *fileStorageMock) DirExists(path string) (bool, error) {
 }
 
 func (fs *fileStorageMock) IsDescendantOf(dir string, path string) (bool, error) {
-	panic("not implemented")
+	rel, err := filepath.Rel(dir, path)
+	if err != nil {
+		return false, err
+	}
+	return !filepath.IsAbs(rel) && !strings.HasPrefix(rel, ".."), nil
 }
 
 func (fs *fileStorageMock) Read(path string) ([]byte, error) {
